@@ -1,15 +1,16 @@
 import { useEffect } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore.js'
 import apiClient from '../../config/apiClient.js'
 
 export default function KakaoCallbackPage() {
-  const [params] = useSearchParams()
   const navigate = useNavigate()
   const setAuth = useAuthStore((s) => s.setAuth)
 
   useEffect(() => {
-    const token = params.get('token')
+    const hash = window.location.hash.slice(1)
+    const hashParams = new URLSearchParams(hash)
+    const token = hashParams.get('token')
     if (!token) {
       navigate('/login')
       return

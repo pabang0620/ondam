@@ -11,6 +11,7 @@ import helmet from 'helmet'
 import morgan from 'morgan'
 import cookieParser from 'cookie-parser'
 import multer from 'multer'
+import rateLimit from 'express-rate-limit'
 import { setIo } from './config/socket.js'
 import authRoutes from './domains/auth/authRoutes.js'
 import userRoutes from './domains/user/userRoutes.js'
@@ -81,6 +82,16 @@ app.use(cookieParser())
 if (process.env.NODE_ENV !== 'test') {
   app.use(morgan('dev'))
 }
+
+// 글로벌 rate limiting
+const globalLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: '요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.' },
+})
+app.use('/api/', globalLimiter)
 
 app.use('/api/auth', authRoutes)
 app.use('/api/users', userRoutes)

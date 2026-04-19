@@ -12,7 +12,8 @@ import { success } from '../../utils/response.js'
 export const getMemorialPage = async (req, res, next) => {
   try {
     const { slug } = req.params
-    const data = await memorialService.getMemorialPage(slug)
+    const { accessCode } = req.query
+    const data = await memorialService.getMemorialPage(slug, accessCode)
     return success(res, data, '추모 페이지 조회 성공')
   } catch (err) {
     next(err)

@@ -1,10 +1,20 @@
 import { Router } from 'express'
 import { z } from 'zod'
+import rateLimit from 'express-rate-limit'
 import { requireAuth } from '../../middleware/auth.js'
 import { validate } from '../../middleware/validate.js'
 import * as paymentController from './paymentController.js'
 
 const router = Router()
+
+const paymentLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  keyGenerator: (req) => req.user?.userId ?? req.ip,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: '결제 요청이 너무 많습니다.' },
+})
 
 // 결제 준비 스키마
 const prepareSchema = z.object({
@@ -48,8 +58,8 @@ const listSchema = z.object({
 router.post('/webhook', paymentController.handleWebhook)
 
 // 인증 필요 라우트
-router.post('/prepare', requireAuth, validate(prepareSchema), paymentController.preparePayment)
-router.post('/confirm', requireAuth, validate(confirmSchema), paymentController.confirmPayment)
+router.post('/prepare', requireAuth, paymentLimiter, validate(prepareSchema), paymentController.preparePayment)
+router.post('/confirm', requireAuth, paymentLimiter, validate(confirmSchema), paymentController.confirmPayment)
 router.get('/', requireAuth, validate(listSchema), paymentController.getPayments)
 router.post('/:paymentId/cancel', requireAuth, validate(cancelSchema), paymentController.cancelPayment)
 

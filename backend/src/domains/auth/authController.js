@@ -123,7 +123,7 @@ export const kakaoCallback = async (req, res, next) => {
     res.cookie(RT_COOKIE, refreshToken, RT_COOKIE_OPTIONS)
 
     const frontUrl = process.env.CLIENT_URL || 'http://localhost:5173'
-    res.redirect(`${frontUrl}/auth/kakao/callback?token=${accessToken}`)
+    res.redirect(`${frontUrl}/auth/kakao/callback#token=${accessToken}`)
   } catch (err) {
     next(err)
   }

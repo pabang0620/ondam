@@ -24,6 +24,9 @@ const slugParamSchema = z.object({
       .max(100)
       .regex(/^[a-z0-9-]+$/, '슬러그는 소문자, 숫자, 하이픈만 사용 가능합니다'),
   }),
+  query: z.object({
+    accessCode: z.string().max(100).optional(),
+  }).optional(),
 })
 
 // ---------------------------------------------------------------------------

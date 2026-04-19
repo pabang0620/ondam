@@ -13,10 +13,19 @@ const s3Client = new S3Client({ region: process.env.AWS_REGION })
 export const extractS3KeyFromUrl = (url) => {
   if (!url) return null
   try {
-    const { pathname } = new URL(url)
-    return pathname.startsWith('/') ? pathname.slice(1) : pathname
+    const parsed = new URL(url)
+    const bucket = process.env.S3_BUCKET
+    const region = process.env.AWS_REGION
+    if (bucket && region) {
+      const allowedHost = `${bucket}.s3.${region}.amazonaws.com`
+      if (parsed.hostname !== allowedHost) return null
+    }
+    const path = parsed.pathname
+    return path.startsWith('/') ? path.slice(1) : path
   } catch {
-    return url  // 이미 키 형태면 그대로 반환
+    // 이미 키 형태인 경우 — path traversal 차단
+    if (url.includes('..')) return null
+    return url
   }
 }
 

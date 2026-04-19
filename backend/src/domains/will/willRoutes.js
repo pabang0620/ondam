@@ -63,7 +63,19 @@ const requestReleaseSchema = z.object({
   }),
   body: z.object({
     deathCertS3Key: z.string().min(1, '사망증명서 S3 키를 입력하세요'),
-    deathCertUrl: z.string().url('유효한 사망증명서 URL을 입력하세요'),
+    deathCertUrl: z.string().url('유효한 사망증명서 URL을 입력하세요').refine((url) => {
+      if (!url) return true
+      try {
+        const { protocol, hostname } = new URL(url)
+        if (protocol !== 'https:') return false
+        const bucket = process.env.S3_BUCKET
+        const region = process.env.AWS_REGION
+        if (bucket && region) {
+          return hostname === `${bucket}.s3.${region}.amazonaws.com`
+        }
+        return hostname.endsWith('.amazonaws.com')
+      } catch { return false }
+    }, '허용되지 않는 URL입니다'),
   }),
 })
 
