@@ -2,28 +2,11 @@ import crypto from 'crypto'
 import { v4 as uuidv4 } from 'uuid'
 import * as repo from './willRepository.js'
 import { encryptString, decryptBuffer } from '../../utils/kms.js'
-import { getPresignedUrl } from '../../utils/s3.js'
+import { getPresignedUrl, extractS3KeyFromUrl } from '../../utils/s3.js'
 import { voiceCloneQueue, videoGenerateQueue } from '../../jobs/queue.js'
 
 // 90일(초)
 const WATCH_URL_EXPIRES = 90 * 24 * 60 * 60
-
-/**
- * S3 URL에서 오브젝트 키 추출
- * https://{bucket}.s3.{region}.amazonaws.com/{key} 형태 지원
- * @param {string} url
- * @returns {string|null}
- */
-const extractS3KeyFromUrl = (url) => {
-  if (!url) return null
-  try {
-    const { pathname } = new URL(url)
-    // pathname은 /{key} 형태 — 앞의 '/' 제거
-    return pathname.startsWith('/') ? pathname.slice(1) : pathname
-  } catch {
-    return null
-  }
-}
 
 // ─── 음성 샘플 ────────────────────────────────────────────────────────────────
 

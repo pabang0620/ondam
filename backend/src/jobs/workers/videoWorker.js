@@ -1,5 +1,6 @@
 import { Worker } from 'bullmq'
 import { v4 as uuidv4 } from 'uuid'
+import { File } from 'buffer'
 import redis from '../../config/redis.js'
 import pool from '../../config/db.js'
 import { decryptBuffer, encryptString } from '../../utils/kms.js'
@@ -78,6 +79,10 @@ const processVideoGenerate = async (jobData, bullmqJobId) => {
     resultVideoS3KeyEncrypted = encrypted.toString('base64')
     resultVideoKmsKeyId = kmsKeyId
   } else {
+    if (!process.env.HIGGSFIELD_API_KEY) {
+      throw Object.assign(new Error('HIGGSFIELD_API_KEY 환경변수가 설정되지 않았습니다'), { status: 500 })
+    }
+
     // 사진 S3 다운로드
     const photoBuffer = await downloadFromS3(photoS3Key)
 
@@ -88,8 +93,8 @@ const processVideoGenerate = async (jobData, bullmqJobId) => {
 
     // Higgsfield Lipsync API 호출
     const formData = new FormData()
-    formData.append('image', new Blob([photoBuffer], { type: 'image/jpeg' }), 'photo.jpg')
-    formData.append('audio', new Blob([audioBuffer], { type: 'audio/mpeg' }), 'voice.mp3')
+    formData.append('image', new File([photoBuffer], 'photo.jpg', { type: 'image/jpeg' }))
+    formData.append('audio', new File([audioBuffer], 'voice.mp3', { type: 'audio/mpeg' }))
 
     const lipsyncRes = await fetch('https://api.higgsfield.ai/v1/generations/lipsync', {
       method: 'POST',
@@ -126,6 +131,9 @@ const processVideoGenerate = async (jobData, bullmqJobId) => {
       const pollData = await pollRes.json()
 
       if (pollData.status === 'completed') {
+        if (!pollData.video_url) {
+          throw new Error('Higgsfield completed 상태이나 video_url이 없습니다')
+        }
         videoUrl = pollData.video_url
         break
       }
@@ -137,6 +145,13 @@ const processVideoGenerate = async (jobData, bullmqJobId) => {
 
     if (!videoUrl) {
       throw new Error('Higgsfield 영상 생성 타임아웃 (5분 초과)')
+    }
+
+    // SSRF 방어 — Higgsfield 도메인 검증
+    const allowedHost = 'higgsfield.ai'
+    const parsedVideoUrl = new URL(videoUrl)
+    if (!parsedVideoUrl.hostname.endsWith(allowedHost)) {
+      throw new Error(`허용되지 않는 영상 URL 호스트: ${parsedVideoUrl.hostname}`)
     }
 
     // 완성된 영상 다운로드

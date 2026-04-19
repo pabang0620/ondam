@@ -1,5 +1,6 @@
 import { Worker } from 'bullmq'
 import { v4 as uuidv4 } from 'uuid'
+import { File } from 'buffer'
 import redis from '../../config/redis.js'
 import pool from '../../config/db.js'
 import { decryptBuffer } from '../../utils/kms.js'
@@ -58,6 +59,10 @@ const processVoiceClone = async (jobData, bullmqJobId) => {
     // mock: ElevenLabs voice ID 생성
     elevenlabsVoiceId = `mock_voice_${uuidv4().replace(/-/g, '').slice(0, 16)}`
   } else {
+    if (!process.env.ELEVENLABS_API_KEY) {
+      throw Object.assign(new Error('ELEVENLABS_API_KEY 환경변수가 설정되지 않았습니다'), { status: 500 })
+    }
+
     // KMS 복호화 → 평문 S3 키 획득
     const encryptedBuf = Buffer.from(s3KeyEncrypted, 'base64')
     const s3Key = await decryptBuffer(encryptedBuf)
@@ -71,8 +76,7 @@ const processVoiceClone = async (jobData, bullmqJobId) => {
     formData.append('description', '온담 유언장 음성 클론')
     formData.append(
       'files',
-      new Blob([audioBuffer], { type: 'audio/mpeg' }),
-      `voice_${voiceSampleId}.mp3`,
+      new File([audioBuffer], `voice_${voiceSampleId}.mp3`, { type: 'audio/mpeg' }),
     )
 
     const cloneRes = await fetch('https://api.elevenlabs.io/v1/voices/add', {

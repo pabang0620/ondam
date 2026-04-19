@@ -3,6 +3,23 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 
 const s3Client = new S3Client({ region: process.env.AWS_REGION })
 
+/**
+ * S3 URL 또는 키에서 오브젝트 키 추출
+ * https://{bucket}.s3.{region}.amazonaws.com/{key} 형태 지원
+ * 이미 키 형태인 경우 그대로 반환
+ * @param {string} url
+ * @returns {string|null}
+ */
+export const extractS3KeyFromUrl = (url) => {
+  if (!url) return null
+  try {
+    const { pathname } = new URL(url)
+    return pathname.startsWith('/') ? pathname.slice(1) : pathname
+  } catch {
+    return url  // 이미 키 형태면 그대로 반환
+  }
+}
+
 const getS3Bucket = () => {
   const bucket = process.env.S3_BUCKET
   if (!bucket) {
@@ -31,16 +48,23 @@ export const getPresignedUrl = async (s3Key, expiresInSeconds) => {
  * @returns {Promise<Buffer>}
  */
 export const downloadFromS3 = async (s3Key) => {
-  const command = new GetObjectCommand({
-    Bucket: getS3Bucket(),
-    Key: s3Key,
-  })
-  const response = await s3Client.send(command)
-  const chunks = []
-  for await (const chunk of response.Body) {
-    chunks.push(chunk)
+  try {
+    const command = new GetObjectCommand({
+      Bucket: getS3Bucket(),
+      Key: s3Key,
+    })
+    const response = await s3Client.send(command)
+    const chunks = []
+    for await (const chunk of response.Body) {
+      chunks.push(chunk)
+    }
+    return Buffer.concat(chunks)
+  } catch (err) {
+    throw Object.assign(
+      new Error(`S3 다운로드 실패 (${s3Key}): ${err.message}`),
+      { status: 500 },
+    )
   }
-  return Buffer.concat(chunks)
 }
 
 /**
@@ -51,21 +75,33 @@ export const downloadFromS3 = async (s3Key) => {
  * @returns {Promise<string>} 업로드된 오브젝트 URL
  */
 export const uploadToS3 = async (s3Key, buffer, { contentType, useKms = false } = {}) => {
-  const bucket = getS3Bucket()
+  try {
+    const bucket = getS3Bucket()
 
-  const params = {
-    Bucket: bucket,
-    Key: s3Key,
-    Body: buffer,
-    ...(contentType && { ContentType: contentType }),
-    ...(useKms && {
-      ServerSideEncryption: 'aws:kms',
-      SSEKMSKeyId: process.env.KMS_KEY_ID,
-    }),
+    if (useKms && !process.env.KMS_KEY_ID) {
+      throw Object.assign(new Error('KMS_KEY_ID 환경변수가 설정되지 않았습니다'), { status: 500 })
+    }
+
+    const params = {
+      Bucket: bucket,
+      Key: s3Key,
+      Body: buffer,
+      ...(contentType && { ContentType: contentType }),
+      ...(useKms && {
+        ServerSideEncryption: 'aws:kms',
+        SSEKMSKeyId: process.env.KMS_KEY_ID,
+      }),
+    }
+
+    const command = new PutObjectCommand(params)
+    await s3Client.send(command)
+
+    return `https://${bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${s3Key}`
+  } catch (err) {
+    if (err.status) throw err  // 이미 래핑된 에러는 그대로 전파
+    throw Object.assign(
+      new Error(`S3 업로드 실패 (${s3Key}): ${err.message}`),
+      { status: 500 },
+    )
   }
-
-  const command = new PutObjectCommand(params)
-  await s3Client.send(command)
-
-  return `https://${bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${s3Key}`
 }

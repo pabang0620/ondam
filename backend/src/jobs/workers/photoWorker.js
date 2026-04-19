@@ -90,6 +90,10 @@ const processPhoto = async (jobData, bullmqJobId) => {
     await new Promise((resolve) => setTimeout(resolve, 3000))
     resultUrl = `https://${process.env.S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/photos/${userId}/${orderId}/result_${photoType}.jpg`
   } else {
+    if (!process.env.GEMINI_API_KEY) {
+      throw Object.assign(new Error('GEMINI_API_KEY 환경변수가 설정되지 않았습니다'), { status: 500 })
+    }
+
     const { GoogleGenAI, Modality } = await import('@google/genai')
     const genai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
 
