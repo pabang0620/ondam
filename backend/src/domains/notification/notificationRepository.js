@@ -22,8 +22,8 @@ export const createNotification = async ({
 }) => {
   await pool.query(
     `INSERT INTO notifications
-       (notification_id, user_id, notification_type, target_type, target_id, title, message)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+       (notification_id, user_id, notification_type, target_type, target_id, title, message, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
     [
       notificationId,
       userId,

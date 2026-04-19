@@ -180,11 +180,11 @@ export const requestPortrait = async (userId, petId) => {
   })
 
   // ai_jobs 레코드 생성
-  await pool.query(
+  await pool.execute(
     `INSERT INTO ai_jobs
-       (job_id, user_id, job_type, job_status, bullmq_job_id, progress, created_at, updated_at)
-     VALUES (?, ?, 'photo_enhance', 'pending', ?, 0, NOW(), NOW())`,
-    [jobId, userId, String(bullJob.id)]
+       (job_id, user_id, job_type, job_status, target_type, target_id, bullmq_job_id, progress, created_at, updated_at)
+     VALUES (?, ?, 'photo_enhance', 'queued', 'pet', ?, ?, 0, NOW(), NOW())`,
+    [jobId, userId, petId, String(bullJob.id)]
   )
 
   return { jobId, status: 'queued' }

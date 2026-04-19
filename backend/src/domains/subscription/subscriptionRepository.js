@@ -112,8 +112,8 @@ export const updateSubscriptionStatus = async (
     await conn.execute(
       `INSERT INTO subscription_logs
          (log_id, subscription_id, prev_status, next_status,
-          changed_by, changed_by_type, reason)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          changed_by, changed_by_type, reason, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
       [logId, subscriptionId, prevStatus, subStatus, changedBy, changedByType, reason ?? null]
     )
 

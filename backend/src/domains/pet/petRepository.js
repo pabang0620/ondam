@@ -131,8 +131,8 @@ export const updatePetStatus = async (petId, {
     const { v4: uuidv4 } = await import('uuid')
     await conn.query(
       `INSERT INTO pet_status_logs
-         (log_id, pet_id, prev_status, next_status, changed_by, changed_by_type, reason)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+         (log_id, pet_id, prev_status, next_status, changed_by, changed_by_type, reason, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
       [uuidv4(), petId, prevStatus, nextStatus, changedBy, changedByType, reason ?? null]
     )
 
