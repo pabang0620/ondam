@@ -5,6 +5,7 @@ import { useAuthStore } from './store/authStore.js'
 import MainLayout from './layouts/MainLayout.jsx'
 import AuthLayout from './layouts/AuthLayout.jsx'
 import AdminLayout from './layouts/AdminLayout.jsx'
+import PrivateRoute from './layouts/PrivateRoute.jsx'
 
 import { ROUTES } from './constants/routes.js'
 
@@ -78,9 +79,16 @@ export default function App() {
     <BrowserRouter>
       <Suspense fallback={<PageFallback />}>
         <Routes>
-          {/* 메인 레이아웃 */}
+          {/* 공개 메인 레이아웃 — 인증 불필요 */}
           <Route element={<MainLayout />}>
             <Route index path={ROUTES.HOME} element={<HomePage />} />
+            <Route path={ROUTES.MEMORIAL} element={<MemorialPage />} />
+            <Route path={ROUTES.WILL_RELEASE} element={<WillReleasePage />} />
+            <Route path={ROUTES.WILL_WATCH} element={<WillWatchPage />} />
+          </Route>
+
+          {/* 보호된 메인 레이아웃 — 인증 필요 */}
+          <Route element={<PrivateRoute><MainLayout /></PrivateRoute>}>
             <Route path={ROUTES.PHOTO} element={<PhotoPage />} />
             <Route path={ROUTES.PHOTO_ORDER} element={<PhotoOrderPage />} />
             <Route path={ROUTES.PHOTO_PAYMENT} element={<PhotoPaymentPage />} />
@@ -97,8 +105,6 @@ export default function App() {
             <Route path={ROUTES.WILL_PROCESSING} element={<WillProcessingPage />} />
             <Route path={ROUTES.WILL_VAULT} element={<WillVaultPage />} />
             <Route path={ROUTES.WILL_EVENT} element={<WillEventPage />} />
-            <Route path={ROUTES.WILL_RELEASE} element={<WillReleasePage />} />
-            <Route path={ROUTES.WILL_WATCH} element={<WillWatchPage />} />
 
             <Route path={ROUTES.PET} element={<PetPage />} />
             <Route path={ROUTES.PET_SUBSCRIPTION} element={<PetSubscriptionPage />} />
@@ -106,7 +112,6 @@ export default function App() {
             <Route path={ROUTES.PET_DETAIL} element={<PetDetailPage />} />
             <Route path={ROUTES.PET_PORTRAIT} element={<PetPortraitPage />} />
 
-            <Route path={ROUTES.MEMORIAL} element={<MemorialPage />} />
             <Route path={ROUTES.MY} element={<MyPage />} />
           </Route>
 

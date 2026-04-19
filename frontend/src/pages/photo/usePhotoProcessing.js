@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { getPhotoOrderStatus } from './photoApi.js'
+import { useJobSocket } from '../../hooks/useJobSocket.js'
 
 const POLL_INTERVAL_MS = 3000
 
@@ -14,6 +15,26 @@ function usePhotoProcessing() {
 
   const intervalRef = useRef(null)
   const isMountedRef = useRef(true)
+  const bullmqJobIdRef = useRef(null)
+
+  useJobSocket({
+    onProgress: (event) => {
+      if (bullmqJobIdRef.current && event.jobId !== bullmqJobIdRef.current) return
+      if (!isMountedRef.current) return
+
+      setStatus(event.status)
+      setProgress(event.progress ?? 0)
+
+      if (event.status === 'completed' || event.status === 'failed') {
+        clearInterval(intervalRef.current)
+        if (event.status === 'completed') {
+          navigate(`/photo/result/${orderId}`)
+        } else {
+          setError('사진 처리에 실패했습니다. 다시 시도해 주세요.')
+        }
+      }
+    },
+  })
 
   useEffect(() => {
     isMountedRef.current = true
@@ -23,9 +44,11 @@ function usePhotoProcessing() {
 
       try {
         const { data } = await getPhotoOrderStatus(orderId)
-        const { status: newStatus, progress: newProgress } = data.data
+        const { status: newStatus, progress: newProgress, jobId } = data.data
 
         if (!isMountedRef.current) return
+
+        if (jobId) bullmqJobIdRef.current = jobId
 
         setStatus(newStatus)
         setProgress(newProgress ?? 0)
