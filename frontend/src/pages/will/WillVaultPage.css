@@ -23,7 +23,7 @@
   align-items: center;
   gap: var(--spacing-xs);
   background-color: var(--color-primary);
-  color: #fff;
+  color: var(--color-surface);
   font-size: var(--font-size-base);
   font-weight: 700;
   padding: 0 var(--spacing-lg);
@@ -74,7 +74,7 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  background-color: #fff5f5;
+  background-color: var(--color-error-light);
   border: 1px solid var(--color-error);
   border-radius: var(--radius-md);
   padding: var(--spacing-md);
@@ -125,7 +125,7 @@
   align-items: center;
   gap: var(--spacing-sm);
   background-color: var(--color-primary);
-  color: #fff;
+  color: var(--color-surface);
   font-size: var(--font-size-base);
   font-weight: 700;
   padding: 0 var(--spacing-xl);
@@ -224,7 +224,7 @@
 }
 
 .status-active {
-  background-color: #e6f4ea;
+  background-color: var(--color-success-light);
   color: var(--color-success);
 }
 
@@ -253,5 +253,5 @@
 
 .will-vault__event-btn:hover {
   background-color: var(--color-primary-light);
-  color: #fff;
+  color: var(--color-surface);
 }

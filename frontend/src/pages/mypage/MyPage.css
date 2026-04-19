@@ -11,7 +11,7 @@
   font-size: var(--font-size-base);
   color: var(--color-error);
   padding: var(--spacing-md);
-  background: #fff5f5;
+  background: var(--color-error-light);
   border-radius: var(--radius-md);
 }
 
@@ -72,7 +72,7 @@
 
 .my-profile__edit:hover {
   background: var(--color-primary-light);
-  color: #fff;
+  color: var(--color-surface);
 }
 
 .my-tabs {

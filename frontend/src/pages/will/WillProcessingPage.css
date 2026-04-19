@@ -11,7 +11,7 @@
   max-width: 480px;
   width: 100%;
   text-align: center;
-  color: #fff;
+  color: var(--color-surface);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -142,7 +142,7 @@
 /* 에러 */
 .will-proc__error {
   font-size: var(--font-size-sm);
-  color: #fca5a5;
+  color: var(--color-error-muted);
 }
 
 /* 안내 */
