@@ -1,0 +1,124 @@
+.will-consent-page {
+  min-height: 100vh;
+  background-color: var(--color-background);
+}
+
+.will-consent__content {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: var(--spacing-xl) var(--spacing-md);
+}
+
+.will-consent__guide {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-xl);
+  line-height: 1.6;
+}
+
+.will-consent__items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-xl);
+}
+
+.will-consent__card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+  background-color: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md) var(--spacing-lg);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s, background-color 0.2s;
+  min-height: var(--min-touch-target);
+  width: 100%;
+}
+
+.will-consent__card.is-checked {
+  border-color: var(--color-primary);
+  background-color: #fdf8f2;
+}
+
+.will-consent__card-check {
+  color: var(--color-border);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.will-consent__card.is-checked .will-consent__card-check {
+  color: var(--color-primary);
+}
+
+.will-consent__card-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.will-consent__card-label {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.will-consent__card-desc {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+/* 전체 동의 */
+.will-consent__all {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  width: 100%;
+  background-color: var(--color-accent);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md) var(--spacing-lg);
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  min-height: var(--min-touch-target);
+  margin-bottom: var(--spacing-xl);
+  transition: border-color 0.2s;
+}
+
+.will-consent__all.is-checked {
+  border-color: var(--color-primary);
+  color: var(--color-primary-dark);
+}
+
+.will-consent__all svg {
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+/* 다음 버튼 */
+.will-consent__next {
+  width: 100%;
+  background-color: var(--color-primary);
+  color: #fff;
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  min-height: var(--min-touch-target);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background-color 0.2s, opacity 0.2s;
+}
+
+.will-consent__next:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.will-consent__next:not(:disabled):hover {
+  background-color: var(--color-primary-dark);
+}

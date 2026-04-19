@@ -1,0 +1,39 @@
+export const ROUTES = {
+  HOME: '/',
+  LOGIN: '/login',
+  JOIN: '/join',
+
+  PHOTO: '/photo',
+  PHOTO_ORDER: '/photo/order',
+  PHOTO_PAYMENT: '/photo/payment',
+  PHOTO_PROCESSING: '/photo/processing/:orderId',
+  PHOTO_RESULT: '/photo/result/:orderId',
+
+  WILL: '/will',
+  WILL_CONSENT: '/will/consent',
+  WILL_BENEFICIARIES: '/will/beneficiaries',
+  WILL_RECORD: '/will/record',
+  WILL_PHOTO: '/will/photo',
+  WILL_PREVIEW: '/will/preview',
+  WILL_PAYMENT: '/will/payment',
+  WILL_PROCESSING: '/will/processing/:willId',
+  WILL_VAULT: '/will/vault',
+  WILL_EVENT: '/will/event',
+  WILL_RELEASE: '/release/:token',
+  WILL_WATCH: '/watch/:token',
+
+  PET: '/pet',
+  PET_NEW: '/pet/new',
+  PET_DETAIL: '/pet/:petId',
+  PET_PORTRAIT: '/pet/:petId/portrait',
+  PET_SUBSCRIPTION: '/pet/subscription',
+  MEMORIAL: '/memorial/:slug',
+
+  MY: '/my',
+
+  ADMIN_LOGIN: '/admin/login',
+  ADMIN: '/admin',
+  ADMIN_RELEASE: '/admin/release',
+  ADMIN_ORDERS: '/admin/orders',
+  ADMIN_USERS: '/admin/users',
+}

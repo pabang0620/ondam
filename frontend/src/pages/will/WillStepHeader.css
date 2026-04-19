@@ -1,0 +1,69 @@
+.will-step-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--spacing-sm) var(--spacing-md);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.will-step-header__back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--min-touch-target);
+  min-height: var(--min-touch-target);
+  background: none;
+  border: none;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+}
+
+.will-step-header__back:hover {
+  background-color: var(--color-accent);
+}
+
+.will-step-header__info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.will-step-header__step {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.will-step-header__title {
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.will-step-header__progress {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.will-step-header__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-border);
+  transition: background-color 0.2s;
+}
+
+.will-step-header__dot.is-done {
+  background-color: var(--color-primary-light);
+}
+
+.will-step-header__dot.is-active {
+  background-color: var(--color-primary);
+  width: 20px;
+}

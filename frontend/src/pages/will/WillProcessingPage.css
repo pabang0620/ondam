@@ -1,0 +1,153 @@
+.will-proc-page {
+  min-height: 100vh;
+  background: linear-gradient(160deg, var(--color-primary-dark) 0%, var(--color-primary) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xl) var(--spacing-md);
+}
+
+.will-proc__content {
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xl);
+}
+
+/* 스피너 */
+.will-proc__spinner-wrap {
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.will-proc__spinner {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-full);
+  border: 5px solid rgba(255, 255, 255, 0.3);
+  border-top-color: var(--color-gold);
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 제목 */
+.will-proc__title {
+  font-size: var(--font-size-xl);
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.will-proc__sub {
+  font-size: var(--font-size-base);
+  color: rgba(255, 255, 255, 0.75);
+  margin-top: calc(-1 * var(--spacing-md));
+}
+
+/* 단계 */
+.will-proc__stages {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  width: 100%;
+  max-width: 320px;
+}
+
+.will-proc__stage {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md) var(--spacing-lg);
+  opacity: 0.55;
+  transition: opacity 0.3s, background-color 0.3s;
+}
+
+.will-proc__stage.is-done {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.will-proc__stage.is-active {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.22);
+  box-shadow: 0 0 0 2px var(--color-gold);
+  animation: stage-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes stage-pulse {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(212, 168, 83, 0.9); }
+  50% { box-shadow: 0 0 0 5px rgba(212, 168, 83, 0.2); }
+}
+
+.will-proc__stage-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  background-color: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.will-proc__stage-label {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+}
+
+/* 진행 바 */
+.will-proc__progress-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  width: 100%;
+  max-width: 320px;
+}
+
+.will-proc__progress-bar {
+  flex: 1;
+  height: 8px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.will-proc__progress-fill {
+  height: 100%;
+  background-color: var(--color-gold);
+  border-radius: var(--radius-full);
+  transition: width 0.5s ease;
+}
+
+.will-proc__progress-pct {
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  color: var(--color-gold);
+  min-width: 40px;
+  text-align: right;
+}
+
+/* 에러 */
+.will-proc__error {
+  font-size: var(--font-size-sm);
+  color: #fca5a5;
+}
+
+/* 안내 */
+.will-proc__note {
+  font-size: var(--font-size-sm);
+  color: rgba(255, 255, 255, 0.65);
+  line-height: 1.7;
+}

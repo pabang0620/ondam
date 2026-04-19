@@ -32,6 +32,7 @@ const WARNING_ONLY = [
   'GMAIL_REFRESH_TOKEN',
   'GMAIL_USER',
   'KAKAO_CLIENT_ID',
+  'KAKAO_CLIENT_SECRET',
 ]
 
 export const validateEnv = () => {

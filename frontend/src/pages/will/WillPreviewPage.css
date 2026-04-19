@@ -1,0 +1,183 @@
+.will-preview-page {
+  min-height: 100vh;
+  background-color: var(--color-background);
+}
+
+.will-preview__content {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: var(--spacing-xl) var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+
+/* 요약 카드 */
+.will-preview__summary {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.will-preview__section-title {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.will-preview__summary-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+}
+
+.will-preview__summary-row svg {
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.will-preview__summary-row.is-done {
+  color: var(--color-success);
+}
+
+.will-preview__summary-row.is-done svg {
+  color: var(--color-success);
+}
+
+.will-preview__summary-row.is-missing {
+  color: var(--color-text-muted);
+}
+
+.will-preview__ben-chips {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  width: 100%;
+  margin-top: var(--spacing-xs);
+}
+
+.will-preview__chip {
+  background-color: var(--color-accent);
+  color: var(--color-primary-dark);
+  font-size: var(--font-size-sm);
+  padding: 2px var(--spacing-sm);
+  border-radius: var(--radius-full);
+  font-weight: 600;
+}
+
+/* 필드 */
+.will-preview__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.will-preview__label {
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.will-preview__required {
+  color: var(--color-error);
+}
+
+.will-preview__field-hint {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.will-preview__input {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 0 var(--spacing-md);
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
+  background-color: var(--color-surface);
+  min-height: var(--min-touch-target);
+  width: 100%;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.will-preview__input:focus {
+  border-color: var(--color-primary);
+}
+
+.will-preview__textarea {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  font-size: var(--font-size-lg);
+  color: var(--color-text-primary);
+  background-color: var(--color-surface);
+  width: 100%;
+  resize: vertical;
+  outline: none;
+  font-family: inherit;
+  line-height: 1.8;
+  transition: border-color 0.2s;
+}
+
+.will-preview__textarea:focus {
+  border-color: var(--color-primary);
+}
+
+.will-preview__textarea[aria-invalid="true"] {
+  border-color: var(--color-error);
+}
+
+.will-preview__char-count {
+  align-self: flex-end;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+/* 에러 */
+.will-preview__error {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  background-color: #fff5f5;
+  border: 1px solid var(--color-error);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  color: var(--color-error);
+  font-size: var(--font-size-base);
+}
+
+/* 제출 버튼 */
+.will-preview__submit {
+  width: 100%;
+  background-color: var(--color-primary);
+  color: #fff;
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  min-height: 56px;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background-color 0.2s, opacity 0.2s;
+}
+
+.will-preview__submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.will-preview__submit:not(:disabled):hover {
+  background-color: var(--color-primary-dark);
+}

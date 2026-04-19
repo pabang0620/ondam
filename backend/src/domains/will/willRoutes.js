@@ -1,18 +1,29 @@
 import { Router } from 'express'
 import { z } from 'zod'
+import rateLimit from 'express-rate-limit'
 import { requireAuth } from '../../middleware/auth.js'
 import { validate } from '../../middleware/validate.js'
 import * as willController from './willController.js'
 
 const router = Router()
 
+// AI 처리 비용 방지 — 음성 클론/영상 생성 트리거 엔드포인트 전용
+const aiLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1시간
+  max: 20,                   // 시간당 최대 20회
+  keyGenerator: (req) => req.user?.userId ?? req.ip,
+  message: { success: false, message: 'AI 처리 요청 한도를 초과했습니다' },
+  standardHeaders: true,
+  legacyHeaders: false,
+})
+
 // ─── 스키마 ───────────────────────────────────────────────────────────────────
 
 const uploadVoiceSampleSchema = z.object({
   body: z.object({
     s3Key: z.string().min(1, 'S3 키를 입력하세요'),
-    durationSec: z.coerce.number().positive().optional(),
-    fileSize: z.coerce.number().positive().optional(),
+    durationSec: z.coerce.number().positive().max(30, '음성 녹음은 30초 이하여야 합니다').optional(),
+    fileSize: z.coerce.number().positive().max(10 * 1024 * 1024, '음성 파일은 10MB 이하여야 합니다').optional(),
   }),
 })
 
@@ -26,7 +37,7 @@ const createWillSchema = z.object({
   body: z.object({
     voiceSampleId: z.string().uuid('유효한 UUID'),
     title: z.string().min(1, '제목을 입력하세요').max(200),
-    contentText: z.string().min(1, '유언 내용을 입력하세요'),
+    contentText: z.string().min(1, '유언 내용을 입력하세요').max(5000, '유언 내용은 5000자 이하여야 합니다'),
     releasePolicy: z.enum(['manual_admin', 'inactivity_family_vote', 'immediate']).default('manual_admin'),
     priceKrw: z.coerce.number().int().positive().optional(),
     beneficiaries: z.array(
@@ -67,6 +78,7 @@ const watchTokenSchema = z.object({
 router.post(
   '/voice-samples',
   requireAuth,
+  aiLimiter,
   validate(uploadVoiceSampleSchema),
   willController.uploadVoiceSample,
 )
@@ -81,6 +93,7 @@ router.get(
 router.post(
   '/wills',
   requireAuth,
+  aiLimiter,
   validate(createWillSchema),
   willController.createWill,
 )
@@ -101,6 +114,7 @@ router.get(
 router.post(
   '/wills/:willId/activate',
   requireAuth,
+  aiLimiter,
   validate(willIdParamSchema),
   willController.activateWill,
 )

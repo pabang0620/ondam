@@ -1,0 +1,173 @@
+.my-page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: var(--spacing-xl) var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+
+.my-error {
+  font-size: var(--font-size-base);
+  color: var(--color-error);
+  padding: var(--spacing-md);
+  background: #fff5f5;
+  border-radius: var(--radius-md);
+}
+
+.my-profile {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.my-profile__avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.my-profile__info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.my-profile__name {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+}
+
+.my-profile__email {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.my-profile__edit {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  background: var(--color-accent);
+  color: var(--color-primary-dark);
+  border: none;
+  border-radius: var(--radius-full);
+  padding: 0 var(--spacing-md);
+  min-height: var(--min-touch-target);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.my-profile__edit:hover {
+  background: var(--color-primary-light);
+  color: #fff;
+}
+
+.my-tabs {
+  display: flex;
+  gap: var(--spacing-xs);
+  border-bottom: 2px solid var(--color-border);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.my-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.my-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  min-height: var(--min-touch-target);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.my-tab-btn--active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+.my-tab-btn:hover:not(.my-tab-btn--active) {
+  color: var(--color-text-primary);
+}
+
+.my-tab-panel {
+  min-height: 200px;
+  padding-top: var(--spacing-md);
+}
+
+.my-tab-empty {
+  font-size: var(--font-size-base);
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: var(--spacing-2xl) 0;
+}
+
+.my-tab-action {
+  padding: var(--spacing-md) 0;
+}
+
+.my-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.my-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  min-height: var(--min-touch-target);
+}
+
+.my-list-item__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.my-list-item__title {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+}
+
+.my-list-item__date {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.my-list-item__badge {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  flex-shrink: 0;
+}
