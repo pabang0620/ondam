@@ -8,6 +8,23 @@ import { voiceCloneQueue, videoGenerateQueue } from '../../jobs/queue.js'
 // 90일(초)
 const WATCH_URL_EXPIRES = 90 * 24 * 60 * 60
 
+/**
+ * S3 URL에서 오브젝트 키 추출
+ * https://{bucket}.s3.{region}.amazonaws.com/{key} 형태 지원
+ * @param {string} url
+ * @returns {string|null}
+ */
+const extractS3KeyFromUrl = (url) => {
+  if (!url) return null
+  try {
+    const { pathname } = new URL(url)
+    // pathname은 /{key} 형태 — 앞의 '/' 제거
+    return pathname.startsWith('/') ? pathname.slice(1) : pathname
+  } catch {
+    return null
+  }
+}
+
 // ─── 음성 샘플 ────────────────────────────────────────────────────────────────
 
 /**
@@ -192,10 +209,23 @@ export const activateWill = async (userId, willId) => {
     throw Object.assign(new Error('음성 샘플이 없습니다'), { status: 400 })
   }
 
+  // 사용자 프로필 이미지 S3 키 조회 (videoWorker 사진 소스)
+  const profileImageUrl = await repo.findUserProfileImageUrl(userId)
+  const photoS3Key = extractS3KeyFromUrl(profileImageUrl)
+  if (!photoS3Key) {
+    throw Object.assign(
+      new Error('프로필 사진이 없습니다. 유언 영상 생성 전 프로필 사진을 등록해 주세요.'),
+      { status: 400 },
+    )
+  }
+
   // BullMQ 영상 생성 큐 등록
   const bullJob = await videoGenerateQueue.add('generate', {
     willId,
     userId,
+    photoS3Key,
+    voiceS3KeyEncrypted: sample.s3_key_encrypted.toString('base64'),
+    voiceKmsKeyId: sample.kms_key_id,
     elevenlabsVoiceId: sample.elevenlabs_voice_id ?? null,
     contentText: will.content_text,
   })

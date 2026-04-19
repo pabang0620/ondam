@@ -2,6 +2,8 @@ import { Worker } from 'bullmq'
 import { v4 as uuidv4 } from 'uuid'
 import redis from '../../config/redis.js'
 import pool from '../../config/db.js'
+import { decryptBuffer, encryptString } from '../../utils/kms.js'
+import { downloadFromS3, uploadToS3 } from '../../utils/s3.js'
 
 const QUEUE_NAME = 'videoGenerate'
 const AI_MOCK = process.env.AI_MOCK === 'true'
@@ -54,7 +56,7 @@ const insertNotification = async ({ userId, type, referenceId }) => {
 // ─── AI 처리 로직 ─────────────────────────────────────────────────────────────
 
 const processVideoGenerate = async (jobData, bullmqJobId) => {
-  const { willId, userId } = jobData
+  const { willId, userId, photoS3Key, voiceS3KeyEncrypted } = jobData
 
   // 1. ai_jobs: running
   await updateAiJob(bullmqJobId, {
@@ -72,18 +74,87 @@ const processVideoGenerate = async (jobData, bullmqJobId) => {
   if (AI_MOCK) {
     const mockVideoKey = `wills/${userId}/${willId}/video_result_${Date.now()}.mp4`
     // mock: 실제 KMS 암호화 사용 — getWatchUrl의 decryptBuffer와 호환성 보장
-    const { encryptString } = await import('../../utils/kms.js')
     const { encrypted, kmsKeyId } = await encryptString(mockVideoKey)
     resultVideoS3KeyEncrypted = encrypted.toString('base64')
     resultVideoKmsKeyId = kmsKeyId
   } else {
-    // TODO: D-ID API 호출 + S3 업로드 + KMS 암호화 실제 구현
-    // const { encryptString } = await import('../../utils/kms.js')
-    // const videoS3Key = `wills/${userId}/${willId}/video_result.mp4`
-    // const { encrypted, kmsKeyId } = await encryptString(videoS3Key)
-    // resultVideoS3KeyEncrypted = encrypted.toString('base64')
-    // resultVideoKmsKeyId = kmsKeyId
-    throw new Error('실제 D-ID API 미구현 — AI_MOCK=true 환경변수 설정 필요')
+    // 사진 S3 다운로드
+    const photoBuffer = await downloadFromS3(photoS3Key)
+
+    // 음성 KMS 복호화 → S3 다운로드
+    const encryptedBuf = Buffer.from(voiceS3KeyEncrypted, 'base64')
+    const voiceS3Key = await decryptBuffer(encryptedBuf)
+    const audioBuffer = await downloadFromS3(voiceS3Key)
+
+    // Higgsfield Lipsync API 호출
+    const formData = new FormData()
+    formData.append('image', new Blob([photoBuffer], { type: 'image/jpeg' }), 'photo.jpg')
+    formData.append('audio', new Blob([audioBuffer], { type: 'audio/mpeg' }), 'voice.mp3')
+
+    const lipsyncRes = await fetch('https://api.higgsfield.ai/v1/generations/lipsync', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${process.env.HIGGSFIELD_API_KEY}` },
+      body: formData,
+    })
+
+    if (!lipsyncRes.ok) {
+      const errText = await lipsyncRes.text()
+      throw new Error(`Higgsfield API 오류 (${lipsyncRes.status}): ${errText}`)
+    }
+
+    const lipsyncData = await lipsyncRes.json()
+    const generationId = lipsyncData.id
+
+    if (!generationId) {
+      throw new Error('Higgsfield API 응답에서 generation id를 찾을 수 없습니다')
+    }
+
+    // 완료 폴링 (최대 30회, 10초 간격 = 5분)
+    let videoUrl = null
+    for (let attempt = 0; attempt < 30; attempt++) {
+      await new Promise((r) => setTimeout(r, 10000))
+
+      const pollRes = await fetch(`https://api.higgsfield.ai/v1/generations/${generationId}`, {
+        headers: { Authorization: `Bearer ${process.env.HIGGSFIELD_API_KEY}` },
+      })
+
+      if (!pollRes.ok) {
+        const errText = await pollRes.text()
+        throw new Error(`Higgsfield 폴링 오류 (${pollRes.status}): ${errText}`)
+      }
+
+      const pollData = await pollRes.json()
+
+      if (pollData.status === 'completed') {
+        videoUrl = pollData.video_url
+        break
+      }
+
+      if (pollData.status === 'failed') {
+        throw new Error(`Higgsfield 영상 생성 실패: ${pollData.error ?? 'unknown error'}`)
+      }
+    }
+
+    if (!videoUrl) {
+      throw new Error('Higgsfield 영상 생성 타임아웃 (5분 초과)')
+    }
+
+    // 완성된 영상 다운로드
+    const videoRes = await fetch(videoUrl)
+    if (!videoRes.ok) {
+      throw new Error(`영상 다운로드 실패 (${videoRes.status})`)
+    }
+    const videoArrayBuffer = await videoRes.arrayBuffer()
+    const videoBuffer = Buffer.from(videoArrayBuffer)
+
+    // S3 업로드 (KMS 암호화)
+    const videoS3Key = `wills/${userId}/${willId}/video_result.mp4`
+    await uploadToS3(videoS3Key, videoBuffer, { contentType: 'video/mp4', useKms: true })
+
+    // KMS로 S3 키 암호화
+    const { encrypted, kmsKeyId } = await encryptString(videoS3Key)
+    resultVideoS3KeyEncrypted = encrypted.toString('base64')
+    resultVideoKmsKeyId = kmsKeyId
   }
 
   // 4. wills: 결과 저장 (KMS 암호화된 S3 키)

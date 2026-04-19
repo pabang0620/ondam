@@ -2,6 +2,8 @@ import { Worker } from 'bullmq'
 import { v4 as uuidv4 } from 'uuid'
 import redis from '../../config/redis.js'
 import pool from '../../config/db.js'
+import { decryptBuffer } from '../../utils/kms.js'
+import { downloadFromS3 } from '../../utils/s3.js'
 
 const QUEUE_NAME = 'voiceClone'
 const AI_MOCK = process.env.AI_MOCK === 'true'
@@ -56,12 +58,40 @@ const processVoiceClone = async (jobData, bullmqJobId) => {
     // mock: ElevenLabs voice ID 생성
     elevenlabsVoiceId = `mock_voice_${uuidv4().replace(/-/g, '').slice(0, 16)}`
   } else {
-    // TODO: KMS decrypt → S3 다운로드 → ElevenLabs API 호출 실제 구현
-    // const { decryptBuffer } = await import('../../utils/kms.js')
-    // const encryptedBuf = Buffer.from(s3KeyEncrypted, 'base64')
-    // const s3Key = await decryptBuffer(encryptedBuf)
-    // ... S3 다운로드 + ElevenLabs API 호출
-    throw new Error('실제 ElevenLabs API 미구현 — AI_MOCK=true 환경변수 설정 필요')
+    // KMS 복호화 → 평문 S3 키 획득
+    const encryptedBuf = Buffer.from(s3KeyEncrypted, 'base64')
+    const s3Key = await decryptBuffer(encryptedBuf)
+
+    // S3에서 음성 파일 다운로드
+    const audioBuffer = await downloadFromS3(s3Key)
+
+    // ElevenLabs Voice Clone API 호출
+    const formData = new FormData()
+    formData.append('name', `ondam-${voiceSampleId}`)
+    formData.append('description', '온담 유언장 음성 클론')
+    formData.append(
+      'files',
+      new Blob([audioBuffer], { type: 'audio/mpeg' }),
+      `voice_${voiceSampleId}.mp3`,
+    )
+
+    const cloneRes = await fetch('https://api.elevenlabs.io/v1/voices/add', {
+      method: 'POST',
+      headers: { 'xi-api-key': process.env.ELEVENLABS_API_KEY },
+      body: formData,
+    })
+
+    if (!cloneRes.ok) {
+      const errText = await cloneRes.text()
+      throw new Error(`ElevenLabs API 오류 (${cloneRes.status}): ${errText}`)
+    }
+
+    const cloneData = await cloneRes.json()
+    elevenlabsVoiceId = cloneData.voice_id
+
+    if (!elevenlabsVoiceId) {
+      throw new Error('ElevenLabs API 응답에서 voice_id를 찾을 수 없습니다')
+    }
   }
 
   // 4. voice_samples: ready

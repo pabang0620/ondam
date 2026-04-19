@@ -87,6 +87,21 @@ export const updateVoiceSample = async (voiceSampleId, { elevenlabsVoiceId, clon
   )
 }
 
+// ─── users (프로필 이미지 조회 전용) ──────────────────────────────────────────────
+
+/**
+ * 사용자 프로필 이미지 URL 조회 (videoWorker photoS3Key 추출용)
+ * @param {string} userId
+ * @returns {Promise<string|null>} profile_image_url
+ */
+export const findUserProfileImageUrl = async (userId) => {
+  const [rows] = await pool.execute(
+    `SELECT profile_image_url FROM users WHERE user_id = ? AND deleted_at IS NULL LIMIT 1`,
+    [userId],
+  )
+  return rows[0]?.profile_image_url ?? null
+}
+
 // ─── wills ────────────────────────────────────────────────────────────────────
 
 export const createWill = async ({
@@ -367,22 +382,27 @@ export const createWillWithBeneficiaries = async (willData, beneficiariesData) =
       [willId, userId, voiceSampleId, title, contentText, releasePolicy, priceKrw ?? 49000],
     )
 
-    for (const b of beneficiariesData) {
+    if (beneficiariesData.length > 0) {
+      // 배치 INSERT — 수혜자 N명을 단일 쿼리로 처리 (N+1 방지)
+      const placeholders = beneficiariesData
+        .map(() => '(?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())')
+        .join(', ')
+      const flatValues = beneficiariesData.flatMap((b) => [
+        b.beneficiaryId,
+        b.willId,
+        b.userId ?? null,
+        b.name,
+        b.email,
+        b.phone ?? null,
+        b.relationship,
+        b.inviteToken,
+      ])
       await connection.execute(
         `INSERT INTO will_beneficiaries
            (beneficiary_id, will_id, user_id, name, email, phone, relationship,
             invite_token, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
-        [
-          b.beneficiaryId,
-          b.willId,
-          b.userId ?? null,
-          b.name,
-          b.email,
-          b.phone ?? null,
-          b.relationship,
-          b.inviteToken,
-        ],
+         VALUES ${placeholders}`,
+        flatValues,
       )
     }
 
