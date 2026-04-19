@@ -38,6 +38,7 @@ const PetPortraitPage = lazy(() => import('./pages/pet/PetPortraitPage.jsx'))
 const PetSubscriptionPage = lazy(() => import('./pages/pet/PetSubscriptionPage.jsx'))
 const MemorialPage = lazy(() => import('./pages/memorial/MemorialPage.jsx'))
 const MyPage = lazy(() => import('./pages/mypage/MyPage.jsx'))
+const KakaoCallbackPage = lazy(() => import('./pages/auth/KakaoCallbackPage.jsx'))
 const AdminLoginPage = lazy(() => import('./pages/admin/AdminLoginPage.jsx'))
 const AdminPage = lazy(() => import('./pages/admin/AdminPage.jsx'))
 const AdminReleasePage = lazy(() => import('./pages/admin/AdminReleasePage.jsx'))
@@ -114,6 +115,9 @@ export default function App() {
             <Route path={ROUTES.LOGIN} element={<LoginPage />} />
             <Route path={ROUTES.JOIN} element={<JoinPage />} />
           </Route>
+
+          {/* 카카오 콜백 (레이아웃 없음) */}
+          <Route path="/auth/kakao/callback" element={<KakaoCallbackPage />} />
 
           {/* 관리자 로그인 (레이아웃 없음) */}
           <Route path={ROUTES.ADMIN_LOGIN} element={<AdminLoginPage />} />
