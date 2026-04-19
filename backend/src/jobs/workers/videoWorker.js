@@ -5,6 +5,7 @@ import redis from '../../config/redis.js'
 import pool from '../../config/db.js'
 import { decryptBuffer, encryptString } from '../../utils/kms.js'
 import { downloadFromS3, uploadToS3 } from '../../utils/s3.js'
+import { getIo } from '../../config/socket.js'
 
 const QUEUE_NAME = 'videoGenerate'
 const AI_MOCK = process.env.AI_MOCK === 'true'
@@ -67,6 +68,14 @@ const processVideoGenerate = async (jobData, bullmqJobId) => {
 
   // 2. wills: active (처리 중)
   await updateWill(willId, { status: 'active' })
+
+  getIo()?.to(`user:${userId}`).emit('job:progress', {
+    jobId: bullmqJobId,
+    jobType: 'video',
+    status: 'running',
+    progress: 0,
+    resultUrl: null,
+  })
 
   // 3. AI 영상 생성 (mock or 실제)
   let resultVideoS3KeyEncrypted
@@ -185,6 +194,14 @@ const processVideoGenerate = async (jobData, bullmqJobId) => {
     completed_at: new Date(),
   })
 
+  getIo()?.to(`user:${userId}`).emit('job:progress', {
+    jobId: bullmqJobId,
+    jobType: 'video',
+    status: 'completed',
+    progress: 100,
+    resultUrl: null,
+  })
+
   // 6. notifications — 유언 영상 생성 완료 (보관 상태 알림, 공개는 아님)
   await insertNotification({
     userId,
@@ -219,7 +236,7 @@ worker.on('failed', async (job, err) => {
 
   if (!job || job.attemptsMade < maxAttempts) return
 
-  const { willId } = job.data
+  const { willId, userId } = job.data
 
   await updateAiJob(String(job.id), {
     job_status: 'failed',
@@ -230,6 +247,14 @@ worker.on('failed', async (job, err) => {
   // wills.status를 draft로 복원 (사용자가 재시도 가능하도록)
   await updateWill(willId, { status: 'draft' })
     .catch((dbErr) => console.error('[videoWorker] wills draft 복원 오류:', dbErr.message))
+
+  getIo()?.to(`user:${userId}`).emit('job:progress', {
+    jobId: String(job.id),
+    jobType: 'video',
+    status: 'failed',
+    progress: 0,
+    resultUrl: null,
+  })
 })
 
 worker.on('error', (err) => {

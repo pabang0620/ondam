@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid'
 import redis from '../../config/redis.js'
 import pool from '../../config/db.js'
 import { downloadFromS3, uploadToS3 } from '../../utils/s3.js'
+import { getIo } from '../../config/socket.js'
 
 const QUEUE_NAME = 'photo'
 const AI_MOCK = process.env.AI_MOCK === 'true'
@@ -83,6 +84,14 @@ const processPhoto = async (jobData, bullmqJobId) => {
 
   // 2. photo_orders: processing
   await updatePhotoOrder(orderId, { status: 'processing' })
+
+  getIo()?.to(`user:${userId}`).emit('job:progress', {
+    jobId: bullmqJobId,
+    jobType: 'photo',
+    status: 'running',
+    progress: 0,
+    resultUrl: null,
+  })
 
   // 3. AI 처리 (mock or 실제)
   const resultS3Key = `photos/${userId}/${orderId}/result_${photoType}.jpg`
@@ -166,6 +175,14 @@ const processPhoto = async (jobData, bullmqJobId) => {
     completed_at: new Date(),
   })
 
+  getIo()?.to(`user:${userId}`).emit('job:progress', {
+    jobId: bullmqJobId,
+    jobType: 'photo',
+    status: 'completed',
+    progress: 100,
+    resultUrl,
+  })
+
   // 7. notifications INSERT
   await insertNotification({
     userId,
@@ -199,7 +216,7 @@ worker.on('failed', async (job, err) => {
 
   if (!job || job.attemptsMade < maxAttempts) return
 
-  const { orderId } = job.data
+  const { orderId, userId } = job.data
 
   await updateAiJob(String(job.id), {
     job_status: 'failed',
@@ -211,6 +228,14 @@ worker.on('failed', async (job, err) => {
     status: 'failed',
     fail_reason: err.message,
   }).catch((dbErr) => console.error('[photoWorker] photo_orders failed 업데이트 오류:', dbErr.message))
+
+  getIo()?.to(`user:${userId}`).emit('job:progress', {
+    jobId: String(job.id),
+    jobType: 'photo',
+    status: 'failed',
+    progress: 0,
+    resultUrl: null,
+  })
 })
 
 worker.on('error', (err) => {

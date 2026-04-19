@@ -5,6 +5,7 @@ import redis from '../../config/redis.js'
 import pool from '../../config/db.js'
 import { decryptBuffer } from '../../utils/kms.js'
 import { downloadFromS3 } from '../../utils/s3.js'
+import { getIo } from '../../config/socket.js'
 
 const QUEUE_NAME = 'voiceClone'
 const AI_MOCK = process.env.AI_MOCK === 'true'
@@ -42,7 +43,7 @@ const updateVoiceSample = async (voiceSampleId, fields) => {
 // ─── AI 처리 로직 ─────────────────────────────────────────────────────────────
 
 const processVoiceClone = async (jobData, bullmqJobId) => {
-  const { voiceSampleId, s3KeyEncrypted, kmsKeyId } = jobData
+  const { voiceSampleId, s3KeyEncrypted, kmsKeyId, userId } = jobData
 
   // 1. ai_jobs: running
   await updateAiJob(bullmqJobId, {
@@ -52,6 +53,14 @@ const processVoiceClone = async (jobData, bullmqJobId) => {
 
   // 2. voice_samples: processing
   await updateVoiceSample(voiceSampleId, { clone_status: 'processing' })
+
+  getIo()?.to(`user:${userId}`).emit('job:progress', {
+    jobId: bullmqJobId,
+    jobType: 'voice',
+    status: 'running',
+    progress: 0,
+    resultUrl: null,
+  })
 
   // 3. KMS 복호화 + 음성 처리
   let elevenlabsVoiceId
@@ -110,6 +119,14 @@ const processVoiceClone = async (jobData, bullmqJobId) => {
     progress: 100,
     completed_at: new Date(),
   })
+
+  getIo()?.to(`user:${userId}`).emit('job:progress', {
+    jobId: bullmqJobId,
+    jobType: 'voice',
+    status: 'completed',
+    progress: 100,
+    resultUrl: null,
+  })
 }
 
 // ─── 워커 등록 ────────────────────────────────────────────────────────────────
@@ -137,7 +154,7 @@ worker.on('failed', async (job, err) => {
 
   if (!job || job.attemptsMade < maxAttempts) return
 
-  const { voiceSampleId } = job.data
+  const { voiceSampleId, userId } = job.data
 
   await updateAiJob(String(job.id), {
     job_status: 'failed',
@@ -148,6 +165,14 @@ worker.on('failed', async (job, err) => {
   await updateVoiceSample(voiceSampleId, {
     clone_status: 'failed',
   }).catch((dbErr) => console.error('[voiceWorker] voice_samples failed 업데이트 오류:', dbErr.message))
+
+  getIo()?.to(`user:${userId}`).emit('job:progress', {
+    jobId: String(job.id),
+    jobType: 'voice',
+    status: 'failed',
+    progress: 0,
+    resultUrl: null,
+  })
 })
 
 worker.on('error', (err) => {
