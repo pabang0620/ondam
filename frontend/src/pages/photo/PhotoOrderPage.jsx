@@ -1,6 +1,7 @@
 import { useRef, useCallback } from 'react'
 import { UploadCloud, ImageIcon, Loader2 } from 'lucide-react'
 import usePhotoOrder from './usePhotoOrder.js'
+import './PhotoOrderPage.css'
 
 const PHOTO_TYPES = [
   { type: 'funeral', label: '장례 사진' },
@@ -48,16 +49,7 @@ function PhotoOrderPage() {
   const openFilePicker = () => fileInputRef.current?.click()
 
   return (
-    <main
-      style={{
-        maxWidth: 600,
-        margin: '0 auto',
-        padding: 'var(--spacing-xl) var(--spacing-md)',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 'var(--spacing-xl)',
-      }}
-    >
+    <main className="photo-order-page">
       <header>
         <p style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 800, color: 'var(--color-primary-dark)', marginBottom: 'var(--spacing-sm)' }}>
           AI 사진관 주문
@@ -72,7 +64,7 @@ function PhotoOrderPage() {
         <p style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700, marginBottom: 'var(--spacing-md)' }}>
           1. 사진 종류 선택
         </p>
-        <div style={{ display: 'flex', gap: 'var(--spacing-sm)', flexWrap: 'wrap' }}>
+        <div className="photo-type-tabs" style={{ display: 'flex', gap: 'var(--spacing-sm)', flexWrap: 'wrap' }}>
           {PHOTO_TYPES.map(({ type, label }) => {
             const isSelected = selectedType === type
             return (

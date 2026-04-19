@@ -252,3 +252,100 @@
 .will-pricing__cta:hover {
   background-color: var(--color-primary-dark);
 }
+
+/* ── 반응형: 태블릿 (≤ 768px) ── */
+@media (max-width: 768px) {
+  .will-section-inner {
+    padding: 0 var(--spacing-md);
+  }
+
+  .will-hero {
+    padding: var(--spacing-xl) var(--spacing-md);
+  }
+
+  .will-hero__title {
+    font-size: var(--font-size-xl);
+  }
+
+  .will-hero__sub {
+    font-size: var(--font-size-base);
+  }
+
+  .will-features__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .will-pricing__card {
+    max-width: 100%;
+    padding: var(--spacing-lg);
+  }
+}
+
+/* ── 반응형: 모바일 (≤ 480px) ── */
+@media (max-width: 480px) {
+  .will-hero {
+    padding: var(--spacing-lg) var(--spacing-md);
+  }
+
+  .will-hero__title {
+    font-size: var(--font-size-xl);
+    line-height: 1.4;
+  }
+
+  .will-hero__sub {
+    font-size: var(--font-size-base);
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .will-hero__cta {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    padding: 0 var(--spacing-md);
+  }
+
+  .will-section-title {
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .will-features {
+    padding: var(--spacing-xl) var(--spacing-md);
+  }
+
+  .will-features__grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
+  }
+
+  .will-steps {
+    padding: var(--spacing-xl) var(--spacing-md);
+  }
+
+  .will-steps__track {
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-lg);
+  }
+
+  .will-pricing {
+    padding: var(--spacing-xl) var(--spacing-md);
+  }
+
+  .will-pricing__card {
+    max-width: 100%;
+    padding: var(--spacing-md);
+  }
+
+  .will-pricing__main {
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-xs);
+  }
+
+  .will-pricing__cta {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+  }
+}

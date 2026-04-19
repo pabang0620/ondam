@@ -1,0 +1,36 @@
+/* PhotoOrderPage */
+.photo-order-page {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: var(--spacing-xl) var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+
+/* ── 반응형: 태블릿 (≤ 768px) ── */
+@media (max-width: 768px) {
+  .photo-order-page {
+    padding: var(--spacing-lg) var(--spacing-md);
+    gap: var(--spacing-lg);
+  }
+}
+
+/* ── 반응형: 모바일 (≤ 480px) ── */
+@media (max-width: 480px) {
+  .photo-order-page {
+    padding: var(--spacing-md) var(--spacing-md);
+    gap: var(--spacing-lg);
+    max-width: 100%;
+  }
+
+  /* 사진 타입 탭 — 모바일에서 버튼 세로 스택 */
+  .photo-order-page .photo-type-tabs {
+    flex-direction: column;
+  }
+
+  .photo-order-page .photo-type-tabs button {
+    width: 100%;
+    text-align: center;
+  }
+}

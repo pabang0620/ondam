@@ -2,6 +2,10 @@
 
 /* 온담 디자인 토큰 */
 :root {
+  /* 반응형 브레이크포인트 */
+  --breakpoint-sm: 480px;
+  --breakpoint-md: 768px;
+
   /* 브랜드 컬러 */
   --color-primary: #8B7355;      /* 따뜻한 갈색 — 기억, 온기 */
   --color-primary-light: #C4A882;
@@ -17,7 +21,12 @@
   --color-text-muted: #9E9E9E;
   --color-border: #E5E5E5;
   --color-error: #E53E3E;
+  --color-error-dark: #C53030;
+  --color-error-light: #fff5f5;
+  --color-error-muted: #fca5a5;
   --color-success: #38A169;
+  --color-success-light: #e6f4ea;
+  --color-accent-light: #fdf8f2;
 
   /* 어르신 UX — 최소 크기 강제 */
   --min-touch-target: 48px;      /* 버튼 최소 높이 */
