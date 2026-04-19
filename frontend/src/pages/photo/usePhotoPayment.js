@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { preparePayment, confirmPayment } from './photoApi.js'
+import { preparePayment, confirmPayment, startProcessing } from './photoApi.js'
 
 const AMOUNT = 9900
 
@@ -22,6 +22,7 @@ function usePhotoPayment() {
     try {
       await preparePayment(orderId)
       await confirmPayment(orderId)
+      await startProcessing(orderId)
       navigate(`/photo/processing/${orderId}`)
     } catch (err) {
       if (pendingRef.current) {

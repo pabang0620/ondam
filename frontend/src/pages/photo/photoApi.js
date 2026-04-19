@@ -37,3 +37,6 @@ export const confirmPayment = (orderId) =>
     orderId,
     amount: 9900,
   })
+
+export const startProcessing = (orderId) =>
+  apiClient.post(`/photo/orders/${orderId}/start`)

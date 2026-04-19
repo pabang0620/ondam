@@ -83,4 +83,11 @@ router.post(
   photoController.retryOrder,
 )
 
+router.post(
+  '/orders/:orderId/start',
+  aiLimiter,
+  validate(orderParamSchema),
+  photoController.startProcessing,
+)
+
 export default router

@@ -65,3 +65,14 @@ export const retryOrder = async (req, res, next) => {
     next(err)
   }
 }
+
+export const startProcessing = async (req, res, next) => {
+  try {
+    const { orderId } = req.params
+    const { userId } = req.user
+    const result = await photoService.startProcessing(orderId, userId)
+    return success(res, result, 'AI 처리가 시작되었습니다')
+  } catch (err) {
+    next(err)
+  }
+}

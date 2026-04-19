@@ -37,7 +37,8 @@ USE ondam;
 -- SUBSCRIPTION_STATUS    : 'active', 'past_due', 'canceled'
 -- AI_JOB_TYPE            : 'photo_enhance', 'voice_clone', 'video_generate', 'avatar_stream'
 -- AI_JOB_STATUS          : 'queued', 'running', 'completed', 'failed'
--- NOTIFICATION_TYPE      : 'photo_complete', 'will_release_request', 'will_released',
+-- NOTIFICATION_TYPE      : 'photo_complete', 'voice_clone_complete', 'will_video_ready',
+--                          'will_release_request', 'will_released',
 --                          'payment_done', 'payment_failed', 'subscription_renewed',
 --                          'subscription_canceled', 'pet_memorial_shared', 'admin_notice'
 -- WILL_RELEASE_REQ_STATUS: 'pending', 'approved', 'rejected'
@@ -637,6 +638,8 @@ CREATE TABLE IF NOT EXISTS notifications (
   user_id             CHAR(36) NOT NULL COMMENT 'users.user_id 참조',
   notification_type   ENUM(
     'photo_complete',
+    'voice_clone_complete',
+    'will_video_ready',
     'will_release_request',
     'will_released',
     'payment_done',
@@ -781,3 +784,27 @@ ALTER TABLE payments
 --     선두 컬럼을 user_id 로 두어 사용자별 조회 + 플랜/상태 필터 최적화
 ALTER TABLE subscriptions
   ADD INDEX idx_subscriptions_user_plan_status (user_id, plan, sub_status);
+
+-- ==========================================================================
+-- 마이그레이션: notifications.notification_type ENUM 누락값 추가 (2026-04-19)
+-- ==========================================================================
+
+-- [3] notifications.notification_type — 'voice_clone_complete', 'will_video_ready' 추가
+--     voiceWorker.js: notification_type = 'voice_clone_complete' 사용 중
+--     videoWorker.js: notification_type = 'will_video_ready' 사용 중
+--     두 값이 ENUM에 없어 INSERT 시 런타임 오류 발생
+--     MySQL ENUM 수정은 전체 테이블 재정의를 유발하므로 오프피크 적용 권장
+ALTER TABLE notifications
+  MODIFY COLUMN notification_type ENUM(
+    'photo_complete',
+    'voice_clone_complete',
+    'will_video_ready',
+    'will_release_request',
+    'will_released',
+    'payment_done',
+    'payment_failed',
+    'subscription_renewed',
+    'subscription_canceled',
+    'pet_memorial_shared',
+    'admin_notice'
+  ) NOT NULL;
