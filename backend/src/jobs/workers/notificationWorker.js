@@ -96,7 +96,7 @@ const dispatch = async (jobData) => {
   const { type, to, subject, message, userId, notificationId } = jobData
 
   if (AI_MOCK) {
-    console.error(
+    console.log(
       `[notificationWorker][MOCK] type=${type} to=${to} notificationId=${notificationId} userId=${userId} message="${message}"`
     )
     return
@@ -133,7 +133,7 @@ const worker = new Worker(
 )
 
 worker.on('completed', (job) => {
-  console.error(`[notificationWorker] job ${job.id} completed (type=${job.data?.type})`)
+  console.log(`[notificationWorker] job ${job.id} completed (type=${job.data?.type})`)
 })
 
 worker.on('failed', (job, err) => {

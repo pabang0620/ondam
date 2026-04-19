@@ -17,7 +17,7 @@ const updateAiJob = async (jobId, fields) => {
   const setClauses = entries.map(([k]) => `${k} = ?`).join(', ')
   const values = [...entries.map(([, v]) => v), jobId]
 
-  await pool.query(
+  await pool.execute(
     `UPDATE ai_jobs SET ${setClauses}, updated_at = NOW() WHERE bullmq_job_id = ?`,
     values,
   )
@@ -31,14 +31,14 @@ const updatePhotoOrder = async (orderId, fields) => {
   const setClauses = entries.map(([k]) => `${k} = ?`).join(', ')
   const values = [...entries.map(([, v]) => v), orderId]
 
-  await pool.query(
+  await pool.execute(
     `UPDATE photo_orders SET ${setClauses}, updated_at = NOW() WHERE order_id = ?`,
     values,
   )
 }
 
 const insertPhotoFile = async ({ fileId, orderId, kind, fileUrl, s3Key }) => {
-  await pool.query(
+  await pool.execute(
     `INSERT INTO photo_files (file_id, order_id, kind, file_url, s3_key, created_at)
      VALUES (?, ?, ?, ?, ?, NOW())`,
     [fileId, orderId, kind, fileUrl, s3Key],
@@ -47,7 +47,7 @@ const insertPhotoFile = async ({ fileId, orderId, kind, fileUrl, s3Key }) => {
 
 const insertNotification = async ({ userId, type, referenceId }) => {
   const notifId = uuidv4()
-  await pool.query(
+  await pool.execute(
     `INSERT INTO notifications
        (notification_id, user_id, notification_type, target_type, target_id,
         title, message, is_read)
@@ -85,10 +85,11 @@ const processPhoto = async (jobData, bullmqJobId) => {
   await updatePhotoOrder(orderId, { status: 'processing' })
 
   // 3. AI 처리 (mock or 실제)
+  const resultS3Key = `photos/${userId}/${orderId}/result_${photoType}.jpg`
   let resultUrl
   if (AI_MOCK) {
     await new Promise((resolve) => setTimeout(resolve, 3000))
-    resultUrl = `https://${process.env.S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/photos/${userId}/${orderId}/result_${photoType}.jpg`
+    resultUrl = `https://${process.env.S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${resultS3Key}`
   } else {
     if (!process.env.GEMINI_API_KEY) {
       throw Object.assign(new Error('GEMINI_API_KEY 환경변수가 설정되지 않았습니다'), { status: 500 })
@@ -139,11 +140,8 @@ const processPhoto = async (jobData, bullmqJobId) => {
     }
 
     const resultBuffer = Buffer.from(resultImageData, 'base64')
-    const resultS3KeyTemp = `photos/${userId}/${orderId}/result_${photoType}.jpg`
-    resultUrl = await uploadToS3(resultS3KeyTemp, resultBuffer, { contentType: 'image/jpeg' })
+    resultUrl = await uploadToS3(resultS3Key, resultBuffer, { contentType: 'image/jpeg' })
   }
-
-  const resultS3Key = `photos/${userId}/${orderId}/result_${photoType}.jpg`
 
   // 4. photo_files INSERT (결과물)
   await insertPhotoFile({
@@ -191,7 +189,7 @@ const worker = new Worker(
 )
 
 worker.on('completed', (job) => {
-  console.error(`[photoWorker] job ${job.id} completed`)
+  console.log(`[photoWorker] job ${job.id} completed`)
 })
 
 // 최대 재시도 소진 후에만 DB 상태를 failed로 확정

@@ -19,7 +19,7 @@ const updateAiJob = async (bullmqJobId, fields) => {
   const setClauses = entries.map(([k]) => `${k} = ?`).join(', ')
   const values = [...entries.map(([, v]) => v), bullmqJobId]
 
-  await pool.query(
+  await pool.execute(
     `UPDATE ai_jobs SET ${setClauses}, updated_at = NOW() WHERE bullmq_job_id = ?`,
     values,
   )
@@ -33,7 +33,7 @@ const updateVoiceSample = async (voiceSampleId, fields) => {
   const setClauses = entries.map(([k]) => `${k} = ?`).join(', ')
   const values = [...entries.map(([, v]) => v), voiceSampleId]
 
-  await pool.query(
+  await pool.execute(
     `UPDATE voice_samples SET ${setClauses}, updated_at = NOW() WHERE voice_sample_id = ?`,
     values,
   )
@@ -127,7 +127,7 @@ const worker = new Worker(
 )
 
 worker.on('completed', (job) => {
-  console.error(`[voiceWorker] job ${job.id} completed`)
+  console.log(`[voiceWorker] job ${job.id} completed`)
 })
 
 // 최대 재시도 소진 후에만 DB 상태를 failed로 확정

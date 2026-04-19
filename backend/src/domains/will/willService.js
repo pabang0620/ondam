@@ -191,6 +191,12 @@ export const activateWill = async (userId, willId) => {
   if (!sample) {
     throw Object.assign(new Error('음성 샘플이 없습니다'), { status: 400 })
   }
+  if (sample.clone_status !== 'ready') {
+    throw Object.assign(
+      new Error(`음성 복제가 아직 완료되지 않았습니다 (현재: ${sample.clone_status})`),
+      { status: 400 },
+    )
+  }
 
   // 사용자 프로필 이미지 S3 키 조회 (videoWorker 사진 소스)
   const profileImageUrl = await repo.findUserProfileImageUrl(userId)
