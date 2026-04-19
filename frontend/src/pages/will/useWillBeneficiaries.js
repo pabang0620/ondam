@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-const EMPTY_FORM = { name: '', phone: '', relationship: '', message: '' }
+const EMPTY_FORM = { name: '', email: '', phone: '', relationship: '', message: '' }
 
 export function useWillBeneficiaries() {
   const navigate = useNavigate()
@@ -14,7 +14,7 @@ export function useWillBeneficiaries() {
   }, [])
 
   const addBeneficiary = useCallback(() => {
-    if (!form.name.trim() || !form.phone.trim()) return
+    if (!form.name.trim() || !form.email.trim() || !form.phone.trim()) return
     setBeneficiaries((prev) => [...prev, { ...form, id: Date.now() }])
     setForm(EMPTY_FORM)
     setIsAdding(false)

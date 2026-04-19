@@ -51,11 +51,11 @@ export function useWillPreview() {
         title,
         contentText,
         releasePolicy: 'manual_admin',
-        beneficiaries: beneficiaries.map(({ name, phone, relationship, message }) => ({
+        beneficiaries: beneficiaries.map(({ name, email, phone, relationship }) => ({
           name,
+          email,
           phone,
           relationship,
-          message,
         })),
       }
 

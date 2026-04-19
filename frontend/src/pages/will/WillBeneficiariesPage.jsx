@@ -85,6 +85,21 @@ export default function WillBeneficiariesPage() {
             </div>
 
             <div className="will-ben__field">
+              <label className="will-ben__label" htmlFor="ben-email">이메일 *</label>
+              <input
+                id="ben-email"
+                type="email"
+                className="will-ben__input"
+                value={form.email}
+                onChange={(e) => updateForm('email', e.target.value)}
+                placeholder="example@email.com"
+                autoComplete="email"
+                required
+                aria-required="true"
+              />
+            </div>
+
+            <div className="will-ben__field">
               <label className="will-ben__label" htmlFor="ben-phone">연락처 *</label>
               <input
                 id="ben-phone"
@@ -130,7 +145,7 @@ export default function WillBeneficiariesPage() {
               type="button"
               className="will-ben__add-btn"
               onClick={addBeneficiary}
-              disabled={!form.name.trim() || !form.phone.trim()}
+              disabled={!form.name.trim() || !form.email.trim() || !form.phone.trim()}
             >
               추가 완료
             </button>
