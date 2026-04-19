@@ -203,11 +203,12 @@ const processVideoGenerate = async (jobData, bullmqJobId) => {
   })
 
   // 6. notifications — 유언 영상 생성 완료 (보관 상태 알림, 공개는 아님)
+  // 알림 INSERT 실패해도 잡 전체를 실패시키지 않음
   await insertNotification({
     userId,
     type: 'will_video_ready',
     referenceId: willId,
-  })
+  }).catch((dbErr) => console.error('[videoWorker] 알림 INSERT 실패:', dbErr.message))
 }
 
 // ─── 워커 등록 ────────────────────────────────────────────────────────────────

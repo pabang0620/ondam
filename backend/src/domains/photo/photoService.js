@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { photoQueue } from '../../jobs/queue.js'
 import * as photoRepository from './photoRepository.js'
 import { extractS3KeyFromUrl, getPresignedUrl } from '../../utils/s3.js'
+import pool from '../../config/db.js'
 
 // ─── 주문 생성 ────────────────────────────────────────────────────────────────
 
@@ -51,44 +52,56 @@ export const getOrders = async (userId, { page, limit }) => {
 // ─── AI 처리 시작 ─────────────────────────────────────────────────────────────
 
 export const startProcessing = async (orderId, userId) => {
-  const order = await photoRepository.findOrderById(orderId)
-  if (!order) {
-    throw Object.assign(new Error('주문을 찾을 수 없습니다'), { status: 404 })
-  }
-  if (order.user_id !== userId) {
-    throw Object.assign(new Error('접근 권한이 없습니다'), { status: 403 })
-  }
-  if (order.status !== 'paid') {
-    throw Object.assign(
-      new Error(`처리를 시작할 수 없는 상태입니다 (현재: ${order.status})`),
-      { status: 400 },
+  const conn = await pool.getConnection()
+  try {
+    await conn.beginTransaction()
+
+    // FOR UPDATE — 동일 주문에 대한 동시 처리 시작 요청 경쟁 조건 방지
+    const [[order]] = await conn.execute(
+      'SELECT * FROM photo_orders WHERE order_id = ? AND deleted_at IS NULL FOR UPDATE',
+      [orderId],
     )
+    if (!order) {
+      throw Object.assign(new Error('주문을 찾을 수 없습니다'), { status: 404 })
+    }
+    if (order.user_id !== userId) {
+      throw Object.assign(new Error('접근 권한이 없습니다'), { status: 403 })
+    }
+    if (order.status !== 'paid') {
+      throw Object.assign(
+        new Error(`처리를 시작할 수 없는 상태입니다 (현재: ${order.status})`),
+        { status: 400 },
+      )
+    }
+
+    const jobId = uuidv4()
+    const bullmqJob = await photoQueue.add('enhance', {
+      orderId,
+      userId,
+      s3Key: extractS3KeyFromUrl(order.source_image_url),
+      photoType: order.photo_type,
+    })
+
+    await photoRepository.createAiJob({
+      jobId,
+      userId,
+      bullmqJobId: String(bullmqJob.id),
+      targetId: orderId,
+    })
+
+    await conn.execute(
+      'UPDATE photo_orders SET status = ?, updated_at = NOW() WHERE order_id = ?',
+      ['processing', orderId],
+    )
+
+    await conn.commit()
+    return { jobId }
+  } catch (err) {
+    await conn.rollback()
+    throw err
+  } finally {
+    conn.release()
   }
-
-  const jobId = uuidv4()
-  const bullmqJob = await photoQueue.add('enhance', {
-    orderId,
-    userId,
-    s3Key: extractS3KeyFromUrl(order.source_image_url),
-    photoType: order.photo_type,
-  })
-
-  await photoRepository.createAiJob({
-    jobId,
-    userId,
-    bullmqJobId: String(bullmqJob.id),
-    targetId: orderId,
-  })
-
-  await photoRepository.updateOrderStatus(orderId, {
-    prevStatus: 'paid',
-    nextStatus: 'processing',
-    changedBy: userId,
-    changedByType: 'system',
-    reason: 'AI 처리 시작',
-  })
-
-  return { jobId }
 }
 
 // ─── 작업 상태 조회 (폴링) ────────────────────────────────────────────────────
@@ -136,8 +149,13 @@ export const getResult = async (orderId, userId) => {
     files.map(async (file) => {
       const s3Key = file.s3_key || extractS3KeyFromUrl(file.file_url)
       if (!s3Key) return file
-      const presignedUrl = await getPresignedUrl(s3Key, 3600) // 1시간
-      return { ...file, file_url: presignedUrl }
+      try {
+        const presignedUrl = await getPresignedUrl(s3Key, 3600) // 1시간
+        return { ...file, file_url: presignedUrl }
+      } catch (err) {
+        console.error('[photoService] presignedUrl 생성 실패:', err.message)
+        return { ...file, file_url: null }
+      }
     }),
   )
 

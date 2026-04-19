@@ -4,6 +4,7 @@ import * as repo from './willRepository.js'
 import { encryptString, decryptBuffer } from '../../utils/kms.js'
 import { getPresignedUrl, extractS3KeyFromUrl } from '../../utils/s3.js'
 import { voiceCloneQueue, videoGenerateQueue } from '../../jobs/queue.js'
+import pool from '../../config/db.js'
 
 // 90일(초)
 const WATCH_URL_EXPIRES = 90 * 24 * 60 * 60
@@ -173,88 +174,108 @@ export const getWills = async (userId, { page = 1, limit = 20 }) => {
 
 /**
  * 유언장 활성화 — 영상 생성 큐 등록 (결제 후 호출)
+ * FOR UPDATE 비관적 락으로 동시 활성화 요청 경쟁 조건 방지
  */
 export const activateWill = async (userId, willId) => {
-  const will = await repo.findWillById(willId)
-  if (!will) {
-    throw Object.assign(new Error('유언장을 찾을 수 없습니다'), { status: 404 })
-  }
-  if (String(will.user_id) !== String(userId)) {
-    throw Object.assign(new Error('접근 권한이 없습니다'), { status: 403 })
-  }
-  if (will.status !== 'draft') {
-    throw Object.assign(new Error('draft 상태의 유언장만 활성화할 수 있습니다'), { status: 400 })
-  }
+  const conn = await pool.getConnection()
+  try {
+    await conn.beginTransaction()
 
-  // 음성 샘플 조회 — null이면 400 에러
-  const sample = await repo.findVoiceSampleById(will.voice_sample_id)
-  if (!sample) {
-    throw Object.assign(new Error('음성 샘플이 없습니다'), { status: 400 })
-  }
-  if (sample.clone_status !== 'ready') {
-    throw Object.assign(
-      new Error(`음성 복제가 아직 완료되지 않았습니다 (현재: ${sample.clone_status})`),
-      { status: 400 },
+    // FOR UPDATE — 동일 will_id에 대한 동시 요청 중 하나만 진행
+    const [[will]] = await conn.execute(
+      'SELECT * FROM wills WHERE will_id = ? AND deleted_at IS NULL FOR UPDATE',
+      [willId],
     )
-  }
+    if (!will) {
+      throw Object.assign(new Error('유언장을 찾을 수 없습니다'), { status: 404 })
+    }
+    if (String(will.user_id) !== String(userId)) {
+      throw Object.assign(new Error('접근 권한이 없습니다'), { status: 403 })
+    }
+    if (will.status !== 'draft') {
+      throw Object.assign(new Error('이미 처리 중이거나 완료된 유언장입니다'), { status: 400 })
+    }
 
-  // 사용자 프로필 이미지 S3 키 조회 (videoWorker 사진 소스)
-  const profileImageUrl = await repo.findUserProfileImageUrl(userId)
-  const photoS3Key = extractS3KeyFromUrl(profileImageUrl)
-  if (!photoS3Key) {
-    throw Object.assign(
-      new Error('프로필 사진이 없습니다. 유언 영상 생성 전 프로필 사진을 등록해 주세요.'),
-      { status: 400 },
+    // 음성 샘플 조회 — null이면 400 에러
+    const sample = await repo.findVoiceSampleById(will.voice_sample_id)
+    if (!sample) {
+      throw Object.assign(new Error('음성 샘플이 없습니다'), { status: 400 })
+    }
+    if (sample.clone_status !== 'ready') {
+      throw Object.assign(
+        new Error(`음성 복제가 아직 완료되지 않았습니다 (현재: ${sample.clone_status})`),
+        { status: 400 },
+      )
+    }
+
+    // 사용자 프로필 이미지 S3 키 조회 (videoWorker 사진 소스)
+    const profileImageUrl = await repo.findUserProfileImageUrl(userId)
+    const photoS3Key = extractS3KeyFromUrl(profileImageUrl)
+    if (!photoS3Key) {
+      throw Object.assign(
+        new Error('프로필 사진이 없습니다. 유언 영상 생성 전 프로필 사진을 등록해 주세요.'),
+        { status: 400 },
+      )
+    }
+
+    // 수익자 존재 확인 — 최소 1명 필수
+    const beneficiaryCount = await repo.countBeneficiaries(willId)
+    if (beneficiaryCount === 0) {
+      throw Object.assign(new Error('수익자를 최소 1명 이상 등록해야 합니다'), { status: 400 })
+    }
+
+    // 음성권 동의 재확인 — 업로드 이후 동의가 철회됐을 수 있음
+    const consent = await repo.findVoiceConsent(userId)
+    if (!consent || consent.is_agreed !== 1) {
+      throw Object.assign(new Error('음성 처리 동의가 필요합니다'), { status: 400 })
+    }
+
+    // BullMQ 영상 생성 큐 등록 (트랜잭션 내 — 롤백 시 큐 항목만 유실, 워커 멱등성으로 처리)
+    const bullJob = await videoGenerateQueue.add('generate', {
+      willId,
+      userId,
+      photoS3Key,
+      voiceS3KeyEncrypted: sample.s3_key_encrypted.toString('base64'),
+      voiceKmsKeyId: sample.kms_key_id,
+      elevenlabsVoiceId: sample.elevenlabs_voice_id ?? null,
+      contentText: will.content_text,
+    })
+
+    const jobId = uuidv4()
+    await repo.createAiJob({
+      jobId,
+      userId,
+      bullmqJobId: bullJob.id,
+      jobType: 'video_generate',
+      targetType: 'will',
+      targetId: willId,
+      queueName: 'videoGenerate',
+    })
+
+    // status 업데이트 — 같은 트랜잭션 내에서 커넥션을 직접 사용
+    await conn.execute(
+      'UPDATE wills SET status = ?, updated_at = NOW() WHERE will_id = ?',
+      ['active', willId],
     )
+
+    await repo.addWillStatusLog({
+      logId: uuidv4(),
+      willId,
+      prevStatus: will.status,
+      nextStatus: 'active',
+      changedBy: userId,
+      changedByType: 'user',
+      reason: '사용자 활성화 요청',
+    })
+
+    await conn.commit()
+    return { jobId, bullJobId: String(bullJob.id) }
+  } catch (err) {
+    await conn.rollback()
+    throw err
+  } finally {
+    conn.release()
   }
-
-  // 수익자 존재 확인 — 최소 1명 필수
-  const beneficiaryCount = await repo.countBeneficiaries(willId)
-  if (beneficiaryCount === 0) {
-    throw Object.assign(new Error('수익자를 최소 1명 이상 등록해야 합니다'), { status: 400 })
-  }
-
-  // 음성권 동의 재확인 — 업로드 이후 동의가 철회됐을 수 있음
-  const consent = await repo.findVoiceConsent(userId)
-  if (!consent || consent.is_agreed !== 1) {
-    throw Object.assign(new Error('음성 처리 동의가 필요합니다'), { status: 400 })
-  }
-
-  // BullMQ 영상 생성 큐 등록
-  const bullJob = await videoGenerateQueue.add('generate', {
-    willId,
-    userId,
-    photoS3Key,
-    voiceS3KeyEncrypted: sample.s3_key_encrypted.toString('base64'),
-    voiceKmsKeyId: sample.kms_key_id,
-    elevenlabsVoiceId: sample.elevenlabs_voice_id ?? null,
-    contentText: will.content_text,
-  })
-
-  const jobId = uuidv4()
-  await repo.createAiJob({
-    jobId,
-    userId,
-    bullmqJobId: bullJob.id,
-    jobType: 'video_generate',
-    targetType: 'will',
-    targetId: willId,
-    queueName: 'videoGenerate',
-  })
-
-  const prevStatus = will.status
-  await repo.updateWill(willId, { status: 'active' })
-  await repo.addWillStatusLog({
-    logId: uuidv4(),
-    willId,
-    prevStatus,
-    nextStatus: 'active',
-    changedBy: userId,
-    changedByType: 'user',
-    reason: '사용자 활성화 요청',
-  })
-
-  return { jobId }
 }
 
 /**

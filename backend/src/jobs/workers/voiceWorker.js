@@ -113,7 +113,7 @@ const processVoiceClone = async (jobData, bullmqJobId) => {
     elevenlabs_voice_id: elevenlabsVoiceId,
   })
 
-  // 4-1. 알림 생성 — 음성 클론 완료
+  // 4-1. 알림 생성 — 음성 클론 완료 (실패해도 잡 전체를 실패시키지 않음)
   const notifId = uuidv4()
   await pool.execute(
     `INSERT INTO notifications
@@ -122,7 +122,7 @@ const processVoiceClone = async (jobData, bullmqJobId) => {
      VALUES (?, ?, 'voice_clone_complete', 'voice_sample', ?,
              '음성 클론 완료', '음성 클론이 완료되었습니다. 이제 유언 영상을 생성할 수 있습니다.', 0, NOW())`,
     [notifId, userId, voiceSampleId],
-  )
+  ).catch((dbErr) => console.error('[voiceWorker] 알림 INSERT 실패:', dbErr.message))
 
   // 5. ai_jobs: completed
   await updateAiJob(bullmqJobId, {

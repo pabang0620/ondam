@@ -133,6 +133,19 @@ export const findWillById = async (willId) => {
   return rows[0] ?? null
 }
 
+/**
+ * FOR UPDATE 락을 걸어 행을 조회 — 트랜잭션 내에서만 사용
+ * @param {object} conn — pool.getConnection()으로 획득한 커넥션
+ * @param {string} willId
+ */
+export const findWillByIdForUpdate = async (conn, willId) => {
+  const [[row]] = await conn.execute(
+    'SELECT * FROM wills WHERE will_id = ? AND deleted_at IS NULL FOR UPDATE',
+    [willId],
+  )
+  return row ?? null
+}
+
 export const findWillsByUserId = async (userId, { limit, offset }) => {
   const [rows] = await pool.execute(
     `SELECT * FROM wills

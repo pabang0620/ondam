@@ -74,16 +74,26 @@ export const confirmPayment = async (userId, { paymentKey, orderId, amount }) =>
 
   // PAYMENT_MOCK=true 환경에서는 토스 API 호출 생략하고 즉시 완료 처리
   if (process.env.PAYMENT_MOCK === 'true') {
-    await pool.execute(
-      `UPDATE payments SET payment_status = 'done', paid_at = NOW(), updated_at = NOW()
-       WHERE payment_key = ?`,
-      [paymentKey],
-    )
-    await _updateTargetStatus(payment.target_type, payment.target_id)
+    const mockConn = await pool.getConnection()
+    try {
+      await mockConn.beginTransaction()
+      await mockConn.execute(
+        `UPDATE payments SET status = 'done', paid_at = NOW(), updated_at = NOW()
+         WHERE payment_id = ? AND deleted_at IS NULL`,
+        [payment.payment_id],
+      )
+      await _updateTargetStatus(payment.target_type, payment.target_id, mockConn)
+      await mockConn.commit()
+    } catch (err) {
+      await mockConn.rollback()
+      throw err
+    } finally {
+      mockConn.release()
+    }
     return { success: true, mock: true }
   }
 
-  // 토스페이먼츠 승인 API 호출
+  // 토스페이먼츠 승인 API 호출 (외부 HTTP — 트랜잭션 밖에서 먼저 수행)
   let tossResponse
   try {
     const res = await fetch(TOSS_CONFIRM_URL, {
@@ -109,15 +119,32 @@ export const confirmPayment = async (userId, { paymentKey, orderId, amount }) =>
     throw Object.assign(new Error('결제 승인 중 오류가 발생했습니다'), { status: 502 })
   }
 
-  // 내부 결제 상태 업데이트
+  // payments + target 상태 업데이트 — 원자적으로 처리
   const paidAt = tossResponse.approvedAt ? new Date(tossResponse.approvedAt) : new Date()
-  const updatedPayment = await paymentRepository.updatePaymentDone(payment.payment_id, {
-    tossPaymentKey: paymentKey,
-    paidAt,
-  })
-
-  // target 상태 업데이트 — 실패 시 결제 불일치 방지를 위해 에러 throw
-  await _updateTargetStatus(payment.target_type, payment.target_id)
+  let updatedPayment
+  const conn = await pool.getConnection()
+  try {
+    await conn.beginTransaction()
+    await conn.execute(
+      `UPDATE payments
+       SET status = 'done', toss_payment_key = ?, paid_at = ?, updated_at = NOW()
+       WHERE payment_id = ? AND deleted_at IS NULL`,
+      [paymentKey, paidAt, payment.payment_id],
+    )
+    await _updateTargetStatus(payment.target_type, payment.target_id, conn)
+    await conn.commit()
+    updatedPayment = await paymentRepository.findPaymentById(payment.payment_id)
+  } catch (err) {
+    await conn.rollback()
+    // 토스는 이미 승인됐으나 DB 업데이트 실패 — 심각한 불일치이므로 상세 로그 후 throw
+    console.error(
+      '[paymentService] confirmPayment DB 트랜잭션 실패 — 토스 승인 완료 후 DB 미반영:',
+      { paymentId: payment.payment_id, paymentKey, error: err.message },
+    )
+    throw err
+  } finally {
+    conn.release()
+  }
 
   return { success: true, payment: updatedPayment }
 }
@@ -247,7 +274,10 @@ export const handleWebhook = async (signature, rawBody, payload) => {
         paidAt: data.approvedAt ? new Date(data.approvedAt) : new Date(),
       })
       await _updateTargetStatus(payment.target_type, payment.target_id).catch((e) =>
-        console.error('[paymentService] _updateTargetStatus 실패:', e.message),
+        console.error(
+          '[paymentService] 웹훅 _updateTargetStatus 실패 — 수동 확인 필요:',
+          { paymentId: payment.payment_id, targetType: payment.target_type, targetId: payment.target_id, error: e.message },
+        ),
       )
     } else if (data.status === 'CANCELED' && payment.status !== 'canceled') {
       await paymentRepository.updatePaymentCanceled(payment.payment_id, {
@@ -266,17 +296,21 @@ export const handleWebhook = async (signature, rawBody, payload) => {
 /**
  * target 상태 업데이트 — 결제 완료 시
  * photo_orders.status='paid' 또는 wills.status='active'
+ * @param {string} targetType
+ * @param {string} targetId
+ * @param {object} [conn] — 트랜잭션 커넥션 (없으면 pool 직접 사용)
  */
-const _updateTargetStatus = async (targetType, targetId) => {
+const _updateTargetStatus = async (targetType, targetId, conn) => {
+  const executor = conn ?? pool
   if (targetType === 'photo_order') {
-    await pool.execute(
-      `UPDATE photo_orders SET status = 'paid', updated_at = NOW() WHERE photo_order_id = ? AND deleted_at IS NULL`,
-      [targetId]
+    await executor.execute(
+      `UPDATE photo_orders SET status = 'paid', updated_at = NOW() WHERE order_id = ? AND deleted_at IS NULL`,
+      [targetId],
     )
   } else if (targetType === 'will_order') {
-    await pool.execute(
+    await executor.execute(
       `UPDATE wills SET status = 'active', updated_at = NOW() WHERE will_id = ? AND deleted_at IS NULL`,
-      [targetId]
+      [targetId],
     )
   }
 }
