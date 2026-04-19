@@ -134,6 +134,7 @@ router.put('/:petId', validate(updatePetSchema), petController.updatePet)
 router.patch('/:petId/status', validate(updateStatusSchema), petController.updatePetStatus)
 router.delete('/:petId', validate(petIdParam), petController.deletePet)
 
+router.get('/:petId/portrait/status', validate(petIdParam), petController.getPortraitStatus)
 router.post('/:petId/portrait', validate(petIdParam), petController.requestPortrait)
 
 router.post('/:petId/media', validate(addMediaSchema), petController.addMedia)

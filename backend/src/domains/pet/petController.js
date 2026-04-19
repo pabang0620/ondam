@@ -106,6 +106,20 @@ export const deletePet = async (req, res, next) => {
 // ---------------------------------------------------------------------------
 
 /**
+ * GET /api/pet/:petId/portrait/status
+ */
+export const getPortraitStatus = async (req, res, next) => {
+  try {
+    const { petId } = req.params
+    const { userId } = req.user
+    const result = await petService.getPortraitStatus(petId, userId)
+    return success(res, result)
+  } catch (err) {
+    next(err)
+  }
+}
+
+/**
  * POST /api/pet/:petId/portrait
  */
 export const requestPortrait = async (req, res, next) => {

@@ -208,6 +208,18 @@ export const activateWill = async (userId, willId) => {
     )
   }
 
+  // 수익자 존재 확인 — 최소 1명 필수
+  const beneficiaryCount = await repo.countBeneficiaries(willId)
+  if (beneficiaryCount === 0) {
+    throw Object.assign(new Error('수익자를 최소 1명 이상 등록해야 합니다'), { status: 400 })
+  }
+
+  // 음성권 동의 재확인 — 업로드 이후 동의가 철회됐을 수 있음
+  const consent = await repo.findVoiceConsent(userId)
+  if (!consent || consent.is_agreed !== 1) {
+    throw Object.assign(new Error('음성 처리 동의가 필요합니다'), { status: 400 })
+  }
+
   // BullMQ 영상 생성 큐 등록
   const bullJob = await videoGenerateQueue.add('generate', {
     willId,
@@ -295,6 +307,9 @@ export const requestRelease = async (token, { deathCertS3Key, deathCertUrl }) =>
   const will = await repo.findWillById(beneficiary.will_id)
   if (!will) {
     throw Object.assign(new Error('유언장을 찾을 수 없습니다'), { status: 404 })
+  }
+  if (!['active', 'completed'].includes(will.status)) {
+    throw Object.assign(new Error('활성화된 유언장만 공개 요청이 가능합니다'), { status: 400 })
   }
   if (will.release_status === 'released') {
     throw Object.assign(new Error('이미 공개된 유언장입니다'), { status: 409 })

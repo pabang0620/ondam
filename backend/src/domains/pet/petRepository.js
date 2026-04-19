@@ -2,6 +2,7 @@
  * Pet Repository — DB 쿼리 전용
  */
 
+import { v4 as uuidv4 } from 'uuid'
 import pool from '../../config/db.js'
 
 // ---------------------------------------------------------------------------
@@ -128,7 +129,6 @@ export const updatePetStatus = async (petId, {
       [nextStatus, petId]
     )
 
-    const { v4: uuidv4 } = await import('uuid')
     await conn.query(
       `INSERT INTO pet_status_logs
          (log_id, pet_id, prev_status, next_status, changed_by, changed_by_type, reason, created_at)
@@ -251,6 +251,19 @@ export const softDeleteMedia = async (mediaId) => {
     `UPDATE pet_media SET deleted_at = NOW() WHERE media_id = ? AND deleted_at IS NULL`,
     [mediaId]
   )
+}
+
+/**
+ * 펫의 가장 최근 ai_jobs 1건 조회 (초상화 상태 확인용)
+ */
+export const findLatestAiJob = async (petId) => {
+  const [[row]] = await pool.query(
+    `SELECT job_status, progress FROM ai_jobs
+     WHERE target_type = 'pet' AND target_id = ?
+     ORDER BY created_at DESC LIMIT 1`,
+    [petId],
+  )
+  return row ?? null
 }
 
 /**

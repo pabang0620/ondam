@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from 'uuid'
 import pool from '../../config/db.js'
 
 // ─── photo_orders ────────────────────────────────────────────────────────────
@@ -54,7 +55,6 @@ export const updateOrderStatus = async (
       [nextStatus, orderId],
     )
 
-    const { v4: uuidv4 } = await import('uuid')
     await conn.query(
       `INSERT INTO photo_order_logs
          (log_id, order_id, prev_status, next_status, changed_by, changed_by_type, reason, created_at)

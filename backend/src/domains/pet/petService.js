@@ -191,6 +191,19 @@ export const requestPortrait = async (userId, petId) => {
 }
 
 /**
+ * AI 초상화 상태 조회 (소유자 확인)
+ */
+export const getPortraitStatus = async (petId, userId) => {
+  const pet = await petRepository.findPetById(petId)
+  if (!pet || pet.user_id !== userId) {
+    throw Object.assign(new Error('반려동물을 찾을 수 없습니다'), { status: 404 })
+  }
+  const job = await petRepository.findLatestAiJob(petId)
+  if (!job) return { status: 'none' }
+  return { status: job.job_status, progress: job.progress }
+}
+
+/**
  * 미디어 삭제 (소유자 확인)
  * media → pet → user 소유권 확인
  */

@@ -113,6 +113,17 @@ const processVoiceClone = async (jobData, bullmqJobId) => {
     elevenlabs_voice_id: elevenlabsVoiceId,
   })
 
+  // 4-1. 알림 생성 — 음성 클론 완료
+  const notifId = uuidv4()
+  await pool.execute(
+    `INSERT INTO notifications
+       (notification_id, user_id, notification_type, target_type, target_id,
+        title, message, is_read, created_at)
+     VALUES (?, ?, 'voice_clone_complete', 'voice_sample', ?,
+             '음성 클론 완료', '음성 클론이 완료되었습니다. 이제 유언 영상을 생성할 수 있습니다.', 0, NOW())`,
+    [notifId, userId, voiceSampleId],
+  )
+
   // 5. ai_jobs: completed
   await updateAiJob(bullmqJobId, {
     job_status: 'completed',

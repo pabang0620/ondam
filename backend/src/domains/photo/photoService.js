@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid'
 import { photoQueue } from '../../jobs/queue.js'
 import * as photoRepository from './photoRepository.js'
-import { extractS3KeyFromUrl } from '../../utils/s3.js'
+import { extractS3KeyFromUrl, getPresignedUrl } from '../../utils/s3.js'
 
 // ─── 주문 생성 ────────────────────────────────────────────────────────────────
 
@@ -131,7 +131,17 @@ export const getResult = async (orderId, userId) => {
   }
 
   const files = await photoRepository.findFilesByOrderId(orderId)
-  return { order, files }
+
+  const filesWithUrls = await Promise.all(
+    files.map(async (file) => {
+      const s3Key = file.s3_key || extractS3KeyFromUrl(file.file_url)
+      if (!s3Key) return file
+      const presignedUrl = await getPresignedUrl(s3Key, 3600) // 1시간
+      return { ...file, file_url: presignedUrl }
+    }),
+  )
+
+  return { order, files: filesWithUrls }
 }
 
 // ─── 실패 주문 재처리 ─────────────────────────────────────────────────────────

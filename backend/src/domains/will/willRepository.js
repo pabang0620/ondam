@@ -219,6 +219,14 @@ export const createBeneficiary = async ({
   return result
 }
 
+export const countBeneficiaries = async (willId) => {
+  const [[row]] = await pool.execute(
+    'SELECT COUNT(*) AS cnt FROM will_beneficiaries WHERE will_id = ? AND deleted_at IS NULL',
+    [willId],
+  )
+  return row.cnt
+}
+
 export const findBeneficiariesByWillId = async (willId) => {
   const [rows] = await pool.execute(
     `SELECT * FROM will_beneficiaries

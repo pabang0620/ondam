@@ -35,9 +35,9 @@ export const getDashboardStats = async () => {
   const [[stats]] = await pool.query(
     `SELECT
        (SELECT COUNT(*) FROM users WHERE deleted_at IS NULL) AS total_users,
-       (SELECT COUNT(*) FROM photo_orders WHERE status = 'processing') AS processing_photos,
-       (SELECT COUNT(*) FROM will_release_requests WHERE req_status = 'pending') AS pending_releases,
-       (SELECT COUNT(*) FROM ai_jobs WHERE job_status = 'failed') AS failed_jobs`,
+       (SELECT COUNT(*) FROM photo_orders WHERE status = 'processing' AND deleted_at IS NULL) AS processing_photos,
+       (SELECT COUNT(*) FROM will_release_requests WHERE req_status = 'pending' AND deleted_at IS NULL) AS pending_releases,
+       (SELECT COUNT(*) FROM ai_jobs WHERE job_status = 'failed' AND deleted_at IS NULL) AS failed_jobs`,
   )
   return stats
 }
