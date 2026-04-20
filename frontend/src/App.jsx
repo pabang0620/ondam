@@ -37,6 +37,8 @@ const PetNewPage = lazy(() => import('./pages/pet/PetNewPage.jsx'))
 const PetDetailPage = lazy(() => import('./pages/pet/PetDetailPage.jsx'))
 const PetPortraitPage = lazy(() => import('./pages/pet/PetPortraitPage.jsx'))
 const PetSubscriptionPage = lazy(() => import('./pages/pet/PetSubscriptionPage.jsx'))
+const BillingAuthSuccessPage = lazy(() => import('./pages/pet/BillingAuthSuccessPage.jsx'))
+const BillingAuthFailPage = lazy(() => import('./pages/pet/BillingAuthFailPage.jsx'))
 const MemorialPage = lazy(() => import('./pages/memorial/MemorialPage.jsx'))
 const MyPage = lazy(() => import('./pages/mypage/MyPage.jsx'))
 const KakaoCallbackPage = lazy(() => import('./pages/auth/KakaoCallbackPage.jsx'))
@@ -108,6 +110,8 @@ export default function App() {
 
             <Route path={ROUTES.PET} element={<PetPage />} />
             <Route path={ROUTES.PET_SUBSCRIPTION} element={<PetSubscriptionPage />} />
+            <Route path={ROUTES.PET_BILLING_SUCCESS} element={<BillingAuthSuccessPage />} />
+            <Route path={ROUTES.PET_BILLING_FAIL} element={<BillingAuthFailPage />} />
             <Route path={ROUTES.PET_NEW} element={<PetNewPage />} />
             <Route path={ROUTES.PET_DETAIL} element={<PetDetailPage />} />
             <Route path={ROUTES.PET_PORTRAIT} element={<PetPortraitPage />} />

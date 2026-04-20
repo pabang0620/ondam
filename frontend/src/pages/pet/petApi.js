@@ -45,12 +45,24 @@ export const petApi = {
     apiClient.get('/subscriptions'),
 
   // 구독 신청
-  subscribe: (plan) =>
-    apiClient.post('/subscriptions', { plan, tossBillingKey: 'mock_key' }),
+  subscribe: ({ plan, authKey, customerKey }) =>
+    apiClient.post('/subscriptions', { plan, authKey, customerKey }),
+
+  // 빌링키 등록 (토스 인증 콜백 후 호출)
+  registerBillingKey: ({ authKey, customerKey, plan }) =>
+    apiClient.post('/subscriptions/billing-auth', { authKey, customerKey, plan }),
 
   // 구독 해지
   cancelSubscription: (subscriptionId) =>
     apiClient.delete(`/subscriptions/${subscriptionId}`),
+
+  // 재결제 시도
+  retryPayment: (subscriptionId) =>
+    apiClient.post(`/subscriptions/${subscriptionId}/retry-payment`),
+
+  // 결제 내역 조회
+  getPaymentLogs: (subscriptionId, page = 1) =>
+    apiClient.get(`/subscriptions/${subscriptionId}/payment-logs`, { params: { page } }),
 
   // 반려동물 삭제 (소프트삭제)
   deletePet: (petId) =>

@@ -1,36 +1,38 @@
-import { useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { ChevronLeft, CheckCircle, Crown } from 'lucide-react'
 import { usePetSubscription } from './usePetSubscription.js'
+import SubscriptionStatusCard from './SubscriptionStatusCard.jsx'
+import CancelSubscriptionModal from './CancelSubscriptionModal.jsx'
 import { ROUTES } from '../../constants/routes.js'
 
-const STATIC_PLANS = [
+const PLANS = [
   {
-    key: 'free',
-    label: '무료',
-    price: '0원',
-    priceNum: 0,
-    features: ['반려동물 1마리 등록', '사진 10장 보관', '기본 프로필 페이지'],
-    highlight: false,
-  },
-  {
-    key: 'standard',
-    label: '스탠다드',
-    price: '4,900원/월',
-    priceNum: 4900,
-    features: ['반려동물 3마리', '사진 100장 보관', 'AI 초상화 1회', '추모 페이지 공개'],
+    key: 'pet_archive',
+    name: '반려동물 아카이브',
+    price: 9900,
+    desc: '반려동물 추억 무제한 보관 + AI 초상화',
     highlight: true,
   },
   {
-    key: 'premium',
-    label: '프리미엄',
-    price: '9,900원/월',
-    priceNum: 9900,
-    features: ['무제한 반려동물', '사진 무제한', 'AI 초상화 무제한', '추모 페이지 공개', '전용 슬러그'],
+    key: 'will_premium',
+    name: 'AI 유언장 프리미엄',
+    price: 29900,
+    desc: 'AI 유언 영상 생성 + 추모관',
+    highlight: false,
+  },
+  {
+    key: 'all',
+    name: '전체 이용권',
+    price: 39900,
+    desc: '모든 기능 무제한 이용',
     highlight: false,
   },
 ]
 
-function PlanCard({ plan, isCurrent, isProcessing, onSubscribe, onCancel, subscriptionId }) {
+function PlanCard({ plan, isCurrent, isProcessing, isRedirecting, onSubscribe }) {
+  const isDisabled = isProcessing || isRedirecting
+
   return (
     <div
       style={{
@@ -91,83 +93,36 @@ function PlanCard({ plan, isCurrent, isProcessing, onSubscribe, onCancel, subscr
       )}
 
       <div>
-        <p style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700 }}>{plan.label}</p>
+        <p style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700 }}>{plan.name}</p>
         <p style={{ fontSize: 'var(--font-size-xl)', fontWeight: 800, color: 'var(--color-primary-dark)', marginTop: 4 }}>
-          {plan.price}
+          {plan.price.toLocaleString()}원/월
         </p>
       </div>
 
-      <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)', flex: 1 }}>
-        {plan.features.map((f) => (
-          <li
-            key={f}
-            style={{
-              fontSize: 'var(--font-size-base)',
-              color: 'var(--color-text-secondary)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 'var(--spacing-sm)',
-            }}
-          >
-            <CheckCircle size={15} color="var(--color-success)" aria-hidden="true" />
-            {f}
-          </li>
-        ))}
-      </ul>
+      <p style={{ fontSize: 'var(--font-size-base)', color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'flex-start', gap: 'var(--spacing-sm)' }}>
+        <CheckCircle size={16} color="var(--color-success)" aria-hidden="true" style={{ flexShrink: 0, marginTop: 2 }} />
+        {plan.desc}
+      </p>
 
-      {/* 버튼 */}
-      {isCurrent && plan.priceNum > 0 ? (
+      {!isCurrent && (
         <button
-          onClick={() => onCancel(subscriptionId)}
-          disabled={isProcessing}
-          style={{
-            background: 'none',
-            color: 'var(--color-text-muted)',
-            border: '1.5px solid var(--color-border)',
-            borderRadius: 'var(--radius-full)',
-            minHeight: 'var(--min-touch-target)',
-            fontSize: 'var(--font-size-base)',
-            fontWeight: 600,
-            cursor: isProcessing ? 'not-allowed' : 'pointer',
-            opacity: isProcessing ? 0.7 : 1,
-          }}
-        >
-          {isProcessing ? '처리 중...' : '구독 해지'}
-        </button>
-      ) : !isCurrent && plan.priceNum > 0 ? (
-        <button
+          type="button"
           onClick={() => onSubscribe(plan.key)}
-          disabled={isProcessing}
+          disabled={isDisabled}
           style={{
             background: plan.highlight ? 'var(--color-primary)' : 'var(--color-surface)',
             color: plan.highlight ? '#fff' : 'var(--color-primary)',
-            border: `2px solid ${plan.highlight ? 'var(--color-primary)' : 'var(--color-primary)'}`,
+            border: `2px solid var(--color-primary)`,
             borderRadius: 'var(--radius-full)',
             minHeight: 'var(--min-touch-target)',
             fontSize: 'var(--font-size-base)',
             fontWeight: 700,
-            cursor: isProcessing ? 'not-allowed' : 'pointer',
-            opacity: isProcessing ? 0.7 : 1,
+            cursor: isDisabled ? 'not-allowed' : 'pointer',
+            opacity: isDisabled ? 0.7 : 1,
             transition: 'background 0.2s, color 0.2s',
           }}
         >
-          {isProcessing ? '처리 중...' : '구독하기'}
-        </button>
-      ) : (
-        <button
-          disabled
-          style={{
-            background: 'var(--color-accent)',
-            color: 'var(--color-text-muted)',
-            border: 'none',
-            borderRadius: 'var(--radius-full)',
-            minHeight: 'var(--min-touch-target)',
-            fontSize: 'var(--font-size-base)',
-            fontWeight: 600,
-            cursor: 'default',
-          }}
-        >
-          {isCurrent ? '무료 플랜 이용 중' : '무료로 시작'}
+          {isRedirecting ? '토스페이먼츠로 이동 중...' : '구독하기'}
         </button>
       )}
     </div>
@@ -176,17 +131,44 @@ function PlanCard({ plan, isCurrent, isProcessing, onSubscribe, onCancel, subscr
 
 export default function PetSubscriptionPage() {
   const navigate = useNavigate()
+  const location = useLocation()
+
   const {
     currentSubscription,
     isLoading,
     error,
     isProcessing,
+    isRedirecting,
     actionError,
+    isCancelModalOpen,
+    successMessage,
     handleSubscribe,
-    handleCancel,
+    handleRetryPayment,
+    openCancelModal,
+    closeCancelModal,
+    confirmCancel,
+    clearSuccessMessage,
   } = usePetSubscription()
 
-  const currentPlanKey = currentSubscription?.plan ?? 'free'
+  // 구독 성공 상태 감지 (BillingAuthSuccessPage에서 리디렉트 시)
+  useEffect(() => {
+    if (location.state?.subscriptionSuccess) {
+      // state 소비 후 히스토리에서 제거
+      navigate(location.pathname, { replace: true, state: {} })
+    }
+  }, [location.state, navigate, location.pathname])
+
+  // 성공 메시지 자동 소멸
+  useEffect(() => {
+    if (!successMessage && !location.state?.subscriptionSuccess) return
+    const timer = setTimeout(() => clearSuccessMessage(), 4000)
+    return () => clearTimeout(timer)
+  }, [successMessage, location.state, clearSuccessMessage])
+
+  const hasActiveSubscription =
+    currentSubscription && currentSubscription.status !== 'canceled'
+
+  const currentPlanKey = currentSubscription?.plan ?? null
 
   return (
     <main
@@ -231,39 +213,94 @@ export default function PetSubscriptionPage() {
         </p>
       </div>
 
+      {/* 성공 알림 */}
+      {(successMessage || location.state?.subscriptionSuccess) && (
+        <p
+          role="status"
+          aria-live="polite"
+          style={{
+            background: 'var(--color-success-light)',
+            color: 'var(--color-success)',
+            borderRadius: 'var(--radius-md)',
+            padding: 'var(--spacing-md)',
+            fontSize: 'var(--font-size-base)',
+            fontWeight: 600,
+          }}
+        >
+          {successMessage || '구독이 성공적으로 등록되었습니다.'}
+        </p>
+      )}
+
+      {/* 로딩 */}
       {isLoading && (
         <p style={{ color: 'var(--color-text-muted)', fontSize: 'var(--font-size-base)' }}>불러오는 중...</p>
       )}
 
+      {/* 조회 에러 */}
       {error && (
         <p role="alert" style={{ color: 'var(--color-error)', fontSize: 'var(--font-size-base)' }}>{error}</p>
       )}
 
+      {/* 액션 에러 */}
       {actionError && (
         <p role="alert" style={{ color: 'var(--color-error)', fontSize: 'var(--font-size-base)' }}>{actionError}</p>
       )}
 
-      {!isLoading && (
-        <div
+      {/* 현재 구독 상태 카드 */}
+      {!isLoading && hasActiveSubscription && (
+        <SubscriptionStatusCard
+          subscription={currentSubscription}
+          onCancel={openCancelModal}
+          onRetry={handleRetryPayment}
+          isProcessing={isProcessing}
+        />
+      )}
+
+      {/* 토스 리디렉트 중 안내 */}
+      {isRedirecting && (
+        <p
+          role="status"
+          aria-live="polite"
           style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-            gap: 'var(--spacing-xl)',
-            paddingTop: 'var(--spacing-md)',
+            textAlign: 'center',
+            fontSize: 'var(--font-size-base)',
+            color: 'var(--color-text-secondary)',
+            padding: 'var(--spacing-md)',
           }}
         >
-          {STATIC_PLANS.map((plan) => (
-            <PlanCard
-              key={plan.key}
-              plan={plan}
-              isCurrent={currentPlanKey === plan.key}
-              isProcessing={isProcessing}
-              subscriptionId={currentSubscription?.subscriptionId}
-              onSubscribe={handleSubscribe}
-              onCancel={handleCancel}
-            />
-          ))}
-        </div>
+          토스페이먼츠로 이동 중입니다...
+        </p>
+      )}
+
+      {/* 플랜 목록 */}
+      {!isLoading && (
+        <>
+          {hasActiveSubscription && (
+            <h2 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
+              다른 플랜으로 변경
+            </h2>
+          )}
+
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gap: 'var(--spacing-xl)',
+              paddingTop: hasActiveSubscription ? 0 : 'var(--spacing-md)',
+            }}
+          >
+            {PLANS.map((plan) => (
+              <PlanCard
+                key={plan.key}
+                plan={plan}
+                isCurrent={currentPlanKey === plan.key && hasActiveSubscription}
+                isProcessing={isProcessing}
+                isRedirecting={isRedirecting}
+                onSubscribe={handleSubscribe}
+              />
+            ))}
+          </div>
+        </>
       )}
 
       {/* 유의사항 */}
@@ -284,6 +321,15 @@ export default function PetSubscriptionPage() {
           <li>플랜 변경은 다음 결제일부터 적용됩니다.</li>
         </ul>
       </section>
+
+      {/* 해지 확인 모달 */}
+      <CancelSubscriptionModal
+        isOpen={isCancelModalOpen}
+        onClose={closeCancelModal}
+        onConfirm={confirmCancel}
+        subscription={currentSubscription}
+        isProcessing={isProcessing}
+      />
     </main>
   )
 }

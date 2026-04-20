@@ -27,6 +27,8 @@ export const ROUTES = {
   PET_DETAIL: '/pet/:petId',
   PET_PORTRAIT: '/pet/:petId/portrait',
   PET_SUBSCRIPTION: '/pet/subscription',
+  PET_BILLING_SUCCESS: '/pet/billing/success',
+  PET_BILLING_FAIL: '/pet/billing/fail',
   MEMORIAL: '/memorial/:slug',
 
   MY: '/my',
