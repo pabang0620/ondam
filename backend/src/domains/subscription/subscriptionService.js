@@ -35,7 +35,11 @@ export const getPlans = () => {
  * 사용자 구독 목록 조회
  */
 export const getSubscriptions = async (userId) => {
-  return subscriptionRepository.findSubscriptionsByUserId(userId)
+  const rows = await subscriptionRepository.findSubscriptionsByUserId(userId)
+  return rows.map((row) => ({
+    ...row,
+    subStatus: row.sub_status,
+  }))
 }
 
 /**
@@ -116,62 +120,74 @@ export const subscribe = async (userId, { plan, authKey, customerKey }) => {
   const subscriptionId = uuidv4()
   const nextBillingAt = addOneMonth(new Date())
 
-  // 결제 성공 시에만 subscriptions INSERT
-  const subscription = await subscriptionRepository.createSubscription({
-    subscriptionId,
-    userId,
-    plan,
-    billingKeyEncrypted: encrypted,
-    billingKmsKeyId: kmsKeyId,
-    priceKrw: amount,
-    nextBillingAt,
-    lastBilledAt: new Date(),
-  })
+  // 결제 성공 후 DB 작업 실패 시 보상 환불
+  try {
+    // 결제 성공 시에만 subscriptions INSERT
+    const subscription = await subscriptionRepository.createSubscription({
+      subscriptionId,
+      userId,
+      plan,
+      billingKeyEncrypted: encrypted,
+      billingKmsKeyId: kmsKeyId,
+      priceKrw: amount,
+      nextBillingAt,
+      lastBilledAt: new Date(),
+    })
 
-  // 결제 로그 INSERT (success)
-  const log = await subscriptionPaymentLogRepository.createLog({
-    subscriptionId,
-    userId,
-    billingCycleDate,
-    attemptNo: 1,
-    attemptType: 'initial',
-    tossOrderId: orderId,
-    amountKrw: amount,
-  })
-  await subscriptionPaymentLogRepository.updateLogResult(log.log_id, {
-    logStatus: 'success',
-    tossPaymentKey,
-    succeededAt: new Date(),
-  })
+    // 결제 로그 INSERT (success)
+    const log = await subscriptionPaymentLogRepository.createLog({
+      subscriptionId,
+      userId,
+      billingCycleDate,
+      attemptNo: 1,
+      attemptType: 'initial',
+      tossOrderId: orderId,
+      amountKrw: amount,
+    })
+    await subscriptionPaymentLogRepository.updateLogResult(log.log_id, {
+      logStatus: 'success',
+      tossPaymentKey,
+      succeededAt: new Date(),
+    })
 
-  // payments INSERT
-  const paymentId = uuidv4()
-  await pool.execute(
-    `INSERT INTO payments
-       (payment_id, user_id, target_type, target_id, toss_payment_key,
-        toss_order_id, amount_krw, status, paid_at)
-     VALUES (?, ?, 'subscription', ?, ?, ?, ?, 'done', NOW())`,
-    [paymentId, userId, subscriptionId, tossPaymentKey ?? paymentId, orderId, amount]
-  )
+    // payments INSERT
+    const paymentId = uuidv4()
+    await pool.execute(
+      `INSERT INTO payments
+         (payment_id, user_id, target_type, target_id, toss_payment_key,
+          toss_order_id, amount_krw, status, paid_at)
+       VALUES (?, ?, 'subscription', ?, ?, ?, ?, 'done', NOW())`,
+      [paymentId, userId, subscriptionId, tossPaymentKey ?? paymentId, orderId, amount]
+    )
 
-  // scan-due repeat job 최초 1회 등록 (이미 있으면 BullMQ가 skip)
-  await billingQueue.add(
-    'scan-due',
-    {},
-    {
-      repeat: { cron: process.env.BILLING_SCAN_CRON || '0 3 * * *' },
-      jobId: 'billing-scan-due-repeat',
+    // scan-due repeat job 최초 1회 등록 (이미 있으면 BullMQ가 skip)
+    await billingQueue.add(
+      'scan-due',
+      {},
+      {
+        repeat: { cron: process.env.BILLING_SCAN_CRON || '0 3 * * *' },
+        jobId: 'billing-scan-due-repeat',
+      }
+    ).catch((err) => {
+      console.warn('[subscriptionService] scan-due 반복 job 등록 실패 (무시):', err.message)
+    })
+
+    return {
+      subscriptionId: subscription.subscription_id,
+      plan: subscription.plan,
+      subStatus: 'active',
+      priceKrw: subscription.price_krw,
+      nextBillingAt: subscription.next_billing_at,
+      lastBilledAt: subscription.last_billed_at,
     }
-  ).catch((err) => {
-    console.warn('[subscriptionService] scan-due 반복 job 등록 실패 (무시):', err.message)
-  })
-
-  return {
-    subscriptionId: subscription.subscription_id,
-    plan: subscription.plan,
-    priceKrw: subscription.price_krw,
-    nextBillingAt: subscription.next_billing_at,
-    lastBilledAt: subscription.last_billed_at,
+  } catch (dbErr) {
+    if (tossPaymentKey) {
+      await subscriptionTossClient.cancelPayment({
+        paymentKey: tossPaymentKey,
+        cancelReason: 'DB 저장 실패로 인한 자동 환불',
+      }).catch((e) => console.error('[subscribe] 보상 환불 실패 — 수동 처리 필요:', tossPaymentKey, e.message))
+    }
+    throw Object.assign(new Error('구독 등록 중 오류가 발생했습니다'), { status: 500 })
   }
 }
 
@@ -213,32 +229,46 @@ export const cancelSubscription = async (userId, subscriptionId) => {
     }
   }
 
-  // DB 상태 변경 + 로그
-  await subscriptionRepository.updateSubscriptionStatus(subscriptionId, {
-    subStatus: 'canceled',
-    prevStatus: subscription.sub_status,
-    changedBy: userId,
-    changedByType: 'user',
-    reason: '사용자 취소',
-  })
+  // DB 상태 변경 + 로그 + 알림 — 단일 트랜잭션으로 원자 처리
+  let updated
+  const conn = await pool.getConnection()
+  try {
+    await conn.beginTransaction()
 
-  const updated = await subscriptionRepository.cancelSubscription(subscriptionId, {
-    cancelReason: '사용자 취소',
-  })
+    await subscriptionRepository.updateSubscriptionStatus(subscriptionId, {
+      subStatus: 'canceled',
+      prevStatus: subscription.sub_status,
+      changedBy: userId,
+      changedByType: 'user',
+      reason: '사용자 취소',
+      conn,
+    })
 
-  // 알림 INSERT
-  const notificationId = uuidv4()
-  await pool.execute(
-    `INSERT INTO notifications
-       (notification_id, user_id, notification_type, target_type, target_id, title, message, created_at)
-     VALUES (?, ?, 'subscription_canceled', 'subscription', ?, '구독 취소 완료', ?, NOW())`,
-    [
-      notificationId,
-      userId,
-      subscriptionId,
-      `${PLANS[subscription.plan]?.name ?? subscription.plan} 구독이 취소되었습니다.`,
-    ]
-  )
+    updated = await subscriptionRepository.cancelSubscription(subscriptionId, {
+      cancelReason: '사용자 취소',
+      conn,
+    })
+
+    const notificationId = uuidv4()
+    await conn.execute(
+      `INSERT INTO notifications
+         (notification_id, user_id, notification_type, target_type, target_id, title, message, created_at)
+       VALUES (?, ?, 'subscription_canceled', 'subscription', ?, '구독 취소 완료', ?, NOW())`,
+      [
+        notificationId,
+        userId,
+        subscriptionId,
+        `${PLANS[subscription.plan]?.name ?? subscription.plan} 구독이 취소되었습니다.`,
+      ],
+    )
+
+    await conn.commit()
+  } catch (err) {
+    await conn.rollback()
+    throw err
+  } finally {
+    conn.release()
+  }
 
   return updated
 }

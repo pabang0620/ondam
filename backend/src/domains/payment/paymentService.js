@@ -247,6 +247,17 @@ export const handleWebhook = async (signature, rawBody, payload) => {
   }
 
   const { eventType, data } = payload
+
+  // 빌링키 삭제 이벤트 — 암호화된 키라 직접 매칭 불가, 로그만 기록 후 수동 확인
+  if (eventType === 'BILLING_DELETED') {
+    const billingKey = payload.billingKey
+    console.warn(
+      '[webhook] BILLING_DELETED 수신 — 수동 확인 필요. billingKey prefix:',
+      billingKey ? billingKey.slice(0, 8) + '...' : 'unknown',
+    )
+    return { synced: true }
+  }
+
   if (!data?.paymentKey) return { synced: false, reason: 'paymentKey 없음' }
 
   const payment = await paymentRepository.findPaymentByTossKey(data.paymentKey)

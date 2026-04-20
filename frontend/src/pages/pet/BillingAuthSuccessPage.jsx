@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { petApi } from './petApi.js'
 
@@ -7,10 +7,15 @@ export default function BillingAuthSuccessPage() {
   const navigate = useNavigate()
   const [error, setError] = useState(null)
   const [isProcessing, setIsProcessing] = useState(true)
+  const processed = useRef(false)
 
   useEffect(() => {
+    if (processed.current) return
+    processed.current = true
+
     const authKey = searchParams.get('authKey')
     const customerKey = searchParams.get('customerKey')
+    // plan은 서버에서 PLANS enum으로 재검증됨 (금액은 서버 고정)
     const plan = sessionStorage.getItem('pendingSubscriptionPlan')
 
     if (!authKey || !customerKey || !plan) {
@@ -27,7 +32,7 @@ export default function BillingAuthSuccessPage() {
         setError(err.response?.data?.message || '구독 등록에 실패했습니다.')
         setIsProcessing(false)
       })
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [searchParams, navigate])
 
   if (isProcessing) return (
     <div style={{ textAlign: 'center', padding: '3rem', fontSize: 'var(--font-size-base)' }}>

@@ -16,7 +16,10 @@ export function getTossPayments() {
       }
       resolve(window.TossPayments(import.meta.env.VITE_TOSS_CLIENT_KEY))
     }
-    script.onerror = () => reject(new Error('토스페이먼츠 SDK 로드 실패'))
+    script.onerror = () => {
+      tossPromise = null  // 실패 시 캐시 초기화 → 재시도 가능
+      reject(new Error('토스페이먼츠 SDK 로드 실패'))
+    }
     document.head.appendChild(script)
   })
   return tossPromise
