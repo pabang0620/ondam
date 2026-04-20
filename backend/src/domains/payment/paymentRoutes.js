@@ -42,7 +42,7 @@ const cancelSchema = z.object({
     paymentId: z.string().uuid('유효한 UUID를 입력하세요'),
   }),
   body: z.object({
-    cancelReason: z.string().min(1, '취소 사유를 입력하세요').max(200).optional(),
+    cancelReason: z.string().trim().min(1, '취소 사유를 입력하세요').max(200).optional(),
   }),
 })
 

@@ -44,7 +44,7 @@ const rejectSchema = z.object({
     id: z.string().min(1),
   }),
   body: z.object({
-    rejectReason: z.string().min(1, '거절 사유를 입력하세요').max(500),
+    rejectReason: z.string().trim().min(1, '거절 사유를 입력하세요').max(500),
   }),
 })
 
@@ -74,7 +74,7 @@ const usersQuerySchema = z.object({
   query: z.object({
     page: z.coerce.number().int().min(1).default(1),
     limit: z.coerce.number().int().min(1).max(100).default(20),
-    search: z.string().optional(),
+    search: z.string().trim().max(100).optional(),
   }),
 })
 

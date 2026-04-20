@@ -44,11 +44,8 @@ export function usePetPortrait(petId) {
     setResult(null)
 
     try {
-      // 1단계: 초상화 생성 요청
-      const res = await petApi.createPortrait(petId, {
-        style: selectedStyle,
-        sourceMediaId: selectedMediaId,
-      })
+      // 1단계: 초상화 생성 요청 (백엔드에서 params 불필요)
+      const res = await petApi.createPortrait(petId, {})
       if (!res.data.success) {
         throw new Error(res.data.message || 'AI 초상화 생성 요청에 실패했습니다.')
       }
@@ -56,35 +53,45 @@ export function usePetPortrait(petId) {
       // 2단계: 상태 폴링 (최대 60초, 2초 간격)
       const MAX_POLLS = 30
       let polls = 0
+      let pollInterval = null
 
-      const poll = async () => {
-        if (polls >= MAX_POLLS) {
-          throw new Error('AI 초상화 생성 시간이 초과되었습니다. 잠시 후 다시 시도해 주세요.')
-        }
-        polls += 1
+      await new Promise((resolve, reject) => {
+        pollInterval = setInterval(async () => {
+          if (polls >= MAX_POLLS) {
+            clearInterval(pollInterval)
+            reject(new Error('AI 초상화 생성 시간이 초과되었습니다. 잠시 후 다시 시도해 주세요.'))
+            return
+          }
+          polls += 1
 
-        const statusRes = await petApi.getPortraitStatus(petId)
-        if (!statusRes.data.success) {
-          throw new Error(statusRes.data.message || '상태 조회에 실패했습니다.')
-        }
+          try {
+            const statusRes = await petApi.getPortraitStatus(petId)
+            if (!statusRes.data.success) {
+              clearInterval(pollInterval)
+              reject(new Error(statusRes.data.message || '상태 조회에 실패했습니다.'))
+              return
+            }
 
-        const { status, portrait } = statusRes.data.data ?? {}
+            const { status, progress, portraitUrl } = statusRes.data.data ?? {}
 
-        if (status === 'completed' && portrait) {
-          setResult(portrait)
-          return
-        }
+            if (status === 'completed') {
+              clearInterval(pollInterval)
+              if (portraitUrl) setResult({ url: portraitUrl })
+              resolve()
+              return
+            }
 
-        if (status === 'failed') {
-          throw new Error('AI 초상화 생성에 실패했습니다. 다시 시도해 주세요.')
-        }
-
-        // pending / processing — 2초 후 재시도
-        await new Promise((resolve) => setTimeout(resolve, 2000))
-        await poll()
-      }
-
-      await poll()
+            if (status === 'failed') {
+              clearInterval(pollInterval)
+              reject(new Error('AI 초상화 생성에 실패했습니다. 다시 시도해 주세요.'))
+            }
+            // pending / processing — 다음 interval 대기
+          } catch (err) {
+            clearInterval(pollInterval)
+            reject(err)
+          }
+        }, 2000)
+      })
     } catch (err) {
       setGenerateError(err.response?.data?.message || err.message || 'AI 초상화 생성에 실패했습니다.')
     } finally {

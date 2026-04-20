@@ -83,7 +83,8 @@ export function useWillRecord() {
 
     try {
       const { data } = await willApi.uploadAudio(formData)
-      const s3Key = data.data?.s3Key
+      const { voiceSampleId, s3Key } = data.data ?? {}
+      if (voiceSampleId) localStorage.setItem('will_voice_sample_id', voiceSampleId)
       localStorage.setItem('will_audio_s3key', s3Key)
       navigate('/will/photo')
     } catch {

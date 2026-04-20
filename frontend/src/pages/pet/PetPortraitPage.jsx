@@ -207,14 +207,14 @@ export default function PetPortraitPage() {
                 role="radiogroup"
                 aria-label="초상화 기준 사진"
               >
-                {media.filter((m) => m.mediaType === 'photo').map((item) => {
-                  const isSelected = selectedMediaId === item.mediaId
+                {media.filter((m) => m.media_type === 'photo').map((item) => {
+                  const isSelected = selectedMediaId === item.media_id
                   return (
                     <button
-                      key={item.mediaId}
+                      key={item.media_id}
                       role="radio"
                       aria-checked={isSelected}
-                      onClick={() => setSelectedMediaId(item.mediaId)}
+                      onClick={() => setSelectedMediaId(item.media_id)}
                       style={{
                         border: `3px solid ${isSelected ? 'var(--color-primary)' : 'transparent'}`,
                         borderRadius: 'var(--radius-md)',
@@ -227,7 +227,7 @@ export default function PetPortraitPage() {
                       }}
                     >
                       <img
-                        src={item.url}
+                        src={item.file_url}
                         alt={item.caption || '선택 가능한 사진'}
                         loading="lazy"
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}

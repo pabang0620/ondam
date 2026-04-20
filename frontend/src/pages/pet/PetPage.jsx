@@ -88,14 +88,14 @@ function PetListItem({ pet }) {
   return (
     <button
       className="pet-list-item"
-      onClick={() => navigate(`/pet/${pet.petId}`)}
+      onClick={() => navigate(`/pet/${pet.pet_id}`)}
       aria-label={`${pet.name} 상세 보기`}
     >
       <div className="pet-list-item__avatar">
-        {pet.profileImageUrl
+        {pet.profile_image_url
           ? (
             <img
-              src={pet.profileImageUrl}
+              src={pet.profile_image_url}
               alt={pet.name}
               onError={(e) => { e.target.onerror = null; e.target.src = '' }}
             />
@@ -105,7 +105,7 @@ function PetListItem({ pet }) {
       <div className="pet-list-item__info">
         <span className="pet-list-item__name">{pet.name}</span>
         <span className="pet-list-item__species">{SPECIES_LABEL[pet.species] || pet.species}</span>
-        {pet.status === 'deceased' && (
+        {pet.pet_status === 'deceased' && (
           <span className="pet-list-item__badge">무지개다리</span>
         )}
       </div>
@@ -203,7 +203,7 @@ export default function PetPage() {
             {!isLoading && pets.length > 0 && (
               <div className="pet-list">
                 {pets.map((pet) => (
-                  <PetListItem key={pet.petId} pet={pet} />
+                  <PetListItem key={pet.pet_id} pet={pet} />
                 ))}
               </div>
             )}

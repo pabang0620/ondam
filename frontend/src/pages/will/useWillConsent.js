@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { willApi } from './willApi.js'
 
 const CONSENT_ITEMS = [
   {
@@ -51,9 +52,21 @@ export function useWillConsent() {
     })
   }, [allChecked])
 
-  const handleNext = useCallback(() => {
+  const handleNext = useCallback(async () => {
     if (!allChecked) return
     localStorage.setItem('will_consents', JSON.stringify(consents))
+
+    const consentPayload = CONSENT_ITEMS.map((item) => ({
+      consentType: item.key,
+      isAgreed: consents[item.key] ?? false,
+    }))
+
+    try {
+      await willApi.saveConsents(consentPayload)
+    } catch {
+      // 동의 저장 실패는 비차단 — 로컬스토리지에 이미 저장됨
+    }
+
     navigate('/will/beneficiaries')
   }, [allChecked, consents, navigate])
 

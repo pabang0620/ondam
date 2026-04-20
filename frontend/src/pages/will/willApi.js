@@ -44,4 +44,20 @@ export const willApi = {
   // 파일 업로드 (사진)
   uploadPhoto: (formData) =>
     apiClient.post('/uploads/photo', formData),
+
+  // 동의 항목 저장
+  saveConsents: (consents) =>
+    apiClient.post('/auth/consents', { consents }),
+
+  // 결제 준비
+  preparePayment: (willId, amountKrw) =>
+    apiClient.post('/payments/prepare', {
+      targetType: 'will_order',
+      targetId: willId,
+      amountKrw,
+    }),
+
+  // 결제 확인
+  confirmPayment: ({ paymentKey, orderId, amount }) =>
+    apiClient.post('/payments/confirm', { paymentKey, orderId, amount }),
 }

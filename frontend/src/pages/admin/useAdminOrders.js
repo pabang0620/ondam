@@ -15,7 +15,7 @@ export function useAdminOrders() {
     setIsLoading(true)
     setError(null)
     try {
-      const { data } = await adminApi.getOrders(p, status === ALL ? '' : status)
+      const { data } = await adminApi.getOrders(p, status === ALL ? '' : status, 20)
       if (data.success) {
         setOrders(data.data ?? [])
         setTotal(data.meta?.total ?? 0)

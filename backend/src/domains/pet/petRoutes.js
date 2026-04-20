@@ -40,9 +40,9 @@ const petIdParam = z.object({
 
 const createPetSchema = z.object({
   body: z.object({
-    name: z.string().min(1, '이름을 입력해주세요').max(50, '이름은 50자 이하여야 합니다'),
+    name: z.string().trim().min(1, '이름을 입력해주세요').max(50, '이름은 50자 이하여야 합니다'),
     species: speciesEnum,
-    breed: z.string().max(100).optional(),
+    breed: z.string().trim().max(100).optional(),
     birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'YYYY-MM-DD 형식이어야 합니다').optional().nullable(),
     deathDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'YYYY-MM-DD 형식이어야 합니다').optional().nullable(),
   }),
@@ -53,8 +53,8 @@ const updatePetSchema = z.object({
     petId: z.string().uuid('유효하지 않은 petId입니다'),
   }),
   body: z.object({
-    name: z.string().min(1).max(50).optional(),
-    breed: z.string().max(100).optional().nullable(),
+    name: z.string().trim().min(1).max(50).optional(),
+    breed: z.string().trim().max(100).optional().nullable(),
     birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
     deathDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
     profileImageUrl: z.string().url().optional().nullable(),

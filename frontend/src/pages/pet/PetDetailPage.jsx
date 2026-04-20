@@ -148,10 +148,10 @@ export default function PetDetailPage() {
             flexShrink: 0,
           }}
         >
-          {pet.profileImageUrl
+          {pet.profile_image_url
             ? (
               <img
-                src={pet.profileImageUrl}
+                src={pet.profile_image_url}
                 alt={pet.name}
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 onError={(e) => { e.target.onerror = null; e.target.src = '' }}
@@ -164,7 +164,7 @@ export default function PetDetailPage() {
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
             <h1 style={{ fontSize: 'var(--font-size-xl)', fontWeight: 800 }}>{pet.name}</h1>
-            {pet.status === 'deceased' && (
+            {pet.pet_status === 'deceased' && (
               <span
                 style={{
                   fontSize: 'var(--font-size-sm)',
@@ -183,19 +183,19 @@ export default function PetDetailPage() {
             {SPECIES_LABEL[pet.species] || pet.species}
             {pet.breed ? ` · ${pet.breed}` : ''}
           </p>
-          {pet.birthDate && (
+          {pet.birth_date && (
             <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)' }}>
-              {formatDate(pet.birthDate)}
-              {pet.deathDate ? ` ~ ${formatDate(pet.deathDate)}` : ''}
+              {formatDate(pet.birth_date)}
+              {pet.death_date ? ` ~ ${formatDate(pet.death_date)}` : ''}
             </p>
           )}
         </div>
       </section>
 
       {/* 추모 페이지 링크 (deceased) */}
-      {pet.status === 'deceased' && pet.memorialSlug && (
+      {pet.pet_status === 'deceased' && pet.memorial_slug && (
         <Link
-          to={`/memorial/${pet.memorialSlug}`}
+          to={`/memorial/${pet.memorial_slug}`}
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -322,7 +322,7 @@ export default function PetDetailPage() {
           >
             {media.map((item) => (
               <div
-                key={item.mediaId}
+                key={item.media_id}
                 style={{
                   aspectRatio: '1',
                   borderRadius: 'var(--radius-md)',
@@ -331,7 +331,7 @@ export default function PetDetailPage() {
                 }}
               >
                 <img
-                  src={item.url}
+                  src={item.file_url}
                   alt={item.caption || `${pet.name} 사진`}
                   loading="lazy"
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
@@ -344,7 +344,7 @@ export default function PetDetailPage() {
       </section>
 
       {/* 사망 등록 버튼 (alive 상태만) */}
-      {pet.status === 'alive' && (
+      {pet.pet_status === 'alive' && (
         <section
           style={{
             border: '1px solid var(--color-border)',

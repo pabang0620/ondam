@@ -8,6 +8,7 @@ export function useWillPreview() {
   const consents = JSON.parse(localStorage.getItem('will_consents') || '{}')
   const beneficiaries = JSON.parse(localStorage.getItem('will_beneficiaries') || '[]')
   const audioS3Key = localStorage.getItem('will_audio_s3key') || ''
+  const voiceSampleId = localStorage.getItem('will_voice_sample_id') || ''
   const photoS3Key = localStorage.getItem('will_photo_s3key') || ''
 
   // 중간 단계 새로고침 시 필수 데이터 누락 여부 검사 → 이전 단계로 redirect
@@ -47,7 +48,7 @@ export function useWillPreview() {
 
     try {
       const payload = {
-        voiceSampleId: audioS3Key,
+        voiceSampleId: voiceSampleId,  // UUID from voice sample creation
         title,
         contentText,
         releasePolicy: 'manual_admin',
@@ -68,12 +69,13 @@ export function useWillPreview() {
     } finally {
       setIsSubmitting(false)
     }
-  }, [audioS3Key, beneficiaries, contentText, navigate, title])
+  }, [voiceSampleId, beneficiaries, contentText, navigate, title])
 
   return {
     consents,
     beneficiaries,
     audioS3Key,
+    voiceSampleId,
     photoS3Key,
     title,
     setTitle,

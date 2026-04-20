@@ -16,7 +16,7 @@ export function useAdminUsers() {
     setIsLoading(true)
     setError(null)
     try {
-      const { data } = await adminApi.getUsers(p, q)
+      const { data } = await adminApi.getUsers(p, q, LIMIT)
       if (data.success) {
         setUsers(data.data ?? [])
         setTotal(data.meta?.total ?? 0)

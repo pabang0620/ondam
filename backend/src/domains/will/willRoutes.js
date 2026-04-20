@@ -36,19 +36,27 @@ const voiceSampleIdSchema = z.object({
 const createWillSchema = z.object({
   body: z.object({
     voiceSampleId: z.string().uuid('유효한 UUID'),
-    title: z.string().min(1, '제목을 입력하세요').max(200),
-    contentText: z.string().min(1, '유언 내용을 입력하세요').max(5000, '유언 내용은 5000자 이하여야 합니다'),
+    title: z.string().trim().min(1, '제목을 입력하세요').max(200),
+    contentText: z.string().trim().min(1, '유언 내용을 입력하세요').max(5000, '유언 내용은 5000자 이하여야 합니다'),
     releasePolicy: z.enum(['manual_admin', 'inactivity_family_vote', 'immediate']).default('manual_admin'),
     priceKrw: z.coerce.number().int().positive().optional(),
+    eventType: z.enum(['death', 'incapacity', 'anniversary']).optional(),
     beneficiaries: z.array(
       z.object({
-        name: z.string().min(1, '수혜자 이름을 입력하세요').max(100),
+        name: z.string().trim().min(1, '수혜자 이름을 입력하세요').max(100),
         email: z.string().email('유효한 이메일을 입력하세요'),
-        phone: z.string().max(20).optional(),
-        relationship: z.string().min(1, '관계를 입력하세요').max(50),
+        phone: z.string().trim().max(20).optional(),
+        relationship: z.string().trim().min(1, '관계를 입력하세요').max(50),
       }),
     ).default([]),
   }),
+})
+
+const willListSchema = z.object({
+  query: z.object({
+    page: z.coerce.number().int().min(1).default(1),
+    limit: z.coerce.number().int().min(1).max(50).default(10),
+  }).optional(),
 })
 
 const willIdParamSchema = z.object({
@@ -113,6 +121,7 @@ router.post(
 router.get(
   '/wills',
   requireAuth,
+  validate(willListSchema),
   willController.getWills,
 )
 

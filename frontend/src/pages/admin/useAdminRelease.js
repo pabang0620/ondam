@@ -12,7 +12,7 @@ export function useAdminRelease() {
     setIsLoading(true)
     setError(null)
     try {
-      const { data } = await adminApi.getReleases()
+      const { data } = await adminApi.getReleases(1, 20)
       if (data.success) setReleases(data.data ?? [])
     } catch (err) {
       setError(err.response?.data?.message || '목록을 불러오지 못했습니다.')

@@ -9,7 +9,7 @@ const router = Router()
 // 프로필 수정 스키마
 const updateProfileSchema = z.object({
   body: z.object({
-    nickname: z.string().min(1, '닉네임은 1자 이상이어야 합니다').max(50, '닉네임은 50자 이하여야 합니다').optional(),
+    nickname: z.string().trim().min(1, '닉네임은 1자 이상이어야 합니다').max(50, '닉네임은 50자 이하여야 합니다').optional(),
     phone: z.string().max(20, '전화번호는 20자 이하여야 합니다').nullable().optional(),
     profileImageUrl: z.string().url('올바른 URL 형식이어야 합니다').max(500).nullable().optional(),
   }),
