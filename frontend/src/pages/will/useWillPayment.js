@@ -38,7 +38,10 @@ export function useWillPayment() {
         amount: WILL_AMOUNT,
       })
 
-      // 3단계: 처리 페이지 이동 (activateWill은 payment confirm 후 paymentService에서 자동 처리)
+      // 3단계: 영상 생성 큐 등록
+      await willApi.activateWill(willId)
+
+      // 4단계: 처리 페이지 이동
       navigate(`/will/processing/${willId}`)
     } catch {
       setPayError('결제에 실패했습니다. 다시 시도해 주세요.')

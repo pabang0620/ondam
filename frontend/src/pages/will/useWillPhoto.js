@@ -1,6 +1,10 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { willApi } from './willApi.js'
+import apiClient from '../../config/apiClient.js'
+
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp']
 
 export function useWillPhoto() {
   const navigate = useNavigate()
@@ -16,8 +20,13 @@ export function useWillPhoto() {
 
   const handleFileSelect = useCallback((file) => {
     if (!file) return
-    if (!file.type.startsWith('image/')) {
-      setUploadError('이미지 파일만 업로드할 수 있습니다.')
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      setUploadError('JPG, PNG, WEBP 형식의 사진만 업로드 가능합니다')
+      return
+    }
+    const ext = file.name.toLowerCase().slice(file.name.lastIndexOf('.'))
+    if (!ALLOWED_EXTENSIONS.includes(ext)) {
+      setUploadError('JPG, PNG, WEBP 형식의 사진만 업로드 가능합니다')
       return
     }
     setUploadError(null)
@@ -27,6 +36,10 @@ export function useWillPhoto() {
 
   const handleFileUpload = useCallback(async (file) => {
     if (!file) return
+    if (!ALLOWED_TYPES.includes(file.type)) return
+    const ext = file.name.toLowerCase().slice(file.name.lastIndexOf('.'))
+    if (!ALLOWED_EXTENSIONS.includes(ext)) return
+
     setIsUploading(true)
     setUploadError(null)
 
@@ -35,8 +48,14 @@ export function useWillPhoto() {
 
     try {
       const { data } = await willApi.uploadPhoto(formData)
-      const s3Key = data.data?.s3Key || data.data?.fileUrl
+      const uploadedUrl = data.data?.url
+      const s3Key = data.data?.s3Key
       localStorage.setItem('will_photo_s3key', s3Key)
+
+      // Save as profile image so activateWill can use it
+      await apiClient.put('/users/me', { profileImageUrl: uploadedUrl })
+      localStorage.setItem('will_photo_url', uploadedUrl)
+
       navigate('/will/preview')
     } catch {
       setUploadError('사진 업로드에 실패했습니다. 다시 시도해 주세요.')
