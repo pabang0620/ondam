@@ -66,7 +66,7 @@ export default function SubscriptionStatusCard({ subscription, onCancel, onRetry
 
   const planName = PLAN_NAMES[subscription.plan] ?? subscription.plan
   const planPrice = PLAN_PRICES[subscription.plan]
-  const { status } = subscription
+  const status = subscription.subStatus ?? subscription.status ?? 'canceled'
 
   return (
     <section

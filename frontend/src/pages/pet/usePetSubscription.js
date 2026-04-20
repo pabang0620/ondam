@@ -91,7 +91,7 @@ export function usePetSubscription() {
     try {
       await petApi.cancelSubscription(subscriptionId)
       setCurrentSubscription((prev) =>
-        prev ? { ...prev, status: 'canceled' } : null,
+        prev ? { ...prev, subStatus: 'canceled' } : null,
       )
       setIsCancelModalOpen(false)
       setSuccessMessage('구독이 해지되었습니다.')

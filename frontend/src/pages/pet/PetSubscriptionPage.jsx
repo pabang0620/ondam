@@ -166,7 +166,8 @@ export default function PetSubscriptionPage() {
   }, [successMessage, location.state, clearSuccessMessage])
 
   const hasActiveSubscription =
-    currentSubscription && currentSubscription.status !== 'canceled'
+    currentSubscription &&
+    (currentSubscription.subStatus ?? currentSubscription.status) !== 'canceled'
 
   const currentPlanKey = currentSubscription?.plan ?? null
 
