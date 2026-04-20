@@ -112,14 +112,15 @@ export const createWill = async ({
   contentText,
   releasePolicy,
   priceKrw,
+  eventType,
 }) => {
   const [result] = await pool.execute(
     `INSERT INTO wills
        (will_id, user_id, voice_sample_id, title, content_text,
-        status, release_policy, release_status, price_krw,
+        status, release_policy, release_status, price_krw, event_type,
         created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, 'draft', ?, 'locked', ?, NOW(), NOW())`,
-    [willId, userId, voiceSampleId, title, contentText, releasePolicy, priceKrw ?? 49000],
+     VALUES (?, ?, ?, ?, ?, 'draft', ?, 'locked', ?, ?, NOW(), NOW())`,
+    [willId, userId, voiceSampleId, title, contentText, releasePolicy, priceKrw ?? 49000, eventType ?? null],
   )
   return result
 }
@@ -391,16 +392,16 @@ export const createWillWithBeneficiaries = async (willData, beneficiariesData) =
     await connection.beginTransaction()
 
     const {
-      willId, userId, voiceSampleId, title, contentText, releasePolicy, priceKrw,
+      willId, userId, voiceSampleId, title, contentText, releasePolicy, priceKrw, eventType,
     } = willData
 
     await connection.execute(
       `INSERT INTO wills
          (will_id, user_id, voice_sample_id, title, content_text,
-          status, release_policy, release_status, price_krw,
+          status, release_policy, release_status, price_krw, event_type,
           created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, 'draft', ?, 'locked', ?, NOW(), NOW())`,
-      [willId, userId, voiceSampleId, title, contentText, releasePolicy, priceKrw ?? 49000],
+       VALUES (?, ?, ?, ?, ?, 'draft', ?, 'locked', ?, ?, NOW(), NOW())`,
+      [willId, userId, voiceSampleId, title, contentText, releasePolicy, priceKrw ?? 49000, eventType ?? null],
     )
 
     if (beneficiariesData.length > 0) {

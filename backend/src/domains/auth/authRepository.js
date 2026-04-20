@@ -128,16 +128,22 @@ export const findRefreshToken = async (tokenHash) => {
 }
 
 /**
- * 동의 항목 upsert — user_consents는 append-only이므로 항상 새 row INSERT
+ * 동의 항목 upsert — (user_id, consent_type) UNIQUE KEY 기반 ON DUPLICATE KEY UPDATE
+ * 동일 사용자·동의 유형의 기존 row가 있으면 is_agreed/agreed_at 만 갱신하고
+ * consent_id(UUID)는 신규 생성 값으로 교체한다 (추적 목적)
  * @param {string} userId
  * @param {string} consentType
  * @param {boolean} isAgreed
  */
 export const upsertConsent = async (userId, consentType, isAgreed) => {
   await pool.query(
-    `INSERT INTO user_consents (consent_id, user_id, consent_type, is_agreed)
-     VALUES (?, ?, ?, ?)`,
-    [uuidv4(), userId, consentType, isAgreed ? 1 : 0]
+    `INSERT INTO user_consents (consent_id, user_id, consent_type, is_agreed, agreed_at)
+     VALUES (?, ?, ?, ?, NOW())
+     ON DUPLICATE KEY UPDATE
+       consent_id = VALUES(consent_id),
+       is_agreed  = VALUES(is_agreed),
+       agreed_at  = NOW()`,
+    [uuidv4(), userId, consentType, isAgreed ? 1 : 0],
   )
 }
 

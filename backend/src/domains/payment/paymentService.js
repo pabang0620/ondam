@@ -309,7 +309,7 @@ const _updateTargetStatus = async (targetType, targetId, conn) => {
     )
   } else if (targetType === 'will_order') {
     await executor.execute(
-      `UPDATE wills SET status = 'active', updated_at = NOW() WHERE will_id = ? AND deleted_at IS NULL`,
+      `UPDATE wills SET status = 'paid', updated_at = NOW() WHERE will_id = ? AND deleted_at IS NULL`,
       [targetId],
     )
   }

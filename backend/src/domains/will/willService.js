@@ -94,7 +94,7 @@ export const getVoiceSampleStatus = async (userId, voiceSampleId) => {
  */
 export const createWill = async (
   userId,
-  { voiceSampleId, title, contentText, releasePolicy, beneficiaries = [], priceKrw },
+  { voiceSampleId, title, contentText, releasePolicy, beneficiaries = [], priceKrw, eventType },
 ) => {
   // 음성 샘플 소유권 + ready 상태 확인
   const sample = await repo.findVoiceSampleById(voiceSampleId)
@@ -135,6 +135,7 @@ export const createWill = async (
       contentText,
       releasePolicy: releasePolicy ?? 'manual_admin',
       priceKrw: priceKrw ?? 49000,
+      eventType: eventType ?? null,
     },
     beneficiariesData,
   )
@@ -192,7 +193,7 @@ export const activateWill = async (userId, willId) => {
     if (String(will.user_id) !== String(userId)) {
       throw Object.assign(new Error('접근 권한이 없습니다'), { status: 403 })
     }
-    if (will.status !== 'draft') {
+    if (!['draft', 'paid'].includes(will.status)) {
       throw Object.assign(new Error('이미 처리 중이거나 완료된 유언장입니다'), { status: 400 })
     }
 

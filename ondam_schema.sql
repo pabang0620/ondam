@@ -99,10 +99,11 @@ CREATE TABLE IF NOT EXISTS user_consents (
 
   created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
+  UNIQUE KEY uq_consents_user_type (user_id, consent_type),
   INDEX idx_consents_user        (user_id, consent_type, agreed_at DESC),
   INDEX idx_consents_type        (consent_type, is_agreed)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  COMMENT='초상권·음성권·AI생성·사후공개 동의 이력 (append-only)';
+  COMMENT='사용자 동의 현황 (user_id + consent_type 당 최신 1건 유지 — ON DUPLICATE KEY UPDATE)';
 
 
 -- 이메일 인증 토큰 (만료·소멸 후 삭제 대상)
@@ -282,10 +283,13 @@ CREATE TABLE IF NOT EXISTS wills (
   result_video_duration_sec     INT UNSIGNED NULL,
 
   -- 상태
-  status                       ENUM('draft','active','released','revoked') NOT NULL DEFAULT 'draft',
+  status                       ENUM('draft','paid','active','released','revoked') NOT NULL DEFAULT 'draft',
   release_policy               ENUM('manual_admin','inactivity_family_vote','immediate') NOT NULL DEFAULT 'manual_admin',
   release_status               ENUM('locked','pending_review','released') NOT NULL DEFAULT 'locked',
   released_at                  DATETIME NULL,
+
+  -- 이벤트 유형 (결제 트리거 조건)
+  event_type                   ENUM('death','incapacity','anniversary') NULL,
 
   -- 가격 스냅샷
   price_krw                    INT UNSIGNED NOT NULL DEFAULT 49000,
@@ -308,8 +312,8 @@ CREATE TABLE IF NOT EXISTS will_status_logs (
   id               BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   log_id           CHAR(36) NOT NULL UNIQUE,
   will_id          CHAR(36) NOT NULL COMMENT 'wills.will_id 참조',
-  prev_status      ENUM('draft','active','released','revoked') NULL,
-  next_status      ENUM('draft','active','released','revoked') NOT NULL,
+  prev_status      ENUM('draft','paid','active','released','revoked') NULL,
+  next_status      ENUM('draft','paid','active','released','revoked') NOT NULL,
   changed_by       CHAR(36) NOT NULL,
   changed_by_type  ENUM('user','admin','system') NOT NULL,
   reason           VARCHAR(500) NULL,
@@ -808,3 +812,30 @@ ALTER TABLE notifications
     'pet_memorial_shared',
     'admin_notice'
   ) NOT NULL;
+
+-- ==========================================================================
+-- 마이그레이션: 유언장 결제→활성화 흐름 도입 (2026-04-19)
+-- ==========================================================================
+
+-- [4] wills.status ENUM — 'paid' 추가
+--     결제 완료 후 프론트엔드가 activateWill 을 명시적으로 호출하기 전까지
+--     유언장은 'paid' 상태를 유지한다 (영상 생성 큐는 activateWill 시점에 등록)
+ALTER TABLE wills
+  MODIFY COLUMN status ENUM('draft','paid','active','released','revoked') NOT NULL DEFAULT 'draft';
+
+-- [5] will_status_logs — prev_status / next_status ENUM 에 'paid' 추가
+ALTER TABLE will_status_logs
+  MODIFY COLUMN prev_status ENUM('draft','paid','active','released','revoked') NULL,
+  MODIFY COLUMN next_status ENUM('draft','paid','active','released','revoked') NOT NULL;
+
+-- [6] wills.event_type — 결제 트리거 조건 (사망/금치산/기념일)
+ALTER TABLE wills
+  ADD COLUMN event_type ENUM('death','incapacity','anniversary') NULL
+    COMMENT '유언장 공개 트리거 이벤트 유형'
+    AFTER release_status;
+
+-- [7] user_consents — (user_id, consent_type) UNIQUE KEY
+--     upsertConsent 에서 ON DUPLICATE KEY UPDATE 를 사용하기 위한 선결 조건
+--     기존 중복 데이터가 있으면 먼저 정리 후 실행
+ALTER TABLE user_consents
+  ADD UNIQUE KEY uq_consents_user_type (user_id, consent_type);
