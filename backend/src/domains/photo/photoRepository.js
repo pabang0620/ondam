@@ -3,11 +3,11 @@ import pool from '../../config/db.js'
 
 // ─── photo_orders ────────────────────────────────────────────────────────────
 
-export const createOrder = async ({ orderId, userId, photoType, priceKrw }) => {
+export const createOrder = async ({ orderId, userId, photoType, priceKrw, sourceImageUrl }) => {
   const [result] = await pool.query(
-    `INSERT INTO photo_orders (order_id, user_id, photo_type, price_krw, status, created_at, updated_at)
-     VALUES (?, ?, ?, ?, 'pending_payment', NOW(), NOW())`,
-    [orderId, userId, photoType, priceKrw],
+    `INSERT INTO photo_orders (order_id, user_id, photo_type, price_krw, source_image_url, status, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, 'pending_payment', NOW(), NOW())`,
+    [orderId, userId, photoType, priceKrw, sourceImageUrl ?? null],
   )
   return result
 }

@@ -39,6 +39,10 @@ export function useWillPreview() {
   const [submitError, setSubmitError] = useState(null)
 
   const handleSubmit = useCallback(async () => {
+    if (!voiceSampleId || !/^[0-9a-f-]{36}$/i.test(voiceSampleId)) {
+      setSubmitError('음성 샘플이 준비되지 않았습니다. 이전 단계(녹음)로 돌아가세요.')
+      return
+    }
     if (!contentText.trim()) {
       setSubmitError('유언 메시지를 입력해 주세요.')
       return

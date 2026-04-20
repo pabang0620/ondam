@@ -28,7 +28,10 @@ export function useWillPayment() {
     try {
       // 1단계: 결제 준비
       const prepareRes = await willApi.preparePayment(willId, WILL_AMOUNT)
-      const orderId = prepareRes.data.data?.orderId || willId
+      if (!prepareRes.data?.success) {
+        throw new Error(prepareRes.data?.message || '결제 준비에 실패했습니다')
+      }
+      const orderId = prepareRes.data.data?.orderId
 
       // 2단계: 결제 확인 (개발 환경 mock)
       const paymentKey = `mock_${Date.now()}`

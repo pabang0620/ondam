@@ -16,4 +16,11 @@ const pool = mysql.createPool({
   supportBigNumbers: true,
 })
 
+// 연결 획득 시 세션 시간대를 KST로 강제 설정
+pool.on('connection', (conn) => {
+  conn.query("SET time_zone = '+09:00'", (err) => {
+    if (err) console.error('[db] SET time_zone 실패:', err.message)
+  })
+})
+
 export default pool

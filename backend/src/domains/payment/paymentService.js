@@ -321,7 +321,7 @@ const _updateTargetStatus = async (targetType, targetId, conn) => {
 const _revertTargetStatus = async (targetType, targetId) => {
   if (targetType === 'photo_order') {
     await pool.execute(
-      `UPDATE photo_orders SET status = 'canceled', updated_at = NOW() WHERE photo_order_id = ? AND deleted_at IS NULL`,
+      `UPDATE photo_orders SET status = 'canceled', updated_at = NOW() WHERE order_id = ? AND deleted_at IS NULL`,
       [targetId]
     )
   } else if (targetType === 'will_order') {

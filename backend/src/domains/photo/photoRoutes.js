@@ -30,6 +30,7 @@ const createOrderSchema = z.object({
     photoType: z.enum(['funeral', 'id', 'job', 'enhance', 'colorize', 'restore', 'removebg'], {
       errorMap: () => ({ message: "photoType은 'funeral', 'id', 'job', 'enhance', 'colorize', 'restore', 'removebg' 중 하나여야 합니다" }),
     }),
+    sourceImageUrl: z.string().url('유효한 URL이어야 합니다'),
   }),
 })
 

@@ -53,8 +53,8 @@ const consentSchema = z.object({
 
 const registerSchema = z.object({
   body: z.object({
-    email: z.string().email('올바른 이메일 형식이 아닙니다'),
-    password: z.string().min(8, '비밀번호는 8자 이상이어야 합니다'),
+    email: z.string().trim().email('올바른 이메일 형식이 아닙니다'),
+    password: z.string().trim().min(8, '비밀번호는 8자 이상이어야 합니다'),
     nickname: z
       .string()
       .trim()
@@ -68,8 +68,8 @@ const registerSchema = z.object({
 
 const loginSchema = z.object({
   body: z.object({
-    email: z.string().email('올바른 이메일 형식이 아닙니다'),
-    password: z.string().min(1, '비밀번호를 입력해주세요'),
+    email: z.string().trim().email('올바른 이메일 형식이 아닙니다'),
+    password: z.string().trim().min(1, '비밀번호를 입력해주세요'),
   }),
 })
 

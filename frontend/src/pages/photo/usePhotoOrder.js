@@ -17,6 +17,7 @@ function usePhotoOrder() {
   const [selectedType, setSelectedType] = useState(initialType)
   const [previewUrl, setPreviewUrl] = useState(null)
   const [uploadedS3Key, setUploadedS3Key] = useState(null)
+  const [uploadedUrl, setUploadedUrl] = useState(null)
   const [isUploading, setIsUploading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState(null)
@@ -53,6 +54,7 @@ function usePhotoOrder() {
     try {
       const { data } = await uploadPhoto(file)
       setUploadedS3Key(data.data.s3Key)
+      setUploadedUrl(data.data.url)
     } catch (err) {
       setError('사진 업로드에 실패했습니다. 다시 시도해 주세요.')
       URL.revokeObjectURL(localUrl)
@@ -69,7 +71,7 @@ function usePhotoOrder() {
     setError(null)
 
     try {
-      const { data } = await createPhotoOrder(selectedType)
+      const { data } = await createPhotoOrder(selectedType, uploadedUrl)
       const orderId = data.data.orderId ?? data.data.id
       navigate(`/photo/payment?orderId=${orderId}`)
     } catch (err) {
@@ -77,7 +79,7 @@ function usePhotoOrder() {
     } finally {
       setIsSubmitting(false)
     }
-  }, [selectedType, uploadedS3Key, isSubmitting, navigate])
+  }, [selectedType, uploadedS3Key, uploadedUrl, isSubmitting, navigate])
 
   const canSubmit = Boolean(selectedType && uploadedS3Key && !isUploading && !isSubmitting)
 

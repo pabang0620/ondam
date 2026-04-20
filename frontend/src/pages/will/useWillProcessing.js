@@ -38,9 +38,9 @@ export function useWillProcessing() {
     if (!willId) return null
     try {
       const { data } = await willApi.getWillStatus(willId)
-      const status = data.data?.jobStatus
-      const prog = data.data?.progress ?? 0
-      const jobId = data.data?.jobId
+      const status = data.data?.job?.jobStatus
+      const prog = data.data?.job?.progress ?? 0
+      const jobId = data.data?.job?.jobId
 
       if (jobId) bullmqJobIdRef.current = jobId
 

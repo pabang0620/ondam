@@ -40,3 +40,17 @@ export const decryptBuffer = async (encryptedBuffer) => {
   const response = await kmsClient.send(command)
   return Buffer.from(response.Plaintext).toString('utf8')
 }
+
+/**
+ * KMS 암호화된 값(Buffer 또는 base64 문자열)과 kmsKeyId를 받아 복호화
+ * subscriptions.toss_billing_key_encrypted 복호화 용도
+ * @param {Buffer|string} encryptedValue — DB에서 읽은 BLOB/Buffer 또는 base64 문자열
+ * @param {string} _kmsKeyId — KMS 복호화 시 키 ID는 ciphertext에 포함되어 있으므로 미사용
+ * @returns {Promise<string>}
+ */
+export const decryptString = async (encryptedValue, _kmsKeyId) => {
+  const cipherBlob = Buffer.isBuffer(encryptedValue)
+    ? encryptedValue
+    : Buffer.from(encryptedValue, 'base64')
+  return decryptBuffer(cipherBlob)
+}

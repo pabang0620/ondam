@@ -20,29 +20,31 @@ USE ondam;
 -- ==========================================================================
 -- ENUM 목록 (shared/constants/enums.ts 동기화 대상)
 --
--- USER_ROLE              : 'user', 'admin'
--- CONSENT_TYPE           : 'privacy', 'portrait', 'voice', 'ai_generation', 'posthumous_release'
--- PHOTO_ORDER_STATUS     : 'pending_payment', 'paid', 'processing', 'completed', 'failed', 'refunded'
--- PHOTO_TYPE             : 'funeral', 'id', 'job'
--- PHOTO_FILE_KIND        : 'raw', 'enhanced'
--- WILL_RELEASE_POLICY    : 'manual_admin', 'inactivity_family_vote', 'immediate'
--- WILL_RELEASE_STATUS    : 'locked', 'pending_review', 'released'
--- WILL_STATUS            : 'draft', 'active', 'released', 'revoked'
--- PET_SPECIES            : 'dog', 'cat', 'rabbit', 'bird', 'hamster', 'fish', 'reptile', 'other'
--- PET_MEDIA_TYPE         : 'photo', 'video'
--- PET_STATUS             : 'alive', 'deceased', 'unknown'
--- PAYMENT_TARGET_TYPE    : 'photo_order', 'will_order', 'subscription'
--- PAYMENT_STATUS         : 'ready', 'done', 'canceled', 'failed'
--- SUBSCRIPTION_PLAN      : 'pet_archive', 'will_premium', 'all'
--- SUBSCRIPTION_STATUS    : 'active', 'past_due', 'canceled'
--- AI_JOB_TYPE            : 'photo_enhance', 'voice_clone', 'video_generate', 'avatar_stream'
--- AI_JOB_STATUS          : 'queued', 'running', 'completed', 'failed'
--- NOTIFICATION_TYPE      : 'photo_complete', 'voice_clone_complete', 'will_video_ready',
---                          'will_release_request', 'will_released',
---                          'payment_done', 'payment_failed', 'subscription_renewed',
---                          'subscription_canceled', 'pet_memorial_shared', 'admin_notice'
--- WILL_RELEASE_REQ_STATUS: 'pending', 'approved', 'rejected'
--- CHANGED_BY_TYPE        : 'user', 'admin', 'system'
+-- USER_ROLE                          : 'user', 'admin'
+-- CONSENT_TYPE                       : 'privacy', 'portrait', 'voice', 'ai_generation', 'posthumous_release'
+-- PHOTO_ORDER_STATUS                 : 'pending_payment', 'paid', 'processing', 'completed', 'failed', 'refunded'
+-- PHOTO_TYPE                         : 'funeral', 'id', 'job', 'enhance', 'colorize', 'restore', 'removebg'
+-- PHOTO_FILE_KIND                    : 'raw', 'enhanced'
+-- WILL_RELEASE_POLICY                : 'manual_admin', 'inactivity_family_vote', 'immediate'
+-- WILL_RELEASE_STATUS                : 'locked', 'pending_review', 'released'
+-- WILL_STATUS                        : 'draft', 'active', 'released', 'revoked'
+-- PET_SPECIES                        : 'dog', 'cat', 'rabbit', 'bird', 'hamster', 'fish', 'reptile', 'other'
+-- PET_MEDIA_TYPE                     : 'photo', 'video'
+-- PET_STATUS                         : 'alive', 'deceased', 'unknown'
+-- PAYMENT_TARGET_TYPE                : 'photo_order', 'will_order', 'subscription'
+-- PAYMENT_STATUS                     : 'ready', 'done', 'canceled', 'failed'
+-- SUBSCRIPTION_PLAN                  : 'pet_archive', 'will_premium', 'all'
+-- SUBSCRIPTION_STATUS                : 'active', 'past_due', 'suspended', 'canceled'
+-- SUBSCRIPTION_PAYMENT_LOG_STATUS    : 'pending', 'success', 'failed', 'retry_scheduled', 'abandoned'
+-- SUBSCRIPTION_PAYMENT_FAIL_CATEGORY : 'card_expired', 'insufficient_funds', 'card_blocked', 'network_error', 'unknown'
+-- AI_JOB_TYPE                        : 'photo_enhance', 'voice_clone', 'video_generate', 'avatar_stream'
+-- AI_JOB_STATUS                      : 'queued', 'running', 'completed', 'failed'
+-- NOTIFICATION_TYPE                  : 'photo_complete', 'voice_clone_complete', 'will_video_ready',
+--                                      'will_release_request', 'will_released',
+--                                      'payment_done', 'payment_failed', 'subscription_renewed',
+--                                      'subscription_canceled', 'pet_memorial_shared', 'admin_notice'
+-- WILL_RELEASE_REQ_STATUS            : 'pending', 'approved', 'rejected'
+-- CHANGED_BY_TYPE                    : 'user', 'admin', 'system'
 -- ==========================================================================
 
 
@@ -162,7 +164,7 @@ CREATE TABLE IF NOT EXISTS photo_orders (
   order_id        CHAR(36) NOT NULL UNIQUE COMMENT 'UUID',
 
   user_id         CHAR(36) NOT NULL COMMENT 'users.user_id 참조',
-  photo_type      ENUM('funeral','id','job') NOT NULL,
+  photo_type      ENUM('funeral','id','job','enhance','colorize','restore','removebg') NOT NULL,
   status          ENUM('pending_payment','paid','processing','completed','failed','refunded')
                   NOT NULL DEFAULT 'pending_payment',
 
@@ -546,7 +548,7 @@ CREATE TABLE IF NOT EXISTS subscriptions (
 
   user_id                     CHAR(36) NOT NULL COMMENT 'users.user_id 참조',
   plan                        ENUM('pet_archive','will_premium','all') NOT NULL,
-  sub_status                  ENUM('active','past_due','canceled') NOT NULL DEFAULT 'active',
+  sub_status                  ENUM('active','past_due','suspended','canceled') NOT NULL DEFAULT 'active',
 
   -- 토스 자동결제 빌링키 (KMS 암호화)
   toss_billing_key_encrypted  VARBINARY(512) NOT NULL COMMENT 'AES-256/KMS 암호화된 빌링키',
@@ -558,6 +560,12 @@ CREATE TABLE IF NOT EXISTS subscriptions (
   last_billed_at              DATETIME NULL,
   canceled_at                 DATETIME NULL,
   cancel_reason               VARCHAR(500) NULL,
+
+  -- 결제 실패 추적
+  fail_count                  TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '연속 결제 실패 횟수',
+  last_failed_at              DATETIME NULL COMMENT '마지막 결제 실패 시각',
+  grace_period_until          DATETIME NULL COMMENT 'past_due 유예 만료 시각 (3일)',
+  suspended_at                DATETIME NULL COMMENT '구독 정지 시각',
 
   created_at                  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at                  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -576,8 +584,8 @@ CREATE TABLE IF NOT EXISTS subscription_logs (
   id              BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   log_id          CHAR(36) NOT NULL UNIQUE,
   subscription_id CHAR(36) NOT NULL COMMENT 'subscriptions.subscription_id 참조',
-  prev_status     ENUM('active','past_due','canceled') NULL,
-  next_status     ENUM('active','past_due','canceled') NOT NULL,
+  prev_status     ENUM('active','past_due','suspended','canceled') NULL,
+  next_status     ENUM('active','past_due','suspended','canceled') NOT NULL,
   changed_by      CHAR(36) NOT NULL,
   changed_by_type ENUM('user','admin','system') NOT NULL,
   reason          VARCHAR(500) NULL,
@@ -586,6 +594,48 @@ CREATE TABLE IF NOT EXISTS subscription_logs (
   INDEX idx_subscription_logs_sub (subscription_id, created_at DESC)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   COMMENT='구독 상태 변경 이력 (append-only)';
+
+
+-- subscription_payment_logs.log_status ENUM SSOT: SUBSCRIPTION_PAYMENT_LOG_STATUS
+-- subscription_payment_logs.fail_category ENUM SSOT: SUBSCRIPTION_PAYMENT_FAIL_CATEGORY
+CREATE TABLE IF NOT EXISTS subscription_payment_logs (
+  id                     BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  log_id                 CHAR(36) NOT NULL UNIQUE COMMENT 'UUID — 외부 노출용',
+
+  subscription_id        CHAR(36) NOT NULL COMMENT 'subscriptions.subscription_id 참조',
+  user_id                CHAR(36) NOT NULL COMMENT 'users.user_id 비정규화 (조회 최적화)',
+
+  billing_cycle_date     DATE NOT NULL COMMENT '결제 사이클 기준일 (구독 시작일 기준 매월 동일 일)',
+  attempt_no             TINYINT UNSIGNED NOT NULL DEFAULT 1 COMMENT '해당 사이클 내 시도 순서 (1~N)',
+
+  log_status             ENUM('pending','success','failed','retry_scheduled','abandoned') NOT NULL DEFAULT 'pending',
+  attempt_type           ENUM('initial','recurring','retry') NOT NULL DEFAULT 'recurring',
+
+  toss_payment_key       VARCHAR(200) NULL UNIQUE COMMENT '성공 시 토스 결제 키',
+  toss_order_id          VARCHAR(64) NOT NULL COMMENT '토스 주문 ID',
+
+  amount_krw             INT UNSIGNED NOT NULL,
+
+  attempted_at           DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '결제 요청 전송 시각',
+  succeeded_at           DATETIME NULL,
+  failed_at              DATETIME NULL,
+
+  fail_code              VARCHAR(50) NULL COMMENT '토스 원본 에러 코드 (예: REJECT_CARD_COMPANY)',
+  fail_category          ENUM('card_expired','insufficient_funds','card_blocked','network_error','unknown') NULL,
+  fail_reason            VARCHAR(500) NULL COMMENT '사용자 노출 메시지',
+
+  next_retry_at          DATETIME NULL COMMENT 'retry_scheduled 상태일 때만 값 존재',
+
+  created_at             DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  UNIQUE KEY uq_sub_pay_logs_cycle_attempt (subscription_id, billing_cycle_date, attempt_no),
+  UNIQUE KEY uq_sub_pay_logs_toss_order    (toss_order_id),
+  INDEX idx_sub_pay_logs_sub_created  (subscription_id, created_at DESC),
+  INDEX idx_sub_pay_logs_user_status  (user_id, log_status, created_at DESC),
+  INDEX idx_sub_pay_logs_status_retry (log_status, next_retry_at),
+  INDEX idx_sub_pay_logs_cycle        (billing_cycle_date, log_status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  COMMENT='구독 정기결제 시도 로그 (append-only)';
 
 
 -- ==========================================================================
@@ -839,3 +889,84 @@ ALTER TABLE wills
 --     기존 중복 데이터가 있으면 먼저 정리 후 실행
 ALTER TABLE user_consents
   ADD UNIQUE KEY uq_consents_user_type (user_id, consent_type);
+
+-- ==========================================================================
+-- 마이그레이션: photo_orders.photo_type ENUM 확장 (2026-04-20)
+-- ==========================================================================
+
+-- [8] photo_orders.photo_type ENUM 확장 (enhance/colorize/restore/removebg 추가)
+--     photoWorker.js 및 Zod 검증이 7개 타입을 지원하나 ENUM은 3개만 선언되어
+--     enhance/colorize/restore/removebg 주문 INSERT 시 런타임 오류 발생
+--     MySQL ENUM 수정은 전체 테이블 재정의를 유발하므로 오프피크 적용 권장
+ALTER TABLE photo_orders
+  MODIFY COLUMN photo_type ENUM('funeral','id','job','enhance','colorize','restore','removebg') NOT NULL;
+
+-- ==========================================================================
+-- 마이그레이션: 구독 정기결제 실패 처리 흐름 도입 (2026-04-20)
+-- ==========================================================================
+
+-- [9] KST 타임존 세팅 (DB 연결 풀 초기화 외 마이그레이션 실행 시 보정)
+SET time_zone = '+09:00';
+
+-- [10] subscription_payment_logs 신규 테이블 생성
+--      구독 정기결제 시도 이력 추적 (append-only)
+--      billing_cycle_date + attempt_no 복합 UNIQUE 로 사이클 내 중복 시도 방지
+CREATE TABLE IF NOT EXISTS subscription_payment_logs (
+  id                     BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  log_id                 CHAR(36) NOT NULL UNIQUE COMMENT 'UUID — 외부 노출용',
+
+  subscription_id        CHAR(36) NOT NULL COMMENT 'subscriptions.subscription_id 참조',
+  user_id                CHAR(36) NOT NULL COMMENT 'users.user_id 비정규화 (조회 최적화)',
+
+  billing_cycle_date     DATE NOT NULL COMMENT '결제 사이클 기준일 (구독 시작일 기준 매월 동일 일)',
+  attempt_no             TINYINT UNSIGNED NOT NULL DEFAULT 1 COMMENT '해당 사이클 내 시도 순서 (1~N)',
+
+  log_status             ENUM('pending','success','failed','retry_scheduled','abandoned') NOT NULL DEFAULT 'pending',
+  attempt_type           ENUM('initial','recurring','retry') NOT NULL DEFAULT 'recurring',
+
+  toss_payment_key       VARCHAR(200) NULL UNIQUE COMMENT '성공 시 토스 결제 키',
+  toss_order_id          VARCHAR(64) NOT NULL COMMENT '토스 주문 ID',
+
+  amount_krw             INT UNSIGNED NOT NULL,
+
+  attempted_at           DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '결제 요청 전송 시각',
+  succeeded_at           DATETIME NULL,
+  failed_at              DATETIME NULL,
+
+  fail_code              VARCHAR(50) NULL COMMENT '토스 원본 에러 코드 (예: REJECT_CARD_COMPANY)',
+  fail_category          ENUM('card_expired','insufficient_funds','card_blocked','network_error','unknown') NULL,
+  fail_reason            VARCHAR(500) NULL COMMENT '사용자 노출 메시지',
+
+  next_retry_at          DATETIME NULL COMMENT 'retry_scheduled 상태일 때만 값 존재',
+
+  created_at             DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  UNIQUE KEY uq_sub_pay_logs_cycle_attempt (subscription_id, billing_cycle_date, attempt_no),
+  UNIQUE KEY uq_sub_pay_logs_toss_order    (toss_order_id),
+  INDEX idx_sub_pay_logs_sub_created  (subscription_id, created_at DESC),
+  INDEX idx_sub_pay_logs_user_status  (user_id, log_status, created_at DESC),
+  INDEX idx_sub_pay_logs_status_retry (log_status, next_retry_at),
+  INDEX idx_sub_pay_logs_cycle        (billing_cycle_date, log_status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  COMMENT='구독 정기결제 시도 로그 (append-only)';
+
+-- [11] subscriptions ENUM 확장 + 결제 실패 추적 컬럼 추가
+--      sub_status 에 'suspended' 추가: past_due 유예 만료 후 접근 차단 상태
+--      fail_count / last_failed_at / grace_period_until / suspended_at 컬럼 신설
+--      MySQL 8.4: NOT NULL + DEFAULT 컬럼 추가는 ALGORITHM=INSTANT 가능 (무락)
+--      ENUM MODIFY는 ALGORITHM=COPY 유발 가능 → 오프피크 적용 권장
+--      shared/constants/enums.ts 의 SUBSCRIPTION_STATUS 동시 수정 필수
+ALTER TABLE subscriptions
+  MODIFY COLUMN sub_status ENUM('active','past_due','suspended','canceled') NOT NULL DEFAULT 'active',
+  ADD COLUMN IF NOT EXISTS fail_count         TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '연속 결제 실패 횟수'     AFTER cancel_reason,
+  ADD COLUMN IF NOT EXISTS last_failed_at     DATETIME NULL                        COMMENT '마지막 결제 실패 시각' AFTER fail_count,
+  ADD COLUMN IF NOT EXISTS grace_period_until DATETIME NULL                        COMMENT 'past_due 유예 만료 시각 (3일)' AFTER last_failed_at,
+  ADD COLUMN IF NOT EXISTS suspended_at       DATETIME NULL                        COMMENT '구독 정지 시각'         AFTER grace_period_until,
+  ADD INDEX idx_subscriptions_grace (sub_status, grace_period_until);
+
+-- [12] subscription_logs ENUM 확장 — 'suspended' 추가
+--      prev_status / next_status 모두 subscriptions.sub_status 와 동기
+--      shared/constants/enums.ts 의 SUBSCRIPTION_STATUS 와 함께 동기화 완료
+ALTER TABLE subscription_logs
+  MODIFY COLUMN prev_status ENUM('active','past_due','suspended','canceled') NULL,
+  MODIFY COLUMN next_status ENUM('active','past_due','suspended','canceled') NOT NULL;

@@ -6,11 +6,11 @@ import pool from '../../config/db.js'
 
 // ─── 주문 생성 ────────────────────────────────────────────────────────────────
 
-export const createOrder = async (userId, { photoType }) => {
+export const createOrder = async (userId, { photoType, sourceImageUrl }) => {
   const orderId = uuidv4()
   const priceKrw = 9900
 
-  await photoRepository.createOrder({ orderId, userId, photoType, priceKrw })
+  await photoRepository.createOrder({ orderId, userId, photoType, priceKrw, sourceImageUrl })
 
   return {
     orderId,

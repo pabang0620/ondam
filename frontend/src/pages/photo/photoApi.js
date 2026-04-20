@@ -1,7 +1,7 @@
 import apiClient from '../../config/apiClient.js'
 
-export const createPhotoOrder = (photoType) =>
-  apiClient.post('/photo/orders', { photoType })
+export const createPhotoOrder = (photoType, sourceImageUrl) =>
+  apiClient.post('/photo/orders', { photoType, sourceImageUrl })
 
 export const getPhotoOrders = () =>
   apiClient.get('/photo/orders')

@@ -82,9 +82,11 @@ export function useWillRecord() {
     formData.append('file', recordedBlob, 'voice-sample.webm')
 
     try {
-      const { data } = await willApi.uploadAudio(formData)
-      const { voiceSampleId, s3Key } = data.data ?? {}
-      if (voiceSampleId) localStorage.setItem('will_voice_sample_id', voiceSampleId)
+      const { data: uploadData } = await willApi.uploadAudio(formData)
+      const { s3Key } = uploadData.data ?? {}
+      const { data: sampleData } = await willApi.createVoiceSample({ s3Key, durationSec: duration })
+      const { voiceSampleId } = sampleData.data ?? {}
+      localStorage.setItem('will_voice_sample_id', voiceSampleId)
       localStorage.setItem('will_audio_s3key', s3Key)
       navigate('/will/photo')
     } catch {
@@ -92,7 +94,7 @@ export function useWillRecord() {
     } finally {
       setIsUploading(false)
     }
-  }, [recordedBlob, navigate])
+  }, [recordedBlob, duration, navigate])
 
   const formatDuration = (sec) => {
     const m = Math.floor(sec / 60).toString().padStart(2, '0')

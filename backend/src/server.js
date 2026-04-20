@@ -1,3 +1,4 @@
+process.env.TZ = 'Asia/Seoul'
 import 'dotenv/config'
 import { validateEnv } from './config/validateEnv.js'
 validateEnv()
@@ -24,6 +25,8 @@ import subscriptionRoutes from './domains/subscription/subscriptionRoutes.js'
 import notificationRoutes from './domains/notification/notificationRoutes.js'
 import adminRoutes from './domains/admin/adminRoutes.js'
 import uploadRoutes from './domains/common/uploadRoutes.js'
+import './queues/billingWorker.js'
+import { billingQueue } from './queues/billingQueue.js'
 
 const app = express()
 const httpServer = createServer(app)
@@ -167,6 +170,18 @@ app.use((err, req, res, _next) => {
 
 httpServer.listen(PORT, () => {
   console.log(`[ondam] 서버 시작 — 포트 ${PORT} (${process.env.NODE_ENV})`)
+
+  // 구독 자동결제 scan-due 반복 job 등록 (이미 있으면 BullMQ가 skip)
+  billingQueue.add(
+    'scan-due',
+    {},
+    {
+      repeat: { cron: process.env.BILLING_SCAN_CRON || '0 3 * * *' },
+      jobId: 'billing-scan-due-repeat',
+    }
+  ).catch((err) => {
+    console.warn('[server] scan-due 반복 job 등록 실패:', err.message)
+  })
 })
 
 export default app

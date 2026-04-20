@@ -134,7 +134,7 @@ export const createWill = async (
       title,
       contentText,
       releasePolicy: releasePolicy ?? 'manual_admin',
-      priceKrw: priceKrw ?? 49000,
+      priceKrw: priceKrw ?? 29900,
       eventType: eventType ?? null,
     },
     beneficiariesData,

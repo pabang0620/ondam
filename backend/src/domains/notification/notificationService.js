@@ -67,6 +67,22 @@ export const markAllAsRead = async (userId) => {
 // ---------------------------------------------------------------------------
 
 /**
+ * DB row → camelCase DTO 변환
+ */
+const toSettingsDto = (row) => ({
+  userId: row.user_id,
+  pushEnabled: Boolean(row.push_enabled),
+  emailEnabled: Boolean(row.email_enabled),
+  smsEnabled: Boolean(row.sms_enabled),
+  notifyPhotoComplete: Boolean(row.notify_photo_complete),
+  notifyWillEvents: Boolean(row.notify_will_events),
+  notifyPayment: Boolean(row.notify_payment),
+  notifySubscription: Boolean(row.notify_subscription),
+  notifyPetMemorial: Boolean(row.notify_pet_memorial),
+  notifyAdminNotice: Boolean(row.notify_admin_notice),
+})
+
+/**
  * 알림 설정 조회 (없으면 기본값 반환)
  */
 export const getSettings = async (userId) => {
@@ -85,7 +101,7 @@ export const getSettings = async (userId) => {
       notifyAdminNotice: true,
     }
   }
-  return settings
+  return toSettingsDto(settings)
 }
 
 /**
