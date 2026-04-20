@@ -14,8 +14,9 @@
 - **스키마 파일**: `ondam_schema.sql` (프로젝트 루트)
 - **작업 큐**: BullMQ + Redis (AI 처리 비동기)
 - **AI API**: OpenAI, ElevenLabs, D-ID, remove.bg
-- **결제**: 토스페이먼츠
+- **결제**: 토스페이먼츠 빌링 API (정기결제)
 - **암호화**: AWS KMS (민감 데이터)
+- **시간대**: `process.env.TZ = 'Asia/Seoul'` (Node.js) + MySQL `SET time_zone = '+09:00'` (DB)
 
 ---
 
@@ -107,6 +108,12 @@ app.post('/api/photo/enhance', async (req, res) => {
 `/api/memorial/:code` — 접근 코드(`memorial_access_code`) 검증 필수.
 유가족 인증 없이 고인 데이터 노출 절대 금지.
 
+### 5. 빌링키 보안
+- 빌링키는 KMS 암호화 후 DB 저장. 로그·API 응답에 절대 노출 금지.
+- 해지 시 즉시 `toss_billing_key_encrypted = NULL` 처리.
+- authKey는 1회용 — 백엔드에서 billingKey 교환 후 즉시 폐기.
+- 빌링키로 결제 후 토스 응답값은 즉시 `subscription_payment_logs`에 기록, authKey는 메모리에서 제거.
+
 ---
 
 ## 어르신 UX 강제 규칙
@@ -129,11 +136,23 @@ app.post('/api/photo/enhance', async (req, res) => {
 | `will` | `/api/will` | AI 유언장 |
 | `pet` | `/api/pet` | 반려동물 아카이브 |
 | `memorial` | `/api/memorial` | 추모관 (접근 코드 필요) |
-| `payment` | `/api/payments` | 토스페이먼츠 |
-| `subscription` | `/api/subscriptions` | 구독 관리 |
+| `payment` | `/api/payments` | 토스페이먼츠 결제 |
+| `subscription` | `/api/subscriptions` | 구독 관리, 정기결제 |
 | `notification` | `/api/notifications` | 알림 |
 | `admin` | `/api/admin` | 관리자 |
 | `common` | `/api/uploads` | S3 업로드, 공통 |
+
+### Subscription (구독) 엔드포인트
+
+| 메서드 | 경로 | 설명 |
+|--------|------|------|
+| `GET` | `/api/subscriptions/plans` | 구독 플랜 목록 (비인증) |
+| `POST` | `/api/subscriptions/billing-auth` | 빌링키 발급 + 즉시 첫 결제 + 구독 생성 |
+| `GET` | `/api/subscriptions` | 내 구독 목록 |
+| `POST` | `/api/subscriptions` | 구독 시작 (deprecated, 하위호환) |
+| `DELETE` | `/api/subscriptions/:id` | 구독 취소 |
+| `POST` | `/api/subscriptions/:id/retry-payment` | 결제 재시도 (past_due/suspended 복원) |
+| `GET` | `/api/subscriptions/:id/payment-logs` | 결제 이력 조회 |
 
 ---
 
@@ -264,6 +283,21 @@ AI 처리 작업에는 반드시 DB에 `jobs` 테이블 레코드를 생성하�
 토스페이먼츠 웹훅(`/api/payments/webhook`) 수신 시:
 1. `TOSS_WEBHOOK_SECRET` 서명 검증 필수
 2. 멱등성 보장 — 같은 결제 ID 중복 처리 방지 (`payments.payment_key` UNIQUE)
+
+### 구독 결제 상태 머신
+```
+active → past_due (1~2회 실패, 3일 유예) → suspended (3회 실패)
+suspended → active (수동 retryPayment 성공 시)
+모든 상태 → canceled (사용자/관리자 취소)
+```
+결제 시도는 반드시 `subscription_payment_logs`에 기록 (pending 선기록 → 결과 업데이트).
+
+### BullMQ 크론 작업
+`subscription-billing` 큐에서 크론 작업:
+- **scan-due 작업**: 매일 03:00 KST에 실행
+- 구독 상태 `active`인 항목만 대상
+- 결제 예정일(next_billing_date ≤ 현재) 구독 찾기
+- 각각 자동 결제 시도 → `subscription_payment_logs` 기록
 
 ### 소프트 삭제
 모든 도메인 테이블에 `deleted_at DATETIME NULL` 필수.
