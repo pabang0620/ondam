@@ -182,15 +182,23 @@ export const updateSubscriptionBilling = async (subscriptionId, fields) => {
     lastFailedAt: 'last_failed_at',
   }
 
-  const entries = Object.entries(fields).filter(([k]) => FIELD_MAP[k] !== undefined)
-  if (entries.length === 0) return findSubscriptionById(subscriptionId)
+  // incrementFailCount 플래그 분리 (아토믹 연산 처리)
+  const { incrementFailCount, ...rest } = fields
+  const entries = Object.entries(rest).filter(([k]) => FIELD_MAP[k] !== undefined)
 
-  const setClauses = entries.map(([k]) => `${FIELD_MAP[k]} = ?`).join(', ')
+  const setClauses = entries.map(([k]) => `${FIELD_MAP[k]} = ?`)
   const values = entries.map(([, v]) => v)
+
+  // incrementFailCount: true 이면 fail_count = fail_count + 1 아토믹 증가
+  if (incrementFailCount) {
+    setClauses.push('fail_count = fail_count + 1')
+  }
+
+  if (setClauses.length === 0) return findSubscriptionById(subscriptionId)
 
   await pool.execute(
     `UPDATE subscriptions
-     SET ${setClauses}, updated_at = NOW()
+     SET ${setClauses.join(', ')}, updated_at = NOW()
      WHERE subscription_id = ? AND deleted_at IS NULL`,
     [...values, subscriptionId]
   )
@@ -199,12 +207,14 @@ export const updateSubscriptionBilling = async (subscriptionId, fields) => {
 
 /**
  * 구독 단건 조회 (빌링키 포함) — 결제 처리용 FOR UPDATE 버전
- * 반드시 트랜잭션 커넥션 안에서 사용할 것
+ * 트랜잭션 커넥션(conn)을 전달하면 FOR UPDATE 락이 실제로 동작함
  * @param {string} subscriptionId
+ * @param {import('mysql2/promise').PoolConnection|null} conn
  * @returns {Promise<object|null>}
  */
-export const findSubscriptionForBilling = async (subscriptionId) => {
-  const [rows] = await pool.execute(
+export const findSubscriptionForBilling = async (subscriptionId, conn = null) => {
+  const executor = conn ?? pool
+  const [rows] = await executor.execute(
     `SELECT subscription_id, user_id, plan, sub_status,
             toss_billing_key_encrypted, billing_kms_key_id,
             price_krw, next_billing_at, last_billed_at,
@@ -212,7 +222,8 @@ export const findSubscriptionForBilling = async (subscriptionId) => {
             created_at, updated_at
      FROM subscriptions
      WHERE subscription_id = ? AND deleted_at IS NULL
-     LIMIT 1`,
+     LIMIT 1
+     FOR UPDATE`,
     [subscriptionId]
   )
   return rows[0] ?? null

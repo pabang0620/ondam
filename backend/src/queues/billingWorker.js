@@ -54,8 +54,20 @@ const handleScanDue = async () => {
 const handleExecuteBilling = async (data) => {
   const { subscriptionId, userId, plan } = data
 
-  // 1. 구독 조회 (FOR UPDATE — 트랜잭션 내)
-  const sub = await subscriptionRepository.findSubscriptionForBilling(subscriptionId)
+  // 1. 구독 조회 (FOR UPDATE — 트랜잭션 + conn 전달로 실제 잠금)
+  const conn = await pool.getConnection()
+  let sub
+  try {
+    await conn.beginTransaction()
+    sub = await subscriptionRepository.findSubscriptionForBilling(subscriptionId, conn)
+    await conn.commit()
+  } catch (err) {
+    await conn.rollback()
+    throw err
+  } finally {
+    conn.release()
+  }
+
   if (!sub) {
     console.warn(`[billingWorker] 구독 없음: ${subscriptionId}`)
     return

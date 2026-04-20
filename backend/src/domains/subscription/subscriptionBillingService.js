@@ -121,35 +121,44 @@ export const runBilling = async ({
   if (tossResult.ok) {
     // 3-성공: 로그 업데이트
     const tossPaymentKey = tossResult.data?.paymentKey ?? null
-    await subscriptionPaymentLogRepository.updateLogResult(log.log_id, {
-      logStatus: 'success',
-      tossPaymentKey,
-      succeededAt: new Date(),
-    })
 
-    // 4. payments INSERT
-    const paymentId = uuidv4()
-    await pool.execute(
-      `INSERT INTO payments
-         (payment_id, user_id, target_type, target_id, toss_payment_key,
-          toss_order_id, amount_krw, status, paid_at)
-       VALUES (?, ?, 'subscription', ?, ?, ?, ?, 'done', NOW())`,
-      [paymentId, userId, subscriptionId, tossPaymentKey ?? paymentId, orderId, amount]
-    )
+    try {
+      await subscriptionPaymentLogRepository.updateLogResult(log.log_id, {
+        logStatus: 'success',
+        tossPaymentKey,
+        succeededAt: new Date(),
+      })
 
-    // 5. subscriptions 상태 업데이트 — 성공
-    await subscriptionRepository.updateSubscriptionBilling(subscriptionId, {
-      subStatus: 'active',
-      failCount: 0,
-      lastBilledAt: new Date(),
-      nextBillingAt: addOneMonth(new Date()),
-    })
+      // 4. payments INSERT
+      const paymentId = uuidv4()
+      await pool.execute(
+        `INSERT INTO payments
+           (payment_id, user_id, target_type, target_id, toss_payment_key,
+            toss_order_id, amount_krw, status, paid_at)
+         VALUES (?, ?, 'subscription', ?, ?, ?, ?, 'done', NOW())`,
+        [paymentId, userId, subscriptionId, tossPaymentKey ?? paymentId, orderId, amount]
+      )
+
+      // 5. subscriptions 상태 업데이트 — 성공
+      await subscriptionRepository.updateSubscriptionBilling(subscriptionId, {
+        subStatus: 'active',
+        failCount: 0,
+        lastBilledAt: new Date(),
+        nextBillingAt: addOneMonth(new Date()),
+      })
+    } catch (dbErr) {
+      if (tossPaymentKey) {
+        await subscriptionTossClient.cancelPayment({
+          paymentKey: tossPaymentKey,
+          cancelReason: 'DB 저장 실패로 인한 자동 환불',
+        }).catch((e) => console.error('[runBilling] 보상 환불 실패 — 수동 처리 필요:', tossPaymentKey, e.message))
+      }
+      throw Object.assign(new Error('결제 처리 중 오류가 발생했습니다'), { status: 500 })
+    }
 
     return { success: true, tossPaymentKey }
   } else {
-    // 3-실패: 현재 fail_count 조회
-    const sub = await subscriptionRepository.findSubscriptionById(subscriptionId)
-    const newFailCount = (sub?.fail_count ?? 0) + 1
+    // 3-실패: fail_count DB 아토믹 증가 후 최신 값 조회
     const maxRetries = Number(process.env.BILLING_MAX_RETRIES ?? 3)
     const graceDays = Number(process.env.BILLING_GRACE_DAYS ?? 3)
     const retryIntervalDays = Number(process.env.BILLING_RETRY_INTERVAL_DAYS ?? 1)
@@ -157,6 +166,13 @@ export const runBilling = async ({
     const failCode = tossResult.errorCode
     const failCategory = categorizeFailCode(failCode)
     const failReason = tossResult.errorMessage ?? '결제 실패'
+
+    // fail_count 아토믹 증가 (SELECT 후 +1 동시성 문제 방지)
+    const updatedSub = await subscriptionRepository.updateSubscriptionBilling(subscriptionId, {
+      incrementFailCount: true,
+      lastFailedAt: new Date(),
+    })
+    const newFailCount = updatedSub?.fail_count ?? maxRetries
 
     let nextRetryAt = null
     let newSubStatus
@@ -186,11 +202,9 @@ export const runBilling = async ({
       nextRetryAt,
     })
 
-    // subscriptions 상태 업데이트 — 실패
+    // subscriptions 상태 업데이트 — 실패 (fail_count는 이미 위에서 아토믹 증가)
     await subscriptionRepository.updateSubscriptionBilling(subscriptionId, {
       subStatus: newSubStatus,
-      failCount: newFailCount,
-      lastFailedAt: new Date(),
       gracePeriodUntil: newGracePeriodUntil,
       suspendedAt: newSuspendedAt,
     })
