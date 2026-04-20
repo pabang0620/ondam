@@ -14,6 +14,7 @@
  * ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
  */
 
+import { v4 as uuidv4 } from 'uuid'
 import pool from '../../config/db.js'
 
 /**
@@ -124,6 +125,20 @@ export const findRefreshToken = async (tokenHash) => {
     [tokenHash]
   )
   return rows[0] ?? null
+}
+
+/**
+ * 동의 항목 upsert — user_consents는 append-only이므로 항상 새 row INSERT
+ * @param {string} userId
+ * @param {string} consentType
+ * @param {boolean} isAgreed
+ */
+export const upsertConsent = async (userId, consentType, isAgreed) => {
+  await pool.query(
+    `INSERT INTO user_consents (consent_id, user_id, consent_type, is_agreed)
+     VALUES (?, ?, ?, ?)`,
+    [uuidv4(), userId, consentType, isAgreed ? 1 : 0]
+  )
 }
 
 /**

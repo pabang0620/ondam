@@ -34,10 +34,10 @@ export const updateLastLogin = async (adminId) => {
 export const getDashboardStats = async () => {
   const [[stats]] = await pool.query(
     `SELECT
-       (SELECT COUNT(*) FROM users WHERE deleted_at IS NULL) AS total_users,
-       (SELECT COUNT(*) FROM photo_orders WHERE status = 'processing' AND deleted_at IS NULL) AS processing_photos,
-       (SELECT COUNT(*) FROM will_release_requests WHERE req_status = 'pending' AND deleted_at IS NULL) AS pending_releases,
-       (SELECT COUNT(*) FROM ai_jobs WHERE job_status = 'failed' AND deleted_at IS NULL) AS failed_jobs`,
+       (SELECT COUNT(*) FROM users WHERE deleted_at IS NULL) AS totalUsers,
+       (SELECT COUNT(*) FROM photo_orders WHERE status = 'processing' AND deleted_at IS NULL) AS processingPhotos,
+       (SELECT COUNT(*) FROM will_release_requests WHERE req_status = 'pending' AND deleted_at IS NULL) AS pendingReleases,
+       (SELECT COUNT(*) FROM ai_jobs WHERE job_status = 'failed' AND deleted_at IS NULL) AS failedJobs`,
   )
   return stats
 }
@@ -47,8 +47,8 @@ export const getDashboardStats = async () => {
 export const getPendingReleaseRequests = async ({ limit, offset }) => {
   const [rows] = await pool.query(
     `SELECT
-       r.id, r.request_id, r.will_id, r.requested_by, r.beneficiary_id,
-       r.death_cert_url, r.req_status, r.reviewed_by, r.reviewed_at,
+       r.id, r.request_id AS releaseId, r.will_id, r.requested_by, r.beneficiary_id,
+       r.death_cert_url AS deathCertificateUrl, r.req_status AS status, r.reviewed_by, r.reviewed_at,
        r.reject_reason, r.created_at, r.updated_at,
        u.email AS requester_email, u.nickname AS requester_nickname
      FROM will_release_requests r
@@ -133,7 +133,7 @@ export const getOrders = async ({ limit, offset, status, targetType }) => {
 
   const [rows] = await pool.query(
     `SELECT
-       po.order_id, po.photo_type, po.status, po.price_krw,
+       po.order_id, po.photo_type, po.status, po.price_krw AS amountKrw,
        po.created_at, po.updated_at,
        u.user_id, u.email, u.nickname
      FROM photo_orders po
@@ -157,11 +157,11 @@ export const getOrders = async ({ limit, offset, status, targetType }) => {
 // ─── 사용자 목록 (관리자) ─────────────────────────────────────────────────────
 
 export const getUsers = async ({ limit, offset, search }) => {
-  const conditions = ['deleted_at IS NULL']
+  const conditions = ['u.deleted_at IS NULL']
   const params = []
 
   if (search) {
-    conditions.push('(email LIKE ? OR nickname LIKE ?)')
+    conditions.push('(u.email LIKE ? OR u.nickname LIKE ?)')
     params.push(`%${search}%`, `%${search}%`)
   }
 
@@ -169,17 +169,19 @@ export const getUsers = async ({ limit, offset, search }) => {
   params.push(limit, offset)
 
   const [rows] = await pool.query(
-    `SELECT user_id, email, nickname, phone, is_active, created_at
-     FROM users
+    `SELECT u.user_id, u.email, u.nickname, u.phone, u.role, u.is_active, u.created_at,
+            s.plan AS subscriptionPlan
+     FROM users u
+     LEFT JOIN subscriptions s ON s.user_id = u.user_id AND s.sub_status = 'active' AND s.deleted_at IS NULL
      WHERE ${where}
-     ORDER BY created_at DESC
+     ORDER BY u.created_at DESC
      LIMIT ? OFFSET ?`,
     params,
   )
 
   const countParams = params.slice(0, -2)
   const [[{ total }]] = await pool.query(
-    `SELECT COUNT(*) AS total FROM users WHERE ${where}`,
+    `SELECT COUNT(*) AS total FROM users u WHERE ${where}`,
     countParams,
   )
   return { users: rows, total }

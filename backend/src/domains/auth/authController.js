@@ -99,6 +99,21 @@ export const logout = async (req, res, next) => {
 }
 
 /**
+ * POST /api/auth/consents
+ * 동의 항목 저장 (portrait, voice, ai_generation, posthumous_release)
+ */
+export const saveConsents = async (req, res, next) => {
+  try {
+    const { userId } = req.user
+    const { consents } = req.body
+    await authService.saveConsents(userId, consents)
+    return success(res, null, '동의 정보가 저장되었습니다')
+  } catch (err) {
+    next(err)
+  }
+}
+
+/**
  * GET /api/auth/kakao
  * 카카오 인증 URL로 리다이렉트
  */

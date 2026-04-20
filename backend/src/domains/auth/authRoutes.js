@@ -36,12 +36,28 @@ const consentItemSchema = z.object({
   isAgreed: z.boolean(),
 })
 
+const consentSchema = z.object({
+  body: z.object({
+    consents: z
+      .array(
+        z.object({
+          consentType: z.enum(['portrait', 'voice', 'ai_generation', 'posthumous_release'], {
+            errorMap: () => ({ message: '유효하지 않은 동의 항목입니다' }),
+          }),
+          isAgreed: z.boolean(),
+        }),
+      )
+      .min(1, '동의 항목이 하나 이상 필요합니다'),
+  }),
+})
+
 const registerSchema = z.object({
   body: z.object({
     email: z.string().email('올바른 이메일 형식이 아닙니다'),
     password: z.string().min(8, '비밀번호는 8자 이상이어야 합니다'),
     nickname: z
       .string()
+      .trim()
       .min(1, '닉네임을 입력해주세요')
       .max(50, '닉네임은 50자 이하여야 합니다'),
     consents: z
@@ -65,6 +81,7 @@ router.post('/register', authLimiter, validate(registerSchema), authController.r
 router.post('/login', authLimiter, validate(loginSchema), authController.login)
 router.post('/refresh', authController.refreshToken)
 router.post('/logout', requireAuth, authController.logout)
+router.post('/consents', requireAuth, validate(consentSchema), authController.saveConsents)
 
 // 카카오 OAuth
 router.get('/kakao', authController.kakaoLogin)

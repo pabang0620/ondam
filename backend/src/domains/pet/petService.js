@@ -200,7 +200,14 @@ export const getPortraitStatus = async (petId, userId) => {
   }
   const job = await petRepository.findLatestAiJob(petId)
   if (!job) return { status: 'none' }
-  return { status: job.job_status, progress: job.progress }
+
+  const result = { status: job.job_status, progress: job.progress }
+
+  if (job.job_status === 'completed' && job.result_url) {
+    result.portraitUrl = job.result_url
+  }
+
+  return result
 }
 
 /**

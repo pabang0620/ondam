@@ -258,7 +258,7 @@ export const softDeleteMedia = async (mediaId) => {
  */
 export const findLatestAiJob = async (petId) => {
   const [[row]] = await pool.query(
-    `SELECT job_status, progress FROM ai_jobs
+    `SELECT job_status, progress, result_url FROM ai_jobs
      WHERE target_type = 'pet' AND target_id = ?
      ORDER BY created_at DESC LIMIT 1`,
     [petId],

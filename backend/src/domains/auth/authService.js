@@ -211,6 +211,17 @@ export const refresh = async (refreshToken) => {
 }
 
 /**
+ * 동의 항목 저장 (목록을 순차 upsert)
+ * @param {string} userId
+ * @param {Array<{ consentType: string, isAgreed: boolean }>} consents
+ */
+export const saveConsents = async (userId, consents) => {
+  for (const { consentType, isAgreed } of consents) {
+    await authRepository.upsertConsent(userId, consentType, isAgreed)
+  }
+}
+
+/**
  * 로그아웃 — refresh token 취소
  * @param {string} refreshToken
  */

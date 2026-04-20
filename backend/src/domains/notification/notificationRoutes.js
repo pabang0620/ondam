@@ -59,11 +59,11 @@ const updateSettingsSchema = z.object({
 
 router.use(requireAuth)
 
-router.get('/', validate(listQuerySchema), notificationController.getNotifications)
 router.get('/unread-count', notificationController.getUnreadCount)
-router.put('/read-all', notificationController.markAllAsRead)
 router.get('/settings', notificationController.getSettings)
 router.put('/settings', validate(updateSettingsSchema), notificationController.updateSettings)
+router.put('/read-all', notificationController.markAllAsRead)
+router.get('/', validate(listQuerySchema), notificationController.getNotifications)
 router.put('/:id/read', validate(notificationIdParamSchema), notificationController.markAsRead)
 
 export default router
