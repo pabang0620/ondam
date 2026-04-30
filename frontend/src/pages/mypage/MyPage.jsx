@@ -87,7 +87,6 @@ function Toggle({ checked, onChange, id, label }) {
               borderRadius: '50%',
               background: '#fff',
               transition: 'left 0.2s',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
             }}
           />
         </div>

@@ -52,7 +52,6 @@ export function Toast({ message, type = 'info', onDismiss }) {
         gap: 'var(--spacing-sm)',
         padding: 'var(--spacing-md) var(--spacing-lg)',
         borderRadius: 'var(--radius-md)',
-        boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
         fontSize: 'var(--font-size-base)',
         fontWeight: 500,
         maxWidth: 360,

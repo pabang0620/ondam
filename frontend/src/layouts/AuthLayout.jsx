@@ -29,7 +29,7 @@ export default function AuthLayout() {
 
       {/* 카드 */}
       <div
-        className="w-full max-w-md rounded-2xl p-8 shadow-sm"
+        className="w-full max-w-md rounded-2xl p-8"
         style={{
           backgroundColor: 'var(--color-surface)',
           border: '1px solid var(--color-border)',

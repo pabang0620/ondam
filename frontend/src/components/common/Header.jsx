@@ -4,10 +4,8 @@ import { ROUTES } from '../../constants/routes.js'
 import apiClient from '../../config/apiClient.js'
 
 export default function Header() {
-  const { isAuthenticated, clearUser } = useAuthStore((s) => ({
-    isAuthenticated: s.isAuthenticated,
-    clearUser: s.clearUser,
-  }))
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const clearUser = useAuthStore((s) => s.clearUser)
   const navigate = useNavigate()
 
   const handleLogout = async () => {
@@ -31,7 +29,6 @@ export default function Header() {
   return (
     <header
       className="sticky top-0 z-50 bg-[var(--color-surface)] border-b border-[var(--color-border)]"
-      style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}
     >
       <div className="max-w-6xl mx-auto px-4 flex items-center justify-between h-16">
         {/* 로고 */}

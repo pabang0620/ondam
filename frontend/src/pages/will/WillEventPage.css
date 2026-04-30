@@ -155,7 +155,6 @@
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: opacity 0.2s, transform 0.1s;
-  box-shadow: 0 4px 16px rgba(212, 168, 83, 0.35);
 }
 
 .will-event__submit:hover:not(:disabled) {

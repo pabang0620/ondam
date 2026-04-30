@@ -158,11 +158,6 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   padding: var(--spacing-md) var(--spacing-lg);
-  transition: box-shadow 0.15s;
-}
-
-.will-vault__card:hover {
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
 }
 
 .will-vault__card-icon {

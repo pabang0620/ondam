@@ -148,7 +148,6 @@ export default function HomePage() {
                 border: highlight
                   ? '2px solid var(--color-primary)'
                   : '1px solid var(--color-border)',
-                boxShadow: highlight ? '0 4px 24px rgba(139,115,85,0.15)' : '0 1px 6px rgba(0,0,0,0.04)',
               }}
             >
               {highlight && (

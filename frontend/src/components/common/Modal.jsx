@@ -25,7 +25,7 @@ export function Modal({ isOpen, onClose, title, children }) {
     }
   }, [isOpen])
 
-  // 포커스 트랩 — 모달 열릴 때 첫 번째 포커스 가능 요소에 포커스
+  // 포커스 트랩 - 모달 열릴 때 첫 번째 포커스 가능 요소에 포커스
   useEffect(() => {
     if (isOpen && dialogRef.current) {
       const focusable = dialogRef.current.querySelectorAll(
@@ -75,7 +75,6 @@ export function Modal({ isOpen, onClose, title, children }) {
           maxWidth: 480,
           maxHeight: '90vh',
           overflowY: 'auto',
-          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
         }}
         onClick={(e) => e.stopPropagation()}
       >

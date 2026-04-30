@@ -82,13 +82,6 @@
 .will-proc__stage.is-active {
   opacity: 1;
   background-color: rgba(255, 255, 255, 0.22);
-  box-shadow: 0 0 0 2px var(--color-gold);
-  animation: stage-pulse 1.6s ease-in-out infinite;
-}
-
-@keyframes stage-pulse {
-  0%, 100% { box-shadow: 0 0 0 2px rgba(212, 168, 83, 0.9); }
-  50% { box-shadow: 0 0 0 5px rgba(212, 168, 83, 0.2); }
 }
 
 .will-proc__stage-icon {

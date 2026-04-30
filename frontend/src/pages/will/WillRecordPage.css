@@ -59,28 +59,20 @@
   align-items: center;
   justify-content: center;
   gap: var(--spacing-xs);
-  box-shadow: 0 4px 20px rgba(229, 62, 62, 0.35); /* --color-error alpha */
-  transition: transform 0.15s, box-shadow 0.15s;
+  transition: transform 0.15s;
 }
 
 .will-record__btn:hover {
   transform: scale(1.04);
-  box-shadow: 0 6px 28px rgba(229, 62, 62, 0.45); /* --color-error alpha */
 }
 
 .will-record__btn.is-recording {
   background-color: var(--color-error-dark);
-  animation: pulse-record 1.4s ease-in-out infinite;
 }
 
 .will-record__btn-label {
   font-size: var(--font-size-base);
   font-weight: 700;
-}
-
-@keyframes pulse-record {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(229, 62, 62, 0.5); } /* --color-error alpha */
-  50% { box-shadow: 0 0 0 18px rgba(229, 62, 62, 0); }
 }
 
 .will-record__done-badge {
