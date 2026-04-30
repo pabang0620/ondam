@@ -148,7 +148,7 @@
 
 .memorial-gallery__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: var(--spacing-sm);
 }
 
@@ -243,8 +243,26 @@
   opacity: 1;
 }
 
-/* 반응형 */
-@media (max-width: 480px) {
+/* ── 반응형: 태블릿 (640px ~ 1023px) ── */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .memorial-gallery__grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ── 반응형: 데스크톱 (≥ 1024px) ── */
+@media (min-width: 1024px) {
+  .memorial-page {
+    max-width: 800px;
+  }
+
+  .memorial-gallery__grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ── 반응형: 모바일 (< 640px) ── */
+@media (max-width: 639px) {
   .memorial-header {
     padding: var(--spacing-xl) var(--spacing-md);
   }
@@ -254,11 +272,30 @@
   }
 
   .memorial-gallery__grid {
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .memorial-dates {
     gap: var(--spacing-lg);
     padding: var(--spacing-lg) var(--spacing-md);
+  }
+
+  .memorial-gallery {
+    padding: var(--spacing-lg) var(--spacing-md);
+  }
+
+  .memorial-tribute {
+    margin: 0 var(--spacing-sm);
+  }
+}
+
+/* ── 320px 안전망 ── */
+@media (max-width: 360px) {
+  .memorial-header__name {
+    font-size: var(--fs-h3);
+  }
+
+  .memorial-header {
+    padding: var(--spacing-lg) var(--spacing-sm);
   }
 }

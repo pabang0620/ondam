@@ -9,6 +9,7 @@ import {
   AlertTriangle,
 } from 'lucide-react'
 import { usePetDetail } from './usePetDetail.js'
+import './PetDetailPage.css'
 
 const SPECIES_LABEL = {
   dog: '강아지', cat: '고양이', rabbit: '토끼',
@@ -87,16 +88,7 @@ export default function PetDetailPage() {
   }
 
   return (
-    <main
-      style={{
-        maxWidth: 600,
-        margin: '0 auto',
-        padding: 'var(--spacing-xl) var(--spacing-md)',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 'var(--spacing-xl)',
-      }}
-    >
+    <main className="pet-detail-page">
       {/* 뒤로가기 */}
       <button
         type="button"
@@ -123,15 +115,7 @@ export default function PetDetailPage() {
 
       {/* 프로필 카드 — surface-warm + pet-soft border + radius 20px */}
       <section
-        style={{
-          background: 'var(--color-surface-warm)',
-          border: '1px solid var(--color-pet-soft)',
-          borderRadius: 'var(--radius-lg)',
-          padding: 'var(--spacing-xl)',
-          display: 'flex',
-          gap: 'var(--spacing-lg)',
-          alignItems: 'center',
-        }}
+        className="pet-detail-profile-card"
         aria-label={`${pet.name} 프로필`}
       >
         {/* 아바타 — 둥근 원형 */}
@@ -232,7 +216,7 @@ export default function PetDetailPage() {
             사진 ({media.length})
           </h2>
 
-          <div style={{ display: 'flex', gap: 'var(--spacing-sm)' }}>
+          <div className="pet-detail-media-actions">
             {/* AI 초상화 버튼 */}
             <button
               onClick={() => navigate(`/pet/${petId}/portrait`)}
@@ -318,15 +302,9 @@ export default function PetDetailPage() {
           </div>
         )}
 
-        {/* 미디어 갤러리 — hover: scale(1.02), border 변화 */}
+        {/* 미디어 갤러리 — 모바일 2열, 태블릿 3열, 데스크톱 4열 */}
         {media.length > 0 && (
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
-              gap: 'var(--spacing-sm)',
-            }}
-          >
+          <div className="pet-detail-media-grid">
             {media.map((item) => (
               <div
                 key={item.media_id}

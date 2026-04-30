@@ -1,0 +1,45 @@
+/* PetSubscriptionPage 모바일 반응형 */
+
+/* 페이지 래퍼 */
+.pet-subscription-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--spacing-xl) var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+  box-sizing: border-box;
+  width: 100%;
+}
+
+@media (max-width: 639px) {
+  .pet-subscription-page {
+    padding: var(--spacing-lg) var(--spacing-md);
+  }
+}
+
+/* 플랜 카드 그리드 — 모바일 1열, 태블릿 2열, 데스크톱 3열 */
+.pet-subscription-plans-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-xl);
+}
+
+@media (min-width: 640px) and (max-width: 1023px) {
+  .pet-subscription-plans-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .pet-subscription-plans-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* 320px 안전망 */
+@media (max-width: 360px) {
+  .pet-subscription-page {
+    padding: var(--spacing-md) var(--spacing-sm);
+  }
+}

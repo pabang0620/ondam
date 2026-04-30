@@ -1,4 +1,5 @@
 import { useAdminLogin } from './useAdminLogin.js'
+import './admin.css'
 
 export default function AdminLoginPage() {
   const { form, error, isSubmitting, handleChange, handleSubmit } = useAdminLogin()
@@ -27,19 +28,7 @@ export default function AdminLoginPage() {
         padding: 'var(--spacing-md)',
       }}
     >
-      <div
-        style={{
-          width: '100%',
-          maxWidth: 400,
-          background: 'var(--color-surface)',
-          border: '1px solid var(--color-border-strong)',
-          borderRadius: 'var(--radius-card)',
-          padding: 'var(--spacing-2xl)',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 'var(--spacing-xl)',
-        }}
-      >
+      <div className="admin-login-card">
         {/* 로고 */}
         <div style={{ textAlign: 'center' }}>
           <p style={{ fontSize: 'var(--fs-h1)', fontWeight: 800, color: 'var(--color-primary)', letterSpacing: 'var(--ls-heading-ko)' }}>

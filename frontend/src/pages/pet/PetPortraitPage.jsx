@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { ChevronLeft, Sparkles, CheckCircle } from 'lucide-react'
 import { usePetPortrait } from './usePetPortrait.js'
+import './PetPortraitPage.css'
 
 export default function PetPortraitPage() {
   const { petId } = useParams()
@@ -22,16 +23,7 @@ export default function PetPortraitPage() {
   const canGenerate = selectedStyle && selectedMediaId && !isGenerating
 
   return (
-    <main
-      style={{
-        maxWidth: 600,
-        margin: '0 auto',
-        padding: 'var(--spacing-xl) var(--spacing-md)',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 'var(--spacing-xl)',
-      }}
-    >
+    <main className="pet-portrait-page">
       {/* 뒤로가기 */}
       <button
         type="button"
@@ -127,11 +119,7 @@ export default function PetPortraitPage() {
               스타일 선택
             </h2>
             <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-                gap: 'var(--spacing-md)',
-              }}
+              className="pet-portrait-style-grid"
               role="radiogroup"
               aria-label="초상화 스타일"
             >
@@ -202,11 +190,7 @@ export default function PetPortraitPage() {
 
             {!isLoading && media.length > 0 && (
               <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))',
-                  gap: 'var(--spacing-sm)',
-                }}
+                className="pet-portrait-photo-grid"
                 role="radiogroup"
                 aria-label="초상화 기준 사진"
               >

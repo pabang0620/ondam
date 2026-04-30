@@ -96,7 +96,7 @@ export default function CancelSubscriptionModal({ isOpen, onClose, onConfirm, su
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: 'var(--spacing-sm)' }}>
+        <div style={{ display: 'flex', gap: 'var(--spacing-sm)', flexWrap: 'wrap' }}>
           <button
             type="button"
             onClick={onClose}

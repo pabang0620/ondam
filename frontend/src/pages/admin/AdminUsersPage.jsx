@@ -1,5 +1,6 @@
 import { useAdminUsers } from './useAdminUsers.js'
 import { Search, ChevronLeft, ChevronRight } from 'lucide-react'
+import './admin.css'
 
 export default function AdminUsersPage() {
   const {
@@ -35,7 +36,7 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <div style={{ padding: 'var(--spacing-xl)' }}>
+    <div className="admin-page">
       {/* 헤더 */}
       <div style={{ marginBottom: 'var(--spacing-xl)' }}>
         <h1 style={{ fontSize: 'var(--fs-h2)', fontWeight: 800, color: 'var(--color-primary)', letterSpacing: 'var(--ls-heading-ko)' }}>회원 관리</h1>
@@ -47,12 +48,7 @@ export default function AdminUsersPage() {
       {/* 검색 인풋 — 56px height, border 1px border-strong, focus 차콜 */}
       <form
         onSubmit={handleSearch}
-        style={{
-          display: 'flex',
-          gap: 'var(--spacing-sm)',
-          marginBottom: 'var(--spacing-lg)',
-          maxWidth: 480,
-        }}
+        className="admin-search-form"
         role="search"
       >
         <label htmlFor="user-search" style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden' }}>
@@ -119,7 +115,7 @@ export default function AdminUsersPage() {
       )}
 
       {/* 테이블 */}
-      <div style={{ overflowX: 'auto' }}>
+      <div className="admin-table-wrapper">
         <table
           style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--fs-body)', background: 'var(--color-surface)' }}
           aria-label="회원 목록"
@@ -195,13 +191,7 @@ export default function AdminUsersPage() {
       {/* 페이지네이션 */}
       {totalPages > 1 && (
         <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 'var(--spacing-sm)',
-            marginTop: 'var(--spacing-lg)',
-          }}
+          className="admin-pagination"
           aria-label="페이지 탐색"
         >
           <button

@@ -1,5 +1,6 @@
 import { useAdminOrders } from './useAdminOrders.js'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import './admin.css'
 
 const LIMIT = 20
 const ALL = 'ALL'
@@ -66,7 +67,7 @@ export default function AdminOrdersPage() {
   }
 
   return (
-    <div style={{ padding: 'var(--spacing-xl)' }}>
+    <div className="admin-page">
       {/* 헤더 */}
       <div style={{ marginBottom: 'var(--spacing-xl)' }}>
         <h1 style={{ fontSize: 'var(--fs-h2)', fontWeight: 800, color: 'var(--color-primary)', letterSpacing: 'var(--ls-heading-ko)' }}>주문 관리</h1>
@@ -77,12 +78,7 @@ export default function AdminOrdersPage() {
 
       {/* 상태 필터 — primary 차콜 선택 */}
       <div
-        style={{
-          display: 'flex',
-          gap: 'var(--spacing-xs)',
-          marginBottom: 'var(--spacing-lg)',
-          flexWrap: 'wrap',
-        }}
+        className="admin-filter-group"
         role="group"
         aria-label="주문 상태 필터"
       >
@@ -117,7 +113,7 @@ export default function AdminOrdersPage() {
       )}
 
       {/* 테이블 */}
-      <div style={{ overflowX: 'auto' }}>
+      <div className="admin-table-wrapper">
         <table
           style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--fs-body)', background: 'var(--color-surface)' }}
           aria-label="주문 목록"
@@ -186,13 +182,7 @@ export default function AdminOrdersPage() {
       {/* 페이지네이션 */}
       {totalPages > 1 && (
         <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 'var(--spacing-sm)',
-            marginTop: 'var(--spacing-lg)',
-          }}
+          className="admin-pagination"
           aria-label="페이지 탐색"
         >
           <button

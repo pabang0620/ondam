@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { CheckCircle, XCircle, ExternalLink, RefreshCw } from 'lucide-react'
 import { useAdminRelease } from './useAdminRelease.js'
+import './admin.css'
 
 const STATUS_LABEL = {
   pending: '대기',
@@ -141,16 +142,9 @@ export default function AdminReleasePage() {
   }
 
   return (
-    <div style={{ padding: 'var(--spacing-xl)' }}>
+    <div className="admin-page">
       {/* 헤더 */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: 'var(--spacing-xl)',
-        }}
-      >
+      <div className="admin-header-row">
         <div>
           <h1 style={{ fontSize: 'var(--fs-h2)', fontWeight: 800, color: 'var(--color-primary)', letterSpacing: 'var(--ls-heading-ko)' }}>
             사후공개 검토
@@ -195,7 +189,7 @@ export default function AdminReleasePage() {
       )}
 
       {/* 테이블 */}
-      <div style={{ overflowX: 'auto' }}>
+      <div className="admin-table-wrapper">
         <table
           style={{
             width: '100%',

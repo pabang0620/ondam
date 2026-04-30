@@ -1,0 +1,134 @@
+/* Admin 공통 모바일 반응형 */
+
+/* 페이지 패딩 래퍼 */
+.admin-page {
+  padding: var(--spacing-xl);
+  box-sizing: border-box;
+  width: 100%;
+}
+
+@media (max-width: 639px) {
+  .admin-page {
+    padding: var(--spacing-md);
+  }
+}
+
+/* 헤더 row — 모바일에서 세로 스택 */
+.admin-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-xl);
+  gap: var(--spacing-md);
+}
+
+@media (max-width: 639px) {
+  .admin-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .admin-header-row button {
+    align-self: flex-start;
+  }
+}
+
+/* 통계 카드 그리드 — 모바일 1열, 태블릿 2열, 데스크톱 4열 */
+.admin-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-md);
+}
+
+@media (min-width: 640px) and (max-width: 1023px) {
+  .admin-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .admin-stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* 검색 폼 — 모바일 풀너비 */
+.admin-search-form {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
+  max-width: 480px;
+  width: 100%;
+}
+
+@media (max-width: 639px) {
+  .admin-search-form {
+    max-width: 100%;
+  }
+}
+
+/* 테이블 래퍼 — 가로 스크롤 */
+.admin-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+}
+
+/* 테이블 최소 너비 — 가로 스크롤이 발동되도록 */
+.admin-table-wrapper table {
+  min-width: 600px;
+}
+
+/* 페이지네이션 — 모바일에서도 충분한 터치 영역 */
+.admin-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-lg);
+  flex-wrap: wrap;
+}
+
+/* 필터 버튼 그룹 — 모바일에서 줄바꿈 */
+.admin-filter-group {
+  display: flex;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-lg);
+  flex-wrap: wrap;
+}
+
+@media (max-width: 360px) {
+  .admin-page {
+    padding: var(--spacing-sm);
+  }
+
+  .admin-filter-group button {
+    font-size: var(--fs-caption);
+    padding: 0 var(--spacing-sm);
+  }
+}
+
+/* AdminLoginPage — 모바일에서 카드 내부 패딩 축소 */
+.admin-login-card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-card);
+  padding: var(--spacing-2xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+
+@media (max-width: 639px) {
+  .admin-login-card {
+    padding: var(--spacing-xl) var(--spacing-md);
+  }
+}
+
+@media (max-width: 360px) {
+  .admin-login-card {
+    padding: var(--spacing-lg) var(--spacing-sm);
+  }
+}

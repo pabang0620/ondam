@@ -1,0 +1,72 @@
+/* PetDetailPage 모바일 반응형 */
+
+/* 미디어 갤러리 — 모바일 2열, 태블릿 3열, 데스크톱 4열 */
+.pet-detail-media-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-sm);
+}
+
+@media (min-width: 640px) and (max-width: 1023px) {
+  .pet-detail-media-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .pet-detail-media-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* 프로필 카드 — 모바일에서 세로 스택 */
+.pet-detail-profile-card {
+  background: var(--color-surface-warm);
+  border: 1px solid var(--color-pet-soft);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
+  display: flex;
+  gap: var(--spacing-lg);
+  align-items: center;
+}
+
+/* 사진 헤더 액션 — 모바일에서 줄바꿈 허용 */
+.pet-detail-media-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+@media (max-width: 360px) {
+  .pet-detail-profile-card {
+    padding: var(--spacing-md);
+    gap: var(--spacing-md);
+  }
+
+  .pet-detail-media-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pet-detail-media-actions button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* 페이지 래퍼 — 320px에서 overflow 방지 */
+.pet-detail-page {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: var(--spacing-xl) var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+  box-sizing: border-box;
+  width: 100%;
+}
+
+@media (max-width: 639px) {
+  .pet-detail-page {
+    padding: var(--spacing-lg) var(--spacing-md);
+  }
+}

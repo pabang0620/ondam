@@ -5,6 +5,7 @@ import { usePetSubscription } from './usePetSubscription.js'
 import SubscriptionStatusCard from './SubscriptionStatusCard.jsx'
 import CancelSubscriptionModal from './CancelSubscriptionModal.jsx'
 import { ROUTES } from '../../constants/routes.js'
+import './PetSubscriptionPage.css'
 
 const PLANS = [
   {
@@ -173,16 +174,7 @@ export default function PetSubscriptionPage() {
   const currentPlanKey = currentSubscription?.plan ?? null
 
   return (
-    <main
-      style={{
-        maxWidth: 720,
-        margin: '0 auto',
-        padding: 'var(--spacing-xl) var(--spacing-md)',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 'var(--spacing-xl)',
-      }}
-    >
+    <main className="pet-subscription-page">
       {/* 뒤로가기 */}
       <button
         type="button"
@@ -284,12 +276,8 @@ export default function PetSubscriptionPage() {
           )}
 
           <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-              gap: 'var(--spacing-xl)',
-              paddingTop: hasActiveSubscription ? 0 : 'var(--spacing-md)',
-            }}
+            className="pet-subscription-plans-grid"
+            style={{ paddingTop: hasActiveSubscription ? 0 : 'var(--spacing-md)' }}
           >
             {PLANS.map((plan) => (
               <PlanCard

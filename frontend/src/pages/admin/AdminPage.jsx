@@ -1,5 +1,6 @@
 import { Users, Image, Clock, AlertTriangle, RefreshCw } from 'lucide-react'
 import { useAdmin } from './useAdmin.js'
+import './admin.css'
 
 const STAT_CONFIG = [
   {
@@ -77,16 +78,9 @@ export default function AdminPage() {
   const { stats, isLoading, error, refetch } = useAdmin()
 
   return (
-    <div style={{ padding: 'var(--spacing-xl)' }}>
+    <div className="admin-page">
       {/* 헤더 */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: 'var(--spacing-xl)',
-        }}
-      >
+      <div className="admin-header-row">
         <div>
           <h1 style={{ fontSize: 'var(--fs-h2)', fontWeight: 800, color: 'var(--color-primary)', letterSpacing: 'var(--ls-heading-ko)' }}>대시보드</h1>
           <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-text-muted)', marginTop: 4 }}>
@@ -134,11 +128,7 @@ export default function AdminPage() {
 
       {/* 통계 카드 그리드 */}
       <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-          gap: 'var(--spacing-md)',
-        }}
+        className="admin-stats-grid"
         aria-busy={isLoading}
       >
         {STAT_CONFIG.map((config) => (
