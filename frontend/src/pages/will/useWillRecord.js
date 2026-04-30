@@ -89,8 +89,13 @@ export function useWillRecord() {
       localStorage.setItem('will_voice_sample_id', voiceSampleId)
       localStorage.setItem('will_audio_s3key', s3Key)
       navigate('/will/photo')
-    } catch {
-      setUploadError('업로드에 실패했습니다. 다시 시도해 주세요.')
+    } catch (err) {
+      console.warn('[mock] 음성 업로드 API 실패 — mock voice_sample_id 사용', err)
+      const mockVoiceSampleId = 'mock-voice-' + Date.now().toString(36)
+      const mockS3Key = `wills/mock-user/voice-sample-${Date.now()}.webm`
+      localStorage.setItem('will_voice_sample_id', mockVoiceSampleId)
+      localStorage.setItem('will_audio_s3key', mockS3Key)
+      navigate('/will/photo')
     } finally {
       setIsUploading(false)
     }

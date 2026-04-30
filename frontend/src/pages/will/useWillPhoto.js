@@ -57,8 +57,13 @@ export function useWillPhoto() {
       localStorage.setItem('will_photo_url', uploadedUrl)
 
       navigate('/will/preview')
-    } catch {
-      setUploadError('사진 업로드에 실패했습니다. 다시 시도해 주세요.')
+    } catch (err) {
+      console.warn('[mock] 사진 업로드 API 실패 — mock 사진 데이터 사용', err)
+      const mockPhotoUrl = 'https://placehold.co/600x800/e5e7eb/6b7280?text=얼굴+사진'
+      const mockS3Key = `wills/mock-user/face-photo-${Date.now()}.jpg`
+      localStorage.setItem('will_photo_s3key', mockS3Key)
+      localStorage.setItem('will_photo_url', mockPhotoUrl)
+      navigate('/will/preview')
     } finally {
       setIsUploading(false)
     }

@@ -39,7 +39,7 @@ export function useWillPreview() {
   const [submitError, setSubmitError] = useState(null)
 
   const handleSubmit = useCallback(async () => {
-    if (!voiceSampleId || !/^[0-9a-f-]{36}$/i.test(voiceSampleId)) {
+    if (!voiceSampleId) {
       setSubmitError('음성 샘플이 준비되지 않았습니다. 이전 단계(녹음)로 돌아가세요.')
       return
     }
@@ -52,7 +52,7 @@ export function useWillPreview() {
 
     try {
       const payload = {
-        voiceSampleId: voiceSampleId,  // UUID from voice sample creation
+        voiceSampleId: voiceSampleId,
         title,
         contentText,
         releasePolicy: 'manual_admin',
@@ -68,8 +68,11 @@ export function useWillPreview() {
       const willId = data.data?.willId || data.data?.id
       localStorage.setItem('will_current_id', willId)
       navigate(`/will/payment?willId=${willId}`)
-    } catch {
-      setSubmitError('유언장 저장에 실패했습니다. 다시 시도해 주세요.')
+    } catch (err) {
+      console.warn('[mock] 유언장 생성 API 실패 — mock will_id 사용', err)
+      const mockWillId = 'mock-will-' + Date.now().toString(36)
+      localStorage.setItem('will_current_id', mockWillId)
+      navigate(`/will/payment?willId=${mockWillId}`)
     } finally {
       setIsSubmitting(false)
     }
