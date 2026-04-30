@@ -13,20 +13,29 @@ const TYPE_STYLES = {
   },
   info: {
     backgroundColor: 'var(--color-primary)',
-    color: '#FFFFFF',
+    color: 'var(--color-text-on-dark)',
     icon: 'ℹ',
   },
 }
 
 export function Toast({ message, type = 'info', onDismiss }) {
   const [visible, setVisible] = useState(true)
+  const [isMobile, setIsMobile] = useState(false)
   const typeStyle = TYPE_STYLES[type] ?? TYPE_STYLES.info
+
+  // 모바일 감지 (< 640px)
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 639px)')
+    const update = (e) => setIsMobile(e.matches)
+    setIsMobile(mq.matches)
+    mq.addEventListener('change', update)
+    return () => mq.removeEventListener('change', update)
+  }, [])
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setVisible(false)
     }, 3000)
-
     return () => clearTimeout(timer)
   }, [])
 
@@ -38,30 +47,49 @@ export function Toast({ message, type = 'info', onDismiss }) {
     }
   }, [visible, onDismiss])
 
+  // 모바일: 상단 풀너비 / 데스크톱: 우측 하단 fixed
+  const positionStyle = isMobile
+    ? {
+        position: 'fixed',
+        top: 'max(var(--spacing-md), env(safe-area-inset-top, 0px))',
+        left: 'var(--spacing-md)',
+        right: 'var(--spacing-md)',
+        bottom: 'auto',
+        maxWidth: '100%',
+        opacity: visible ? 1 : 0,
+        transform: visible ? 'translateY(0)' : 'translateY(-8px)',
+      }
+    : {
+        position: 'fixed',
+        bottom: 'var(--spacing-xl)',
+        right: 'var(--spacing-xl)',
+        top: 'auto',
+        left: 'auto',
+        maxWidth: 360,
+        opacity: visible ? 1 : 0,
+        transform: visible ? 'translateY(0)' : 'translateY(8px)',
+      }
+
   return (
     <div
       role={type === 'error' ? 'alert' : 'status'}
       aria-live={type === 'error' ? 'assertive' : 'polite'}
       style={{
-        position: 'fixed',
-        bottom: 'var(--spacing-xl)',
-        right: 'var(--spacing-xl)',
         zIndex: 2000,
         display: 'flex',
         alignItems: 'center',
         gap: 'var(--spacing-sm)',
         padding: 'var(--spacing-md) var(--spacing-lg)',
-        borderRadius: 'var(--radius-md)',
-        fontSize: 'var(--font-size-base)',
+        borderRadius: 'var(--radius-sm)',
+        border: '1px solid rgba(255,255,255,0.15)',
+        fontSize: 'var(--fs-body)',
         fontWeight: 500,
-        maxWidth: 360,
-        opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0)' : 'translateY(8px)',
         transition: 'opacity 0.3s ease, transform 0.3s ease',
         ...typeStyle,
+        ...positionStyle,
       }}
     >
-      <span aria-hidden="true" style={{ fontSize: 18, lineHeight: 1 }}>
+      <span aria-hidden="true" style={{ fontSize: 18, lineHeight: 1, flexShrink: 0 }}>
         {typeStyle.icon}
       </span>
       <span style={{ flex: 1 }}>{message}</span>
@@ -82,6 +110,7 @@ export function Toast({ message, type = 'info', onDismiss }) {
           cursor: 'pointer',
           opacity: 0.8,
           padding: 0,
+          flexShrink: 0,
         }}
       >
         ×

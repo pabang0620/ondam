@@ -4,22 +4,35 @@ import { ROUTES } from '../../constants/routes.js'
 export default function Footer() {
   return (
     <footer
-      className="border-t border-[var(--color-border)] mt-auto"
-      style={{ backgroundColor: 'var(--color-surface)' }}
+      style={{
+        backgroundColor: 'var(--color-surface-warm)',
+        borderTop: '1px solid var(--color-border)',
+        marginTop: 'auto',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+      }}
     >
-      <div className="max-w-6xl mx-auto px-4 py-10">
-        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-8">
+      <div className="max-w-6xl mx-auto px-4 py-8 sm:py-10">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6 sm:gap-8">
           {/* 브랜드 */}
           <div className="flex flex-col gap-2">
             <span
-              className="font-bold text-lg"
-              style={{ color: 'var(--color-primary)' }}
+              style={{
+                fontFamily: 'var(--font-serif)',
+                fontWeight: 700,
+                fontSize: 'var(--fs-body-lg)',
+                color: 'var(--color-text-primary)',
+                letterSpacing: 'var(--ls-heading-ko)',
+              }}
             >
               온담
             </span>
             <p
-              className="text-sm leading-relaxed max-w-xs"
-              style={{ color: 'var(--color-text-secondary)' }}
+              style={{
+                fontSize: 'var(--fs-caption)',
+                lineHeight: 'var(--lh-relaxed)',
+                color: 'var(--color-text-secondary)',
+                maxWidth: '18rem',
+              }}
             >
               AI로 간직하는 소중한 기억.
               <br />
@@ -27,58 +40,102 @@ export default function Footer() {
             </p>
           </div>
 
-          {/* 서비스 링크 */}
-          <div className="flex flex-col gap-2">
-            <span
-              className="text-sm font-semibold mb-1"
-              style={{ color: 'var(--color-text-primary)' }}
-            >
-              서비스
-            </span>
-            {[
-              { to: ROUTES.PHOTO, label: 'AI 사진관' },
-              { to: ROUTES.WILL, label: 'AI 유언장' },
-              { to: ROUTES.PET, label: '반려동물 아카이브' },
-            ].map(({ to, label }) => (
-              <Link
-                key={to}
-                to={to}
-                className="text-sm hover:underline transition-colors"
-                style={{ color: 'var(--color-text-secondary)' }}
+          {/* 링크 그룹: 모바일에서 가로 2열, 데스크톱에서 나란히 */}
+          <div className="grid grid-cols-2 sm:flex sm:flex-row gap-6 sm:gap-12">
+            {/* 서비스 링크 */}
+            <div className="flex flex-col gap-2">
+              <span
+                style={{
+                  fontSize: 'var(--fs-caption)',
+                  fontWeight: 600,
+                  color: 'var(--color-text-primary)',
+                  marginBottom: 4,
+                }}
               >
-                {label}
-              </Link>
-            ))}
-          </div>
+                서비스
+              </span>
+              {[
+                { to: ROUTES.PHOTO, label: 'AI 사진관' },
+                { to: ROUTES.WILL, label: 'AI 유언장' },
+                { to: ROUTES.PET, label: '반려동물 아카이브' },
+              ].map(({ to, label }) => (
+                <Link
+                  key={to}
+                  to={to}
+                  style={{
+                    fontSize: 'var(--fs-caption)',
+                    color: 'var(--color-text-secondary)',
+                    transition: 'var(--transition-base)',
+                    minHeight: 'var(--min-touch-target)',
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = 'var(--color-text-primary)'
+                    e.currentTarget.style.textDecoration = 'underline'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = 'var(--color-text-secondary)'
+                    e.currentTarget.style.textDecoration = 'none'
+                  }}
+                >
+                  {label}
+                </Link>
+              ))}
+            </div>
 
-          {/* 고객 지원 */}
-          <div className="flex flex-col gap-2">
-            <span
-              className="text-sm font-semibold mb-1"
-              style={{ color: 'var(--color-text-primary)' }}
-            >
-              고객 지원
-            </span>
-            {[
-              { label: '이용약관', href: '#' },
-              { label: '개인정보처리방침', href: '#' },
-              { label: '고객센터', href: '#' },
-            ].map(({ label, href }) => (
-              <a
-                key={label}
-                href={href}
-                className="text-sm hover:underline transition-colors"
-                style={{ color: 'var(--color-text-secondary)' }}
+            {/* 고객 지원 */}
+            <div className="flex flex-col gap-2">
+              <span
+                style={{
+                  fontSize: 'var(--fs-caption)',
+                  fontWeight: 600,
+                  color: 'var(--color-text-primary)',
+                  marginBottom: 4,
+                }}
               >
-                {label}
-              </a>
-            ))}
+                고객 지원
+              </span>
+              {[
+                { label: '이용약관', href: '#' },
+                { label: '개인정보처리방침', href: '#' },
+                { label: '고객센터', href: '#' },
+              ].map(({ label, href }) => (
+                <a
+                  key={label}
+                  href={href}
+                  style={{
+                    fontSize: 'var(--fs-caption)',
+                    color: 'var(--color-text-secondary)',
+                    transition: 'var(--transition-base)',
+                    minHeight: 'var(--min-touch-target)',
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = 'var(--color-text-primary)'
+                    e.currentTarget.style.textDecoration = 'underline'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = 'var(--color-text-secondary)'
+                    e.currentTarget.style.textDecoration = 'none'
+                  }}
+                >
+                  {label}
+                </a>
+              ))}
+            </div>
           </div>
         </div>
 
         <div
-          className="mt-8 pt-6 border-t border-[var(--color-border)] text-sm"
-          style={{ color: 'var(--color-text-muted)' }}
+          style={{
+            marginTop: 'var(--spacing-xl)',
+            paddingTop: 'var(--spacing-lg)',
+            borderTop: '1px solid var(--color-border)',
+            fontSize: 'var(--fs-caption)',
+            color: 'var(--color-text-muted)',
+          }}
         >
           © {new Date().getFullYear()} 온담. All rights reserved.
         </div>

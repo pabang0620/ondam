@@ -1,14 +1,79 @@
-import { Link, NavLink, useNavigate } from 'react-router-dom'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore.js'
 import { ROUTES } from '../../constants/routes.js'
 import apiClient from '../../config/apiClient.js'
+
+const NAV_LINKS = [
+  { to: ROUTES.PHOTO, label: 'AI 사진관' },
+  { to: ROUTES.WILL, label: '유언장' },
+  { to: ROUTES.PET, label: '반려동물' },
+]
 
 export default function Header() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const clearUser = useAuthStore((s) => s.clearUser)
   const navigate = useNavigate()
+  const location = useLocation()
+
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const drawerRef = useRef(null)
+  const hamburgerRef = useRef(null)
+
+  // 페이지 이동 시 drawer 닫기
+  useEffect(() => {
+    setDrawerOpen(false)
+  }, [location.pathname])
+
+  // drawer 열릴 때 스크롤 잠금 + 포커스 이동
+  useEffect(() => {
+    if (drawerOpen) {
+      document.body.style.overflow = 'hidden'
+      // 첫 번째 포커스 가능한 요소로 이동
+      const firstFocusable = drawerRef.current?.querySelector(
+        'a, button, [tabindex]:not([tabindex="-1"])'
+      )
+      firstFocusable?.focus()
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [drawerOpen])
+
+  // ESC로 drawer 닫기 + Tab 포커스 트랩
+  useEffect(() => {
+    if (!drawerOpen) return
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setDrawerOpen(false)
+        hamburgerRef.current?.focus()
+        return
+      }
+      if (e.key === 'Tab' && drawerRef.current) {
+        const focusable = drawerRef.current.querySelectorAll(
+          'a, button, [tabindex]:not([tabindex="-1"])'
+        )
+        if (focusable.length === 0) return
+        const first = focusable[0]
+        const last = focusable[focusable.length - 1]
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault()
+          last.focus()
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault()
+          first.focus()
+        }
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [drawerOpen])
 
   const handleLogout = async () => {
+    setDrawerOpen(false)
     try {
       await apiClient.post('/auth/logout')
     } catch {
@@ -18,65 +83,387 @@ export default function Header() {
     navigate(ROUTES.LOGIN)
   }
 
+  const toggleDrawer = useCallback(() => {
+    setDrawerOpen((prev) => !prev)
+  }, [])
+
   const navLinkClass = ({ isActive }) =>
     [
       'text-base font-medium transition-colors',
-      isActive
-        ? 'text-[var(--color-primary)] border-b-2 border-[var(--color-primary)]'
-        : 'text-[var(--color-text-secondary)] hover:text-[var(--color-primary)]',
+      isActive ? 'border-b-2' : 'hover:opacity-80',
     ].join(' ')
 
   return (
-    <header
-      className="sticky top-0 z-50 bg-[var(--color-surface)] border-b border-[var(--color-border)]"
-    >
-      <div className="max-w-6xl mx-auto px-4 flex items-center justify-between h-16">
-        {/* 로고 */}
-        <Link
-          to={ROUTES.HOME}
-          className="flex items-center gap-2"
-          aria-label="온담 홈으로 이동"
+    <>
+      <header
+        style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 50,
+          backgroundColor: 'var(--color-bg)',
+          borderBottom: '1px solid var(--color-border)',
+          paddingTop: 'env(safe-area-inset-top, 0px)',
+        }}
+      >
+        <div className="max-w-6xl mx-auto px-4 flex items-center justify-between h-16">
+          {/* 로고 */}
+          <Link
+            to={ROUTES.HOME}
+            className="flex items-center gap-2"
+            aria-label="온담 홈으로 이동"
+          >
+            <span
+              style={{
+                fontFamily: 'var(--font-serif)',
+                fontWeight: 700,
+                fontSize: 'var(--fs-h3)',
+                letterSpacing: 'var(--ls-heading-ko)',
+                color: 'var(--color-text-primary)',
+              }}
+            >
+              온담
+            </span>
+            <span
+              className="hidden sm:inline"
+              style={{
+                fontSize: 'var(--fs-caption)',
+                color: 'var(--color-text-muted)',
+              }}
+            >
+              AI 기억사진관
+            </span>
+          </Link>
+
+          {/* 데스크톱 네비게이션 */}
+          <nav className="hidden md:flex items-center gap-6" aria-label="주요 메뉴">
+            {NAV_LINKS.map(({ to, label }) => (
+              <NavLink
+                key={to}
+                to={to}
+                className={navLinkClass}
+                style={({ isActive }) => ({
+                  color: isActive ? 'var(--color-primary)' : 'var(--color-text-secondary)',
+                  borderColor: isActive ? 'var(--color-warm-accent)' : 'transparent',
+                })}
+              >
+                {label}
+              </NavLink>
+            ))}
+          </nav>
+
+          {/* 우측 영역: 데스크톱 인증 버튼 + 모바일 햄버거 */}
+          <div className="flex items-center gap-2">
+            {/* 데스크톱 인증 버튼 */}
+            <div className="hidden md:flex items-center gap-2">
+              {isAuthenticated ? (
+                <>
+                  <Link
+                    to={ROUTES.MY}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      minHeight: 'var(--min-touch-target)',
+                      padding: '0 var(--spacing-md)',
+                      borderRadius: 'var(--radius-sm)',
+                      border: '1px solid var(--color-border-strong)',
+                      color: 'var(--color-text-primary)',
+                      fontSize: 'var(--fs-body)',
+                      fontWeight: 500,
+                      transition: 'var(--transition-base)',
+                      backgroundColor: 'transparent',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'var(--color-surface-warm)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent'
+                    }}
+                  >
+                    마이페이지
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      minHeight: 'var(--min-touch-target)',
+                      padding: '0 var(--spacing-md)',
+                      borderRadius: 'var(--radius-sm)',
+                      border: 'none',
+                      background: 'transparent',
+                      color: 'var(--color-text-secondary)',
+                      fontSize: 'var(--fs-body)',
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                      transition: 'var(--transition-base)',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.color = 'var(--color-text-primary)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = 'var(--color-text-secondary)'
+                    }}
+                  >
+                    로그아웃
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to={ROUTES.LOGIN}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      minHeight: 'var(--min-touch-target)',
+                      padding: '0 var(--spacing-md)',
+                      borderRadius: 'var(--radius-sm)',
+                      border: '1px solid var(--color-border-strong)',
+                      color: 'var(--color-text-primary)',
+                      fontSize: 'var(--fs-body)',
+                      fontWeight: 500,
+                      transition: 'var(--transition-base)',
+                      backgroundColor: 'transparent',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'var(--color-surface-warm)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent'
+                    }}
+                  >
+                    로그인
+                  </Link>
+                  <Link
+                    to={ROUTES.JOIN}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      minHeight: 'var(--min-touch-target)',
+                      padding: '0 var(--spacing-md)',
+                      borderRadius: 'var(--radius-sm)',
+                      backgroundColor: 'var(--color-primary)',
+                      color: 'var(--color-text-on-dark)',
+                      fontSize: 'var(--fs-body)',
+                      fontWeight: 600,
+                      transition: 'var(--transition-base)',
+                      border: 'none',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'var(--color-primary-soft)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'var(--color-primary)'
+                    }}
+                  >
+                    회원가입
+                  </Link>
+                </>
+              )}
+            </div>
+
+            {/* 모바일 햄버거 버튼 */}
+            <button
+              ref={hamburgerRef}
+              type="button"
+              onClick={toggleDrawer}
+              aria-label={drawerOpen ? '메뉴 닫기' : '메뉴 열기'}
+              aria-expanded={drawerOpen}
+              aria-controls="mobile-drawer"
+              className="md:hidden"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 'var(--min-touch-target)',
+                height: 'var(--min-touch-target)',
+                minHeight: 'var(--min-touch-target)',
+                border: 'none',
+                background: 'transparent',
+                cursor: 'pointer',
+                padding: 0,
+                color: 'var(--color-text-primary)',
+                flexShrink: 0,
+              }}
+            >
+              {drawerOpen ? (
+                /* X 아이콘 */
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              ) : (
+                /* 햄버거 아이콘 */
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <line x1="3" y1="7" x2="21" y2="7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  <line x1="3" y1="12" x2="21" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  <line x1="3" y1="17" x2="21" y2="17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              )}
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* 모바일 Drawer */}
+      {/* Backdrop */}
+      {drawerOpen && (
+        <div
+          aria-hidden="true"
+          onClick={() => setDrawerOpen(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 98,
+            backgroundColor: 'rgba(42, 40, 38, 0.45)',
+          }}
+        />
+      )}
+
+      {/* Drawer 패널 */}
+      <nav
+        id="mobile-drawer"
+        ref={drawerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="모바일 메뉴"
+        className="md:hidden"
+        style={{
+          position: 'fixed',
+          top: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 99,
+          width: 'min(280px, 85vw)',
+          backgroundColor: 'var(--color-bg)',
+          borderLeft: '1px solid var(--color-border)',
+          display: 'flex',
+          flexDirection: 'column',
+          paddingTop: 'env(safe-area-inset-top, 0px)',
+          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+          transform: drawerOpen ? 'translateX(0)' : 'translateX(100%)',
+          transition: 'transform 0.25s ease',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+        }}
+      >
+        {/* Drawer 상단: 닫기 버튼 */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: 'var(--spacing-md) var(--spacing-md)',
+            borderBottom: '1px solid var(--color-border)',
+            minHeight: 64,
+          }}
         >
           <span
-            className="font-bold text-xl tracking-tight"
-            style={{ color: 'var(--color-primary)' }}
+            style={{
+              fontFamily: 'var(--font-serif)',
+              fontWeight: 700,
+              fontSize: 'var(--fs-h3)',
+              letterSpacing: 'var(--ls-heading-ko)',
+              color: 'var(--color-text-primary)',
+            }}
           >
             온담
           </span>
-          <span className="text-xs text-[var(--color-text-muted)] hidden sm:inline">
-            AI 기억사진관
-          </span>
-        </Link>
+          <button
+            type="button"
+            onClick={() => setDrawerOpen(false)}
+            aria-label="메뉴 닫기"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 'var(--min-touch-target)',
+              height: 'var(--min-touch-target)',
+              minHeight: 'var(--min-touch-target)',
+              border: 'none',
+              background: 'transparent',
+              cursor: 'pointer',
+              color: 'var(--color-text-secondary)',
+              fontSize: 24,
+              borderRadius: 'var(--radius-sm)',
+            }}
+          >
+            ×
+          </button>
+        </div>
 
-        {/* 메인 네비게이션 */}
-        <nav className="hidden md:flex items-center gap-6" aria-label="주요 메뉴">
-          <NavLink to={ROUTES.PHOTO} className={navLinkClass}>
-            AI 사진관
-          </NavLink>
-          <NavLink to={ROUTES.WILL} className={navLinkClass}>
-            유언장
-          </NavLink>
-          <NavLink to={ROUTES.PET} className={navLinkClass}>
-            반려동물
-          </NavLink>
-        </nav>
+        {/* 메인 메뉴 */}
+        <div style={{ flex: 1, padding: 'var(--spacing-md) 0' }}>
+          {NAV_LINKS.map(({ to, label }) => (
+            <NavLink
+              key={to}
+              to={to}
+              style={({ isActive }) => ({
+                display: 'flex',
+                alignItems: 'center',
+                padding: 'var(--spacing-md) var(--spacing-lg)',
+                fontSize: 'var(--fs-body-lg)',
+                fontWeight: 500,
+                color: isActive ? 'var(--color-primary)' : 'var(--color-text-secondary)',
+                backgroundColor: isActive ? 'var(--color-surface-warm)' : 'transparent',
+                borderLeft: isActive
+                  ? '3px solid var(--color-warm-accent)'
+                  : '3px solid transparent',
+                transition: 'var(--transition-base)',
+                minHeight: 'var(--min-touch-target)',
+                textDecoration: 'none',
+              })}
+            >
+              {label}
+            </NavLink>
+          ))}
+        </div>
 
-        {/* 인증 버튼 영역 */}
-        <div className="flex items-center gap-2">
+        {/* 인증 영역 */}
+        <div
+          style={{
+            borderTop: '1px solid var(--color-border)',
+            padding: 'var(--spacing-md)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 'var(--spacing-sm)',
+          }}
+        >
           {isAuthenticated ? (
             <>
               <Link
                 to={ROUTES.MY}
-                className="px-4 py-2 rounded-lg text-[var(--color-primary)] border border-[var(--color-primary)] font-medium text-base hover:bg-[var(--color-accent)] transition-colors"
-                style={{ minHeight: 'var(--min-touch-target)' }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  minHeight: 'var(--size-button-h)',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--color-border-strong)',
+                  color: 'var(--color-text-primary)',
+                  fontSize: 'var(--fs-body)',
+                  fontWeight: 500,
+                  textDecoration: 'none',
+                }}
               >
                 마이페이지
               </Link>
               <button
                 type="button"
                 onClick={handleLogout}
-                className="px-4 py-2 rounded-lg text-[var(--color-text-secondary)] font-medium text-base hover:text-[var(--color-text-primary)] transition-colors"
-                style={{ minHeight: 'var(--min-touch-target)' }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  minHeight: 'var(--size-button-h)',
+                  borderRadius: 'var(--radius-sm)',
+                  border: 'none',
+                  background: 'transparent',
+                  color: 'var(--color-text-secondary)',
+                  fontSize: 'var(--fs-body)',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                }}
               >
                 로그아웃
               </button>
@@ -85,17 +472,35 @@ export default function Header() {
             <>
               <Link
                 to={ROUTES.LOGIN}
-                className="px-4 py-2 rounded-lg text-[var(--color-primary)] border border-[var(--color-primary)] font-medium text-base hover:bg-[var(--color-accent)] transition-colors"
-                style={{ minHeight: 'var(--min-touch-target)' }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  minHeight: 'var(--size-button-h)',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--color-border-strong)',
+                  color: 'var(--color-text-primary)',
+                  fontSize: 'var(--fs-body)',
+                  fontWeight: 500,
+                  textDecoration: 'none',
+                }}
               >
                 로그인
               </Link>
               <Link
                 to={ROUTES.JOIN}
-                className="px-4 py-2 rounded-lg text-[var(--color-surface)] font-medium text-base transition-colors"
                 style={{
-                  minHeight: 'var(--min-touch-target)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  minHeight: 'var(--size-button-h)',
+                  borderRadius: 'var(--radius-sm)',
                   backgroundColor: 'var(--color-primary)',
+                  color: 'var(--color-text-on-dark)',
+                  fontSize: 'var(--fs-body)',
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                  border: 'none',
                 }}
               >
                 회원가입
@@ -103,34 +508,7 @@ export default function Header() {
             </>
           )}
         </div>
-      </div>
-
-      {/* 모바일 하단 네비게이션 */}
-      <nav
-        className="md:hidden flex border-t border-[var(--color-border)]"
-        aria-label="모바일 메뉴"
-      >
-        {[
-          { to: ROUTES.PHOTO, label: 'AI 사진관' },
-          { to: ROUTES.WILL, label: '유언장' },
-          { to: ROUTES.PET, label: '반려동물' },
-        ].map(({ to, label }) => (
-          <NavLink
-            key={to}
-            to={to}
-            className={({ isActive }) =>
-              [
-                'flex-1 text-center py-3 text-sm font-medium transition-colors',
-                isActive
-                  ? 'text-[var(--color-primary)] bg-[var(--color-accent)]'
-                  : 'text-[var(--color-text-secondary)]',
-              ].join(' ')
-            }
-          >
-            {label}
-          </NavLink>
-        ))}
       </nav>
-    </header>
+    </>
   )
 }
