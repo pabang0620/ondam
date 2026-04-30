@@ -104,9 +104,12 @@ export default function HomePage() {
             className="font-bold leading-tight mb-6"
             style={{
               fontFamily: 'var(--font-serif)',
-              fontSize: 'clamp(24px, 6vw, 48px)',
+              fontSize: 'clamp(28px, 6vw, 48px)',
+              fontWeight: 800,
               color: 'var(--color-text-on-dark)',
               letterSpacing: 'var(--ls-heading-ko)',
+              lineHeight: 1.3,
+              wordBreak: 'keep-all',
             }}
           >
             AI로 간직하는
@@ -178,9 +181,11 @@ export default function HomePage() {
         <h2
           className="text-center font-bold mb-4 sm:mb-5"
           style={{
-            fontSize: 'clamp(20px, 4vw, var(--fs-h2))',
+            fontSize: 'clamp(22px, 4vw, var(--fs-h2))',
+            fontWeight: 700,
             color: 'var(--color-text-primary)',
             letterSpacing: 'var(--ls-heading-ko)',
+            wordBreak: 'keep-all',
           }}
         >
           온담의 서비스
@@ -226,7 +231,7 @@ export default function HomePage() {
                 </div>
               )}
 
-              <div className="flex flex-col gap-5 p-6 sm:p-7 flex-1">
+              <div className="flex flex-col gap-5 p-6 sm:p-7 flex-1" style={{ minWidth: 0 }}>
                 {/* 도메인 컬러 아이콘 영역 */}
                 <div
                   className="w-12 h-12 flex items-center justify-center flex-shrink-0"
@@ -239,20 +244,26 @@ export default function HomePage() {
                   <Icon size={22} style={{ color: domainColor }} />
                 </div>
 
-                <div>
+                <div style={{ minWidth: 0 }}>
                   <h3
                     className="font-bold mb-2"
                     style={{
                       fontSize: 'var(--fs-h3)',
                       color: 'var(--color-text-primary)',
                       letterSpacing: 'var(--ls-heading-ko)',
+                      wordBreak: 'keep-all',
                     }}
                   >
                     {title}
                   </h3>
                   <p
                     className="leading-relaxed"
-                    style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)' }}
+                    style={{
+                      fontSize: 'var(--fs-body)',
+                      color: 'var(--color-text-secondary)',
+                      wordBreak: 'keep-all',
+                      paddingRight: '4px',
+                    }}
                   >
                     {description}
                   </p>
@@ -299,16 +310,18 @@ export default function HomePage() {
             className="text-center font-bold mb-4 sm:mb-5"
             style={{
               fontFamily: 'var(--font-serif)',
-              fontSize: 'clamp(20px, 4vw, var(--fs-h2))',
+              fontSize: 'clamp(22px, 4vw, var(--fs-h2))',
+              fontWeight: 700,
               color: 'var(--color-text-primary)',
               letterSpacing: 'var(--ls-heading-ko)',
+              wordBreak: 'keep-all',
             }}
           >
             왜 온담인가요
           </h2>
           <p
             className="text-center mb-10 sm:mb-14"
-            style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}
+            style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)', wordBreak: 'keep-all' }}
           >
             온담은 기억이 흐려지지 않도록 곁에 있겠습니다.
           </p>
@@ -330,13 +343,13 @@ export default function HomePage() {
                 </div>
                 <h3
                   className="font-bold"
-                  style={{ fontSize: 'var(--fs-h3)', color: 'var(--color-text-primary)' }}
+                  style={{ fontSize: 'var(--fs-h3)', color: 'var(--color-text-primary)', wordBreak: 'keep-all' }}
                 >
                   {title}
                 </h3>
                 <p
                   className="leading-relaxed"
-                  style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)' }}
+                  style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', wordBreak: 'keep-all' }}
                 >
                   {description}
                 </p>
@@ -355,9 +368,11 @@ export default function HomePage() {
           className="font-bold mb-5 sm:mb-6"
           style={{
             fontFamily: 'var(--font-serif)',
-            fontSize: 'clamp(20px, 4vw, var(--fs-h2))',
+            fontSize: 'clamp(22px, 4vw, var(--fs-h2))',
+            fontWeight: 700,
             color: 'var(--color-text-primary)',
             letterSpacing: 'var(--ls-heading-ko)',
+            wordBreak: 'keep-all',
           }}
         >
           지금 시작하세요

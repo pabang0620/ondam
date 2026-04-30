@@ -12,12 +12,14 @@
 
 .will-section-title {
   font-family: var(--font-serif);
-  font-size: var(--fs-h2);
+  font-size: clamp(20px, 4vw, var(--fs-h2));
   font-weight: 700;
   color: var(--color-will);
   text-align: center;
   margin-bottom: var(--spacing-xl);
   letter-spacing: var(--ls-heading-ko);
+  word-break: keep-all;
+  line-height: 1.3;
 }
 
 /* Hero */
@@ -40,12 +42,13 @@
 
 .will-hero__title {
   font-family: var(--font-serif);
-  font-size: var(--fs-h1);
-  font-weight: 700;
-  line-height: 1.35;
+  font-size: clamp(28px, 6vw, var(--fs-h1));
+  font-weight: 800;
+  line-height: 1.3;
   margin-bottom: var(--spacing-md);
   letter-spacing: var(--ls-heading-ko);
   color: var(--color-text-on-dark);
+  word-break: keep-all;
 }
 
 .will-hero__sub {
@@ -78,7 +81,7 @@
 
 /* Features */
 .will-features {
-  padding: var(--spacing-2xl) var(--spacing-md);
+  padding: 56px var(--spacing-md);
   background-color: var(--color-surface);
 }
 
@@ -116,11 +119,12 @@
   font-size: var(--fs-body);
   color: var(--color-text-secondary);
   line-height: var(--lh-relaxed);
+  word-break: keep-all;
 }
 
 /* Steps */
 .will-steps {
-  padding: var(--spacing-2xl) var(--spacing-md);
+  padding: 56px var(--spacing-md);
   background-color: var(--color-bg-alt);
 }
 
@@ -166,7 +170,7 @@
 
 /* Pricing */
 .will-pricing {
-  padding: var(--spacing-2xl) var(--spacing-md);
+  padding: 56px var(--spacing-md);
   background-color: var(--color-surface);
 }
 
@@ -232,6 +236,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-wrap: wrap;
   gap: var(--spacing-xs);
   font-size: var(--fs-caption);
   color: var(--color-text-muted);
@@ -239,6 +244,9 @@
   padding: var(--spacing-sm) var(--spacing-md);
   border-radius: var(--radius-sm);
   margin-bottom: var(--spacing-xl);
+  word-break: keep-all;
+  text-align: center;
+  line-height: 1.6;
 }
 
 .will-pricing__cta {
@@ -263,8 +271,27 @@
   opacity: 0.88;
 }
 
-/* ── 반응형: 태블릿 (≤ 768px) ── */
-@media (max-width: 768px) {
+/* ── 반응형: 태블릿 이상 (640px~) ── */
+@media (min-width: 640px) {
+  .will-features,
+  .will-steps,
+  .will-pricing {
+    padding-top: 64px;
+    padding-bottom: 64px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .will-features,
+  .will-steps,
+  .will-pricing {
+    padding-top: 80px;
+    padding-bottom: 80px;
+  }
+}
+
+/* ── 반응형: 태블릿 (640px ~ 1023px) ── */
+@media (max-width: 1023px) {
   .will-section-inner {
     padding: 0 var(--spacing-md);
   }
@@ -274,7 +301,7 @@
   }
 
   .will-hero__title {
-    font-size: var(--fs-h2);
+    font-size: clamp(26px, 5vw, var(--fs-h1));
   }
 
   .will-hero__sub {
@@ -282,7 +309,7 @@
   }
 
   .will-features__grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .will-pricing__card {
@@ -291,8 +318,12 @@
   }
 }
 
-/* ── 반응형: 모바일 (≤ 480px) ── */
-@media (max-width: 480px) {
+/* ── 반응형: 모바일 (< 640px) ── */
+@media (max-width: 639px) {
+  .will-page {
+    overflow-x: hidden;
+  }
+
   .will-hero {
     padding: var(--spacing-lg) var(--spacing-md);
   }
@@ -320,7 +351,7 @@
   }
 
   .will-features {
-    padding: var(--spacing-xl) var(--spacing-md);
+    padding: 48px var(--spacing-md);
   }
 
   .will-features__grid {
@@ -329,17 +360,18 @@
   }
 
   .will-steps {
-    padding: var(--spacing-xl) var(--spacing-md);
+    padding: 48px var(--spacing-md);
   }
 
+  /* 모바일 step track: 가로 스크롤 방지 위해 flex-wrap 허용 */
   .will-steps__track {
-    flex-direction: column;
-    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: var(--spacing-lg);
   }
 
   .will-pricing {
-    padding: var(--spacing-xl) var(--spacing-md);
+    padding: 48px var(--spacing-md);
   }
 
   .will-pricing__card {

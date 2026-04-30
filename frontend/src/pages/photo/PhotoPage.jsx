@@ -57,8 +57,8 @@ function FeatureCard({ icon: Icon, title, desc }) {
       >
         <Icon size={24} color="var(--color-photo)" />
       </div>
-      <p style={{ fontWeight: 700, fontSize: 'var(--fs-body-lg)', color: 'var(--color-text-primary)', letterSpacing: 'var(--ls-heading-ko)' }}>{title}</p>
-      <p style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--fs-body)', lineHeight: 'var(--lh-relaxed)' }}>
+      <p style={{ fontWeight: 700, fontSize: 'var(--fs-body-lg)', color: 'var(--color-text-primary)', letterSpacing: 'var(--ls-heading-ko)', wordBreak: 'keep-all' }}>{title}</p>
+      <p style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--fs-body)', lineHeight: 'var(--lh-relaxed)', wordBreak: 'keep-all' }}>
         {desc}
       </p>
     </div>
@@ -94,8 +94,8 @@ function PhotoTypeCard({ type, label, desc, onClick }) {
       }}
     >
       <div>
-        <p style={{ fontWeight: 700, fontSize: 'var(--fs-body-lg)', marginBottom: 4, color: 'var(--color-text-primary)', letterSpacing: 'var(--ls-heading-ko)' }}>{label}</p>
-        <p style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--fs-body)' }}>{desc}</p>
+        <p style={{ fontWeight: 700, fontSize: 'var(--fs-body-lg)', marginBottom: 4, color: 'var(--color-text-primary)', letterSpacing: 'var(--ls-heading-ko)', wordBreak: 'keep-all' }}>{label}</p>
+        <p style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--fs-body)', wordBreak: 'keep-all' }}>{desc}</p>
       </div>
       <ArrowRight size={20} color="var(--color-photo)" style={{ flexShrink: 0 }} />
     </button>
@@ -121,20 +121,24 @@ function PhotoPage() {
         padding: 'var(--spacing-xl) var(--spacing-md)',
         display: 'flex',
         flexDirection: 'column',
-        gap: 'var(--spacing-2xl)',
+        gap: '56px',
         background: 'var(--color-bg)',
+        width: '100%',
+        boxSizing: 'border-box',
+        overflowX: 'hidden',
       }}
     >
       {/* Hero */}
-      <section style={{ textAlign: 'center', padding: 'var(--spacing-xl) 0' }}>
+      <section style={{ textAlign: 'center', padding: 'var(--spacing-lg) 0 var(--spacing-2xl)' }}>
         <h1
           style={{
-            fontSize: 'var(--fs-h1)',
+            fontSize: 'clamp(28px, 6vw, 48px)',
             fontWeight: 800,
             color: 'var(--color-photo)',
-            lineHeight: 1.35,
+            lineHeight: 1.3,
             marginBottom: 'var(--spacing-md)',
             letterSpacing: 'var(--ls-heading-ko)',
+            wordBreak: 'keep-all',
           }}
         >
           AI가 되살리는<br />소중한 순간
@@ -146,6 +150,7 @@ function PhotoPage() {
             lineHeight: 'var(--lh-relaxed)',
             maxWidth: 480,
             margin: '0 auto',
+            wordBreak: 'keep-all',
           }}
         >
           오래되어 빛바랜 사진, 흐릿해진 기억을 AI가 선명하게 복원합니다.
@@ -157,11 +162,13 @@ function PhotoPage() {
       <section>
         <h2
           style={{
-            fontSize: 'var(--fs-h2)',
+            fontSize: 'clamp(20px, 4vw, var(--fs-h2))',
             fontWeight: 700,
             marginBottom: 'var(--spacing-lg)',
             color: 'var(--color-text-primary)',
             letterSpacing: 'var(--ls-heading-ko)',
+            wordBreak: 'keep-all',
+            lineHeight: 1.3,
           }}
         >
           제공 기능
@@ -169,7 +176,7 @@ function PhotoPage() {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))',
             gap: 'var(--spacing-md)',
           }}
         >
@@ -183,11 +190,13 @@ function PhotoPage() {
       <section>
         <h2
           style={{
-            fontSize: 'var(--fs-h2)',
+            fontSize: 'clamp(20px, 4vw, var(--fs-h2))',
             fontWeight: 700,
-            marginBottom: 'var(--spacing-sm)',
+            marginBottom: 'var(--spacing-md)',
             color: 'var(--color-text-primary)',
             letterSpacing: 'var(--ls-heading-ko)',
+            wordBreak: 'keep-all',
+            lineHeight: 1.3,
           }}
         >
           어떤 사진이 필요하신가요?
@@ -198,11 +207,12 @@ function PhotoPage() {
             color: 'var(--color-text-secondary)',
             marginBottom: 'var(--spacing-lg)',
             lineHeight: 'var(--lh-relaxed)',
+            wordBreak: 'keep-all',
           }}
         >
           사진 종류를 선택하시면 바로 시작할 수 있습니다.
         </p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
           {PHOTO_TYPES.map((item) => (
             <PhotoTypeCard key={item.type} {...item} onClick={handleTypeSelect} />
           ))}

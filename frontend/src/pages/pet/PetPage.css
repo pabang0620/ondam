@@ -26,17 +26,19 @@
 }
 
 .pet-hero__title {
-  font-size: var(--fs-h1);
+  font-size: clamp(28px, 6vw, var(--fs-h1));
   font-weight: 800;
   color: var(--color-primary);
-  line-height: 1.4;
+  line-height: 1.3;
   letter-spacing: var(--ls-heading-ko);
+  word-break: keep-all;
 }
 
 .pet-hero__sub {
   font-size: var(--fs-body-lg);
   color: var(--color-text-secondary);
   line-height: var(--lh-relaxed);
+  word-break: keep-all;
 }
 
 .pet-hero__cta {
@@ -63,7 +65,7 @@
 
 /* Section */
 .pet-section {
-  padding: var(--spacing-xl) var(--spacing-md);
+  padding: 56px var(--spacing-md);
 }
 
 .pet-section--accent {
@@ -78,11 +80,13 @@
 }
 
 .pet-section__title {
-  font-size: var(--fs-h2);
+  font-size: clamp(20px, 4vw, var(--fs-h2));
   font-weight: 700;
   color: var(--color-text-primary);
   margin-bottom: var(--spacing-lg);
   letter-spacing: var(--ls-heading-ko);
+  word-break: keep-all;
+  line-height: 1.3;
 }
 
 .pet-section__sub {
@@ -96,14 +100,14 @@
 .pet-features-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: var(--spacing-md);
+  gap: 20px;
 }
 
 .pet-feature-card {
   background: var(--color-surface-warm);
   border: 1px solid var(--color-pet-soft);
   border-radius: var(--radius-card);
-  padding: var(--spacing-lg);
+  padding: 20px 24px;
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
@@ -129,20 +133,21 @@
   font-size: var(--fs-body);
   color: var(--color-text-secondary);
   line-height: var(--lh-relaxed);
+  word-break: keep-all;
 }
 
 /* Plan cards — 구독 카드: 살구 베이지 베이스 */
 .pet-plans-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: var(--spacing-md);
+  gap: 20px;
 }
 
 .pet-plan-card {
   background: var(--color-surface);
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-card);
-  padding: var(--spacing-lg);
+  padding: 24px;
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
@@ -262,7 +267,7 @@
 .pet-list {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-md);
 }
 
 /* 펫 카드 — surface-warm + pet-soft border + radius 16~20px */
@@ -354,6 +359,17 @@
   .pet-section__inner {
     max-width: 960px;
   }
+
+  .pet-section {
+    padding: 80px var(--spacing-md);
+  }
+}
+
+/* ── 반응형: 태블릿 (640px ~ 1023px) ── */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .pet-section {
+    padding: 64px var(--spacing-md);
+  }
 }
 
 /* ── 반응형: 태블릿 (640px ~ 1023px) ── */
@@ -393,7 +409,7 @@
   }
 
   .pet-section {
-    padding: var(--spacing-lg) var(--spacing-md);
+    padding: 48px var(--spacing-md);
   }
 
   .pet-section__title {
@@ -411,11 +427,11 @@
 
   .pet-plans-grid {
     grid-template-columns: 1fr;
-    gap: var(--spacing-lg);
+    gap: var(--spacing-xl);
   }
 
   .pet-plan-card {
-    padding: var(--spacing-md);
+    padding: 20px;
   }
 
   .pet-plan-card__btn {
