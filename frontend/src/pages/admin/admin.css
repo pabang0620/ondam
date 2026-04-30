@@ -2,14 +2,14 @@
 
 /* 페이지 패딩 래퍼 */
 .admin-page {
-  padding: var(--spacing-xl);
+  padding: 32px;
   box-sizing: border-box;
   width: 100%;
 }
 
 @media (max-width: 639px) {
   .admin-page {
-    padding: var(--spacing-md);
+    padding: 16px;
   }
 }
 
@@ -18,7 +18,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: var(--spacing-xl);
+  margin-bottom: 24px;
   gap: var(--spacing-md);
 }
 
@@ -37,7 +37,7 @@
 .admin-stats-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--spacing-md);
+  gap: 16px;
 }
 
 @media (min-width: 640px) and (max-width: 1023px) {
@@ -56,7 +56,7 @@
 .admin-search-form {
   display: flex;
   gap: var(--spacing-sm);
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: 24px;
   max-width: 480px;
   width: 100%;
 }

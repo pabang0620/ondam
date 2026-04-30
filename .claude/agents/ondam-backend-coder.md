@@ -16,7 +16,7 @@ model: sonnet
 
 ### 승인 없이 즉시 실행 가능
 - 기존 코드 파일 읽기 (Read, Grep, Glob)
-- 코드 파일 생성·수정 (Write, Edit) — Routes/Controller/Service/Repository 등 모든 .js 파일
+- 코드 파일 생성·수정 (Write, Edit) - Routes/Controller/Service/Repository 등 모든 .js 파일
 - 마이그레이션 SQL 파일 작성 (실행 제외)
 - 린트·타입체크 실행
 
@@ -35,7 +35,7 @@ model: sonnet
    - 기존 테이블 활용 가능 시 → 바로 코드 작성 진행
 3. **코드 생성** (반드시 4개 파일 세트 완성):
    - `{도메인}Repository.js` → `{도메인}Service.js` → `{도메인}Controller.js` → `{도메인}Routes.js` 순서로 작성
-   - **중간 중단 금지** — DB 테이블 미존재 등 이유로 코드 생성을 멈추지 말 것
+   - **중간 중단 금지** - DB 테이블 미존재 등 이유로 코드 생성을 멈추지 말 것
 4. **라우터 등록**: `routes/index.js`에 신규 라우터 등록
 5. **검증**: curl 테스트 제안
 
@@ -47,17 +47,17 @@ model: sonnet
 ## 온담 도메인 목록
 
 ```
-auth        — 인증/JWT/소셜로그인
-user        — 회원 프로필, 동의 이력
-photo       — 사진 업로드, AI 보정 처리
-will        — 유언 영상, 음성 메시지
-pet         — 반려동물 등록, 기억 저장
-memorial    — 추모 페이지, 공개 설정
-payment     — 토스페이 결제 연동
-subscription — 구독 플랜 관리
-notification — 알림 시스템
-admin       — 관리자 기능
-common      — aggregation, 검색, 업로드
+auth        - 인증/JWT/소셜로그인
+user        - 회원 프로필, 동의 이력
+photo       - 사진 업로드, AI 보정 처리
+will        - 유언 영상, 음성 메시지
+pet         - 반려동물 등록, 기억 저장
+memorial    - 추모 페이지, 공개 설정
+payment     - 토스페이 결제 연동
+subscription - 구독 플랜 관리
+notification - 알림 시스템
+admin       - 관리자 기능
+common      - aggregation, 검색, 업로드
 ```
 
 ---
@@ -101,7 +101,7 @@ backend/src/
 
 ## 3계층 아키텍처 규칙
 
-### Controller — req/res만 처리
+### Controller - req/res만 처리
 ```js
 // ✅ 올바른 예
 export const getPhotos = async (req, res, next) => {
@@ -112,14 +112,14 @@ export const getPhotos = async (req, res, next) => {
   } catch (err) { next(err) }
 }
 
-// ❌ 잘못된 예 — 컨트롤러에 SQL 직접 작성 금지
+// ❌ 잘못된 예 - 컨트롤러에 SQL 직접 작성 금지
 export const getPhotos = async (req, res, next) => {
   const [rows] = await pool.query('SELECT ...')  // ← Repository 역할
   return res.json({ data: rows })
 }
 ```
 
-### Service — 비즈니스 로직
+### Service - 비즈니스 로직
 ```js
 // ✅ 올바른 예
 export const getPhotos = async (filters, { limit, offset }) => {
@@ -133,7 +133,7 @@ export const createPhoto = async (userUuid, data) => {
 }
 ```
 
-### Repository — SQL만 담당
+### Repository - SQL만 담당
 ```js
 import pool from '../../config/database.js'
 
@@ -155,7 +155,7 @@ export const findPhotos = async (filters, limit, offset) => {
 > 동기 처리(HTTP 응답 대기 중 AI API 직접 호출) 금지.
 
 ```js
-// ✅ 올바른 예 — BullMQ 큐를 통한 비동기 처리
+// ✅ 올바른 예 - BullMQ 큐를 통한 비동기 처리
 import { photoQueue } from '../../queues/photoQueue.js'
 
 export const enhancePhoto = async (req, res, next) => {
@@ -167,7 +167,7 @@ export const enhancePhoto = async (req, res, next) => {
   } catch (err) { next(err) }
 }
 
-// ❌ 잘못된 예 — 동기 처리 (응답 지연, 타임아웃 위험)
+// ❌ 잘못된 예 - 동기 처리 (응답 지연, 타임아웃 위험)
 export const enhancePhoto = async (req, res, next) => {
   try {
     const result = await aiService.enhance(photo)  // ← 수십 초 대기 → 금지
@@ -202,10 +202,10 @@ await updateAiJobStatus(jobId, 'failed', { error_message: err.message })
 > **민감 데이터(음성 s3_key, 유언 영상 s3_key) INSERT 시 반드시 KMS 암호화 적용.**
 
 ```js
-// ✅ 올바른 예 — KMS 암호화 후 저장
+// ✅ 올바른 예 - KMS 암호화 후 저장
 import { encrypt, decrypt } from '../../utils/kmsHelper.js'
 
-// Repository — 저장 시 암호화
+// Repository - 저장 시 암호화
 export const createVoice = async (userUuid, data) => {
   const encryptedS3Key = await encrypt(data.s3_key)
   const [result] = await pool.query(
@@ -215,7 +215,7 @@ export const createVoice = async (userUuid, data) => {
   return result
 }
 
-// Repository — 조회 시 복호화
+// Repository - 조회 시 복호화
 export const findVoiceByUUID = async (uuid) => {
   const [rows] = await pool.query('SELECT * FROM voices WHERE uuid = ?', [uuid])
   if (!rows[0]) return null
@@ -225,7 +225,7 @@ export const findVoiceByUUID = async (uuid) => {
   }
 }
 
-// ❌ 잘못된 예 — 평문 저장 금지
+// ❌ 잘못된 예 - 평문 저장 금지
 export const createVoice = async (userUuid, data) => {
   await pool.query('INSERT INTO voices (..., s3_key) VALUES (?, ?, ?)', [..., data.s3_key])
 }
@@ -244,7 +244,7 @@ export const createVoice = async (userUuid, data) => {
 > **토스페이 결제 webhook은 반드시 서명 검증 후 처리한다.**
 
 ```js
-// ✅ 올바른 예 — 서명 검증 후 처리
+// ✅ 올바른 예 - 서명 검증 후 처리
 import { verifyTossWebhookSignature } from '../../utils/tossHelper.js'
 
 export const handleWebhook = async (req, res, next) => {
@@ -260,7 +260,7 @@ export const handleWebhook = async (req, res, next) => {
   } catch (err) { next(err) }
 }
 
-// ❌ 잘못된 예 — 서명 검증 없이 처리 금지
+// ❌ 잘못된 예 - 서명 검증 없이 처리 금지
 export const handleWebhook = async (req, res, next) => {
   await paymentService.processWebhook(req.body)  // ← 서명 검증 누락 금지
   return res.status(200).json({ success: true })
@@ -331,7 +331,7 @@ router.get('/memorials/:uuid', getMemorial)
 > 음성/초상권 관련 API에는 반드시 동의 여부 검증 로직을 포함한다.
 
 ```js
-// Service — 동의 여부 확인
+// Service - 동의 여부 확인
 export const createVoiceCloneJob = async (userUuid, data) => {
   // 음성 복제 전 반드시 consent 확인
   const consent = await consentRepository.findConsent(userUuid, 'voice_clone')
@@ -400,7 +400,7 @@ export const getPageData = async (req, res, next) => {
 ```
 
 ### 필수 규칙 (미준수 시 코드 검수 실패)
-- **모든** 서비스 호출에 `.catch(() => 기본값)` 필수 — 핵심 데이터도 예외 없음
+- **모든** 서비스 호출에 `.catch(() => 기본값)` 필수 - 핵심 데이터도 예외 없음
   ```js
   // 올바른 예
   const [memorial, photos] = await Promise.all([
@@ -428,7 +428,7 @@ const memorials = await memorialRepository.findMemorials(filters, limit, offset)
 ### DB 연결
 ```js
 import pool from '../../config/database.js'
-// mysql2/promise pool — await pool.query() 사용
+// mysql2/promise pool - await pool.query() 사용
 // 트랜잭션: const conn = await pool.getConnection(); conn.beginTransaction()
 ```
 

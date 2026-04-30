@@ -6,7 +6,7 @@
 .will-event__content {
   max-width: 600px;
   margin: 0 auto;
-  padding: var(--spacing-xl) var(--spacing-md);
+  padding: 32px var(--spacing-md);
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xl);
@@ -47,10 +47,10 @@
   color: var(--color-error);
 }
 
-/* 이벤트 타입 그룹 */
+/* 이벤트 타입 그룹 — gap 12px */
 .will-event__type-group {
   display: flex;
-  gap: var(--spacing-md);
+  gap: 12px;
   flex-wrap: wrap;
 }
 
@@ -144,6 +144,31 @@
   padding: var(--spacing-sm) var(--spacing-md);
   color: var(--color-error);
   font-size: var(--fs-body);
+}
+
+/* ── 반응형: 모바일 (< 640px) ── */
+@media (max-width: 639px) {
+  .will-event__content {
+    padding: var(--spacing-lg) var(--spacing-md) 32px;
+    gap: var(--spacing-lg);
+  }
+
+  .will-event__title {
+    font-size: var(--fs-h2);
+  }
+
+  /* 이벤트 타입: 모바일 2열 그리드 */
+  .will-event__type-group {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .will-event__type-btn {
+    min-width: unset;
+    flex: unset;
+    min-height: 72px;
+  }
 }
 
 /* 제출 버튼 — warm-accent 골드 */

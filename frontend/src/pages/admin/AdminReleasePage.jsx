@@ -132,7 +132,7 @@ export default function AdminReleasePage() {
 
   /* 표 스타일 — header bg=surface-warm, row 구분 1px var(--color-border) */
   const thStyle = {
-    padding: 'var(--spacing-sm) var(--spacing-md)',
+    padding: '12px 16px',
     textAlign: 'left',
     fontWeight: 700,
     color: 'var(--color-primary)',
@@ -234,10 +234,10 @@ export default function AdminReleasePage() {
                     opacity: isProcessing ? 0.7 : 1,
                   }}
                 >
-                  <td style={{ padding: 'var(--spacing-md)', fontFamily: 'monospace', fontSize: 'var(--fs-caption)', color: 'var(--color-text-muted)' }}>
+                  <td style={{ padding: '12px 16px', fontFamily: 'monospace', fontSize: 'var(--fs-caption)', color: 'var(--color-text-muted)' }}>
                     {release.willId?.slice(0, 12)}...
                   </td>
-                  <td style={{ padding: 'var(--spacing-md)', whiteSpace: 'nowrap', fontSize: 'var(--fs-caption)', color: 'var(--color-text-secondary)' }}>
+                  <td style={{ padding: '12px 16px', whiteSpace: 'nowrap', fontSize: 'var(--fs-caption)', color: 'var(--color-text-secondary)' }}>
                     {new Date(release.createdAt).toLocaleDateString('ko-KR')}
                   </td>
                   <td style={{ padding: 'var(--spacing-md)' }}>

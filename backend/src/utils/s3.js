@@ -23,7 +23,7 @@ export const extractS3KeyFromUrl = (url) => {
     const path = parsed.pathname
     return path.startsWith('/') ? path.slice(1) : path
   } catch {
-    // 이미 키 형태인 경우 — path traversal 차단
+    // 이미 키 형태인 경우 - path traversal 차단
     if (url.includes('..')) return null
     return url
   }
@@ -39,8 +39,8 @@ const getS3Bucket = () => {
 
 /**
  * S3 객체의 서명된 다운로드 URL 생성
- * @param {string} s3Key  — S3 오브젝트 키
- * @param {number} expiresInSeconds — 만료 시간(초)
+ * @param {string} s3Key  - S3 오브젝트 키
+ * @param {number} expiresInSeconds - 만료 시간(초)
  * @returns {Promise<string>} 서명된 URL
  */
 export const getPresignedUrl = async (s3Key, expiresInSeconds) => {

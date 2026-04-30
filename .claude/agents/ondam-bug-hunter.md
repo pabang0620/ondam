@@ -14,10 +14,10 @@ model: sonnet
 ---
 
 ## 실행 원칙
-1. **병렬 최우선** — 각 탐지 영역을 독립 Agent로 동시 실행
-2. **버그만 보고** — 스타일·네이밍·아키텍처 지적 금지. 실제로 오동작하는 코드만
-3. **재현 경로 명시** — 버그마다 어떤 상황에서 발생하는지 서술
-4. **심각도 분류** — CRITICAL(크래시·데이터 손실) / HIGH(기능 불동작) / MEDIUM(잘못된 결과) / LOW(엣지 케이스)
+1. **병렬 최우선** - 각 탐지 영역을 독립 Agent로 동시 실행
+2. **버그만 보고** - 스타일·네이밍·아키텍처 지적 금지. 실제로 오동작하는 코드만
+3. **재현 경로 명시** - 버그마다 어떤 상황에서 발생하는지 서술
+4. **심각도 분류** - CRITICAL(크래시·데이터 손실) / HIGH(기능 불동작) / MEDIUM(잘못된 결과) / LOW(엣지 케이스)
 
 ---
 
@@ -45,7 +45,7 @@ find /home/pabang/myapp/ondam/frontend/src -name "*.jsx" -o -name "*.js" | grep 
 
 ---
 
-## 영역 A — SQL 런타임 버그
+## 영역 A - SQL 런타임 버그
 
 ### 탐지 대상
 ```
@@ -61,7 +61,7 @@ backend/src/domains/*/Repository.js (또는 *repository.js)
 흔한 패턴:
 - `uuid` → 실제로는 `xxx_id` (예: `photo_id`, `user_id`)
 - `start_date` → `started_at`
-- `deleted_at` — 해당 테이블에 soft-delete 컬럼이 없는데 WHERE에 사용
+- `deleted_at` - 해당 테이블에 soft-delete 컬럼이 없는데 WHERE에 사용
 - 삭제된 컬럼인데 SELECT에 남아 있음
 
 #### A2. SELECT에 없는 컬럼 참조
@@ -89,17 +89,17 @@ Service에서 넘기는 객체의 키와 Repository INSERT 쿼리의 컬럼 목�
 ### 보고 형식
 ```
 [CRITICAL] backend/src/domains/photo/photoRepository.js:94
-  updatePhoto() — WHERE id = ? 이지만 전달값이 UUID (photo_uuid)
+  updatePhoto() - WHERE id = ? 이지만 전달값이 UUID (photo_uuid)
   → UPDATE가 항상 0 rows affected (silent no-op)
   재현: 사진 수정 시 제목/메타데이터 저장 안 됨
 ```
 
 탐지 결과 없음 시:
-[영역 A] 이상 없음 — 체크리스트 5개 항목 검토 완료
+[영역 A] 이상 없음 - 체크리스트 5개 항목 검토 완료
 
 ---
 
-## 영역 B — 백엔드 로직 버그
+## 영역 B - 백엔드 로직 버그
 
 ### 탐지 대상
 ```
@@ -118,7 +118,7 @@ backend/src/scheduler.js
 Service가 Repository에 넘기는 ID 값이 UUID인지 정수인지 확인.
 Repository WHERE 절의 컬럼 타입과 일치 여부.
 
-#### B3. 크론/스케줄러 — 실제 동작 여부
+#### B3. 크론/스케줄러 - 실제 동작 여부
 `scheduler.js` 또는 cron 파일이 `SELECT`만 하고 실제 DB 변경을 하지 않는 경우.
 설계 의도(query-time 필터)와 실제 코드 일치 여부 확인.
 
@@ -136,17 +136,17 @@ Repository WHERE 절의 컬럼 타입과 일치 여부.
 ### 보고 형식
 ```
 [HIGH] backend/src/domains/subscription/subscriptionService.js:45
-  activateSubscription() — payments INSERT 성공 후 subscriptions UPDATE 실패 시 롤백 없음
+  activateSubscription() - payments INSERT 성공 후 subscriptions UPDATE 실패 시 롤백 없음
   → 결제는 됐는데 구독 미활성화 상태 (데이터 정합성 오류)
   재현: 결제 직후 서버 에러 발생 시
 ```
 
 탐지 결과 없음 시:
-[영역 B] 이상 없음 — 체크리스트 5개 항목 검토 완료
+[영역 B] 이상 없음 - 체크리스트 5개 항목 검토 완료
 
 ---
 
-## 영역 C — 프론트엔드 런타임 버그
+## 영역 C - 프론트엔드 런타임 버그
 
 ### 탐지 대상
 ```
@@ -172,7 +172,7 @@ const loadData = useCallback(...)  // ← 너무 늦은 선언
 ```
 
 #### C2. undefined 접근으로 인한 크래시
-- `data.items.map(...)` — `data.items`가 null일 때 크래시
+- `data.items.map(...)` - `data.items`가 null일 때 크래시
 - 옵셔널 체이닝 없는 중첩 객체 접근
 - async 함수 완료 전 state 접근
 
@@ -194,17 +194,17 @@ items.map(...)  // null.map → 크래시 (초기값이 []이어야 함)
 ### 보고 형식
 ```
 [CRITICAL] frontend/src/pages/memorial/useMemorialDetail.js:65
-  useEffect deps에 loadMemorial 참조 — 선언은 line 82
+  useEffect deps에 loadMemorial 참조 - 선언은 line 82
   → "Cannot access 'loadMemorial' before initialization" TDZ 오류
   재현: 추모 상세 페이지 진입 시 즉시 크래시
 ```
 
 탐지 결과 없음 시:
-[영역 C] 이상 없음 — 체크리스트 5개 항목 검토 완료
+[영역 C] 이상 없음 - 체크리스트 5개 항목 검토 완료
 
 ---
 
-## 영역 D — 프론트↔백엔드 API 계약 불일치
+## 영역 D - 프론트↔백엔드 API 계약 불일치
 
 ### 탐지 대상
 ```
@@ -244,11 +244,11 @@ backend/src/domains/*/Controller.js
 ```
 
 탐지 결과 없음 시:
-[영역 D] 이상 없음 — 체크리스트 5개 항목 검토 완료
+[영역 D] 이상 없음 - 체크리스트 5개 항목 검토 완료
 
 ---
 
-## 영역 E — 라우트·미들웨어 누락/오순서
+## 영역 E - 라우트·미들웨어 누락/오순서
 
 ### 탐지 대상
 ```
@@ -283,11 +283,11 @@ router.get('/mine', ...)        // ← 영원히 도달 불가
 ```
 
 탐지 결과 없음 시:
-[영역 E] 이상 없음 — 체크리스트 3개 항목 검토 완료
+[영역 E] 이상 없음 - 체크리스트 3개 항목 검토 완료
 
 ---
 
-## 영역 F — BullMQ job 상태 추적 버그 (온담 전용)
+## 영역 F - BullMQ job 상태 추적 버그 (온담 전용)
 
 ### 탐지 대상
 ```
@@ -331,11 +331,11 @@ BullMQ job에 `attempts` 설정 없이 AI API 오류 시 재시도 불가.
 ```
 
 탐지 결과 없음 시:
-[영역 F] 이상 없음 — 체크리스트 4개 항목 검토 완료
+[영역 F] 이상 없음 - 체크리스트 4개 항목 검토 완료
 
 ---
 
-## 영역 G — 결제 검증 및 사후 공개 트리거 버그 (온담 전용)
+## 영역 G - 결제 검증 및 사후 공개 트리거 버그 (온담 전용)
 
 ### 탐지 대상
 ```
@@ -349,7 +349,7 @@ backend/src/domains/memorial/
 #### G1. 토스페이 webhook 서명 검증 누락
 `/payments/webhook` 엔드포인트에서 `toss-signature` 헤더 검증 없이 처리:
 ```js
-// 버그 패턴 — 서명 검증 없음
+// 버그 패턴 - 서명 검증 없음
 export const handleWebhook = async (req, res) => {
   await paymentService.processWebhook(req.body)  // ← 검증 없이 처리 → 위조 가능
 }
@@ -360,7 +360,7 @@ export const handleWebhook = async (req, res) => {
 `payments` INSERT → `subscriptions` UPDATE 흐름에서 트랜잭션 없이 순차 실행:
 첫 번째 성공 후 두 번째 실패 시 데이터 불일치.
 
-#### G3. 사후 공개 트리거 — 유가족 알림 누락
+#### G3. 사후 공개 트리거 - 유가족 알림 누락
 `wills.release_status` 변경 시 (예약 → 공개 전환) 유가족에게 알림 발송 누락:
 ```js
 // 버그 패턴
@@ -375,13 +375,13 @@ await willRepository.updateReleaseStatus(uuid, 'released')
 ### 보고 형식
 ```
 [CRITICAL] backend/src/domains/payment/paymentController.js:30
-  handleWebhook() — toss-signature 헤더 검증 없이 결제 처리
+  handleWebhook() - toss-signature 헤더 검증 없이 결제 처리
   → 외부에서 임의 결제 완료 신호 위조 가능
   재현: webhook 엔드포인트에 임의 payload 전송 시 구독 활성화됨
 ```
 
 탐지 결과 없음 시:
-[영역 G] 이상 없음 — 체크리스트 4개 항목 검토 완료
+[영역 G] 이상 없음 - 체크리스트 4개 항목 검토 완료
 
 ---
 

@@ -56,13 +56,13 @@
   line-height: var(--lh-relaxed);
 }
 
-/* 본문 */
+/* 본문 — 비디오 ↔ 메시지 ↔ 액션 사이 32px */
 .will-watch__content {
   max-width: 720px;
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xl);
+  gap: 32px;
 }
 
 /* 헤더 */
@@ -71,7 +71,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-md);
   color: var(--color-warm-accent);
 }
 
@@ -123,4 +123,22 @@
   flex-shrink: 0;
   margin-top: 2px;
   color: var(--color-warm-accent);
+}
+
+/* ── 반응형: 모바일 (< 640px) ── */
+@media (max-width: 639px) {
+  .will-watch-page {
+    padding: var(--spacing-lg) var(--spacing-md);
+    align-items: flex-start;
+  }
+
+  .will-watch__title {
+    font-size: var(--fs-h2);
+  }
+
+  .will-watch__greeting {
+    font-size: var(--fs-body);
+  }
+
+  /* 비디오는 항상 풀너비 16:9 — 이미 width:100% + aspect-ratio 적용됨 */
 }

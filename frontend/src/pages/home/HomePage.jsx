@@ -177,7 +177,7 @@ export default function HomePage() {
 
       {/* 서비스 4종 카드 섹션 */}
       <section className="w-full">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
+      <div className="max-w-6xl mx-auto px-4 sm:px-8 lg:px-12 py-16 sm:py-20 lg:py-24">
         <h2
           className="text-center font-bold mb-4 sm:mb-5"
           style={{
@@ -191,14 +191,14 @@ export default function HomePage() {
           온담의 서비스
         </h2>
         <p
-          className="text-center mb-10 sm:mb-14"
+          className="text-center mb-12 sm:mb-16"
           style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}
         >
           기억을 지키는 네 가지 방법
         </p>
 
         {/* 모바일 1열 → 태블릿 2열 */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
           {SERVICES.map(({ icon: Icon, title, description, price, to, cta, highlight, domainColor, domainBg }) => (
             <div
               key={title}
@@ -231,7 +231,7 @@ export default function HomePage() {
                 </div>
               )}
 
-              <div className="flex flex-col gap-5 p-6 sm:p-7 flex-1" style={{ minWidth: 0 }}>
+              <div className="flex flex-col gap-5 p-7 sm:p-8 flex-1" style={{ minWidth: 0 }}>
                 {/* 도메인 컬러 아이콘 영역 */}
                 <div
                   className="w-12 h-12 flex items-center justify-center flex-shrink-0"
@@ -278,7 +278,7 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <div className="px-6 sm:px-7 pb-6 sm:pb-7">
+              <div className="px-7 sm:px-8 pb-7 sm:pb-8">
                 <Link
                   to={to}
                   className="block text-center font-semibold transition-opacity hover:opacity-90"
@@ -306,7 +306,7 @@ export default function HomePage() {
         className="w-full"
         style={{ backgroundColor: 'var(--color-bg-alt)' }}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-24">
+        <div className="max-w-6xl mx-auto px-4 sm:px-8 lg:px-12 py-12 sm:py-16 lg:py-24">
           <h2
             className="text-center font-bold mb-4 sm:mb-5"
             style={{
@@ -321,7 +321,7 @@ export default function HomePage() {
             왜 온담인가요
           </h2>
           <p
-            className="text-center mb-10 sm:mb-14"
+            className="text-center mb-12 sm:mb-16"
             style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)', wordBreak: 'keep-all' }}
           >
             온담은 기억이 흐려지지 않도록 곁에 있겠습니다.
@@ -365,7 +365,7 @@ export default function HomePage() {
         className="w-full"
         style={{ backgroundColor: 'var(--color-bg)' }}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 lg:py-28 text-center">
+        <div className="max-w-6xl mx-auto px-4 sm:px-8 lg:px-12 py-16 sm:py-24 lg:py-28 text-center">
           <h2
             className="font-bold mb-5 sm:mb-6"
             style={{

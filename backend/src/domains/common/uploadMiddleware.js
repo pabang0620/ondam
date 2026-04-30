@@ -108,7 +108,7 @@ export const uploadSingleImage = (fieldName, folder) =>
   }).single(fieldName)
 
 /**
- * 오디오 단일 업로드 — SSE-KMS 적용 필수 (음성권 보호)
+ * 오디오 단일 업로드 - SSE-KMS 적용 필수 (음성권 보호)
  * @param {string} fieldName - form-data 필드명
  * @param {string} folder    - S3 경로 prefix (예: 'wills')
  */

@@ -6,7 +6,7 @@
 .will-payment__content {
   max-width: 600px;
   margin: 0 auto;
-  padding: var(--spacing-xl) var(--spacing-md);
+  padding: 32px var(--spacing-md);
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xl);
@@ -163,6 +163,31 @@
 .will-payment__pay-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* ── 반응형: 모바일 (< 640px) ── */
+@media (max-width: 639px) {
+  .will-payment__content {
+    padding: var(--spacing-lg) var(--spacing-md) 32px;
+    gap: var(--spacing-lg);
+  }
+
+  .will-payment__summary {
+    padding: 16px 20px;
+  }
+
+  /* 상품 행: 가격이 긴 경우 줄바꿈 */
+  .will-payment__item {
+    flex-wrap: wrap;
+  }
+
+  .will-payment__item-price {
+    font-size: var(--fs-h3);
+  }
+
+  .will-payment__total-price {
+    font-size: var(--fs-h2);
+  }
 }
 
 /* 보안 노트 */

@@ -1,5 +1,5 @@
 /**
- * Pet Service — 비즈니스 로직 전용
+ * Pet Service - 비즈니스 로직 전용
  */
 
 import { v4 as uuidv4 } from 'uuid'

@@ -1,6 +1,6 @@
 /**
  * 필수 환경변수 검증
- * 서버 시작 시 호출 — 누락 시 process.exit(1)으로 즉시 종료
+ * 서버 시작 시 호출 - 누락 시 process.exit(1)으로 즉시 종료
  * AI/결제 등 외부 API 키는 warning만 출력 (개발 환경 편의)
  */
 
@@ -39,7 +39,7 @@ export const validateEnv = () => {
   const missing = REQUIRED.filter((key) => !process.env[key])
 
   if (missing.length > 0) {
-    console.error('[env] 필수 환경변수 누락 — 서버를 시작할 수 없습니다:')
+    console.error('[env] 필수 환경변수 누락 - 서버를 시작할 수 없습니다:')
     missing.forEach((key) => console.error(`  - ${key}`))
     process.exit(1)
   }

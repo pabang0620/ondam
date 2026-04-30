@@ -7,7 +7,7 @@ import * as willController from './willController.js'
 
 const router = Router()
 
-// AI 처리 비용 방지 — 음성 클론/영상 생성 트리거 엔드포인트 전용
+// AI 처리 비용 방지 - 음성 클론/영상 생성 트리거 엔드포인트 전용
 const aiLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1시간
   max: 20,                   // 시간당 최대 20회

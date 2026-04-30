@@ -276,11 +276,8 @@ export default function Header() {
               aria-label={drawerOpen ? '메뉴 닫기' : '메뉴 열기'}
               aria-expanded={drawerOpen}
               aria-controls="mobile-drawer"
-              className="md:hidden"
+              className="flex items-center justify-center md:hidden"
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
                 width: 'var(--min-touch-target)',
                 height: 'var(--min-touch-target)',
                 minHeight: 'var(--min-touch-target)',

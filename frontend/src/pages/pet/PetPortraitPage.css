@@ -4,7 +4,7 @@
 .pet-portrait-page {
   max-width: 600px;
   margin: 0 auto;
-  padding: var(--spacing-xl) var(--spacing-md);
+  padding: 32px var(--spacing-md) 48px;
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xl);
@@ -14,7 +14,7 @@
 
 @media (max-width: 639px) {
   .pet-portrait-page {
-    padding: var(--spacing-lg) var(--spacing-md);
+    padding: var(--spacing-lg) var(--spacing-md) 32px;
   }
 }
 
@@ -22,7 +22,7 @@
 .pet-portrait-style-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: var(--spacing-md);
+  gap: 12px;
 }
 
 @media (min-width: 640px) and (max-width: 1023px) {

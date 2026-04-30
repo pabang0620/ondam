@@ -115,7 +115,7 @@ export const createAiJob = async ({ jobId, userId, bullmqJobId, targetId }) => {
 }
 
 /**
- * ai_jobs 상태 업데이트 — willRepository.updateAiJob 과 동일한 인터페이스
+ * ai_jobs 상태 업데이트 - willRepository.updateAiJob 과 동일한 인터페이스
  * updates 허용 키: job_status, progress, result_url, error_message, bullmq_job_id
  */
 export const updateAiJob = async (jobId, updates) => {

@@ -1,12 +1,12 @@
 /**
- * Memorial Repository — DB 쿼리 전용
+ * Memorial Repository - DB 쿼리 전용
  * 공개 추모 페이지 전용 (비회원 접근 가능)
  */
 
 import pool from '../../config/db.js'
 
 /**
- * memorial_slug 로 펫 조회 (공개용 — 민감 필드 제외)
+ * memorial_slug 로 펫 조회 (공개용 - 민감 필드 제외)
  */
 export const findPetBySlug = async (slug) => {
   const [rows] = await pool.query(

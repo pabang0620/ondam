@@ -113,7 +113,7 @@ const processVoiceClone = async (jobData, bullmqJobId) => {
     elevenlabs_voice_id: elevenlabsVoiceId,
   })
 
-  // 4-1. 알림 생성 — 음성 클론 완료 (실패해도 잡 전체를 실패시키지 않음)
+  // 4-1. 알림 생성 - 음성 클론 완료 (실패해도 잡 전체를 실패시키지 않음)
   const notifId = uuidv4()
   await pool.execute(
     `INSERT INTO notifications

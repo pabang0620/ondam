@@ -15,12 +15,12 @@ const WATCH_URL_EXPIRES = 90 * 24 * 60 * 60
  * 음성 샘플 업로드 등록
  * S3 업로드는 클라이언트 또는 업로드 미들웨어에서 먼저 완료한 뒤 s3Key 전달
  *
- * 음성권 동의(user_consents.consent_type='voice', is_agreed=1) 필수 — 미동의 시 400 거부
+ * 음성권 동의(user_consents.consent_type='voice', is_agreed=1) 필수 - 미동의 시 400 거부
  * consentId는 클라이언트에서 받지 않고 findVoiceConsent 결과의 consent_id 사용
  */
 export const uploadVoiceSample = async (userId, { s3Key, durationSec, fileSize }) => {
   // 음성권 동의 확인 (온담 보안 규칙 §3)
-  // user_consents 테이블에서 consent_type='voice' 최신 row 조회 — is_agreed=1이어야 통과
+  // user_consents 테이블에서 consent_type='voice' 최신 row 조회 - is_agreed=1이어야 통과
   const consentRow = await repo.findVoiceConsent(userId)
   if (!consentRow || consentRow.is_agreed !== 1) {
     throw Object.assign(
@@ -156,7 +156,7 @@ export const getWill = async (userId, willId) => {
   }
 
   const rawBeneficiaries = await repo.findBeneficiariesByWillId(willId)
-  // invite_token은 수혜자 본인 전달용 — 유언장 조회 응답에서 제거
+  // invite_token은 수혜자 본인 전달용 - 유언장 조회 응답에서 제거
   const beneficiaries = rawBeneficiaries.map(({ invite_token: _omit, ...b }) => b)
   return { ...will, beneficiaries }
 }
@@ -174,7 +174,7 @@ export const getWills = async (userId, { page = 1, limit = 20 }) => {
 }
 
 /**
- * 유언장 활성화 — 영상 생성 큐 등록 (결제 후 호출)
+ * 유언장 활성화 - 영상 생성 큐 등록 (결제 후 호출)
  * FOR UPDATE 비관적 락으로 동시 활성화 요청 경쟁 조건 방지
  */
 export const activateWill = async (userId, willId) => {
@@ -182,7 +182,7 @@ export const activateWill = async (userId, willId) => {
   try {
     await conn.beginTransaction()
 
-    // FOR UPDATE — 동일 will_id에 대한 동시 요청 중 하나만 진행
+    // FOR UPDATE - 동일 will_id에 대한 동시 요청 중 하나만 진행
     const [[will]] = await conn.execute(
       'SELECT * FROM wills WHERE will_id = ? AND deleted_at IS NULL FOR UPDATE',
       [willId],
@@ -197,7 +197,7 @@ export const activateWill = async (userId, willId) => {
       throw Object.assign(new Error('이미 처리 중이거나 완료된 유언장입니다'), { status: 400 })
     }
 
-    // 음성 샘플 조회 — null이면 400 에러
+    // 음성 샘플 조회 - null이면 400 에러
     const sample = await repo.findVoiceSampleById(will.voice_sample_id)
     if (!sample) {
       throw Object.assign(new Error('음성 샘플이 없습니다'), { status: 400 })
@@ -219,19 +219,19 @@ export const activateWill = async (userId, willId) => {
       )
     }
 
-    // 수익자 존재 확인 — 최소 1명 필수
+    // 수익자 존재 확인 - 최소 1명 필수
     const beneficiaryCount = await repo.countBeneficiaries(willId)
     if (beneficiaryCount === 0) {
       throw Object.assign(new Error('수익자를 최소 1명 이상 등록해야 합니다'), { status: 400 })
     }
 
-    // 음성권 동의 재확인 — 업로드 이후 동의가 철회됐을 수 있음
+    // 음성권 동의 재확인 - 업로드 이후 동의가 철회됐을 수 있음
     const consent = await repo.findVoiceConsent(userId)
     if (!consent || consent.is_agreed !== 1) {
       throw Object.assign(new Error('음성 처리 동의가 필요합니다'), { status: 400 })
     }
 
-    // BullMQ 영상 생성 큐 등록 (트랜잭션 내 — 롤백 시 큐 항목만 유실, 워커 멱등성으로 처리)
+    // BullMQ 영상 생성 큐 등록 (트랜잭션 내 - 롤백 시 큐 항목만 유실, 워커 멱등성으로 처리)
     const bullJob = await videoGenerateQueue.add('generate', {
       willId,
       userId,
@@ -253,7 +253,7 @@ export const activateWill = async (userId, willId) => {
       queueName: 'videoGenerate',
     })
 
-    // status 업데이트 — 같은 트랜잭션 내에서 커넥션을 직접 사용
+    // status 업데이트 - 같은 트랜잭션 내에서 커넥션을 직접 사용
     await conn.execute(
       'UPDATE wills SET status = ?, updated_at = NOW() WHERE will_id = ?',
       ['active', willId],

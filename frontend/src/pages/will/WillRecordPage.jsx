@@ -116,7 +116,7 @@ export default function WillRecordPage() {
             aria-busy={isUploading}
           >
             <Upload size={20} aria-hidden="true" />
-            {isUploading ? '업로드 중...' : '다음 — 사진 업로드'}
+            {isUploading ? '업로드 중...' : '다음 - 사진 업로드'}
           </button>
         )}
       </div>

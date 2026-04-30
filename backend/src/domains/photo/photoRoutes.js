@@ -7,7 +7,7 @@ import * as photoController from './photoController.js'
 
 const router = Router()
 
-// AI 처리 비용 방지 — 인증된 사용자 기준으로 키 생성
+// AI 처리 비용 방지 - 인증된 사용자 기준으로 키 생성
 const aiLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1시간
   max: 20,                   // 시간당 최대 20회

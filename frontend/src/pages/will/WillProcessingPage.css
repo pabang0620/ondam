@@ -15,7 +15,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--spacing-xl);
+  gap: 24px;
 }
 
 /* 스피너 */
@@ -64,6 +64,7 @@
   gap: var(--spacing-md);
   width: 100%;
   max-width: 320px;
+  margin-bottom: 0;
 }
 
 .will-proc__stage {
@@ -72,7 +73,7 @@
   gap: var(--spacing-md);
   background-color: rgba(245, 239, 230, 0.08);
   border-radius: var(--radius-sm);
-  padding: var(--spacing-md) var(--spacing-lg);
+  padding: 14px var(--spacing-lg);
   opacity: 0.5;
   transition: opacity var(--transition-base), background-color var(--transition-base);
 }
@@ -147,4 +148,26 @@
   font-size: var(--fs-caption);
   color: rgba(245, 239, 230, 0.6);
   line-height: var(--lh-relaxed);
+}
+
+/* ── 반응형: 모바일 (< 640px) ── */
+@media (max-width: 639px) {
+  .will-proc-page {
+    padding: var(--spacing-lg) var(--spacing-md);
+    align-items: flex-start;
+  }
+
+  .will-proc__title {
+    font-size: var(--fs-h3);
+  }
+
+  /* 단계 목록 풀너비 */
+  .will-proc__stages {
+    max-width: 100%;
+  }
+
+  /* 진행 바 풀너비 */
+  .will-proc__progress-wrap {
+    max-width: 100%;
+  }
 }

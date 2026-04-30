@@ -56,7 +56,7 @@ export const startProcessing = async (orderId, userId) => {
   try {
     await conn.beginTransaction()
 
-    // FOR UPDATE — 동일 주문에 대한 동시 처리 시작 요청 경쟁 조건 방지
+    // FOR UPDATE - 동일 주문에 대한 동시 처리 시작 요청 경쟁 조건 방지
     const [[order]] = await conn.execute(
       'SELECT * FROM photo_orders WHERE order_id = ? AND deleted_at IS NULL FOR UPDATE',
       [orderId],

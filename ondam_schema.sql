@@ -54,7 +54,7 @@ USE ondam;
 
 CREATE TABLE IF NOT EXISTS users (
   id                   BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  user_id              CHAR(36) NOT NULL UNIQUE COMMENT 'UUID — 외부 노출용',
+  user_id              CHAR(36) NOT NULL UNIQUE COMMENT 'UUID - 외부 노출용',
 
   -- 기본 정보
   email                VARCHAR(320) NOT NULL UNIQUE,
@@ -87,7 +87,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 
 -- 동의 이력 (append-only: 철회도 새 row로 기록)
--- updated_at 의도적 제외 — 동의 이력은 불변 레코드
+-- updated_at 의도적 제외 - 동의 이력은 불변 레코드
 CREATE TABLE IF NOT EXISTS user_consents (
   id           BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   consent_id   CHAR(36) NOT NULL UNIQUE COMMENT 'UUID',
@@ -105,7 +105,7 @@ CREATE TABLE IF NOT EXISTS user_consents (
   INDEX idx_consents_user        (user_id, consent_type, agreed_at DESC),
   INDEX idx_consents_type        (consent_type, is_agreed)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  COMMENT='사용자 동의 현황 (user_id + consent_type 당 최신 1건 유지 — ON DUPLICATE KEY UPDATE)';
+  COMMENT='사용자 동의 현황 (user_id + consent_type 당 최신 1건 유지 - ON DUPLICATE KEY UPDATE)';
 
 
 -- 이메일 인증 토큰 (만료·소멸 후 삭제 대상)
@@ -120,7 +120,7 @@ CREATE TABLE IF NOT EXISTS email_verifications (
   INDEX idx_email_verif_user    (user_id),
   INDEX idx_email_verif_expires (expires_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  COMMENT='이메일 인증 토큰 — 검증 후 또는 만료 후 물리 삭제 가능';
+  COMMENT='이메일 인증 토큰 - 검증 후 또는 만료 후 물리 삭제 가능';
 
 
 -- 휴대폰 인증 (OTP)
@@ -135,7 +135,7 @@ CREATE TABLE IF NOT EXISTS phone_verifications (
 
   INDEX idx_phone_verif_phone   (phone, expires_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  COMMENT='휴대폰 OTP 인증 — 검증 완료 또는 만료 후 삭제 가능';
+  COMMENT='휴대폰 OTP 인증 - 검증 완료 또는 만료 후 삭제 가능';
 
 
 -- 비밀번호 재설정 토큰
@@ -150,7 +150,7 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens (
   INDEX idx_pwd_reset_user    (user_id),
   INDEX idx_pwd_reset_expires (expires_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  COMMENT='비밀번호 재설정 토큰 — 사용 또는 만료 후 삭제 가능';
+  COMMENT='비밀번호 재설정 토큰 - 사용 또는 만료 후 삭제 가능';
 
 
 -- ==========================================================================
@@ -206,7 +206,7 @@ CREATE TABLE IF NOT EXISTS photo_order_logs (
 
 
 -- 보정 결과 파일 (append-only: 재처리 시 기존 row 삭제 없이 신규 INSERT)
--- updated_at 의도적 제외 — 파일 메타데이터는 불변 레코드
+-- updated_at 의도적 제외 - 파일 메타데이터는 불변 레코드
 CREATE TABLE IF NOT EXISTS photo_files (
   id            BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   file_id       CHAR(36) NOT NULL UNIQUE COMMENT 'UUID',
@@ -261,7 +261,7 @@ CREATE TABLE IF NOT EXISTS voice_samples (
   INDEX idx_voice_samples_consent (consent_id),
   INDEX idx_voice_samples_status  (clone_status, deleted_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  COMMENT='AI 음성 복제 샘플 (민감 데이터 — s3_key KMS 암호화)';
+  COMMENT='AI 음성 복제 샘플 (민감 데이터 - s3_key KMS 암호화)';
 
 
 -- 유언장 (민감 데이터: result_video_s3_key_encrypted)
@@ -306,7 +306,7 @@ CREATE TABLE IF NOT EXISTS wills (
   INDEX idx_wills_release_status          (release_status, deleted_at),
   INDEX idx_wills_created                 (created_at DESC)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  COMMENT='AI 디지털 유언장 (민감 데이터 — result_video S3 키 KMS 암호화)';
+  COMMENT='AI 디지털 유언장 (민감 데이터 - result_video S3 키 KMS 암호화)';
 
 
 -- 유언장 상태 변경 이력 (append-only)
@@ -350,7 +350,7 @@ CREATE TABLE IF NOT EXISTS will_beneficiaries (
   INDEX idx_will_beneficiaries_user  (user_id),
   INDEX idx_will_beneficiaries_email (email)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  COMMENT='유가족 등록 — 유언 공개 대상자';
+  COMMENT='유가족 등록 - 유언 공개 대상자';
 
 
 -- 사후 공개 요청 (사망증명 업로드 + 관리자 승인)
@@ -380,7 +380,7 @@ CREATE TABLE IF NOT EXISTS will_release_requests (
   INDEX idx_will_release_req_status  (req_status, deleted_at),
   INDEX idx_will_release_req_created (created_at DESC)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  COMMENT='사후 공개 요청 — 사망증명 업로드 + 관리자 승인 워크플로우';
+  COMMENT='사후 공개 요청 - 사망증명 업로드 + 관리자 승인 워크플로우';
 
 
 -- ==========================================================================
@@ -467,7 +467,7 @@ CREATE TABLE IF NOT EXISTS pet_status_logs (
 
 
 -- 반려동물 사진·동영상 (append-only: 삭제 시 deleted_at 설정)
--- updated_at 의도적 제외 — 미디어 메타데이터는 불변 레코드
+-- updated_at 의도적 제외 - 미디어 메타데이터는 불변 레코드
 CREATE TABLE IF NOT EXISTS pet_media (
   id               BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   media_id         CHAR(36) NOT NULL UNIQUE COMMENT 'UUID',
@@ -484,7 +484,7 @@ CREATE TABLE IF NOT EXISTS pet_media (
   file_size        INT UNSIGNED NOT NULL COMMENT '바이트',
   width            INT UNSIGNED NULL COMMENT '픽셀 (photo/video)',
   height           INT UNSIGNED NULL COMMENT '픽셀 (photo/video)',
-  duration_sec     INT UNSIGNED NULL COMMENT '길이(초) — video만',
+  duration_sec     INT UNSIGNED NULL COMMENT '길이(초) - video만',
 
   taken_at         DATETIME NULL COMMENT '촬영 일시 (EXIF 또는 사용자 입력)',
   sort_order       INT UNSIGNED NOT NULL DEFAULT 0,
@@ -512,7 +512,7 @@ CREATE TABLE IF NOT EXISTS payments (
 
   user_id           CHAR(36) NOT NULL COMMENT 'users.user_id 참조',
 
-  -- Polymorphic 참조 (VARCHAR 금지 — ENUM 명시)
+  -- Polymorphic 참조 (VARCHAR 금지 - ENUM 명시)
   target_type       ENUM('photo_order','will_order','subscription') NOT NULL,
   target_id         CHAR(36) NOT NULL COMMENT 'photo_orders.order_id / wills.will_id / subscriptions.subscription_id',
 
@@ -537,7 +537,7 @@ CREATE TABLE IF NOT EXISTS payments (
   INDEX idx_payments_status_deleted    (status, deleted_at),
   INDEX idx_payments_created           (created_at DESC)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  COMMENT='결제 내역 — 토스페이먼츠 연동';
+  COMMENT='결제 내역 - 토스페이먼츠 연동';
 
 
 -- subscriptions.plan   ENUM SSOT: SUBSCRIPTION_PLAN
@@ -576,7 +576,7 @@ CREATE TABLE IF NOT EXISTS subscriptions (
   INDEX idx_subscriptions_next_billing   (next_billing_at),
   INDEX idx_subscriptions_plan           (plan, sub_status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  COMMENT='구독 관리 — 토스 자동결제 빌링키 KMS 암호화';
+  COMMENT='구독 관리 - 토스 자동결제 빌링키 KMS 암호화';
 
 
 -- 구독 상태 변경 이력 (append-only)
@@ -600,7 +600,7 @@ CREATE TABLE IF NOT EXISTS subscription_logs (
 -- subscription_payment_logs.fail_category ENUM SSOT: SUBSCRIPTION_PAYMENT_FAIL_CATEGORY
 CREATE TABLE IF NOT EXISTS subscription_payment_logs (
   id                     BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  log_id                 CHAR(36) NOT NULL UNIQUE COMMENT 'UUID — 외부 노출용',
+  log_id                 CHAR(36) NOT NULL UNIQUE COMMENT 'UUID - 외부 노출용',
 
   subscription_id        CHAR(36) NOT NULL COMMENT 'subscriptions.subscription_id 참조',
   user_id                CHAR(36) NOT NULL COMMENT 'users.user_id 비정규화 (조회 최적화)',
@@ -677,11 +677,11 @@ CREATE TABLE IF NOT EXISTS ai_jobs (
   INDEX idx_ai_jobs_target       (target_type, target_id),
   INDEX idx_ai_jobs_created      (created_at DESC)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  COMMENT='BullMQ AI 작업 추적 — photo_enhance/voice_clone/video_generate/avatar_stream';
+  COMMENT='BullMQ AI 작업 추적 - photo_enhance/voice_clone/video_generate/avatar_stream';
 
 
 -- ==========================================================================
--- 알림 도메인 (동시 설계 — 원칙 10)
+-- 알림 도메인 (동시 설계 - 원칙 10)
 -- ==========================================================================
 
 -- notifications.notification_type ENUM SSOT: NOTIFICATION_TYPE
@@ -704,7 +704,7 @@ CREATE TABLE IF NOT EXISTS notifications (
     'admin_notice'
   ) NOT NULL,
 
-  -- Polymorphic: VARCHAR 금지 — ENUM 명시
+  -- Polymorphic: VARCHAR 금지 - ENUM 명시
   target_type         ENUM('photo_order','will','will_release_request','payment','subscription','pet','avatar_session') NULL,
   target_id           CHAR(36) NULL,
 
@@ -774,8 +774,8 @@ CREATE TABLE IF NOT EXISTS admin_users (
 
 -- ==========================================================================
 -- 감사 로그 도메인 (민감 데이터 접근 감사, append-only)
--- JSON 컬럼 사용: 원칙 6 명시 예외 — 감사 로그 특성상 어떤 엔티티든 기록 가능해야 함
--- updated_at 의도적 제외 — 감사 로그는 불변 레코드
+-- JSON 컬럼 사용: 원칙 6 명시 예외 - 감사 로그 특성상 어떤 엔티티든 기록 가능해야 함
+-- updated_at 의도적 제외 - 감사 로그는 불변 레코드
 -- ==========================================================================
 
 CREATE TABLE IF NOT EXISTS audit_logs (
@@ -792,7 +792,7 @@ CREATE TABLE IF NOT EXISTS audit_logs (
 
   ip_address    VARCHAR(45) NULL,
   user_agent    VARCHAR(500) NULL,
-  detail        JSON NULL COMMENT '감사 상세 데이터 (원칙 6 예외 — audit_logs)',
+  detail        JSON NULL COMMENT '감사 상세 데이터 (원칙 6 예외 - audit_logs)',
 
   created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -804,12 +804,12 @@ CREATE TABLE IF NOT EXISTS audit_logs (
 
 
 -- ==========================================================================
--- 인증 — Refresh Token
+-- 인증 - Refresh Token
 -- ==========================================================================
 
 CREATE TABLE IF NOT EXISTS refresh_tokens (
   id           BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  token_hash   VARCHAR(64) NOT NULL UNIQUE  COMMENT 'SHA-256 해시 — 원본 JWT 저장 금지',
+  token_hash   VARCHAR(64) NOT NULL UNIQUE  COMMENT 'SHA-256 해시 - 원본 JWT 저장 금지',
   user_id      CHAR(36) NOT NULL            COMMENT 'users.user_id 참조',
   expires_at   DATETIME NOT NULL,
   revoked_at   DATETIME NULL,
@@ -818,7 +818,7 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
   INDEX idx_rt_user    (user_id),
   INDEX idx_rt_expires (expires_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  COMMENT='JWT Refresh Token 해시 저장 — Rotation 방식 (재사용 시 revoke)';
+  COMMENT='JWT Refresh Token 해시 저장 - Rotation 방식 (재사용 시 revoke)';
 
 
 -- ==========================================================================
@@ -831,7 +831,7 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
 ALTER TABLE payments
   ADD INDEX idx_payments_toss_order_id (toss_order_id);
 
--- [2] subscriptions — user_id + plan + sub_status 복합 인덱스
+-- [2] subscriptions - user_id + plan + sub_status 복합 인덱스
 --     subscriptionRepository.findActiveSubscription:
 --       WHERE user_id = ? AND plan = ? AND sub_status = 'active' AND deleted_at IS NULL
 --     기존 idx_subscriptions_plan(plan, sub_status) 은 user_id 없어 풀스캔 가능
@@ -843,7 +843,7 @@ ALTER TABLE subscriptions
 -- 마이그레이션: notifications.notification_type ENUM 누락값 추가 (2026-04-19)
 -- ==========================================================================
 
--- [3] notifications.notification_type — 'voice_clone_complete', 'will_video_ready' 추가
+-- [3] notifications.notification_type - 'voice_clone_complete', 'will_video_ready' 추가
 --     voiceWorker.js: notification_type = 'voice_clone_complete' 사용 중
 --     videoWorker.js: notification_type = 'will_video_ready' 사용 중
 --     두 값이 ENUM에 없어 INSERT 시 런타임 오류 발생
@@ -867,24 +867,24 @@ ALTER TABLE notifications
 -- 마이그레이션: 유언장 결제→활성화 흐름 도입 (2026-04-19)
 -- ==========================================================================
 
--- [4] wills.status ENUM — 'paid' 추가
+-- [4] wills.status ENUM - 'paid' 추가
 --     결제 완료 후 프론트엔드가 activateWill 을 명시적으로 호출하기 전까지
 --     유언장은 'paid' 상태를 유지한다 (영상 생성 큐는 activateWill 시점에 등록)
 ALTER TABLE wills
   MODIFY COLUMN status ENUM('draft','paid','active','released','revoked') NOT NULL DEFAULT 'draft';
 
--- [5] will_status_logs — prev_status / next_status ENUM 에 'paid' 추가
+-- [5] will_status_logs - prev_status / next_status ENUM 에 'paid' 추가
 ALTER TABLE will_status_logs
   MODIFY COLUMN prev_status ENUM('draft','paid','active','released','revoked') NULL,
   MODIFY COLUMN next_status ENUM('draft','paid','active','released','revoked') NOT NULL;
 
--- [6] wills.event_type — 결제 트리거 조건 (사망/금치산/기념일)
+-- [6] wills.event_type - 결제 트리거 조건 (사망/금치산/기념일)
 ALTER TABLE wills
   ADD COLUMN event_type ENUM('death','incapacity','anniversary') NULL
     COMMENT '유언장 공개 트리거 이벤트 유형'
     AFTER release_status;
 
--- [7] user_consents — (user_id, consent_type) UNIQUE KEY
+-- [7] user_consents - (user_id, consent_type) UNIQUE KEY
 --     upsertConsent 에서 ON DUPLICATE KEY UPDATE 를 사용하기 위한 선결 조건
 --     기존 중복 데이터가 있으면 먼저 정리 후 실행
 ALTER TABLE user_consents
@@ -913,7 +913,7 @@ SET time_zone = '+09:00';
 --      billing_cycle_date + attempt_no 복합 UNIQUE 로 사이클 내 중복 시도 방지
 CREATE TABLE IF NOT EXISTS subscription_payment_logs (
   id                     BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  log_id                 CHAR(36) NOT NULL UNIQUE COMMENT 'UUID — 외부 노출용',
+  log_id                 CHAR(36) NOT NULL UNIQUE COMMENT 'UUID - 외부 노출용',
 
   subscription_id        CHAR(36) NOT NULL COMMENT 'subscriptions.subscription_id 참조',
   user_id                CHAR(36) NOT NULL COMMENT 'users.user_id 비정규화 (조회 최적화)',
@@ -964,7 +964,7 @@ ALTER TABLE subscriptions
   ADD COLUMN IF NOT EXISTS suspended_at       DATETIME NULL                        COMMENT '구독 정지 시각'         AFTER grace_period_until,
   ADD INDEX idx_subscriptions_grace (sub_status, grace_period_until);
 
--- [12] subscription_logs ENUM 확장 — 'suspended' 추가
+-- [12] subscription_logs ENUM 확장 - 'suspended' 추가
 --      prev_status / next_status 모두 subscriptions.sub_status 와 동기
 --      shared/constants/enums.ts 의 SUBSCRIPTION_STATUS 와 함께 동기화 완료
 ALTER TABLE subscription_logs

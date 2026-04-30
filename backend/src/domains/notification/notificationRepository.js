@@ -1,5 +1,5 @@
 /**
- * Notification Repository — DB 쿼리 전용
+ * Notification Repository - DB 쿼리 전용
  */
 
 import pool from '../../config/db.js'

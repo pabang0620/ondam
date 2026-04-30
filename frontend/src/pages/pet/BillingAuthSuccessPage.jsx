@@ -38,7 +38,7 @@ export default function BillingAuthSuccessPage() {
     <div
       style={{
         textAlign: 'center',
-        padding: 'var(--spacing-2xl) var(--spacing-md)',
+        padding: '48px var(--spacing-md)',
         fontSize: 'var(--fs-body)',
         color: 'var(--color-text-secondary)',
       }}
@@ -51,11 +51,11 @@ export default function BillingAuthSuccessPage() {
     <div
       style={{
         textAlign: 'center',
-        padding: 'var(--spacing-2xl) var(--spacing-md)',
+        padding: '48px var(--spacing-md)',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: 'var(--spacing-lg)',
+        gap: '24px',
       }}
     >
       <p role="alert" style={{ color: 'var(--color-error)', fontSize: 'var(--fs-body)' }}>{error}</p>

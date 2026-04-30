@@ -1,11 +1,11 @@
 # 온담(ondam) 프로젝트 가이드
 
 ## 서비스 개요
-온담 — AI 기억사진관. 고인과의 기억을 AI로 간직하는 통합 플랫폼.
+온담 - AI 기억사진관. 고인과의 기억을 AI로 간직하는 통합 플랫폼.
 - **AI 사진관**: 오래된 사진 복원, 화질 개선, 컬러라이징, 배경 제거
 - **AI 디지털 유언장**: 고인의 사진 + 음성 → AI 영상 메시지 생성 (유가족 전달)
 - **반려동물 아카이브**: 반려동물 기억 사진 보관 + AI 초상화
-- **추모관**: 유가족 전용 — 고인 기억 모아보기 (접근 코드 필요)
+- **추모관**: 유가족 전용 - 고인 기억 모아보기 (접근 코드 필요)
 
 ---
 
@@ -83,7 +83,7 @@ ondam-api-linker             → API-프론트 연결 검증
 }
 ```
 
-### 2. AI 처리 — BullMQ 큐 경유 필수
+### 2. AI 처리 - BullMQ 큐 경유 필수
 AI API 호출(OpenAI, ElevenLabs, D-ID)은 **절대 HTTP 요청 핸들러 안에서 직접 호출 금지**.
 반드시 BullMQ 큐에 작업 추가 → 워커에서 처리 → 결과 DB 업데이트 → 프론트 폴링/웹소켓 알림.
 
@@ -105,13 +105,13 @@ app.post('/api/photo/enhance', async (req, res) => {
 동의 없는 경우 400 응답으로 거부.
 
 ### 4. 추모관 접근 제한
-`/api/memorial/:code` — 접근 코드(`memorial_access_code`) 검증 필수.
+`/api/memorial/:code` - 접근 코드(`memorial_access_code`) 검증 필수.
 유가족 인증 없이 고인 데이터 노출 절대 금지.
 
 ### 5. 빌링키 보안
 - 빌링키는 KMS 암호화 후 DB 저장. 로그·API 응답에 절대 노출 금지.
 - 해지 시 즉시 `toss_billing_key_encrypted = NULL` 처리.
-- authKey는 1회용 — 백엔드에서 billingKey 교환 후 즉시 폐기.
+- authKey는 1회용 - 백엔드에서 billingKey 교환 후 즉시 폐기.
 - 빌링키로 결제 후 토스 응답값은 즉시 `subscription_payment_logs`에 기록, authKey는 메모리에서 제거.
 
 ---
@@ -220,7 +220,7 @@ Service에서 에러 발생 시 HTTP 상태 코드를 함께 전달:
 // Service
 throw Object.assign(new Error('메시지'), { status: 404 })
 
-// Controller — 모든 catch는 next(err)로만 위임
+// Controller - 모든 catch는 next(err)로만 위임
 } catch (err) {
   next(err)
 }
@@ -252,7 +252,7 @@ router.post('/path/:id', validate(schema), controller)
 ### JWT 페이로드 필드명 (온담 고정)
 - accessToken payload: `{ userId: string, role: string }`
 - 컨트롤러에서 `req.user.userId` 로 접근
-- **주의**: WeCom은 `req.user.uuid` 사용 — 온담은 `userId` 사용
+- **주의**: WeCom은 `req.user.uuid` 사용 - 온담은 `userId` 사용
 
 ---
 
@@ -282,7 +282,7 @@ AI 처리 작업에는 반드시 DB에 `jobs` 테이블 레코드를 생성하�
 ### 결제 웹훅 보안
 토스페이먼츠 웹훅(`/api/payments/webhook`) 수신 시:
 1. `TOSS_WEBHOOK_SECRET` 서명 검증 필수
-2. 멱등성 보장 — 같은 결제 ID 중복 처리 방지 (`payments.payment_key` UNIQUE)
+2. 멱등성 보장 - 같은 결제 ID 중복 처리 방지 (`payments.payment_key` UNIQUE)
 
 ### 구독 결제 상태 머신
 ```

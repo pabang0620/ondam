@@ -2,9 +2,9 @@
 
 ## 작업 방식
 
-- 구현 전 항상 방향 확인 먼저 — 추측 금지
+- 구현 전 항상 방향 확인 먼저 - 추측 금지
 - 기획/설계 포함 작업은 반드시 물어보고 진행
-- AI 기능(음성 클론, 영상 생성)은 Phase 2 — Phase 1에서는 큐 구조만 구축
+- AI 기능(음성 클론, 영상 생성)은 Phase 2 - Phase 1에서는 큐 구조만 구축
 - 결제/구독은 Phase 3
 
 ---
@@ -40,8 +40,8 @@
 | react-router-dom v7 | 라우팅 |
 | axios | HTTP 클라이언트 |
 | zustand v5 | 전역 상태 |
-| tailwindcss v4 + @tailwindcss/vite | devDependencies — global.css import 유지 |
-| 파일별 CSS | 스타일링 (BEM 컨벤션) — 신규 컴포넌트는 전부 이 방식 |
+| tailwindcss v4 + @tailwindcss/vite | devDependencies - global.css import 유지 |
+| 파일별 CSS | 스타일링 (BEM 컨벤션) - 신규 컴포넌트는 전부 이 방식 |
 | dayjs | 날짜 포맷 |
 | lucide-react | 아이콘 |
 | swiper | 슬라이더 |
@@ -85,7 +85,7 @@ src/jobs/
     └── notificationWorker.js
 ```
 
-### 파일 네이밍 — 점(.) 절대 금지
+### 파일 네이밍 - 점(.) 절대 금지
 ```
 {Domain}{Layer}.js  ← camelCase
 예: authRoutes.js / authController.js / authService.js / authRepository.js
@@ -99,7 +99,7 @@ src/jobs/
 ### 3레이어 분리
 ```
 pages/photo/
-├── PhotoPage.jsx    # View (렌더링만 — fetch/상태 직접 작성 금지)
+├── PhotoPage.jsx    # View (렌더링만 - fetch/상태 직접 작성 금지)
 ├── usePhoto.js      # Hook (상태·로직·API 조합)
 └── photoApi.js      # API (axios 호출만)
 ```
@@ -118,9 +118,9 @@ pages/
 ```
 
 ### 레이아웃
-- `MainLayout` — 일반 페이지 (Header + Footer)
-- `AuthLayout` — 로그인/회원가입 (Header 없음)
-- `AdminLayout` — `/admin/*` (사이드바)
+- `MainLayout` - 일반 페이지 (Header + Footer)
+- `AuthLayout` - 로그인/회원가입 (Header 없음)
+- `AdminLayout` - `/admin/*` (사이드바)
 
 ---
 
@@ -174,7 +174,7 @@ deleted_at DATETIME NULL DEFAULT NULL
 ```
 
 ### 로그 테이블
-- `created_at` 만 — `updated_at` 없음 (append-only)
+- `created_at` 만 - `updated_at` 없음 (append-only)
 
 ### 동의 추적
 - 음성/영상 처리 동의: `voice_consent_at DATETIME NULL`

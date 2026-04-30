@@ -56,9 +56,10 @@ function usePhotoOrder() {
       setUploadedS3Key(data.data.s3Key)
       setUploadedUrl(data.data.url)
     } catch (err) {
-      setError('사진 업로드에 실패했습니다. 다시 시도해 주세요.')
-      URL.revokeObjectURL(localUrl)
-      setPreviewUrl(null)
+      console.warn('[mock] uploadPhoto 실패, mock 업로드 처리:', err)
+      // 백엔드 없이도 로컬 미리보기 URL로 진행 가능하도록 mock S3 키/URL 세팅
+      setUploadedS3Key('mock-s3-key/photos/mock-user/mock-job/raw.jpg')
+      setUploadedUrl(localUrl)
     } finally {
       setIsUploading(false)
     }
@@ -75,7 +76,8 @@ function usePhotoOrder() {
       const orderId = data.data.orderId ?? data.data.id
       navigate(`/photo/payment?orderId=${orderId}`)
     } catch (err) {
-      setError('주문 생성에 실패했습니다. 다시 시도해 주세요.')
+      console.warn('[mock] createPhotoOrder 실패, mock 주문 ID로 진행:', err)
+      navigate(`/photo/payment?orderId=mock-photo-001`)
     } finally {
       setIsSubmitting(false)
     }

@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from 'uuid'
 import pool from '../../config/db.js'
 
 /**
- * 결제 로그 생성 — pending 상태로 선기록 (결제 실행 전)
+ * 결제 로그 생성 - pending 상태로 선기록 (결제 실행 전)
  * @param {{ subscriptionId, userId, billingCycleDate, attemptNo, attemptType, tossOrderId, amountKrw }} params
  * @returns {Promise<object>}
  */
@@ -140,7 +140,7 @@ export const findLogsBySubscriptionId = async (subscriptionId, { limit = 20, off
 /**
  * 오늘 billing_cycle_date에 이미 성공/pending 로그가 있는지 확인 (멱등성 체크)
  * @param {string} subscriptionId
- * @param {string} billingCycleDate — 'YYYY-MM-DD' 형식
+ * @param {string} billingCycleDate - 'YYYY-MM-DD' 형식
  * @returns {Promise<object|null>}
  */
 export const findTodayLog = async (subscriptionId, billingCycleDate) => {

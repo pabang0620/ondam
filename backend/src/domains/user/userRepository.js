@@ -16,7 +16,7 @@ export const findByUserId = async (userId) => {
 }
 
 /**
- * user_id(UUID)로 사용자 조회 (password_hash 포함 — 비밀번호 변경 전용)
+ * user_id(UUID)로 사용자 조회 (password_hash 포함 - 비밀번호 변경 전용)
  */
 export const findByUserIdWithHash = async (userId) => {
   const [rows] = await pool.query(
@@ -29,7 +29,7 @@ export const findByUserIdWithHash = async (userId) => {
 }
 
 /**
- * 프로필 업데이트 — 화이트리스트 컬럼만 허용
+ * 프로필 업데이트 - 화이트리스트 컬럼만 허용
  */
 export const updateProfile = async (userId, fields) => {
   const entries = Object.entries(fields).filter(
@@ -57,7 +57,7 @@ export const updatePassword = async (userId, passwordHash) => {
 }
 
 /**
- * 소프트 삭제 — deleted_at = NOW(), is_active = 0
+ * 소프트 삭제 - deleted_at = NOW(), is_active = 0
  */
 export const softDelete = async (userId) => {
   await pool.query(

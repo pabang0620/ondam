@@ -76,7 +76,7 @@ export default function WillPhotoPage() {
         {!isUploading && previewUrl && !uploadError && (
           <div className="will-photo__status is-done" aria-live="polite">
             <CheckCircle size={18} aria-hidden="true" />
-            업로드 완료 — 다음 단계로 이동합니다
+            업로드 완료 - 다음 단계로 이동합니다
           </div>
         )}
 

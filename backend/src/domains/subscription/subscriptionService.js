@@ -185,7 +185,7 @@ export const subscribe = async (userId, { plan, authKey, customerKey }) => {
       await subscriptionTossClient.cancelPayment({
         paymentKey: tossPaymentKey,
         cancelReason: 'DB 저장 실패로 인한 자동 환불',
-      }).catch((e) => console.error('[subscribe] 보상 환불 실패 — 수동 처리 필요:', tossPaymentKey, e.message))
+      }).catch((e) => console.error('[subscribe] 보상 환불 실패 - 수동 처리 필요:', tossPaymentKey, e.message))
     }
     throw Object.assign(new Error('구독 등록 중 오류가 발생했습니다'), { status: 500 })
   }
@@ -221,7 +221,7 @@ export const cancelSubscription = async (userId, subscriptionId) => {
       const deleteResult = await subscriptionTossClient.deleteBillingKey({ billingKey })
       if (!deleteResult.ok) {
         console.warn(
-          `[subscriptionService] 빌링키 삭제 실패 (무시하고 DB 취소 진행): ${deleteResult.errorCode} — ${deleteResult.errorMessage}`
+          `[subscriptionService] 빌링키 삭제 실패 (무시하고 DB 취소 진행): ${deleteResult.errorCode} - ${deleteResult.errorMessage}`
         )
       }
     } catch (err) {
@@ -229,7 +229,7 @@ export const cancelSubscription = async (userId, subscriptionId) => {
     }
   }
 
-  // DB 상태 변경 + 로그 + 알림 — 단일 트랜잭션으로 원자 처리
+  // DB 상태 변경 + 로그 + 알림 - 단일 트랜잭션으로 원자 처리
   let updated
   const conn = await pool.getConnection()
   try {

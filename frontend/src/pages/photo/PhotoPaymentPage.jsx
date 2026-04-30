@@ -28,7 +28,7 @@ function PhotoPaymentPage() {
       style={{
         maxWidth: 480,
         margin: '0 auto',
-        padding: 'var(--spacing-xl) var(--spacing-md)',
+        padding: '32px var(--spacing-md) 48px',
         display: 'flex',
         flexDirection: 'column',
         gap: 'var(--spacing-xl)',
@@ -44,13 +44,13 @@ function PhotoPaymentPage() {
         </p>
       </header>
 
-      {/* 주문 요약 카드 */}
+      {/* 주문 요약 카드 — 24px padding */}
       <section
         style={{
           background: 'var(--color-surface)',
           border: '1px solid var(--color-border)',
           borderRadius: 'var(--radius-card)',
-          padding: 'var(--spacing-lg)',
+          padding: '24px',
           display: 'flex',
           flexDirection: 'column',
           gap: 'var(--spacing-md)',
@@ -68,7 +68,7 @@ function PhotoPaymentPage() {
           }}
         >
           <span style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--fs-body)' }}>주문 번호</span>
-          <span style={{ fontSize: 'var(--fs-body)', fontFamily: 'monospace' }}>{orderId}</span>
+          <span style={{ fontSize: 'var(--fs-caption)', fontFamily: 'monospace', wordBreak: 'break-all', textAlign: 'right', maxWidth: '60%' }}>{orderId}</span>
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

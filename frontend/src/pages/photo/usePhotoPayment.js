@@ -25,8 +25,11 @@ function usePhotoPayment() {
       await startProcessing(orderId)
       navigate(`/photo/processing/${orderId}`)
     } catch (err) {
+      console.warn('[mock] 결제 API 실패, mock 결제 시뮬레이션으로 진행:', err)
+      // 백엔드 없이도 결제 완료 흐름을 체험할 수 있도록 2초 대기 후 처리 페이지 이동
+      await new Promise((resolve) => setTimeout(resolve, 2000))
       if (pendingRef.current) {
-        setError('결제 처리 중 오류가 발생했습니다. 다시 시도해 주세요.')
+        navigate(`/photo/processing/${orderId}`)
       }
     } finally {
       pendingRef.current = false

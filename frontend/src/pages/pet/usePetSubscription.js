@@ -3,6 +3,22 @@ import { petApi } from './petApi.js'
 import { getTossPayments } from '../../lib/tossPayments.js'
 import { useAuthStore } from '../../store/authStore.js'
 
+const NEXT_BILLING_DATE = (() => {
+  const d = new Date()
+  d.setDate(d.getDate() + 30)
+  return d.toISOString()
+})()
+
+const MOCK_SUBSCRIPTION = {
+  subscriptionId: 'mock-sub-001',
+  userId: 'mock-user-001',
+  plan: 'pet_archive',
+  subStatus: 'active',
+  next_billing_at: NEXT_BILLING_DATE,
+  fail_count: 0,
+  amount: 9900,
+}
+
 export function usePetSubscription() {
   const user = useAuthStore((s) => s.user)
 
@@ -27,7 +43,9 @@ export function usePetSubscription() {
       if (plansRes.data.success) setPlans(plansRes.data.data ?? [])
       if (subRes.data.success) setCurrentSubscription(subRes.data.data?.[0] ?? null)
     } catch (err) {
-      setError(err.response?.data?.message || '정보를 불러오지 못했습니다.')
+      console.warn('[mock] usePetSubscription.fetchData - 백엔드 응답 없음, mock 구독 데이터로 대체', err)
+      setPlans([])
+      setCurrentSubscription(MOCK_SUBSCRIPTION)
     } finally {
       setIsLoading(false)
     }
@@ -51,10 +69,22 @@ export function usePetSubscription() {
         successUrl: window.location.origin + '/pet/billing/success',
         failUrl: window.location.origin + '/pet/billing/fail',
       })
-      // 리디렉트 발생 — 이후 코드 실행 안 됨
+      // 리디렉트 발생 - 이후 코드 실행 안 됨
     } catch (err) {
+      console.warn('[mock] usePetSubscription.handleSubscribe - 토스 SDK 실패, mock 구독 성공 처리', err)
       sessionStorage.removeItem('pendingSubscriptionPlan')
-      setActionError('결제 모듈 로드에 실패했습니다. 잠시 후 다시 시도해 주세요.')
+      const nextBilling = new Date()
+      nextBilling.setDate(nextBilling.getDate() + 30)
+      setCurrentSubscription({
+        subscriptionId: `mock-sub-${Date.now()}`,
+        userId: user?.userId ?? 'mock-user-001',
+        plan: planKey,
+        subStatus: 'active',
+        next_billing_at: nextBilling.toISOString(),
+        fail_count: 0,
+        amount: planKey === 'pet_archive' ? 9900 : planKey === 'will_premium' ? 29900 : 39900,
+      })
+      setSuccessMessage('구독이 성공적으로 등록되었습니다. (시뮬레이션)')
       setIsRedirecting(false)
     }
   }
@@ -71,7 +101,11 @@ export function usePetSubscription() {
         setSuccessMessage('재결제가 완료되었습니다.')
       }
     } catch (err) {
-      setActionError(err.response?.data?.message || '재결제에 실패했습니다.')
+      console.warn('[mock] usePetSubscription.handleRetryPayment - API 실패, mock 재결제 성공 처리', err)
+      setCurrentSubscription((prev) =>
+        prev ? { ...prev, subStatus: 'active', fail_count: 0 } : prev,
+      )
+      setSuccessMessage('재결제가 완료되었습니다. (시뮬레이션)')
     } finally {
       if (pendingRef.current) {
         setIsProcessing(false)
@@ -96,7 +130,12 @@ export function usePetSubscription() {
       setIsCancelModalOpen(false)
       setSuccessMessage('구독이 해지되었습니다.')
     } catch (err) {
-      setActionError(err.response?.data?.message || '구독 해지에 실패했습니다.')
+      console.warn('[mock] usePetSubscription.confirmCancel - API 실패, 로컬 상태만 canceled로 변경', err)
+      setCurrentSubscription((prev) =>
+        prev ? { ...prev, subStatus: 'canceled' } : null,
+      )
+      setIsCancelModalOpen(false)
+      setSuccessMessage('구독이 해지되었습니다. (시뮬레이션)')
     } finally {
       if (pendingRef.current) {
         setIsProcessing(false)

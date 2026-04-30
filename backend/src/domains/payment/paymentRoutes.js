@@ -54,7 +54,7 @@ const listSchema = z.object({
   }),
 })
 
-// 웹훅 — 인증 없이 수신 (토스 서명 검증은 서비스 레이어에서 처리)
+// 웹훅 - 인증 없이 수신 (토스 서명 검증은 서비스 레이어에서 처리)
 router.post('/webhook', paymentController.handleWebhook)
 
 // 인증 필요 라우트

@@ -3,8 +3,8 @@ import pool from '../../config/db.js'
 // ─── users (음성권 동의 확인 전용) ───────────────────────────────────────────────
 
 /**
- * 음성권 동의 여부 확인 — user_consents 테이블에서 최신 동의 이력 조회
- * users 테이블에 voice_consent_at 컬럼 없음 — user_consents(consent_type='voice') 참조
+ * 음성권 동의 여부 확인 - user_consents 테이블에서 최신 동의 이력 조회
+ * users 테이블에 voice_consent_at 컬럼 없음 - user_consents(consent_type='voice') 참조
  * @param {string} userId
  * @returns {Promise<{ is_agreed: number, agreed_at: Date }|null>} 최신 동의 row, 없으면 null
  */
@@ -135,8 +135,8 @@ export const findWillById = async (willId) => {
 }
 
 /**
- * FOR UPDATE 락을 걸어 행을 조회 — 트랜잭션 내에서만 사용
- * @param {object} conn — pool.getConnection()으로 획득한 커넥션
+ * FOR UPDATE 락을 걸어 행을 조회 - 트랜잭션 내에서만 사용
+ * @param {object} conn - pool.getConnection()으로 획득한 커넥션
  * @param {string} willId
  */
 export const findWillByIdForUpdate = async (conn, willId) => {
@@ -405,7 +405,7 @@ export const createWillWithBeneficiaries = async (willData, beneficiariesData) =
     )
 
     if (beneficiariesData.length > 0) {
-      // 배치 INSERT — 수혜자 N명을 단일 쿼리로 처리 (N+1 방지)
+      // 배치 INSERT - 수혜자 N명을 단일 쿼리로 처리 (N+1 방지)
       const placeholders = beneficiariesData
         .map(() => '(?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())')
         .join(', ')

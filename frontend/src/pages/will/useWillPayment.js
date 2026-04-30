@@ -47,7 +47,7 @@ export function useWillPayment() {
       // 4단계: 처리 페이지 이동
       navigate(`/will/processing/${willId}`)
     } catch (err) {
-      console.warn('[mock] 결제 API 실패 — 1.5초 후 처리 페이지로 이동 (시뮬레이션)', err)
+      console.warn('[mock] 결제 API 실패 - 1.5초 후 처리 페이지로 이동 (시뮬레이션)', err)
       await new Promise((resolve) => setTimeout(resolve, 1500))
       navigate(`/will/processing/${willId}`)
     } finally {

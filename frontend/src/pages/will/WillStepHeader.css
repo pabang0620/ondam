@@ -50,7 +50,7 @@
 
 .will-step-header__progress {
   display: flex;
-  gap: 4px;
+  gap: 8px;
   align-items: center;
 }
 
@@ -71,4 +71,50 @@
 .will-step-header__dot.is-active {
   background-color: var(--color-primary);
   width: 20px;
+}
+
+/* ── 반응형: 모바일 (< 640px) ── */
+@media (max-width: 639px) {
+  .will-step-header {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    gap: var(--spacing-sm);
+    /* 가로 스크롤 절대 방지 */
+    overflow: hidden;
+    max-width: 100vw;
+  }
+
+  .will-step-header__title {
+    font-size: var(--fs-caption);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  .will-step-header__step {
+    font-size: 11px;
+  }
+
+  /* 도트 컨테이너 — 최소 너비 보장, 가로 스크롤 없음 */
+  .will-step-header__progress {
+    flex-shrink: 0;
+    gap: 6px;
+  }
+
+  /* 도트 크기 소폭 축소 */
+  .will-step-header__dot {
+    width: 6px;
+    height: 6px;
+  }
+
+  .will-step-header__dot.is-active {
+    width: 16px;
+  }
+}
+
+/* 320px 극소 화면 */
+@media (max-width: 359px) {
+  .will-step-header__info {
+    display: none;
+  }
 }

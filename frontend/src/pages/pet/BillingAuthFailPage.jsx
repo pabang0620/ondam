@@ -16,11 +16,11 @@ export default function BillingAuthFailPage() {
     <div
       style={{
         textAlign: 'center',
-        padding: 'var(--spacing-2xl) var(--spacing-md)',
+        padding: '48px var(--spacing-md)',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: 'var(--spacing-lg)',
+        gap: '24px',
       }}
     >
       <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 700, color: 'var(--color-primary)' }}>

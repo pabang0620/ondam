@@ -4,7 +4,7 @@
 .pet-detail-media-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: var(--spacing-sm);
+  gap: 12px;
 }
 
 @media (min-width: 640px) and (max-width: 1023px) {
@@ -57,16 +57,16 @@
 .pet-detail-page {
   max-width: 600px;
   margin: 0 auto;
-  padding: var(--spacing-xl) var(--spacing-md);
+  padding: 32px var(--spacing-md) 48px;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xl);
+  gap: 32px;
   box-sizing: border-box;
   width: 100%;
 }
 
 @media (max-width: 639px) {
   .pet-detail-page {
-    padding: var(--spacing-lg) var(--spacing-md);
+    padding: var(--spacing-lg) var(--spacing-md) 32px;
   }
 }

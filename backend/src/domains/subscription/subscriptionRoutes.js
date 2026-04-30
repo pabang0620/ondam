@@ -17,7 +17,7 @@ const billingAuthSchema = z.object({
   }),
 })
 
-// 구독 시작 스키마 (POST / — 하위 호환 유지)
+// 구독 시작 스키마 (POST / - 하위 호환 유지)
 const subscribeSchema = z.object({
   body: z.object({
     plan: z.enum(['pet_archive', 'will_premium', 'all'], {
@@ -53,7 +53,7 @@ const paymentLogsQuerySchema = z.object({
   }).optional(),
 })
 
-// 비인증 — 플랜 목록
+// 비인증 - 플랜 목록
 router.get('/plans', subscriptionController.getPlans)
 
 // 인증 필요 라우트

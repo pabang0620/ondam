@@ -11,7 +11,7 @@ const router = Router()
 // Rate Limiters
 // ---------------------------------------------------------------------------
 
-// 관리자 로그인 브루트포스 방지 — 일반 authLimiter보다 엄격
+// 관리자 로그인 브루트포스 방지 - 일반 authLimiter보다 엄격
 const adminLoginLimiter = rateLimit({
   windowMs: 5 * 60 * 1000, // 5분
   max: 5,                   // 5분 내 최대 5회
@@ -20,7 +20,7 @@ const adminLoginLimiter = rateLimit({
   legacyHeaders: false,
 })
 
-// 관리자 API 전체 — 과도한 스크래핑/자동화 방지
+// 관리자 API 전체 - 과도한 스크래핑/자동화 방지
 const adminApiLimiter = rateLimit({
   windowMs: 60 * 1000, // 1분
   max: 60,             // 분당 최대 60회
@@ -80,7 +80,7 @@ const usersQuerySchema = z.object({
 
 // ─── 라우트 ───────────────────────────────────────────────────────────────────
 
-// 인증 없음 — 관리자 로그인 (브루트포스 방지 limiter 적용)
+// 인증 없음 - 관리자 로그인 (브루트포스 방지 limiter 적용)
 router.post('/auth/login', adminLoginLimiter, validate(loginSchema), adminController.login)
 
 // 이하 모두 requireAuth + requireAdmin 2층 필수

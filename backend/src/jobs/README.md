@@ -37,7 +37,7 @@ const state = await job.getState() // waiting | active | completed | failed
 
 ## 보안 주의사항
 
-- **음성 데이터**: voiceClone 큐의 페이로드에 음성 원본 S3 URL 포함 — KMS로 암호화 필수
+- **음성 데이터**: voiceClone 큐의 페이로드에 음성 원본 S3 URL 포함 - KMS로 암호화 필수
 - **유언 영상**: videoGenerate 완료 후 S3 저장 시 서버사이드 암호화 (`SSE-KMS`) 강제
 - **동의 없는 처리 금지**: 큐 추가 전 반드시 `consent_at` 확인
 

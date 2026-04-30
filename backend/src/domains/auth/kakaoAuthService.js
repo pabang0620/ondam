@@ -88,7 +88,7 @@ const fetchKakaoUserInfo = async (kakaoAccessToken) => {
  * 카카오 콜백 처리
  * code → access_token → 사용자 정보 → DB 조회/생성 → JWT 발급
  *
- * @param {string} code  — 카카오에서 전달받은 인가 코드
+ * @param {string} code  - 카카오에서 전달받은 인가 코드
  * @returns {Promise<{ accessToken: string, refreshToken: string, user: object }>}
  */
 export const handleKakaoCallback = async (code) => {
@@ -98,7 +98,7 @@ export const handleKakaoCallback = async (code) => {
   // 2. kakao access token → 사용자 정보
   const { kakaoId, email, nickname } = await fetchKakaoUserInfo(kakaoAccessToken)
 
-  // 3. DB 조회 — kakao_id 기준
+  // 3. DB 조회 - kakao_id 기준
   let user = await authRepository.findByKakaoId(kakaoId)
 
   // 4. 없으면 신규 가입

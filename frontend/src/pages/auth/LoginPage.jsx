@@ -6,10 +6,10 @@ export default function LoginPage() {
   const { email, setEmail, password, setPassword, isLoading, error, handleSubmit } = useLogin()
 
   return (
-    <div className="flex flex-col gap-7">
+    <div className="flex flex-col gap-9">
       <div className="text-center">
         <h1
-          className="font-bold mb-1"
+          className="font-bold mb-2"
           style={{
             fontSize: 'var(--fs-h2)',
             color: 'var(--color-text-primary)',
@@ -23,7 +23,7 @@ export default function LoginPage() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
+      <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-6">
         {/* 이메일 */}
         <div className="flex flex-col gap-2">
           <label
@@ -125,7 +125,7 @@ export default function LoginPage() {
           type="submit"
           disabled={isLoading}
           aria-busy={isLoading}
-          className="w-full font-semibold mt-2"
+          className="w-full font-semibold mt-4"
           style={{
             height: 'var(--size-button-h)',
             fontSize: 'var(--fs-button)',

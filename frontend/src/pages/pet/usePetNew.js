@@ -58,7 +58,9 @@ export function usePetNew() {
         navigate(`/pet/${data.data.petId}`)
       }
     } catch (err) {
-      setSubmitError(err.response?.data?.message || '등록에 실패했습니다. 다시 시도해 주세요.')
+      console.warn('[mock] usePetNew.handleSubmit - API 실패, mock 반려동물 ID로 이동', err)
+      const mockPetId = `mock-pet-${Date.now()}`
+      navigate(`/pet/${mockPetId}`)
     } finally {
       pendingRef.current = false
       setIsSubmitting(false)

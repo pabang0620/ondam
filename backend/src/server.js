@@ -169,7 +169,7 @@ app.use((err, req, res, _next) => {
 })
 
 httpServer.listen(PORT, () => {
-  console.log(`[ondam] 서버 시작 — 포트 ${PORT} (${process.env.NODE_ENV})`)
+  console.log(`[ondam] 서버 시작 - 포트 ${PORT} (${process.env.NODE_ENV})`)
 
   // 구독 자동결제 scan-due 반복 job 등록 (이미 있으면 BullMQ가 skip)
   billingQueue.add(

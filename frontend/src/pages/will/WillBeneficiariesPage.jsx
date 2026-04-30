@@ -159,7 +159,7 @@ export default function WillBeneficiariesPage() {
           disabled={beneficiaries.length === 0}
           aria-disabled={beneficiaries.length === 0}
         >
-          다음 — 음성 녹음
+          다음 - 음성 녹음
         </button>
       </div>
     </div>

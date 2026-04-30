@@ -19,16 +19,16 @@ export function LoadingSpinner({ size = 40, label = '로딩 중...' }) {
         style={{
           width: size,
           height: size,
-          border: `3px solid var(--color-accent)`,
-          borderTopColor: 'var(--color-primary)',
+          border: `3px solid var(--color-border)`,
+          borderTopColor: 'var(--color-warm-accent)',
           borderRadius: '50%',
           animation: 'spinner-spin 0.7s linear infinite',
         }}
       />
       <span
         style={{
-          fontSize: 'var(--font-size-sm)',
-          color: 'var(--color-text-secondary)',
+          fontSize: 'var(--fs-caption)',
+          color: 'var(--color-text-muted)',
         }}
       >
         {label}

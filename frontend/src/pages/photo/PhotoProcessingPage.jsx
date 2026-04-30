@@ -44,7 +44,7 @@ function PhotoProcessingPage() {
       style={{
         maxWidth: 480,
         margin: '0 auto',
-        padding: 'var(--spacing-xl) var(--spacing-md)',
+        padding: '32px var(--spacing-md) 48px',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -87,7 +87,7 @@ function PhotoProcessingPage() {
       </div>
 
       {/* 진행 바 */}
-      <div style={{ width: '100%', maxWidth: 360 }}>
+      <div style={{ width: '100%', maxWidth: 360, padding: '0 var(--spacing-md)', boxSizing: 'border-box' }}>
         <div
           style={{
             height: 10,

@@ -6,7 +6,7 @@
 .will-ben__content {
   max-width: 600px;
   margin: 0 auto;
-  padding: var(--spacing-xl) var(--spacing-md);
+  padding: 32px var(--spacing-md);
 }
 
 .will-ben__guide {
@@ -21,7 +21,7 @@
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  gap: 16px;
   margin-bottom: var(--spacing-lg);
 }
 
@@ -32,7 +32,7 @@
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-card);
-  padding: var(--spacing-md) var(--spacing-lg);
+  padding: 16px 20px;
 }
 
 .will-ben__card-info {
@@ -112,10 +112,10 @@
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-card);
-  padding: var(--spacing-lg);
+  padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  gap: 16px;
   margin-bottom: var(--spacing-lg);
 }
 
@@ -202,7 +202,7 @@
   border: none;
   border-radius: var(--radius-pill);
   cursor: pointer;
-  margin-top: var(--spacing-lg);
+  margin-top: 24px;
   transition: opacity var(--transition-base);
 }
 
@@ -213,4 +213,36 @@
 
 .will-ben__next:not(:disabled):hover {
   opacity: 0.88;
+}
+
+/* ── 반응형: 모바일 (< 640px) ── */
+@media (max-width: 639px) {
+  .will-ben__content {
+    padding: var(--spacing-lg) var(--spacing-md) 32px;
+  }
+
+  /* 유가족 카드 메타 정보 줄바꿈 대응 */
+  .will-ben__card-meta {
+    word-break: break-all;
+  }
+
+  /* 폼: 데스크톱에서 2열 가능하도록 준비 — 모바일은 1열 유지 */
+  .will-ben__form {
+    padding: 16px;
+    gap: 16px;
+  }
+}
+
+/* ── 반응형: 데스크톱 (≥ 1024px) — 유가족 폼 2열 ── */
+@media (min-width: 1024px) {
+  .will-ben__form {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* 메시지 textarea와 완료 버튼은 전체 너비 */
+  .will-ben__form .will-ben__field:nth-last-child(2),
+  .will-ben__form .will-ben__add-btn {
+    grid-column: 1 / -1;
+  }
 }

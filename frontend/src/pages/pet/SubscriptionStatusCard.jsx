@@ -76,7 +76,7 @@ export default function SubscriptionStatusCard({ subscription, onCancel, onRetry
         background: 'var(--color-pet-soft)',
         border: '1px solid var(--color-pet)',
         borderRadius: 'var(--radius-card)',
-        padding: 'var(--spacing-xl)',
+        padding: '24px',
         display: 'flex',
         flexDirection: 'column',
         gap: 'var(--spacing-md)',

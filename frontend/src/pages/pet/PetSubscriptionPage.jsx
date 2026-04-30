@@ -44,7 +44,7 @@ function PlanCard({ plan, isCurrent, isProcessing, isRedirecting, onSubscribe })
           'var(--color-border-strong)'
         }`,
         borderRadius: 'var(--radius-card)',
-        padding: 'var(--spacing-xl)',
+        padding: '24px',
         display: 'flex',
         flexDirection: 'column',
         gap: 'var(--spacing-md)',
@@ -299,7 +299,7 @@ export default function PetSubscriptionPage() {
           background: 'var(--color-surface-warm)',
           border: '1px solid var(--color-border)',
           borderRadius: 'var(--radius-card)',
-          padding: 'var(--spacing-lg)',
+          padding: '20px 24px',
           fontSize: 'var(--fs-caption)',
           color: 'var(--color-text-secondary)',
           lineHeight: 1.7,

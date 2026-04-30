@@ -6,18 +6,18 @@
 .will-preview__content {
   max-width: 600px;
   margin: 0 auto;
-  padding: var(--spacing-xl) var(--spacing-md);
+  padding: 32px var(--spacing-md);
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xl);
 }
 
-/* 요약 카드 */
+/* 요약 카드 — 24px padding */
 .will-preview__summary {
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-card);
-  padding: var(--spacing-lg);
+  padding: 24px;
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
@@ -185,4 +185,26 @@
 
 .will-preview__submit:not(:disabled):hover {
   opacity: 0.88;
+}
+
+/* ── 반응형: 모바일 (< 640px) ── */
+@media (max-width: 639px) {
+  .will-preview__content {
+    padding: var(--spacing-lg) var(--spacing-md) 32px;
+    gap: var(--spacing-lg);
+  }
+
+  .will-preview__summary {
+    padding: 16px 20px;
+  }
+
+  /* 유가족 칩 줄바꿈 허용 */
+  .will-preview__ben-chips {
+    flex-wrap: wrap;
+  }
+
+  /* textarea 최소 높이 보장 */
+  .will-preview__textarea {
+    min-height: 200px;
+  }
 }

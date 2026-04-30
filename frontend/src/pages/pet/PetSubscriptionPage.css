@@ -4,7 +4,7 @@
 .pet-subscription-page {
   max-width: 720px;
   margin: 0 auto;
-  padding: var(--spacing-xl) var(--spacing-md);
+  padding: 32px var(--spacing-md) 48px;
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xl);
@@ -14,7 +14,7 @@
 
 @media (max-width: 639px) {
   .pet-subscription-page {
-    padding: var(--spacing-lg) var(--spacing-md);
+    padding: var(--spacing-lg) var(--spacing-md) 32px;
   }
 }
 

@@ -57,7 +57,7 @@ export default function PetNewPage() {
       style={{
         maxWidth: 480,
         margin: '0 auto',
-        padding: 'var(--spacing-xl) var(--spacing-md)',
+        padding: '32px var(--spacing-md) 48px',
         display: 'flex',
         flexDirection: 'column',
         gap: 'var(--spacing-xl)',
@@ -88,15 +88,15 @@ export default function PetNewPage() {
       </button>
 
       <div>
-        <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 800, color: 'var(--color-primary)', letterSpacing: 'var(--ls-heading-ko)' }}>
+        <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 800, color: 'var(--color-primary)', letterSpacing: 'var(--ls-heading-ko)', marginBottom: 'var(--spacing-sm)' }}>
           반려동물 등록
         </h1>
-        <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', marginTop: 'var(--spacing-sm)' }}>
+        <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)' }}>
           소중한 반려동물 정보를 입력해 주세요.
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-lg)' }}>
+      <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         {/* 이름 */}
         <div style={fieldStyle}>
           <label htmlFor="pet-name" style={labelStyle}>

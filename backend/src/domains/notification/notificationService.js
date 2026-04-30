@@ -1,7 +1,7 @@
 /**
- * Notification Service — 비즈니스 로직 전용
+ * Notification Service - 비즈니스 로직 전용
  *
- * sendNotification() 은 내부용 — 다른 서비스에서 import하여 사용 가능
+ * sendNotification() 은 내부용 - 다른 서비스에서 import하여 사용 가능
  */
 
 import { v4 as uuidv4 } from 'uuid'
@@ -112,7 +112,7 @@ export const updateSettings = async (userId, settings) => {
 }
 
 // ---------------------------------------------------------------------------
-// 알림 발송 (내부용 — 다른 서비스에서 import)
+// 알림 발송 (내부용 - 다른 서비스에서 import)
 // ---------------------------------------------------------------------------
 
 /**

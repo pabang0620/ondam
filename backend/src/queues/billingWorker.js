@@ -54,7 +54,7 @@ const handleScanDue = async () => {
 const handleExecuteBilling = async (data) => {
   const { subscriptionId, userId, plan } = data
 
-  // 1. 구독 조회 (FOR UPDATE — 트랜잭션 + conn 전달로 실제 잠금)
+  // 1. 구독 조회 (FOR UPDATE - 트랜잭션 + conn 전달로 실제 잠금)
   const conn = await pool.getConnection()
   let sub
   try {
@@ -77,7 +77,7 @@ const handleExecuteBilling = async (data) => {
     return
   }
 
-  // 2. 멱등성 — 오늘 이미 성공/pending 로그 있으면 skip
+  // 2. 멱등성 - 오늘 이미 성공/pending 로그 있으면 skip
   const billingCycleDate = todayKST()
   const existingLog = await subscriptionPaymentLogRepository.findTodayLog(subscriptionId, billingCycleDate)
   if (existingLog) {
@@ -148,7 +148,7 @@ const handleExecuteBilling = async (data) => {
         `${orderName} 결제에 실패했습니다. 사유: ${result.failReason ?? '알 수 없음'}`,
       ]
     )
-    console.warn(`[billingWorker] 결제 실패: ${subscriptionId} — ${result.failReason}`)
+    console.warn(`[billingWorker] 결제 실패: ${subscriptionId} - ${result.failReason}`)
   }
 }
 
@@ -174,7 +174,7 @@ worker.on('completed', (job) => {
 })
 
 worker.on('failed', (job, err) => {
-  console.error(`[billingWorker] job 실패: ${job?.name} (${job?.id}) — ${err.message}`)
+  console.error(`[billingWorker] job 실패: ${job?.name} (${job?.id}) - ${err.message}`)
 })
 
 export default worker

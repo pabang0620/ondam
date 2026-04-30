@@ -6,7 +6,7 @@
 .will-consent__content {
   max-width: 600px;
   margin: 0 auto;
-  padding: var(--spacing-xl) var(--spacing-md);
+  padding: 32px var(--spacing-md);
 }
 
 .will-consent__guide {
@@ -30,7 +30,7 @@
   background-color: var(--color-surface);
   border: 2px solid var(--color-border);
   border-radius: var(--radius-card);
-  padding: var(--spacing-md) var(--spacing-lg);
+  padding: 20px 24px;
   text-align: left;
   cursor: pointer;
   transition: border-color var(--transition-base), background-color var(--transition-base);
@@ -80,13 +80,13 @@
   background-color: var(--color-surface-warm);
   border: 2px solid var(--color-border);
   border-radius: var(--radius-sm);
-  padding: var(--spacing-md) var(--spacing-lg);
+  padding: 16px 24px;
   font-size: var(--fs-body);
   font-weight: 700;
   color: var(--color-text-primary);
   cursor: pointer;
   min-height: var(--min-touch-target);
-  margin-bottom: var(--spacing-xl);
+  margin-bottom: 24px;
   transition: border-color var(--transition-base);
 }
 
@@ -122,4 +122,25 @@
 
 .will-consent__next:not(:disabled):hover {
   opacity: 0.88;
+}
+
+/* ── 반응형: 모바일 (< 640px) ── */
+@media (max-width: 639px) {
+  .will-consent__content {
+    padding: var(--spacing-lg) var(--spacing-md) 32px;
+  }
+
+  /* 동의 카드 텍스트 크기 유지(최소 16px = var(--fs-body)) */
+  .will-consent__card-desc {
+    font-size: var(--fs-body);
+  }
+
+  /* 체크 아이콘 충분한 터치 영역 */
+  .will-consent__card-check {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 }

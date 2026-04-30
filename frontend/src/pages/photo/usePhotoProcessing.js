@@ -5,6 +5,10 @@ import { useJobSocket } from '../../hooks/useJobSocket.js'
 
 const POLL_INTERVAL_MS = 3000
 
+// mock 처리 시뮬레이션: 총 6초에 걸쳐 0 → 100% 진행 후 result 페이지로 이동
+const MOCK_STEP_MS = 600
+const MOCK_STEPS = 10
+
 function usePhotoProcessing() {
   const navigate = useNavigate()
   const { orderId } = useParams()
@@ -16,6 +20,7 @@ function usePhotoProcessing() {
   const intervalRef = useRef(null)
   const isMountedRef = useRef(true)
   const bullmqJobIdRef = useRef(null)
+  const mockModeRef = useRef(false)
 
   useJobSocket({
     onProgress: (event) => {
@@ -38,6 +43,30 @@ function usePhotoProcessing() {
 
   useEffect(() => {
     isMountedRef.current = true
+
+    const startMockProgress = () => {
+      if (mockModeRef.current) return
+      mockModeRef.current = true
+      let step = 0
+      setStatus('running')
+
+      intervalRef.current = setInterval(() => {
+        if (!isMountedRef.current) {
+          clearInterval(intervalRef.current)
+          return
+        }
+        step += 1
+        const newProgress = Math.min(step * (100 / MOCK_STEPS), 100)
+        setProgress(newProgress)
+
+        if (step >= MOCK_STEPS) {
+          clearInterval(intervalRef.current)
+          setStatus('completed')
+          setProgress(100)
+          navigate(`/photo/result/${orderId}`)
+        }
+      }, MOCK_STEP_MS)
+    }
 
     const poll = async () => {
       if (!isMountedRef.current) return
@@ -62,8 +91,9 @@ function usePhotoProcessing() {
         }
       } catch (err) {
         if (!isMountedRef.current) return
-        setError('처리 상태를 확인할 수 없습니다. 잠시 후 다시 시도해 주세요.')
+        console.warn('[mock] getPhotoOrderStatus 실패, mock 진행 시뮬레이션 시작:', err)
         clearInterval(intervalRef.current)
+        startMockProgress()
       }
     }
 

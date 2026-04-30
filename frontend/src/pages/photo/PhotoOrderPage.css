@@ -2,24 +2,26 @@
 .photo-order-page {
   max-width: 600px;
   margin: 0 auto;
-  padding: var(--spacing-xl) var(--spacing-md);
+  padding: 32px var(--spacing-md) 48px;
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xl);
+  width: 100%;
+  box-sizing: border-box;
 }
 
-/* ── 반응형: 태블릿 (≤ 768px) ── */
-@media (max-width: 768px) {
+/* ── 반응형: 태블릿 (640px ~ 1023px) ── */
+@media (max-width: 1023px) {
   .photo-order-page {
-    padding: var(--spacing-lg) var(--spacing-md);
-    gap: var(--spacing-lg);
+    padding: 24px var(--spacing-md) 48px;
+    gap: var(--spacing-xl);
   }
 }
 
-/* ── 반응형: 모바일 (≤ 480px) ── */
-@media (max-width: 480px) {
+/* ── 반응형: 모바일 (< 640px) ── */
+@media (max-width: 639px) {
   .photo-order-page {
-    padding: var(--spacing-md) var(--spacing-md);
+    padding: 16px var(--spacing-md) 32px;
     gap: var(--spacing-lg);
     max-width: 100%;
   }
@@ -32,5 +34,12 @@
   .photo-order-page .photo-type-tabs button {
     width: 100%;
     text-align: center;
+  }
+}
+
+/* 320px 극소 화면 */
+@media (max-width: 359px) {
+  .photo-order-page {
+    padding: var(--spacing-md) var(--spacing-sm);
   }
 }

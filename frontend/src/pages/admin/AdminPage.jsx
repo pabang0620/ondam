@@ -42,7 +42,7 @@ function StatCard({ config, value }) {
         background: 'var(--color-surface)',
         border: '1px solid var(--color-border)',
         borderRadius: 'var(--radius-card)',
-        padding: 'var(--spacing-lg)',
+        padding: '24px',
         display: 'flex',
         gap: 'var(--spacing-md)',
         alignItems: 'center',

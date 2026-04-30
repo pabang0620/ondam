@@ -110,8 +110,8 @@ const dispatch = async (jobData) => {
       await sendEmail({ to, subject, message })
       break
     case 'push':
-      // push 미구현 — 향후 FCM 등으로 대체 예정
-      console.error(`[notificationWorker] push 미구현 — notificationId=${notificationId} to=${to}`)
+      // push 미구현 - 향후 FCM 등으로 대체 예정
+      console.error(`[notificationWorker] push 미구현 - notificationId=${notificationId} to=${to}`)
       break
     default:
       throw new Error(`알 수 없는 알림 타입: ${type}`)

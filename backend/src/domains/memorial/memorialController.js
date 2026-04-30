@@ -1,5 +1,5 @@
 /**
- * Memorial Controller — 요청 파싱 + 응답 전담
+ * Memorial Controller - 요청 파싱 + 응답 전담
  */
 
 import * as memorialService from './memorialService.js'

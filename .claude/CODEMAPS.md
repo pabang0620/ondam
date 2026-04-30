@@ -103,7 +103,7 @@ GET    /api/subscriptions/:id/payment-logs
 
 **자동 정기결제 (BullMQ)**
 ```
-1. 매일 03:00 KST — billingWorker scan-due 작업 실행
+1. 매일 03:00 KST - billingWorker scan-due 작업 실행
 2. 결제 대상 조회: sub_status='active' AND next_billing_at ≤ 오늘
 3. 각 구독별 execute-billing job 큐 등록
 4. 워커: billingKey KMS 복호화 → 토스 결제 실행
@@ -204,12 +204,12 @@ canceled (소프트 삭제 적용)
 | `petRepository.js` | pets 테이블 CRUD |
 
 **프론트엔드**: `/frontend/src/pages/pet/`
-- `PetPage.jsx` — 반려동물 목록
-- `PetDetailPage.jsx` — 상세 페이지
-- `PetNewPage.jsx` — 신규 등록
-- `PetPortraitPage.jsx` — AI 초상화
-- `PetSubscriptionPage.jsx` — 구독 관리
-- `usePet.js`, `usePetDetail.js` — 상태 관리 훅
+- `PetPage.jsx` - 반려동물 목록
+- `PetDetailPage.jsx` - 상세 페이지
+- `PetNewPage.jsx` - 신규 등록
+- `PetPortraitPage.jsx` - AI 초상화
+- `PetSubscriptionPage.jsx` - 구독 관리
+- `usePet.js`, `usePetDetail.js` - 상태 관리 훅
 
 ---
 
@@ -289,7 +289,7 @@ components/common/
 └─ (기타)
 
 config/
-├─ apiClient.js — axios 인스턴스 (권장 사용)
+├─ apiClient.js - axios 인스턴스 (권장 사용)
 
 hooks/
 ├─ useAuth.js
@@ -297,10 +297,10 @@ hooks/
 └─ (기타)
 
 lib/
-└─ tossPayments.js — 토스페이먼츠 SDK 래퍼
+└─ tossPayments.js - 토스페이먼츠 SDK 래퍼
 
 utils/
-├─ dateKst.js — KST 날짜 유틸
+├─ dateKst.js - KST 날짜 유틸
 └─ (기타)
 
 store/
@@ -314,18 +314,18 @@ styles/
 
 **예: Pet 페이지**
 ```
-1. PetPage.jsx       — UI 렌더링만
-2. usePet.js         — 상태 관리, 데이터 페칭 로직
-3. petApi.js         — 백엔드 API axios 호출
+1. PetPage.jsx       - UI 렌더링만
+2. usePet.js         - 상태 관리, 데이터 페칭 로직
+3. petApi.js         - 백엔드 API axios 호출
 ```
 
 ### 구독 UI 컴포넌트
 
-- `PetSubscriptionPage.jsx` — 구독 페이지 (플랜 선택, 빌링 인증)
-- `SubscriptionStatusCard.jsx` — 현재 구독 상태 표시
-- `CancelSubscriptionModal.jsx` — 구독 취소 모달
-- `BillingAuthSuccessPage.jsx` — 빌링 성공 페이지
-- `BillingAuthFailPage.jsx` — 빌링 실패 페이지
+- `PetSubscriptionPage.jsx` - 구독 페이지 (플랜 선택, 빌링 인증)
+- `SubscriptionStatusCard.jsx` - 현재 구독 상태 표시
+- `CancelSubscriptionModal.jsx` - 구독 취소 모달
+- `BillingAuthSuccessPage.jsx` - 빌링 성공 페이지
+- `BillingAuthFailPage.jsx` - 빌링 실패 페이지
 
 ---
 
@@ -451,6 +451,6 @@ SET time_zone = '+09:00';
 
 ## 관련 문서
 
-- `CLAUDE.md` — 프로젝트 가이드, 에러 처리, API 응답 포맷
-- `dev-style.md` — 코딩 스타일, 네이밍 컨벤션
-- `/ondam_schema.sql` — 전체 DB 스키마
+- `CLAUDE.md` - 프로젝트 가이드, 에러 처리, API 응답 포맷
+- `dev-style.md` - 코딩 스타일, 네이밍 컨벤션
+- `/ondam_schema.sql` - 전체 DB 스키마

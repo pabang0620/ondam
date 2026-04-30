@@ -1,5 +1,5 @@
 /**
- * Pet Controller — 요청 파싱 + 응답 전담
+ * Pet Controller - 요청 파싱 + 응답 전담
  */
 
 import * as petService from './petService.js'

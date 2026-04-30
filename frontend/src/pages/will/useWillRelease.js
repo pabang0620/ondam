@@ -51,7 +51,7 @@ export function useWillRelease() {
       await willApi.submitRelease(token, { deathCertS3Key, deathCertUrl })
       setIsSubmitted(true)
     } catch (err) {
-      console.warn('[mock] 사후 공개 제출 API 실패 — mock 제출 완료 처리', err)
+      console.warn('[mock] 사후 공개 제출 API 실패 - mock 제출 완료 처리', err)
       setIsSubmitted(true)
     } finally {
       setIsSubmitting(false)

@@ -30,10 +30,10 @@ DB 실제 테이블 컬럼명 (ondam_schema.sql)
 ---
 
 ## 실행 원칙
-1. **병렬 최우선** — 3개 탐지 축을 독립 Agent로 동시 실행
-2. **불일치만 보고** — 스타일·아키텍처·성능 이슈 제외
-3. **Zod strip 취약성 우선** — silent strip은 에러 없이 데이터 유실되므로 CRITICAL 처리
-4. **재현 경로 명시** — 어떤 API 요청에서 어떤 필드가 무시되는지 서술
+1. **병렬 최우선** - 3개 탐지 축을 독립 Agent로 동시 실행
+2. **불일치만 보고** - 스타일·아키텍처·성능 이슈 제외
+3. **Zod strip 취약성 우선** - silent strip은 에러 없이 데이터 유실되므로 CRITICAL 처리
+4. **재현 경로 명시** - 어떤 API 요청에서 어떤 필드가 무시되는지 서술
 
 ---
 
@@ -65,7 +65,7 @@ find /home/pabang/myapp/ondam/frontend/src -name "*Api.js" -o -name "*api.js" | 
 
 ---
 
-## 축 1 — Zod 스키마 ↔ DB 컬럼명 불일치
+## 축 1 - Zod 스키마 ↔ DB 컬럼명 불일치
 
 ### 탐지 대상
 ```
@@ -115,7 +115,7 @@ Zod `z.enum([...])` 값이 DB ENUM 정의와 다른 경우:
 | `subscriptions` | `plan_type` | 실제 DB ENUM 값으로 교차검증 |
 | `payments` | `status` | `pending`, `completed`, `failed`, `cancelled` |
 
-⚠️ Zod 스키마가 허용해도 DB ENUM에 없으면 INSERT 실패 — 반드시 교차검증
+⚠️ Zod 스키마가 허용해도 DB ENUM에 없으면 INSERT 실패 - 반드시 교차검증
 
 #### Z4. 존재하지 않는 DB 컬럼을 Zod에서 정의
 Zod 스키마에 있지만 DB 테이블에 없는 필드:
@@ -132,11 +132,11 @@ Zod 스키마에 있지만 DB 테이블에 없는 필드:
 ```
 
 탐지 결과 없음 시:
-[축 1] 이상 없음 — Z1~Z4 항목 전체 검토 완료
+[축 1] 이상 없음 - Z1~Z4 항목 전체 검토 완료
 
 ---
 
-## 축 2 — Repository SQL ↔ DB 컬럼명 불일치
+## 축 2 - Repository SQL ↔ DB 컬럼명 불일치
 
 ### 탐지 대상
 ```
@@ -202,11 +202,11 @@ INSERT INTO voices (..., s3_key) VALUES (?, ?, ?)
 ```
 
 탐지 결과 없음 시:
-[축 2] 이상 없음 — R1~R7 항목 전체 검토 완료
+[축 2] 이상 없음 - R1~R7 항목 전체 검토 완료
 
 ---
 
-## 축 3 — 프론트엔드 전송 필드명 ↔ Zod 스키마 필드명 불일치
+## 축 3 - 프론트엔드 전송 필드명 ↔ Zod 스키마 필드명 불일치
 
 ### 탐지 대상
 ```
@@ -270,7 +270,7 @@ FormData에서 배열을 `append` 반복 vs 쿼리 스트링 배열 vs JSON 배�
 ```
 
 탐지 결과 없음 시:
-[축 3] 이상 없음 — F1~F6 항목 전체 검토 완료
+[축 3] 이상 없음 - F1~F6 항목 전체 검토 완료
 
 ---
 

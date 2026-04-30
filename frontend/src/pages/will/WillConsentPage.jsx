@@ -58,7 +58,7 @@ export default function WillConsentPage() {
           disabled={!allChecked}
           aria-disabled={!allChecked}
         >
-          다음 — 유가족 등록
+          다음 - 유가족 등록
         </button>
       </div>
     </div>

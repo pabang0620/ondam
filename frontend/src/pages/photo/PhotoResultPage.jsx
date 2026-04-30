@@ -1,5 +1,6 @@
 import { Download, RefreshCw, Share2, Loader2, AlertCircle } from 'lucide-react'
 import usePhotoResult from './usePhotoResult.js'
+import './PhotoResultPage.css'
 
 function PhotoImage({ src, alt, label }) {
   return (
@@ -100,7 +101,7 @@ function PhotoResultPage() {
       style={{
         maxWidth: 700,
         margin: '0 auto',
-        padding: 'var(--spacing-xl) var(--spacing-md)',
+        padding: '32px var(--spacing-md) 48px',
         display: 'flex',
         flexDirection: 'column',
         gap: 'var(--spacing-xl)',
@@ -118,10 +119,10 @@ function PhotoResultPage() {
 
       {/* Before / After */}
       <section aria-label="원본과 보정본 비교">
-        <h2 style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 700, marginBottom: 'var(--spacing-md)', color: 'var(--color-text-primary)' }}>
+        <h2 style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 700, marginBottom: 20, color: 'var(--color-text-primary)' }}>
           Before / After
         </h2>
-        <div style={{ display: 'flex', gap: 'var(--spacing-md)' }}>
+        <div className="photo-result__before-after">
           {rawFile ? (
             <PhotoImage src={rawFile.fileUrl} alt="원본 사진" label="Before" />
           ) : (
@@ -171,7 +172,7 @@ function PhotoResultPage() {
         style={{
           display: 'flex',
           flexDirection: 'column',
-          gap: 'var(--spacing-sm)',
+          gap: 12,
         }}
       >
         {/* 다운로드 */}
@@ -296,3 +297,4 @@ function PhotoResultPage() {
 }
 
 export default PhotoResultPage
+

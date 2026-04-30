@@ -1,5 +1,5 @@
 /**
- * Pet Repository — DB 쿼리 전용
+ * Pet Repository - DB 쿼리 전용
  */
 
 import { v4 as uuidv4 } from 'uuid'

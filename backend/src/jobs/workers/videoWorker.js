@@ -83,7 +83,7 @@ const processVideoGenerate = async (jobData, bullmqJobId) => {
 
   if (AI_MOCK) {
     const mockVideoKey = `wills/${userId}/${willId}/video_result_${Date.now()}.mp4`
-    // mock: 실제 KMS 암호화 사용 — getWatchUrl의 decryptBuffer와 호환성 보장
+    // mock: 실제 KMS 암호화 사용 - getWatchUrl의 decryptBuffer와 호환성 보장
     const { encrypted, kmsKeyId } = await encryptString(mockVideoKey)
     resultVideoS3KeyEncrypted = encrypted.toString('base64')
     resultVideoKmsKeyId = kmsKeyId
@@ -156,7 +156,7 @@ const processVideoGenerate = async (jobData, bullmqJobId) => {
       throw new Error('Higgsfield 영상 생성 타임아웃 (5분 초과)')
     }
 
-    // SSRF 방어 — Higgsfield 도메인 검증
+    // SSRF 방어 - Higgsfield 도메인 검증
     const allowedHost = 'higgsfield.ai'
     const parsedVideoUrl = new URL(videoUrl)
     if (!parsedVideoUrl.hostname.endsWith(allowedHost)) {
@@ -202,7 +202,7 @@ const processVideoGenerate = async (jobData, bullmqJobId) => {
     resultUrl: null,
   })
 
-  // 6. notifications — 유언 영상 생성 완료 (보관 상태 알림, 공개는 아님)
+  // 6. notifications - 유언 영상 생성 완료 (보관 상태 알림, 공개는 아님)
   // 알림 INSERT 실패해도 잡 전체를 실패시키지 않음
   await insertNotification({
     userId,

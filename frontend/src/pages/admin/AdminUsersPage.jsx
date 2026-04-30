@@ -18,7 +18,7 @@ export default function AdminUsersPage() {
 
   /* 표 — header bg=surface-warm, row 구분 1px var(--color-border) */
   const thStyle = {
-    padding: 'var(--spacing-sm) var(--spacing-md)',
+    padding: '12px 16px',
     textAlign: 'left',
     fontWeight: 700,
     color: 'var(--color-primary)',
@@ -28,7 +28,7 @@ export default function AdminUsersPage() {
   }
 
   const tdStyle = {
-    padding: 'var(--spacing-sm) var(--spacing-md)',
+    padding: '12px 16px',
     fontSize: 'var(--fs-body)',
     borderBottom: '1px solid var(--color-border)',
     verticalAlign: 'middle',
@@ -38,7 +38,7 @@ export default function AdminUsersPage() {
   return (
     <div className="admin-page">
       {/* 헤더 */}
-      <div style={{ marginBottom: 'var(--spacing-xl)' }}>
+      <div style={{ marginBottom: '24px' }}>
         <h1 style={{ fontSize: 'var(--fs-h2)', fontWeight: 800, color: 'var(--color-primary)', letterSpacing: 'var(--ls-heading-ko)' }}>회원 관리</h1>
         <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-text-muted)', marginTop: 4 }}>
           전체 회원 목록을 조회합니다. (총 {total.toLocaleString('ko-KR')}명)

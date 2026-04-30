@@ -1,5 +1,5 @@
 /**
- * Admin Controller — 요청 파싱 + 응답 전담
+ * Admin Controller - 요청 파싱 + 응답 전담
  */
 
 import { v4 as uuidv4 } from 'uuid'
@@ -18,7 +18,7 @@ export const login = async (req, res, next) => {
     const result = await adminService.login(email, password)
     return success(res, result, '관리자 로그인 성공')
   } catch (err) {
-    // 인증 실패(401)는 audit_logs에 기록 — 브루트포스 탐지용
+    // 인증 실패(401)는 audit_logs에 기록 - 브루트포스 탐지용
     if (err.status === 401) {
       adminRepository.createAuditLog({
         logId: uuidv4(),

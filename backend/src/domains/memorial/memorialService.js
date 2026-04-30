@@ -1,5 +1,5 @@
 /**
- * Memorial Service — 비즈니스 로직 전용
+ * Memorial Service - 비즈니스 로직 전용
  * 공개 추모 페이지 (비회원 접근 가능)
  */
 
@@ -14,7 +14,7 @@ const MEDIA_PAGE_LIMIT = 50
  * - memorial_access_code가 설정된 경우 accessCode 일치 필요
  *
  * @param {string} slug
- * @param {string|undefined} accessCode — 쿼리로 전달된 접근 코드
+ * @param {string|undefined} accessCode - 쿼리로 전달된 접근 코드
  * @returns {{ pet: object, media: object[], mediaMeta: object }}
  */
 export const getMemorialPage = async (slug, accessCode) => {

@@ -1,5 +1,5 @@
 /**
- * Notification Controller — 요청 파싱 + 응답 전담
+ * Notification Controller - 요청 파싱 + 응답 전담
  */
 
 import * as notificationService from './notificationService.js'

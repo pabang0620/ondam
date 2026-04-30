@@ -48,7 +48,7 @@ export function useWillProcessing() {
       setProgress(prog)
       return status
     } catch (err) {
-      console.warn('[mock] 상태 폴링 API 실패 — mock 처리 중 상태 유지', err)
+      console.warn('[mock] 상태 폴링 API 실패 - mock 처리 중 상태 유지', err)
       return 'mock_pending'
     }
   }, [willId])

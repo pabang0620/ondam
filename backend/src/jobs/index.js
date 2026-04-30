@@ -18,7 +18,7 @@ console.error('[ondam-workers] 활성 큐: photo, voiceClone, videoGenerate, not
 // ─── Graceful Shutdown ────────────────────────────────────────────────────────
 
 const shutdown = async (signal) => {
-  console.error(`[ondam-workers] ${signal} 수신 — graceful shutdown 시작`)
+  console.error(`[ondam-workers] ${signal} 수신 - graceful shutdown 시작`)
 
   try {
     await Promise.all([

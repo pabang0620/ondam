@@ -1,5 +1,5 @@
 /**
- * Auth Service — 비즈니스 로직 전용
+ * Auth Service - 비즈니스 로직 전용
  */
 
 import bcrypt from 'bcrypt'
@@ -149,7 +149,7 @@ export const login = async ({ email, password }) => {
 
 /**
  * Access token 갱신 (Refresh token rotation)
- * @param {string} refreshToken  — HttpOnly 쿠키에서 전달된 원본 토큰
+ * @param {string} refreshToken  - HttpOnly 쿠키에서 전달된 원본 토큰
  * @returns {{ accessToken: string, refreshToken: string, user: object }}
  */
 export const refresh = async (refreshToken) => {
@@ -222,7 +222,7 @@ export const saveConsents = async (userId, consents) => {
 }
 
 /**
- * 로그아웃 — refresh token 취소
+ * 로그아웃 - refresh token 취소
  * @param {string} refreshToken
  */
 export const logout = async (refreshToken) => {

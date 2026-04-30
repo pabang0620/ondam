@@ -50,10 +50,10 @@ function Toggle({ checked, onChange, id, label }) {
         alignItems: 'center',
         gap: 'var(--spacing-md)',
         cursor: 'pointer',
-        minHeight: 'var(--min-touch-target)',
+        minHeight: 'var(--size-button-h)',
       }}
     >
-      <span style={{ flex: 1, fontSize: 'var(--font-size-base)', color: 'var(--color-text-primary)' }}>
+      <span style={{ flex: 1, fontSize: 'var(--fs-body)', color: 'var(--color-text-primary)' }}>
         {label}
       </span>
       <div style={{ position: 'relative', flexShrink: 0 }}>
@@ -71,10 +71,10 @@ function Toggle({ checked, onChange, id, label }) {
           style={{
             width: 48,
             height: 28,
-            borderRadius: 'var(--radius-full)',
-            background: checked ? 'var(--color-primary)' : 'var(--color-border)',
+            borderRadius: 'var(--radius-pill)',
+            background: checked ? 'var(--color-warm-accent)' : 'var(--color-border)',
             position: 'relative',
-            transition: 'background 0.2s',
+            transition: 'background var(--transition-base)',
           }}
         >
           <div
@@ -85,8 +85,8 @@ function Toggle({ checked, onChange, id, label }) {
               width: 22,
               height: 22,
               borderRadius: '50%',
-              background: '#fff',
-              transition: 'left 0.2s',
+              background: 'var(--color-surface)',
+              transition: 'left var(--transition-base)',
             }}
           />
         </div>
@@ -155,7 +155,7 @@ function SubscriptionTab() {
   const navigate = useNavigate()
   return (
     <div className="my-tab-action">
-      <p style={{ fontSize: 'var(--font-size-base)', color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-md)' }}>
+      <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-md)' }}>
         반려동물 아카이브 구독을 관리합니다.
       </p>
       <button
@@ -165,12 +165,12 @@ function SubscriptionTab() {
           alignItems: 'center',
           gap: 'var(--spacing-sm)',
           background: 'var(--color-primary)',
-          color: '#fff',
+          color: 'var(--color-surface)',
           border: 'none',
-          borderRadius: 'var(--radius-full)',
+          borderRadius: 'var(--radius-pill)',
           padding: '0 var(--spacing-xl)',
-          minHeight: 'var(--min-touch-target)',
-          fontSize: 'var(--font-size-base)',
+          height: 'var(--size-button-h)',
+          fontSize: 'var(--fs-button)',
           fontWeight: 700,
           cursor: 'pointer',
         }}

@@ -1,5 +1,5 @@
 /**
- * Auth Repository — DB 쿼리 전용
+ * Auth Repository - DB 쿼리 전용
  *
  * 실행 필요 (최초 1회):
  * CREATE TABLE IF NOT EXISTS refresh_tokens (
@@ -37,7 +37,7 @@ export const findByEmail = async (email) => {
 
 /**
  * UUID로 사용자 조회 (소프트삭제 제외)
- * @param {string} userId  — UUID (user_id 컬럼)
+ * @param {string} userId  - UUID (user_id 컬럼)
  * @returns {Promise<object|null>}
  */
 export const findByUserId = async (userId) => {
@@ -128,7 +128,7 @@ export const findRefreshToken = async (tokenHash) => {
 }
 
 /**
- * 동의 항목 upsert — (user_id, consent_type) UNIQUE KEY 기반 ON DUPLICATE KEY UPDATE
+ * 동의 항목 upsert - (user_id, consent_type) UNIQUE KEY 기반 ON DUPLICATE KEY UPDATE
  * 동일 사용자·동의 유형의 기존 row가 있으면 is_agreed/agreed_at 만 갱신하고
  * consent_id(UUID)는 신규 생성 값으로 교체한다 (추적 목적)
  * @param {string} userId

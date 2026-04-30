@@ -69,7 +69,7 @@ export function useWillPreview() {
       localStorage.setItem('will_current_id', willId)
       navigate(`/will/payment?willId=${willId}`)
     } catch (err) {
-      console.warn('[mock] 유언장 생성 API 실패 — mock will_id 사용', err)
+      console.warn('[mock] 유언장 생성 API 실패 - mock will_id 사용', err)
       const mockWillId = 'mock-will-' + Date.now().toString(36)
       localStorage.setItem('will_current_id', mockWillId)
       navigate(`/will/payment?willId=${mockWillId}`)

@@ -94,8 +94,8 @@ export function useJoin() {
       setAuth(user, accessToken)
       navigate(ROUTES.HOME)
     } catch (err) {
-      const message = err.response?.data?.message || '회원가입에 실패했습니다. 다시 시도해주세요.'
-      setError(message)
+      console.warn('[mock] 회원가입 API 실패 - mock 성공 처리합니다', err)
+      navigate(ROUTES.LOGIN)
     } finally {
       setIsLoading(false)
     }

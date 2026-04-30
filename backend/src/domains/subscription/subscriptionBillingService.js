@@ -10,7 +10,7 @@ import * as subscriptionRepository from './subscriptionRepository.js'
 import * as subscriptionTossClient from './subscriptionTossClient.js'
 
 /**
- * 날짜에 1개월 추가 (월말 자연 처리 — JS Date 기본 동작 활용)
+ * 날짜에 1개월 추가 (월말 자연 처리 - JS Date 기본 동작 활용)
  * @param {Date} date
  * @returns {Date}
  */
@@ -139,7 +139,7 @@ export const runBilling = async ({
         [paymentId, userId, subscriptionId, tossPaymentKey ?? paymentId, orderId, amount]
       )
 
-      // 5. subscriptions 상태 업데이트 — 성공
+      // 5. subscriptions 상태 업데이트 - 성공
       await subscriptionRepository.updateSubscriptionBilling(subscriptionId, {
         subStatus: 'active',
         failCount: 0,
@@ -151,7 +151,7 @@ export const runBilling = async ({
         await subscriptionTossClient.cancelPayment({
           paymentKey: tossPaymentKey,
           cancelReason: 'DB 저장 실패로 인한 자동 환불',
-        }).catch((e) => console.error('[runBilling] 보상 환불 실패 — 수동 처리 필요:', tossPaymentKey, e.message))
+        }).catch((e) => console.error('[runBilling] 보상 환불 실패 - 수동 처리 필요:', tossPaymentKey, e.message))
       }
       throw Object.assign(new Error('결제 처리 중 오류가 발생했습니다'), { status: 500 })
     }
@@ -202,7 +202,7 @@ export const runBilling = async ({
       nextRetryAt,
     })
 
-    // subscriptions 상태 업데이트 — 실패 (fail_count는 이미 위에서 아토믹 증가)
+    // subscriptions 상태 업데이트 - 실패 (fail_count는 이미 위에서 아토믹 증가)
     await subscriptionRepository.updateSubscriptionBilling(subscriptionId, {
       subStatus: newSubStatus,
       gracePeriodUntil: newGracePeriodUntil,

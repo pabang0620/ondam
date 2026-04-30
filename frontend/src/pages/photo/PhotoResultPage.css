@@ -1,0 +1,12 @@
+/* PhotoResultPage */
+.photo-result__before-after {
+  display: flex;
+  gap: 20px;
+}
+
+/* 모바일: 세로 스택 (320px ~ 639px) */
+@media (max-width: 639px) {
+  .photo-result__before-after {
+    flex-direction: column;
+  }
+}

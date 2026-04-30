@@ -64,7 +64,7 @@ export function useWillConsent() {
     try {
       await willApi.saveConsents(consentPayload)
     } catch {
-      // 동의 저장 실패는 비차단 — 로컬스토리지에 이미 저장됨
+      // 동의 저장 실패는 비차단 - 로컬스토리지에 이미 저장됨
     }
 
     navigate('/will/beneficiaries')

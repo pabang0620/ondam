@@ -1,5 +1,5 @@
 /**
- * Auth Controller — 요청 파싱 + 응답 전담
+ * Auth Controller - 요청 파싱 + 응답 전담
  */
 
 import * as authService from './authService.js'

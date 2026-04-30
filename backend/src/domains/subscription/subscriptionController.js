@@ -45,7 +45,7 @@ export const billingAuth = async (req, res, next) => {
 
 /**
  * POST /api/subscriptions
- * 구독 시작 — plan, authKey, customerKey 필요
+ * 구독 시작 - plan, authKey, customerKey 필요
  * @deprecated billingAuth 사용 권장. 하위 호환용으로 유지.
  */
 export const subscribe = async (req, res, next) => {

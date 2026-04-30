@@ -6,7 +6,7 @@
 .will-record__content {
   max-width: 600px;
   margin: 0 auto;
-  padding: var(--spacing-xl) var(--spacing-md);
+  padding: 32px var(--spacing-md);
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xl);
@@ -40,12 +40,13 @@
   line-height: var(--lh-relaxed);
 }
 
-/* 녹음 버튼 영역 */
+/* 녹음 버튼 영역 — 위/아래 40px+ 여백 확보 */
 .will-record__btn-area {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--spacing-lg);
+  padding: 40px 0;
 }
 
 /* 120px 원형 녹음 버튼 — box-shadow 금지, transform pulse만 사용 */
@@ -219,4 +220,39 @@
 
 .will-record__upload:not(:disabled):hover {
   opacity: 0.88;
+}
+
+/* ── 반응형: 모바일 (< 640px) ── */
+@media (max-width: 639px) {
+  .will-record__content {
+    padding: var(--spacing-lg) var(--spacing-md) 32px;
+    gap: var(--spacing-lg);
+  }
+
+  .will-record__btn-area {
+    padding: 32px 0;
+  }
+
+  /* 녹음 버튼: 모바일 100~120px 사이 유지 */
+  .will-record__btn {
+    width: 108px;
+    height: 108px;
+  }
+
+  /* 타이머 폰트 모바일 조정 */
+  .will-record__timer {
+    font-size: 32px;
+  }
+
+  /* 오디오 플레이어 풀너비 */
+  .will-record__audio {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .will-record__wave-bar {
+    animation: none;
+    height: 16px;
+  }
 }

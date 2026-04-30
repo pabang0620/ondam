@@ -49,10 +49,10 @@ export const preparePayment = async (userId, { targetType, targetId, amountKrw }
  * - 멱등성: paymentKey가 이미 done이면 기존 payment 반환
  */
 export const confirmPayment = async (userId, { paymentKey, orderId, amount }) => {
-  // 멱등성 확인 — 이미 처리된 paymentKey
+  // 멱등성 확인 - 이미 처리된 paymentKey
   const existing = await paymentRepository.findPaymentByTossKey(paymentKey)
   if (existing && existing.status === 'done') {
-    // 첫 번째 요청 타임아웃 후 재시도 케이스 대응 — target 상태 재동기화
+    // 첫 번째 요청 타임아웃 후 재시도 케이스 대응 - target 상태 재동기화
     await _updateTargetStatus(existing.target_type, existing.target_id)
     return { success: true, payment: existing, idempotent: true }
   }
@@ -93,7 +93,7 @@ export const confirmPayment = async (userId, { paymentKey, orderId, amount }) =>
     return { success: true, mock: true }
   }
 
-  // 토스페이먼츠 승인 API 호출 (외부 HTTP — 트랜잭션 밖에서 먼저 수행)
+  // 토스페이먼츠 승인 API 호출 (외부 HTTP - 트랜잭션 밖에서 먼저 수행)
   let tossResponse
   try {
     const res = await fetch(TOSS_CONFIRM_URL, {
@@ -119,7 +119,7 @@ export const confirmPayment = async (userId, { paymentKey, orderId, amount }) =>
     throw Object.assign(new Error('결제 승인 중 오류가 발생했습니다'), { status: 502 })
   }
 
-  // payments + target 상태 업데이트 — 원자적으로 처리
+  // payments + target 상태 업데이트 - 원자적으로 처리
   const paidAt = tossResponse.approvedAt ? new Date(tossResponse.approvedAt) : new Date()
   let updatedPayment
   const conn = await pool.getConnection()
@@ -136,9 +136,9 @@ export const confirmPayment = async (userId, { paymentKey, orderId, amount }) =>
     updatedPayment = await paymentRepository.findPaymentById(payment.payment_id)
   } catch (err) {
     await conn.rollback()
-    // 토스는 이미 승인됐으나 DB 업데이트 실패 — 심각한 불일치이므로 상세 로그 후 throw
+    // 토스는 이미 승인됐으나 DB 업데이트 실패 - 심각한 불일치이므로 상세 로그 후 throw
     console.error(
-      '[paymentService] confirmPayment DB 트랜잭션 실패 — 토스 승인 완료 후 DB 미반영:',
+      '[paymentService] confirmPayment DB 트랜잭션 실패 - 토스 승인 완료 후 DB 미반영:',
       { paymentId: payment.payment_id, paymentKey, error: err.message },
     )
     throw err
@@ -225,9 +225,9 @@ export const getPaymentHistory = async (userId) => {
  * - TOSS_WEBHOOK_SECRET 서명 검증 후 결제 상태 동기화
  */
 /**
- * @param {string} signature   — toss-signature 헤더 값
- * @param {string} rawBody     — 서명 검증용 원본 요청 바디 문자열
- * @param {object} payload     — 파싱된 JSON 페이로드 (이벤트 처리용)
+ * @param {string} signature   - toss-signature 헤더 값
+ * @param {string} rawBody     - 서명 검증용 원본 요청 바디 문자열
+ * @param {object} payload     - 파싱된 JSON 페이로드 (이벤트 처리용)
  */
 export const handleWebhook = async (signature, rawBody, payload) => {
   const webhookSecret = process.env.TOSS_WEBHOOK_SECRET
@@ -248,11 +248,11 @@ export const handleWebhook = async (signature, rawBody, payload) => {
 
   const { eventType, data } = payload
 
-  // 빌링키 삭제 이벤트 — 암호화된 키라 직접 매칭 불가, 로그만 기록 후 수동 확인
+  // 빌링키 삭제 이벤트 - 암호화된 키라 직접 매칭 불가, 로그만 기록 후 수동 확인
   if (eventType === 'BILLING_DELETED') {
     const billingKey = payload.billingKey
     console.warn(
-      '[webhook] BILLING_DELETED 수신 — 수동 확인 필요. billingKey prefix:',
+      '[webhook] BILLING_DELETED 수신 - 수동 확인 필요. billingKey prefix:',
       billingKey ? billingKey.slice(0, 8) + '...' : 'unknown',
     )
     return { synced: true }
@@ -286,7 +286,7 @@ export const handleWebhook = async (signature, rawBody, payload) => {
       })
       await _updateTargetStatus(payment.target_type, payment.target_id).catch((e) =>
         console.error(
-          '[paymentService] 웹훅 _updateTargetStatus 실패 — 수동 확인 필요:',
+          '[paymentService] 웹훅 _updateTargetStatus 실패 - 수동 확인 필요:',
           { paymentId: payment.payment_id, targetType: payment.target_type, targetId: payment.target_id, error: e.message },
         ),
       )
@@ -305,11 +305,11 @@ export const handleWebhook = async (signature, rawBody, payload) => {
 }
 
 /**
- * target 상태 업데이트 — 결제 완료 시
+ * target 상태 업데이트 - 결제 완료 시
  * photo_orders.status='paid' 또는 wills.status='active'
  * @param {string} targetType
  * @param {string} targetId
- * @param {object} [conn] — 트랜잭션 커넥션 (없으면 pool 직접 사용)
+ * @param {object} [conn] - 트랜잭션 커넥션 (없으면 pool 직접 사용)
  */
 const _updateTargetStatus = async (targetType, targetId, conn) => {
   const executor = conn ?? pool
@@ -327,7 +327,7 @@ const _updateTargetStatus = async (targetType, targetId, conn) => {
 }
 
 /**
- * target 상태 환원 — 결제 취소 시
+ * target 상태 환원 - 결제 취소 시
  */
 const _revertTargetStatus = async (targetType, targetId) => {
   if (targetType === 'photo_order') {

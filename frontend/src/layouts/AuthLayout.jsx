@@ -42,7 +42,7 @@ export default function AuthLayout() {
 
       {/* 카드 — 모바일: 좌우 여백 최소화, 데스크톱: 중앙 박스 */}
       <div
-        className="w-full rounded-2xl p-6 sm:p-8"
+        className="w-full rounded-2xl p-8 sm:p-10"
         style={{
           maxWidth: 'min(448px, 100%)',
           backgroundColor: 'var(--color-surface)',

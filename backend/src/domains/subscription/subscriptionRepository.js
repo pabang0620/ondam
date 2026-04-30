@@ -147,7 +147,7 @@ export const updateNextBilling = async (subscriptionId, { nextBillingAt, lastBil
 }
 
 /**
- * 구독 취소 — sub_status='canceled', canceled_at, cancel_reason 업데이트
+ * 구독 취소 - sub_status='canceled', canceled_at, cancel_reason 업데이트
  */
 export const cancelSubscription = async (subscriptionId, { cancelReason }) => {
   await pool.execute(
@@ -206,7 +206,7 @@ export const updateSubscriptionBilling = async (subscriptionId, fields) => {
 }
 
 /**
- * 구독 단건 조회 (빌링키 포함) — 결제 처리용 FOR UPDATE 버전
+ * 구독 단건 조회 (빌링키 포함) - 결제 처리용 FOR UPDATE 버전
  * 트랜잭션 커넥션(conn)을 전달하면 FOR UPDATE 락이 실제로 동작함
  * @param {string} subscriptionId
  * @param {import('mysql2/promise').PoolConnection|null} conn

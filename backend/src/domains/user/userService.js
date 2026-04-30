@@ -28,7 +28,7 @@ export const getProfile = async (userId) => {
 }
 
 /**
- * 프로필 수정 — nickname, phone, profileImageUrl 중 전달된 값만 업데이트
+ * 프로필 수정 - nickname, phone, profileImageUrl 중 전달된 값만 업데이트
  */
 export const updateProfile = async (userId, { nickname, phone, profileImageUrl }) => {
   const user = await userRepository.findByUserId(userId)
@@ -57,7 +57,7 @@ export const changePassword = async (userId, { currentPassword, newPassword }) =
     throw Object.assign(new Error('사용자를 찾을 수 없습니다'), { status: 404 })
   }
 
-  // 소셜 로그인 전용 계정 — password_hash 없는 경우
+  // 소셜 로그인 전용 계정 - password_hash 없는 경우
   if (!user.password_hash) {
     throw Object.assign(new Error('소셜 로그인 계정은 비밀번호를 변경할 수 없습니다'), { status: 400 })
   }

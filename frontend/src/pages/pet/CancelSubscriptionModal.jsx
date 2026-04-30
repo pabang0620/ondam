@@ -66,7 +66,7 @@ export default function CancelSubscriptionModal({ isOpen, onClose, onConfirm, su
         style={{
           background: 'var(--color-surface)',
           borderRadius: 'var(--radius-lg)',
-          padding: 'var(--spacing-xl)',
+          padding: '24px',
           maxWidth: 400,
           width: '100%',
           display: 'flex',
@@ -96,7 +96,7 @@ export default function CancelSubscriptionModal({ isOpen, onClose, onConfirm, su
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: 'var(--spacing-sm)', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
           <button
             type="button"
             onClick={onClose}

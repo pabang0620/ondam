@@ -6,7 +6,7 @@
 .will-photo__content {
   max-width: 600px;
   margin: 0 auto;
-  padding: var(--spacing-xl) var(--spacing-md);
+  padding: 32px var(--spacing-md);
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xl);
@@ -40,7 +40,7 @@
   line-height: var(--lh-relaxed);
 }
 
-/* 업로드 드롭 영역 */
+/* 업로드 드롭 영역 — 충분한 padding으로 클릭 영역 확보 */
 .will-photo__drop-area {
   width: 100%;
   min-height: 220px;
@@ -52,6 +52,7 @@
   align-items: center;
   justify-content: center;
   gap: var(--spacing-md);
+  padding: var(--spacing-xl);
   cursor: pointer;
   color: var(--color-will);
   transition: background-color var(--transition-base), border-color var(--transition-base);
@@ -73,7 +74,7 @@
   color: var(--color-text-muted);
 }
 
-/* 미리보기 */
+/* 미리보기 — 가이드 ↔ 이미지 ↔ 상태 사이 24px 자동 보장됨(gap) */
 .will-photo__preview-wrap {
   position: relative;
   width: 100%;
@@ -181,4 +182,22 @@
   padding: 0 var(--spacing-sm);
   min-height: var(--min-touch-target);
   cursor: pointer;
+}
+
+/* ── 반응형: 모바일 (< 640px) ── */
+@media (max-width: 639px) {
+  .will-photo__content {
+    padding: var(--spacing-lg) var(--spacing-md) 32px;
+    gap: var(--spacing-lg);
+  }
+
+  /* 업로드 드롭 영역 풀너비 */
+  .will-photo__drop-area {
+    min-height: 180px;
+  }
+
+  /* 미리보기: 모바일에서 max-width 풀너비 */
+  .will-photo__preview-wrap {
+    max-width: 100%;
+  }
 }
