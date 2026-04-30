@@ -16,19 +16,7 @@ export default function MainLayout() {
         className="flex-1 w-full"
         style={{ overflowX: 'hidden' }}
       >
-        {/* 최대 너비 1200px, 수평 중앙 정렬 — 모든 페이지 콘텐츠가 중앙에 위치 */}
-        <div
-          style={{
-            maxWidth: '1200px',
-            marginLeft: 'auto',
-            marginRight: 'auto',
-            width: '100%',
-            paddingLeft: 'clamp(16px, 4vw, 32px)',
-            paddingRight: 'clamp(16px, 4vw, 32px)',
-          }}
-        >
-          <Outlet />
-        </div>
+        <Outlet />
       </main>
       <Footer />
     </div>

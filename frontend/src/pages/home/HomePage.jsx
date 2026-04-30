@@ -72,7 +72,6 @@ export default function HomePage() {
         className="relative overflow-hidden"
         style={{
           background: `linear-gradient(160deg, var(--color-primary) 0%, var(--color-primary-soft) 100%)`,
-          padding: 'clamp(56px, 10vw, 120px) clamp(16px, 5vw, 48px)',
         }}
       >
         {/* 배경 장식 — 머스터드 골드 광원 */}
@@ -85,7 +84,7 @@ export default function HomePage() {
           aria-hidden="true"
         />
 
-        <div className="relative max-w-3xl mx-auto text-center">
+        <div className="relative max-w-3xl mx-auto text-center px-4 sm:px-6 lg:px-8 py-14 sm:py-20 lg:py-28">
           {/* 서비스 뱃지 */}
           <span
             className="inline-block mb-6"
@@ -177,7 +176,8 @@ export default function HomePage() {
       </section>
 
       {/* 서비스 4종 카드 섹션 */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
+      <section className="w-full">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
         <h2
           className="text-center font-bold mb-4 sm:mb-5"
           style={{
@@ -298,14 +298,15 @@ export default function HomePage() {
             </div>
           ))}
         </div>
+      </div>
       </section>
 
       {/* 왜 온담인가 — FEATURES 섹션 */}
       <section
-        className="py-14 sm:py-20 lg:py-24"
+        className="w-full"
         style={{ backgroundColor: 'var(--color-bg-alt)' }}
       >
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-24">
           <h2
             className="text-center font-bold mb-4 sm:mb-5"
             style={{
@@ -327,7 +328,7 @@ export default function HomePage() {
           </p>
 
           {/* 모바일 1열 → 데스크톱 3열 */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-10">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-10 lg:gap-12">
             {FEATURES.map(({ icon: Icon, title, description }) => (
               <div key={title} className="flex flex-col items-center text-center gap-4">
                 <div
@@ -361,51 +362,55 @@ export default function HomePage() {
 
       {/* 하단 CTA 섹션 */}
       <section
-        className="py-16 sm:py-24 lg:py-28 text-center px-4 sm:px-6"
+        className="w-full"
         style={{ backgroundColor: 'var(--color-bg)' }}
       >
-        <h2
-          className="font-bold mb-5 sm:mb-6"
-          style={{
-            fontFamily: 'var(--font-serif)',
-            fontSize: 'clamp(22px, 4vw, var(--fs-h2))',
-            fontWeight: 700,
-            color: 'var(--color-text-primary)',
-            letterSpacing: 'var(--ls-heading-ko)',
-            wordBreak: 'keep-all',
-          }}
-        >
-          지금 시작하세요
-        </h2>
-        <p
-          style={{
-            fontSize: 'var(--fs-body)',
-            color: 'var(--color-text-secondary)',
-            maxWidth: '400px',
-            margin: '0 auto 40px',
-            lineHeight: 'var(--lh-relaxed)',
-          }}
-        >
-          소중한 기억은 지금 이 순간에도 희미해지고 있습니다.
-        </p>
-        {/* 모바일: 풀너비 / 데스크톱: 고정 너비 */}
-        <Link
-          to={ROUTES.JOIN}
-          className="flex items-center justify-center font-bold transition-opacity hover:opacity-90 mx-auto"
-          style={{
-            height: 'var(--size-button-h)',
-            width: '100%',
-            maxWidth: '320px',
-            padding: '0 40px',
-            fontSize: 'var(--fs-button)',
-            backgroundColor: 'var(--color-primary)',
-            color: 'var(--color-surface)',
-            borderRadius: 'var(--radius-pill)',
-            border: 'none',
-          }}
-        >
-          무료로 시작하기
-        </Link>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 lg:py-28 text-center">
+          <h2
+            className="font-bold mb-5 sm:mb-6"
+            style={{
+              fontFamily: 'var(--font-serif)',
+              fontSize: 'clamp(22px, 4vw, var(--fs-h2))',
+              fontWeight: 700,
+              color: 'var(--color-text-primary)',
+              letterSpacing: 'var(--ls-heading-ko)',
+              wordBreak: 'keep-all',
+            }}
+          >
+            지금 시작하세요
+          </h2>
+          <p
+            style={{
+              fontSize: 'var(--fs-body)',
+              color: 'var(--color-text-secondary)',
+              maxWidth: '400px',
+              margin: '0 auto 40px',
+              lineHeight: 'var(--lh-relaxed)',
+            }}
+          >
+            소중한 기억은 지금 이 순간에도 희미해지고 있습니다.
+          </p>
+          {/* 모바일: 풀너비 / 데스크톱: 고정 너비 — flex justify-center로 가운데 정렬 보장 */}
+          <div className="flex justify-center">
+            <Link
+              to={ROUTES.JOIN}
+              className="flex items-center justify-center font-bold transition-opacity hover:opacity-90"
+              style={{
+                height: 'var(--size-button-h)',
+                width: '100%',
+                maxWidth: '320px',
+                padding: '0 40px',
+                fontSize: 'var(--fs-button)',
+                backgroundColor: 'var(--color-primary)',
+                color: 'var(--color-surface)',
+                borderRadius: 'var(--radius-pill)',
+                border: 'none',
+              }}
+            >
+              무료로 시작하기
+            </Link>
+          </div>
+        </div>
       </section>
     </div>
   )
