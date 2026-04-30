@@ -1,6 +1,6 @@
 .will-ben-page {
   min-height: 100vh;
-  background-color: var(--color-background);
+  background-color: var(--color-bg);
 }
 
 .will-ben__content {
@@ -10,9 +10,9 @@
 }
 
 .will-ben__guide {
-  font-size: var(--font-size-base);
+  font-size: var(--fs-body);
   color: var(--color-text-secondary);
-  line-height: 1.7;
+  line-height: var(--lh-relaxed);
   margin-bottom: var(--spacing-xl);
 }
 
@@ -31,7 +31,7 @@
   gap: var(--spacing-md);
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-card);
   padding: var(--spacing-md) var(--spacing-lg);
 }
 
@@ -43,18 +43,18 @@
 }
 
 .will-ben__card-name {
-  font-size: var(--font-size-base);
+  font-size: var(--fs-body);
   font-weight: 700;
   color: var(--color-text-primary);
 }
 
 .will-ben__card-meta {
-  font-size: var(--font-size-sm);
+  font-size: var(--fs-caption);
   color: var(--color-text-secondary);
 }
 
 .will-ben__card-msg {
-  font-size: var(--font-size-sm);
+  font-size: var(--fs-caption);
   color: var(--color-text-muted);
   font-style: italic;
   margin-top: var(--spacing-xs);
@@ -70,12 +70,13 @@
   border: none;
   color: var(--color-error);
   cursor: pointer;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   flex-shrink: 0;
+  transition: background-color var(--transition-fast);
 }
 
 .will-ben__card-remove:hover {
-  background-color: #fff5f5;
+  background-color: var(--color-error-light);
 }
 
 /* 추가 토글 */
@@ -84,22 +85,22 @@
   align-items: center;
   gap: var(--spacing-sm);
   width: 100%;
-  background-color: var(--color-accent);
-  border: 2px dashed var(--color-primary-light);
-  border-radius: var(--radius-md);
+  background-color: var(--color-surface-warm);
+  border: 2px dashed var(--color-border-strong);
+  border-radius: var(--radius-sm);
   padding: 0 var(--spacing-lg);
-  font-size: var(--font-size-base);
+  font-size: var(--fs-body);
   font-weight: 600;
-  color: var(--color-primary-dark);
+  color: var(--color-will);
   cursor: pointer;
   min-height: var(--min-touch-target);
   margin-bottom: var(--spacing-md);
-  transition: background-color 0.2s;
+  transition: background-color var(--transition-base), border-color var(--transition-base);
 }
 
 .will-ben__add-toggle:hover {
-  background-color: var(--color-primary-light);
-  color: #fff;
+  background-color: var(--color-bg-alt);
+  border-color: var(--color-will);
 }
 
 .will-ben__add-toggle svg:last-child {
@@ -110,7 +111,7 @@
 .will-ben__form {
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-card);
   padding: var(--spacing-lg);
   display: flex;
   flex-direction: column;
@@ -125,57 +126,59 @@
 }
 
 .will-ben__label {
-  font-size: var(--font-size-base);
+  font-size: var(--fs-body);
   font-weight: 600;
   color: var(--color-text-primary);
 }
 
 .will-ben__input {
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   padding: 0 var(--spacing-md);
-  font-size: var(--font-size-base);
+  font-size: var(--fs-body);
   color: var(--color-text-primary);
-  background-color: var(--color-background);
-  min-height: var(--min-touch-target);
+  background-color: var(--color-bg);
+  height: var(--size-input-h);
+  min-height: var(--size-input-h);
   width: 100%;
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color var(--transition-base);
 }
 
 .will-ben__input:focus {
-  border-color: var(--color-primary);
+  border-color: var(--color-will);
 }
 
 .will-ben__textarea {
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   padding: var(--spacing-sm) var(--spacing-md);
-  font-size: var(--font-size-base);
+  font-size: var(--fs-body);
   color: var(--color-text-primary);
-  background-color: var(--color-background);
+  background-color: var(--color-bg);
   width: 100%;
   resize: vertical;
   outline: none;
   font-family: inherit;
-  transition: border-color 0.2s;
-  line-height: 1.6;
+  transition: border-color var(--transition-base);
+  line-height: var(--lh-relaxed);
 }
 
 .will-ben__textarea:focus {
-  border-color: var(--color-primary);
+  border-color: var(--color-will);
 }
 
 .will-ben__add-btn {
-  background-color: var(--color-primary);
-  color: #fff;
-  font-size: var(--font-size-base);
+  background-color: var(--color-will);
+  color: var(--color-text-on-dark);
+  font-size: var(--fs-body);
   font-weight: 700;
-  min-height: var(--min-touch-target);
+  height: var(--size-button-h);
+  min-height: var(--size-button-h);
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-pill);
   cursor: pointer;
-  transition: background-color 0.2s, opacity 0.2s;
+  transition: opacity var(--transition-base);
 }
 
 .will-ben__add-btn:disabled {
@@ -184,22 +187,23 @@
 }
 
 .will-ben__add-btn:not(:disabled):hover {
-  background-color: var(--color-primary-dark);
+  opacity: 0.88;
 }
 
 /* 다음 버튼 */
 .will-ben__next {
   width: 100%;
-  background-color: var(--color-primary);
-  color: #fff;
-  font-size: var(--font-size-lg);
+  background-color: var(--color-will);
+  color: var(--color-text-on-dark);
+  font-size: var(--fs-button);
   font-weight: 700;
-  min-height: var(--min-touch-target);
+  height: var(--size-button-h);
+  min-height: var(--size-button-h);
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-pill);
   cursor: pointer;
   margin-top: var(--spacing-lg);
-  transition: background-color 0.2s, opacity 0.2s;
+  transition: opacity var(--transition-base);
 }
 
 .will-ben__next:disabled {
@@ -208,5 +212,5 @@
 }
 
 .will-ben__next:not(:disabled):hover {
-  background-color: var(--color-primary-dark);
+  opacity: 0.88;
 }

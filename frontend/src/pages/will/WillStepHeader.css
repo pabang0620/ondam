@@ -18,14 +18,15 @@
   min-height: var(--min-touch-target);
   background: none;
   border: none;
-  color: var(--color-text-primary);
+  color: var(--color-will);
   cursor: pointer;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   flex-shrink: 0;
+  transition: background-color var(--transition-fast);
 }
 
 .will-step-header__back:hover {
-  background-color: var(--color-accent);
+  background-color: var(--color-bg-alt);
 }
 
 .will-step-header__info {
@@ -35,14 +36,16 @@
 }
 
 .will-step-header__step {
-  font-size: var(--font-size-sm);
+  font-size: var(--fs-caption);
   color: var(--color-text-muted);
 }
 
 .will-step-header__title {
-  font-size: var(--font-size-base);
+  font-family: var(--font-serif);
+  font-size: var(--fs-body);
   font-weight: 700;
-  color: var(--color-text-primary);
+  color: var(--color-will);
+  letter-spacing: var(--ls-heading-ko);
 }
 
 .will-step-header__progress {
@@ -54,15 +57,17 @@
 .will-step-header__dot {
   width: 8px;
   height: 8px;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-pill);
   background-color: var(--color-border);
-  transition: background-color 0.2s;
+  transition: background-color var(--transition-base), width var(--transition-base);
 }
 
+/* 완료 단계 — warm-accent */
 .will-step-header__dot.is-done {
-  background-color: var(--color-primary-light);
+  background-color: var(--color-warm-accent);
 }
 
+/* 현재 단계 — 차콜 (진행 중 강조) */
 .will-step-header__dot.is-active {
   background-color: var(--color-primary);
   width: 20px;

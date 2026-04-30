@@ -1,6 +1,6 @@
 .will-proc-page {
   min-height: 100vh;
-  background: linear-gradient(160deg, var(--color-primary-dark) 0%, var(--color-primary) 100%);
+  background: linear-gradient(160deg, #1A1715 0%, var(--color-will) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -11,7 +11,7 @@
   max-width: 480px;
   width: 100%;
   text-align: center;
-  color: var(--color-surface);
+  color: var(--color-text-on-dark);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -30,9 +30,9 @@
 .will-proc__spinner {
   width: 64px;
   height: 64px;
-  border-radius: var(--radius-full);
-  border: 5px solid rgba(255, 255, 255, 0.3);
-  border-top-color: var(--color-gold);
+  border-radius: var(--radius-pill);
+  border: 5px solid rgba(245, 239, 230, 0.25);
+  border-top-color: var(--color-warm-accent);
   animation: spin 1s linear infinite;
 }
 
@@ -42,14 +42,17 @@
 
 /* 제목 */
 .will-proc__title {
-  font-size: var(--font-size-xl);
-  font-weight: 800;
+  font-family: var(--font-serif);
+  font-size: var(--fs-h2);
+  font-weight: 700;
   line-height: 1.4;
+  color: var(--color-text-on-dark);
+  letter-spacing: var(--ls-heading-ko);
 }
 
 .will-proc__sub {
-  font-size: var(--font-size-base);
-  color: rgba(255, 255, 255, 0.75);
+  font-size: var(--fs-body);
+  color: rgba(245, 239, 230, 0.72);
   margin-top: calc(-1 * var(--spacing-md));
 }
 
@@ -67,28 +70,28 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-md);
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-md);
+  background-color: rgba(245, 239, 230, 0.08);
+  border-radius: var(--radius-sm);
   padding: var(--spacing-md) var(--spacing-lg);
-  opacity: 0.55;
-  transition: opacity 0.3s, background-color 0.3s;
+  opacity: 0.5;
+  transition: opacity var(--transition-base), background-color var(--transition-base);
 }
 
 .will-proc__stage.is-done {
   opacity: 1;
-  background-color: rgba(255, 255, 255, 0.15);
+  background-color: rgba(201, 162, 75, 0.15);
 }
 
 .will-proc__stage.is-active {
   opacity: 1;
-  background-color: rgba(255, 255, 255, 0.22);
+  background-color: rgba(245, 239, 230, 0.18);
 }
 
 .will-proc__stage-icon {
   width: 36px;
   height: 36px;
-  border-radius: var(--radius-full);
-  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-pill);
+  background-color: rgba(245, 239, 230, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -96,8 +99,9 @@
 }
 
 .will-proc__stage-label {
-  font-size: var(--font-size-base);
+  font-size: var(--fs-body);
   font-weight: 600;
+  color: var(--color-text-on-dark);
 }
 
 /* 진행 바 */
@@ -112,35 +116,35 @@
 .will-proc__progress-bar {
   flex: 1;
   height: 8px;
-  background-color: rgba(255, 255, 255, 0.2);
-  border-radius: var(--radius-full);
+  background-color: rgba(245, 239, 230, 0.18);
+  border-radius: var(--radius-pill);
   overflow: hidden;
 }
 
 .will-proc__progress-fill {
   height: 100%;
-  background-color: var(--color-gold);
-  border-radius: var(--radius-full);
+  background-color: var(--color-warm-accent);
+  border-radius: var(--radius-pill);
   transition: width 0.5s ease;
 }
 
 .will-proc__progress-pct {
-  font-size: var(--font-size-base);
+  font-size: var(--fs-body);
   font-weight: 700;
-  color: var(--color-gold);
+  color: var(--color-warm-accent);
   min-width: 40px;
   text-align: right;
 }
 
 /* 에러 */
 .will-proc__error {
-  font-size: var(--font-size-sm);
+  font-size: var(--fs-caption);
   color: var(--color-error-muted);
 }
 
 /* 안내 */
 .will-proc__note {
-  font-size: var(--font-size-sm);
-  color: rgba(255, 255, 255, 0.65);
-  line-height: 1.7;
+  font-size: var(--fs-caption);
+  color: rgba(245, 239, 230, 0.6);
+  line-height: var(--lh-relaxed);
 }

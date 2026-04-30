@@ -1,6 +1,6 @@
 .will-event-page {
   min-height: 100vh;
-  background-color: var(--color-background);
+  background-color: var(--color-bg);
 }
 
 .will-event__content {
@@ -13,15 +13,17 @@
 }
 
 .will-event__title {
-  font-size: var(--font-size-2xl);
-  font-weight: 800;
-  color: var(--color-text-primary);
+  font-family: var(--font-serif);
+  font-size: var(--fs-h1);
+  font-weight: 700;
+  color: var(--color-will);
+  letter-spacing: var(--ls-heading-ko);
 }
 
 .will-event__sub {
-  font-size: var(--font-size-base);
+  font-size: var(--fs-body);
   color: var(--color-text-secondary);
-  line-height: 1.6;
+  line-height: var(--lh-relaxed);
   margin-top: calc(-1 * var(--spacing-md));
 }
 
@@ -33,7 +35,7 @@
 }
 
 .will-event__label {
-  font-size: var(--font-size-base);
+  font-size: var(--fs-body);
   font-weight: 700;
   color: var(--color-text-primary);
   display: flex;
@@ -61,24 +63,24 @@
   min-width: 100px;
   background-color: var(--color-surface);
   border: 2px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-card);
   padding: var(--spacing-md);
-  font-size: var(--font-size-base);
+  font-size: var(--fs-body);
   font-weight: 600;
   color: var(--color-text-secondary);
   cursor: pointer;
   min-height: 80px;
-  transition: border-color 0.2s, background-color 0.2s, color 0.2s;
+  transition: border-color var(--transition-base), background-color var(--transition-base), color var(--transition-base);
 }
 
 .will-event__type-btn:hover {
-  border-color: var(--color-primary-light);
+  border-color: var(--color-border-strong);
 }
 
 .will-event__type-btn.is-active {
-  border-color: var(--color-primary);
-  background-color: #fdf8f2;
-  color: var(--color-primary-dark);
+  border-color: var(--color-will);
+  background-color: var(--color-surface-warm);
+  color: var(--color-will);
 }
 
 .will-event__type-btn span {
@@ -88,28 +90,29 @@
 /* 선택 */
 .will-event__select {
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   padding: 0 var(--spacing-md);
-  font-size: var(--font-size-base);
+  font-size: var(--fs-body);
   color: var(--color-text-primary);
   background-color: var(--color-surface);
-  min-height: var(--min-touch-target);
+  height: var(--size-input-h);
+  min-height: var(--size-input-h);
   width: 100%;
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color var(--transition-base);
   cursor: pointer;
 }
 
 .will-event__select:focus {
-  border-color: var(--color-primary);
+  border-color: var(--color-will);
 }
 
 /* 텍스트에어리어 */
 .will-event__textarea {
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   padding: var(--spacing-md);
-  font-size: var(--font-size-lg);
+  font-size: var(--fs-body-lg);
   color: var(--color-text-primary);
   background-color: var(--color-surface);
   width: 100%;
@@ -117,16 +120,16 @@
   outline: none;
   font-family: inherit;
   line-height: 1.8;
-  transition: border-color 0.2s;
+  transition: border-color var(--transition-base);
 }
 
 .will-event__textarea:focus {
-  border-color: var(--color-primary);
+  border-color: var(--color-will);
 }
 
 .will-event__char-count {
   align-self: flex-end;
-  font-size: var(--font-size-sm);
+  font-size: var(--fs-caption);
   color: var(--color-text-muted);
 }
 
@@ -135,30 +138,31 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  background-color: #fff5f5;
+  background-color: var(--color-error-light);
   border: 1px solid var(--color-error);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   padding: var(--spacing-sm) var(--spacing-md);
   color: var(--color-error);
-  font-size: var(--font-size-base);
+  font-size: var(--fs-body);
 }
 
-/* 제출 버튼 */
+/* 제출 버튼 — warm-accent 골드 */
 .will-event__submit {
   width: 100%;
-  background-color: var(--color-gold);
+  background-color: var(--color-warm-accent);
   color: var(--color-primary-dark);
-  font-size: var(--font-size-lg);
+  font-size: var(--fs-button);
   font-weight: 800;
-  min-height: 60px;
+  height: var(--size-button-h);
+  min-height: var(--size-button-h);
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-pill);
   cursor: pointer;
-  transition: opacity 0.2s, transform 0.1s;
+  transition: opacity var(--transition-base), transform var(--transition-fast);
 }
 
 .will-event__submit:hover:not(:disabled) {
-  opacity: 0.9;
+  opacity: 0.88;
   transform: translateY(-1px);
 }
 

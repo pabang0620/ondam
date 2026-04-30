@@ -126,7 +126,7 @@ export default function WillPage() {
             </ul>
             <div className="will-pricing__subscription">
               <Lock size={14} aria-hidden="true" />
-              장기 보관 구독: <strong>1,900원/월</strong> — 영상이 안전하게 보관됩니다
+              장기 보관 구독: <strong>1,900원/월</strong> - 영상이 안전하게 보관됩니다
             </div>
             <button
               className="will-pricing__cta"

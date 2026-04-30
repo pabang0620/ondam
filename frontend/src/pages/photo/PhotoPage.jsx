@@ -37,7 +37,7 @@ function FeatureCard({ icon: Icon, title, desc }) {
       style={{
         background: 'var(--color-surface)',
         border: '1px solid var(--color-border)',
-        borderRadius: 'var(--radius-lg)',
+        borderRadius: 'var(--radius-card)',
         padding: 'var(--spacing-lg)',
         display: 'flex',
         flexDirection: 'column',
@@ -49,16 +49,16 @@ function FeatureCard({ icon: Icon, title, desc }) {
           width: 48,
           height: 48,
           borderRadius: 'var(--radius-md)',
-          background: 'var(--color-accent)',
+          background: 'var(--color-bg-alt)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
         }}
       >
-        <Icon size={24} color="var(--color-primary)" />
+        <Icon size={24} color="var(--color-photo)" />
       </div>
-      <p style={{ fontWeight: 700, fontSize: 'var(--font-size-lg)' }}>{title}</p>
-      <p style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-base)', lineHeight: 1.6 }}>
+      <p style={{ fontWeight: 700, fontSize: 'var(--fs-body-lg)', color: 'var(--color-text-primary)', letterSpacing: 'var(--ls-heading-ko)' }}>{title}</p>
+      <p style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--fs-body)', lineHeight: 'var(--lh-relaxed)' }}>
         {desc}
       </p>
     </div>
@@ -72,32 +72,32 @@ function PhotoTypeCard({ type, label, desc, onClick }) {
       style={{
         background: 'var(--color-surface)',
         border: '2px solid var(--color-border)',
-        borderRadius: 'var(--radius-lg)',
+        borderRadius: 'var(--radius-card)',
         padding: 'var(--spacing-lg)',
         cursor: 'pointer',
         textAlign: 'left',
-        minHeight: 'var(--min-touch-target)',
+        minHeight: 'var(--size-button-h)',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
         gap: 'var(--spacing-md)',
-        transition: 'border-color 0.2s, background 0.2s',
+        transition: 'border-color var(--transition-base), background-color var(--transition-base)',
         width: '100%',
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = 'var(--color-primary)'
-        e.currentTarget.style.background = 'var(--color-accent)'
+        e.currentTarget.style.borderColor = 'var(--color-photo)'
+        e.currentTarget.style.backgroundColor = 'var(--color-bg-alt)'
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.borderColor = 'var(--color-border)'
-        e.currentTarget.style.background = 'var(--color-surface)'
+        e.currentTarget.style.backgroundColor = 'var(--color-surface)'
       }}
     >
       <div>
-        <p style={{ fontWeight: 700, fontSize: 'var(--font-size-lg)', marginBottom: 4 }}>{label}</p>
-        <p style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-base)' }}>{desc}</p>
+        <p style={{ fontWeight: 700, fontSize: 'var(--fs-body-lg)', marginBottom: 4, color: 'var(--color-text-primary)', letterSpacing: 'var(--ls-heading-ko)' }}>{label}</p>
+        <p style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--fs-body)' }}>{desc}</p>
       </div>
-      <ArrowRight size={20} color="var(--color-primary)" style={{ flexShrink: 0 }} />
+      <ArrowRight size={20} color="var(--color-photo)" style={{ flexShrink: 0 }} />
     </button>
   )
 }
@@ -122,26 +122,28 @@ function PhotoPage() {
         display: 'flex',
         flexDirection: 'column',
         gap: 'var(--spacing-2xl)',
+        background: 'var(--color-bg)',
       }}
     >
       {/* Hero */}
       <section style={{ textAlign: 'center', padding: 'var(--spacing-xl) 0' }}>
-        <p
+        <h1
           style={{
-            fontSize: 'var(--font-size-2xl)',
+            fontSize: 'var(--fs-h1)',
             fontWeight: 800,
-            color: 'var(--color-primary-dark)',
-            lineHeight: 1.4,
+            color: 'var(--color-photo)',
+            lineHeight: 1.35,
             marginBottom: 'var(--spacing-md)',
+            letterSpacing: 'var(--ls-heading-ko)',
           }}
         >
           AI가 되살리는<br />소중한 순간
-        </p>
+        </h1>
         <p
           style={{
-            fontSize: 'var(--font-size-lg)',
+            fontSize: 'var(--fs-body-lg)',
             color: 'var(--color-text-secondary)',
-            lineHeight: 1.7,
+            lineHeight: 'var(--lh-relaxed)',
             maxWidth: 480,
             margin: '0 auto',
           }}
@@ -153,15 +155,17 @@ function PhotoPage() {
 
       {/* 기능 카드 */}
       <section>
-        <p
+        <h2
           style={{
-            fontSize: 'var(--font-size-xl)',
+            fontSize: 'var(--fs-h2)',
             fontWeight: 700,
             marginBottom: 'var(--spacing-lg)',
+            color: 'var(--color-text-primary)',
+            letterSpacing: 'var(--ls-heading-ko)',
           }}
         >
           제공 기능
-        </p>
+        </h2>
         <div
           style={{
             display: 'grid',
@@ -177,20 +181,23 @@ function PhotoPage() {
 
       {/* 사진 타입 선택 */}
       <section>
-        <p
+        <h2
           style={{
-            fontSize: 'var(--font-size-xl)',
+            fontSize: 'var(--fs-h2)',
             fontWeight: 700,
             marginBottom: 'var(--spacing-sm)',
+            color: 'var(--color-text-primary)',
+            letterSpacing: 'var(--ls-heading-ko)',
           }}
         >
           어떤 사진이 필요하신가요?
-        </p>
+        </h2>
         <p
           style={{
-            fontSize: 'var(--font-size-base)',
+            fontSize: 'var(--fs-body)',
             color: 'var(--color-text-secondary)',
             marginBottom: 'var(--spacing-lg)',
+            lineHeight: 'var(--lh-relaxed)',
           }}
         >
           사진 종류를 선택하시면 바로 시작할 수 있습니다.
@@ -205,21 +212,23 @@ function PhotoPage() {
       {/* 가격 + 시작 버튼 */}
       <section
         style={{
-          background: 'var(--color-accent)',
+          background: 'var(--color-surface-warm)',
+          border: '1px solid var(--color-border)',
           borderRadius: 'var(--radius-lg)',
           padding: 'var(--spacing-xl)',
           textAlign: 'center',
         }}
       >
-        <p style={{ fontSize: 'var(--font-size-base)', color: 'var(--color-text-secondary)', marginBottom: 4 }}>
+        <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', marginBottom: 4 }}>
           1세트 가격
         </p>
         <p
           style={{
             fontSize: 36,
             fontWeight: 800,
-            color: 'var(--color-primary-dark)',
+            color: 'var(--color-photo)',
             marginBottom: 'var(--spacing-lg)',
+            letterSpacing: 'var(--ls-heading-ko)',
           }}
         >
           9,900원
@@ -227,19 +236,23 @@ function PhotoPage() {
         <button
           onClick={handleStart}
           style={{
-            background: 'var(--color-primary)',
-            color: '#fff',
+            background: 'var(--color-photo)',
+            color: 'var(--color-text-on-dark)',
             border: 'none',
-            borderRadius: 'var(--radius-full)',
+            borderRadius: 'var(--radius-pill)',
             padding: '0 var(--spacing-2xl)',
-            minHeight: 'var(--min-touch-target)',
-            fontSize: 'var(--font-size-lg)',
+            height: 'var(--size-button-h)',
+            minHeight: 'var(--size-button-h)',
+            fontSize: 'var(--fs-button)',
             fontWeight: 700,
             cursor: 'pointer',
             display: 'inline-flex',
             alignItems: 'center',
             gap: 'var(--spacing-sm)',
+            transition: 'opacity var(--transition-base)',
           }}
+          onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.88' }}
+          onMouseLeave={(e) => { e.currentTarget.style.opacity = '1' }}
         >
           지금 시작하기 <ArrowRight size={20} />
         </button>

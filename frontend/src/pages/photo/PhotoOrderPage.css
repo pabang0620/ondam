@@ -24,7 +24,7 @@
     max-width: 100%;
   }
 
-  /* 사진 타입 탭 — 모바일에서 버튼 세로 스택 */
+  /* 사진 타입 탭 - 모바일에서 버튼 세로 스택 */
   .photo-order-page .photo-type-tabs {
     flex-direction: column;
   }

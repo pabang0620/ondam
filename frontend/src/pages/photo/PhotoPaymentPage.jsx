@@ -32,13 +32,14 @@ function PhotoPaymentPage() {
         display: 'flex',
         flexDirection: 'column',
         gap: 'var(--spacing-xl)',
+        background: 'var(--color-bg)',
       }}
     >
       <header>
-        <p style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 800, color: 'var(--color-primary-dark)', marginBottom: 'var(--spacing-sm)' }}>
+        <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 800, color: 'var(--color-photo)', marginBottom: 'var(--spacing-sm)', letterSpacing: 'var(--ls-heading-ko)' }}>
           결제
-        </p>
-        <p style={{ fontSize: 'var(--font-size-base)', color: 'var(--color-text-secondary)' }}>
+        </h1>
+        <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>
           주문 내용을 확인하고 결제를 진행해 주세요.
         </p>
       </header>
@@ -48,14 +49,14 @@ function PhotoPaymentPage() {
         style={{
           background: 'var(--color-surface)',
           border: '1px solid var(--color-border)',
-          borderRadius: 'var(--radius-lg)',
+          borderRadius: 'var(--radius-card)',
           padding: 'var(--spacing-lg)',
           display: 'flex',
           flexDirection: 'column',
           gap: 'var(--spacing-md)',
         }}
       >
-        <p style={{ fontWeight: 700, fontSize: 'var(--font-size-lg)' }}>주문 요약</p>
+        <p style={{ fontWeight: 700, fontSize: 'var(--fs-body-lg)', color: 'var(--color-text-primary)' }}>주문 요약</p>
 
         <div
           style={{
@@ -66,13 +67,13 @@ function PhotoPaymentPage() {
             borderBottom: '1px solid var(--color-border)',
           }}
         >
-          <span style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-base)' }}>주문 번호</span>
-          <span style={{ fontSize: 'var(--font-size-base)', fontFamily: 'monospace' }}>{orderId}</span>
+          <span style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--fs-body)' }}>주문 번호</span>
+          <span style={{ fontSize: 'var(--fs-body)', fontFamily: 'monospace' }}>{orderId}</span>
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-base)' }}>서비스</span>
-          <span style={{ fontSize: 'var(--font-size-base)', fontWeight: 600 }}>AI 사진관 1세트</span>
+          <span style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--fs-body)' }}>서비스</span>
+          <span style={{ fontSize: 'var(--fs-body)', fontWeight: 600, color: 'var(--color-text-primary)' }}>AI 사진관 1세트</span>
         </div>
 
         <div
@@ -81,11 +82,11 @@ function PhotoPaymentPage() {
             justifyContent: 'space-between',
             alignItems: 'center',
             paddingTop: 'var(--spacing-md)',
-            borderTop: '2px solid var(--color-border)',
+            borderTop: '2px solid var(--color-border-strong)',
           }}
         >
-          <span style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700 }}>결제 금액</span>
-          <span style={{ fontSize: 28, fontWeight: 800, color: 'var(--color-primary-dark)' }}>
+          <span style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 700, color: 'var(--color-text-primary)' }}>결제 금액</span>
+          <span style={{ fontSize: 28, fontWeight: 800, color: 'var(--color-photo)' }}>
             {formattedAmount}원
           </span>
         </div>
@@ -95,17 +96,17 @@ function PhotoPaymentPage() {
       <div
         role="status"
         style={{
-          background: '#fffbeb',
-          border: '1px solid #f6d860',
-          borderRadius: 'var(--radius-md)',
+          background: 'var(--color-surface-warm)',
+          border: '1px solid var(--color-warm-accent-soft)',
+          borderRadius: 'var(--radius-sm)',
           padding: 'var(--spacing-md)',
           display: 'flex',
           gap: 'var(--spacing-sm)',
           alignItems: 'flex-start',
         }}
       >
-        <Info size={18} color="#b45309" style={{ flexShrink: 0, marginTop: 2 }} />
-        <p style={{ fontSize: 'var(--font-size-sm)', color: '#92400e', lineHeight: 1.6 }}>
+        <Info size={18} color="var(--color-warm-accent)" style={{ flexShrink: 0, marginTop: 2 }} />
+        <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>
           현재 결제는 테스트 모드로 동작합니다. 실제 금액이 청구되지 않습니다.
           토스페이먼츠 정식 연동 전까지 모의 결제로 진행됩니다.
         </p>
@@ -117,10 +118,10 @@ function PhotoPaymentPage() {
           role="alert"
           style={{
             color: 'var(--color-error)',
-            fontSize: 'var(--font-size-base)',
-            background: '#fff5f5',
-            border: '1px solid #fed7d7',
-            borderRadius: 'var(--radius-md)',
+            fontSize: 'var(--fs-body)',
+            background: 'var(--color-error-light)',
+            border: '1px solid var(--color-error)',
+            borderRadius: 'var(--radius-sm)',
             padding: 'var(--spacing-md)',
           }}
         >
@@ -136,19 +137,20 @@ function PhotoPaymentPage() {
         aria-busy={isPaying}
         style={{
           width: '100%',
-          minHeight: 'var(--min-touch-target)',
-          background: isPaying ? 'var(--color-border)' : 'var(--color-primary)',
-          color: isPaying ? 'var(--color-text-muted)' : '#fff',
+          height: 'var(--size-button-h)',
+          minHeight: 'var(--size-button-h)',
+          background: isPaying ? 'var(--color-border)' : 'var(--color-photo)',
+          color: isPaying ? 'var(--color-text-muted)' : 'var(--color-text-on-dark)',
           border: 'none',
-          borderRadius: 'var(--radius-full)',
-          fontSize: 'var(--font-size-lg)',
+          borderRadius: 'var(--radius-pill)',
+          fontSize: 'var(--fs-button)',
           fontWeight: 700,
           cursor: isPaying ? 'not-allowed' : 'pointer',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           gap: 'var(--spacing-sm)',
-          transition: 'background 0.2s',
+          transition: 'background-color var(--transition-base)',
         }}
       >
         {isPaying ? (

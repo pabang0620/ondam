@@ -6,10 +6,12 @@ function PhotoImage({ src, alt, label }) {
     <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
       <p
         style={{
-          fontSize: 'var(--font-size-base)',
-          fontWeight: 700,
-          color: 'var(--color-text-secondary)',
+          fontSize: 'var(--fs-caption)',
+          fontWeight: 600,
+          color: 'var(--color-text-muted)',
           textAlign: 'center',
+          textTransform: 'uppercase',
+          letterSpacing: '0.06em',
         }}
       >
         {label}
@@ -26,9 +28,9 @@ function PhotoImage({ src, alt, label }) {
           width: '100%',
           aspectRatio: '3 / 4',
           objectFit: 'cover',
-          borderRadius: 'var(--radius-lg)',
+          borderRadius: 'var(--radius-card)',
           border: '1px solid var(--color-border)',
-          background: '#f5f5f5',
+          background: 'var(--color-bg-alt)',
         }}
       />
     </div>
@@ -102,38 +104,39 @@ function PhotoResultPage() {
         display: 'flex',
         flexDirection: 'column',
         gap: 'var(--spacing-xl)',
+        background: 'var(--color-bg)',
       }}
     >
       <header>
-        <p style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 800, color: 'var(--color-primary-dark)', marginBottom: 'var(--spacing-sm)' }}>
+        <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 800, color: 'var(--color-photo)', marginBottom: 'var(--spacing-sm)', letterSpacing: 'var(--ls-heading-ko)' }}>
           처리 완료
-        </p>
-        <p style={{ fontSize: 'var(--font-size-base)', color: 'var(--color-text-secondary)' }}>
+        </h1>
+        <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>
           AI가 사진을 성공적으로 복원했습니다. 결과물을 확인해 보세요.
         </p>
       </header>
 
       {/* Before / After */}
       <section aria-label="원본과 보정본 비교">
-        <p style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700, marginBottom: 'var(--spacing-md)' }}>
+        <h2 style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 700, marginBottom: 'var(--spacing-md)', color: 'var(--color-text-primary)' }}>
           Before / After
-        </p>
+        </h2>
         <div style={{ display: 'flex', gap: 'var(--spacing-md)' }}>
           {rawFile ? (
-            <PhotoImage src={rawFile.fileUrl} alt="원본 사진" label="원본" />
+            <PhotoImage src={rawFile.fileUrl} alt="원본 사진" label="Before" />
           ) : (
             <div
               style={{
                 flex: 1,
                 aspectRatio: '3 / 4',
-                background: 'var(--color-background)',
-                border: '1px dashed var(--color-border)',
-                borderRadius: 'var(--radius-lg)',
+                background: 'var(--color-bg-alt)',
+                border: '1px dashed var(--color-border-strong)',
+                borderRadius: 'var(--radius-card)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: 'var(--color-text-muted)',
-                fontSize: 'var(--font-size-sm)',
+                fontSize: 'var(--fs-caption)',
               }}
             >
               원본 없음
@@ -141,20 +144,20 @@ function PhotoResultPage() {
           )}
 
           {enhancedFile ? (
-            <PhotoImage src={enhancedFile.fileUrl} alt="AI 보정된 사진" label="보정본" />
+            <PhotoImage src={enhancedFile.fileUrl} alt="AI 보정된 사진" label="After" />
           ) : (
             <div
               style={{
                 flex: 1,
                 aspectRatio: '3 / 4',
-                background: 'var(--color-background)',
-                border: '1px dashed var(--color-border)',
-                borderRadius: 'var(--radius-lg)',
+                background: 'var(--color-bg-alt)',
+                border: '1px dashed var(--color-border-strong)',
+                borderRadius: 'var(--radius-card)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: 'var(--color-text-muted)',
-                fontSize: 'var(--font-size-sm)',
+                fontSize: 'var(--fs-caption)',
               }}
             >
               보정본 없음
@@ -177,19 +180,23 @@ function PhotoResultPage() {
             onClick={() => handleDownload(enhancedFile.fileUrl, 'ondam_enhanced.jpg')}
             style={{
               width: '100%',
-              minHeight: 'var(--min-touch-target)',
-              background: 'var(--color-primary)',
-              color: '#fff',
+              height: 'var(--size-button-h)',
+              minHeight: 'var(--size-button-h)',
+              background: 'var(--color-photo)',
+              color: 'var(--color-text-on-dark)',
               border: 'none',
-              borderRadius: 'var(--radius-full)',
-              fontSize: 'var(--font-size-lg)',
+              borderRadius: 'var(--radius-pill)',
+              fontSize: 'var(--fs-button)',
               fontWeight: 700,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: 'var(--spacing-sm)',
+              transition: 'opacity var(--transition-base)',
             }}
+            onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.88' }}
+            onMouseLeave={(e) => { e.currentTarget.style.opacity = '1' }}
           >
             <Download size={22} />
             보정본 다운로드
@@ -201,18 +208,20 @@ function PhotoResultPage() {
             onClick={() => handleDownload(rawFile.fileUrl, 'ondam_original.jpg')}
             style={{
               width: '100%',
-              minHeight: 'var(--min-touch-target)',
+              height: 'var(--size-button-h)',
+              minHeight: 'var(--size-button-h)',
               background: 'var(--color-surface)',
-              color: 'var(--color-primary)',
-              border: '2px solid var(--color-primary)',
-              borderRadius: 'var(--radius-full)',
-              fontSize: 'var(--font-size-base)',
+              color: 'var(--color-photo)',
+              border: '2px solid var(--color-photo)',
+              borderRadius: 'var(--radius-pill)',
+              fontSize: 'var(--fs-body)',
               fontWeight: 600,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: 'var(--spacing-sm)',
+              transition: 'background-color var(--transition-base)',
             }}
           >
             <Download size={18} />
@@ -225,12 +234,13 @@ function PhotoResultPage() {
           onClick={handleShare}
           style={{
             width: '100%',
-            minHeight: 'var(--min-touch-target)',
+            height: 'var(--size-button-h)',
+            minHeight: 'var(--size-button-h)',
             background: 'var(--color-surface)',
             color: 'var(--color-text-primary)',
             border: '1px solid var(--color-border)',
-            borderRadius: 'var(--radius-full)',
-            fontSize: 'var(--font-size-base)',
+            borderRadius: 'var(--radius-pill)',
+            fontSize: 'var(--fs-body)',
             fontWeight: 600,
             cursor: 'pointer',
             display: 'flex',
@@ -255,8 +265,8 @@ function PhotoResultPage() {
             background: 'transparent',
             color: isRetrying ? 'var(--color-text-muted)' : 'var(--color-text-secondary)',
             border: 'none',
-            borderRadius: 'var(--radius-full)',
-            fontSize: 'var(--font-size-base)',
+            borderRadius: 'var(--radius-pill)',
+            fontSize: 'var(--fs-body)',
             cursor: isRetrying ? 'not-allowed' : 'pointer',
             display: 'flex',
             alignItems: 'center',

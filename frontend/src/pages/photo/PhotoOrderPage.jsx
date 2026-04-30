@@ -51,17 +51,17 @@ function PhotoOrderPage() {
   return (
     <main className="photo-order-page">
       <header>
-        <p style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 800, color: 'var(--color-primary-dark)', marginBottom: 'var(--spacing-sm)' }}>
+        <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 800, color: 'var(--color-photo)', marginBottom: 'var(--spacing-sm)', letterSpacing: 'var(--ls-heading-ko)' }}>
           AI 사진관 주문
-        </p>
-        <p style={{ fontSize: 'var(--font-size-base)', color: 'var(--color-text-secondary)' }}>
+        </h1>
+        <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>
           사진 종류를 선택하고 원본 사진을 업로드해 주세요.
         </p>
       </header>
 
       {/* 사진 타입 탭 */}
       <section>
-        <p style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700, marginBottom: 'var(--spacing-md)' }}>
+        <p style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 700, marginBottom: 'var(--spacing-md)', color: 'var(--color-text-primary)' }}>
           1. 사진 종류 선택
         </p>
         <div className="photo-type-tabs" style={{ display: 'flex', gap: 'var(--spacing-sm)', flexWrap: 'wrap' }}>
@@ -72,16 +72,17 @@ function PhotoOrderPage() {
                 key={type}
                 onClick={() => handleTypeSelect(type)}
                 style={{
-                  minHeight: 'var(--min-touch-target)',
+                  height: 'var(--size-button-h)',
+                  minHeight: 'var(--size-button-h)',
                   padding: '0 var(--spacing-lg)',
-                  borderRadius: 'var(--radius-full)',
-                  border: `2px solid ${isSelected ? 'var(--color-primary)' : 'var(--color-border)'}`,
-                  background: isSelected ? 'var(--color-primary)' : 'var(--color-surface)',
-                  color: isSelected ? '#fff' : 'var(--color-text-primary)',
-                  fontSize: 'var(--font-size-base)',
+                  borderRadius: 'var(--radius-pill)',
+                  border: `2px solid ${isSelected ? 'var(--color-photo)' : 'var(--color-border)'}`,
+                  background: isSelected ? 'var(--color-photo)' : 'var(--color-surface)',
+                  color: isSelected ? 'var(--color-text-on-dark)' : 'var(--color-text-primary)',
+                  fontSize: 'var(--fs-button)',
                   fontWeight: isSelected ? 700 : 400,
                   cursor: 'pointer',
-                  transition: 'all 0.2s',
+                  transition: 'border-color var(--transition-base), background-color var(--transition-base), color var(--transition-base)',
                 }}
               >
                 {label}
@@ -93,7 +94,7 @@ function PhotoOrderPage() {
 
       {/* 파일 업로드 */}
       <section>
-        <p style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700, marginBottom: 'var(--spacing-md)' }}>
+        <p style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 700, marginBottom: 'var(--spacing-md)', color: 'var(--color-text-primary)' }}>
           2. 사진 업로드
         </p>
 
@@ -118,9 +119,9 @@ function PhotoOrderPage() {
                 width: '100%',
                 maxHeight: 360,
                 objectFit: 'contain',
-                borderRadius: 'var(--radius-lg)',
-                border: '2px solid var(--color-border)',
-                background: '#f5f5f5',
+                borderRadius: 'var(--radius-card)',
+                border: '1px solid var(--color-border)',
+                background: 'var(--color-bg-alt)',
               }}
             />
             {isUploading && (
@@ -173,9 +174,9 @@ function PhotoOrderPage() {
             style={{
               width: '100%',
               minHeight: 200,
-              border: '2px dashed var(--color-border)',
-              borderRadius: 'var(--radius-lg)',
-              background: 'var(--color-background)',
+              border: '2px dashed var(--color-border-strong)',
+              borderRadius: 'var(--radius-card)',
+              background: 'var(--color-bg)',
               cursor: 'pointer',
               display: 'flex',
               flexDirection: 'column',
@@ -183,24 +184,24 @@ function PhotoOrderPage() {
               justifyContent: 'center',
               gap: 'var(--spacing-sm)',
               color: 'var(--color-text-muted)',
-              fontSize: 'var(--font-size-base)',
-              transition: 'border-color 0.2s, background 0.2s',
+              fontSize: 'var(--fs-body)',
+              transition: 'border-color var(--transition-base), background-color var(--transition-base)',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = 'var(--color-primary)'
-              e.currentTarget.style.background = 'var(--color-accent)'
+              e.currentTarget.style.borderColor = 'var(--color-photo)'
+              e.currentTarget.style.backgroundColor = 'var(--color-bg-alt)'
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = 'var(--color-border)'
-              e.currentTarget.style.background = 'var(--color-background)'
+              e.currentTarget.style.borderColor = 'var(--color-border-strong)'
+              e.currentTarget.style.backgroundColor = 'var(--color-bg)'
             }}
             aria-label="사진 업로드 영역, 클릭 또는 드래그"
           >
-            <UploadCloud size={40} color="var(--color-primary-light)" />
-            <span style={{ fontWeight: 600, color: 'var(--color-text-secondary)' }}>
+            <UploadCloud size={40} color="var(--color-photo)" />
+            <span style={{ fontWeight: 600, color: 'var(--color-text-secondary)', fontSize: 'var(--fs-body-lg)' }}>
               클릭하거나 사진을 끌어다 놓으세요
             </span>
-            <span style={{ fontSize: 'var(--font-size-sm)' }}>JPG, PNG, WEBP, HEIC · 최대 20MB</span>
+            <span style={{ fontSize: 'var(--fs-caption)' }}>JPG, PNG, WEBP, HEIC · 최대 20MB</span>
           </button>
         )}
       </section>
@@ -209,16 +210,17 @@ function PhotoOrderPage() {
       {selectedType && (
         <section
           style={{
-            background: 'var(--color-accent)',
-            borderRadius: 'var(--radius-md)',
+            background: 'var(--color-surface-warm)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 'var(--radius-sm)',
             padding: 'var(--spacing-md)',
             display: 'flex',
             alignItems: 'center',
             gap: 'var(--spacing-sm)',
           }}
         >
-          <ImageIcon size={18} color="var(--color-primary)" />
-          <span style={{ fontSize: 'var(--font-size-base)', color: 'var(--color-primary-dark)', fontWeight: 600 }}>
+          <ImageIcon size={18} color="var(--color-photo)" />
+          <span style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-primary)', fontWeight: 600 }}>
             선택된 종류: {photoTypeLabels[selectedType]}
           </span>
         </section>
@@ -230,10 +232,10 @@ function PhotoOrderPage() {
           role="alert"
           style={{
             color: 'var(--color-error)',
-            fontSize: 'var(--font-size-base)',
-            background: '#fff5f5',
-            border: '1px solid #fed7d7',
-            borderRadius: 'var(--radius-md)',
+            fontSize: 'var(--fs-body)',
+            background: 'var(--color-error-light)',
+            border: '1px solid var(--color-error)',
+            borderRadius: 'var(--radius-sm)',
             padding: 'var(--spacing-md)',
           }}
         >
@@ -249,19 +251,20 @@ function PhotoOrderPage() {
         aria-busy={isSubmitting}
         style={{
           width: '100%',
-          minHeight: 'var(--min-touch-target)',
-          background: canSubmit ? 'var(--color-primary)' : 'var(--color-border)',
-          color: canSubmit ? '#fff' : 'var(--color-text-muted)',
+          height: 'var(--size-button-h)',
+          minHeight: 'var(--size-button-h)',
+          background: canSubmit ? 'var(--color-photo)' : 'var(--color-border)',
+          color: canSubmit ? 'var(--color-text-on-dark)' : 'var(--color-text-muted)',
           border: 'none',
-          borderRadius: 'var(--radius-full)',
-          fontSize: 'var(--font-size-lg)',
+          borderRadius: 'var(--radius-pill)',
+          fontSize: 'var(--fs-button)',
           fontWeight: 700,
           cursor: canSubmit ? 'pointer' : 'not-allowed',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           gap: 'var(--spacing-sm)',
-          transition: 'background 0.2s',
+          transition: 'background-color var(--transition-base)',
         }}
       >
         {isSubmitting ? (

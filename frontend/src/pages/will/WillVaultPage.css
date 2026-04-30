@@ -1,6 +1,7 @@
+/* 보관함 — 종이 질감(surface-warm), hairline border */
 .will-vault-page {
   min-height: 100vh;
-  background-color: var(--color-background);
+  background-color: var(--color-bg);
 }
 
 .will-vault__header {
@@ -13,29 +14,32 @@
 }
 
 .will-vault__title {
-  font-size: var(--font-size-xl);
-  font-weight: 800;
-  color: var(--color-text-primary);
+  font-family: var(--font-serif);
+  font-size: var(--fs-h2);
+  font-weight: 700;
+  color: var(--color-will);
+  letter-spacing: var(--ls-heading-ko);
 }
 
 .will-vault__new-btn {
   display: flex;
   align-items: center;
   gap: var(--spacing-xs);
-  background-color: var(--color-primary);
-  color: var(--color-surface);
-  font-size: var(--font-size-base);
+  background-color: var(--color-will);
+  color: var(--color-text-on-dark);
+  font-size: var(--fs-body);
   font-weight: 700;
   padding: 0 var(--spacing-lg);
-  min-height: var(--min-touch-target);
+  height: var(--size-button-h);
+  min-height: var(--size-button-h);
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-pill);
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: opacity var(--transition-base);
 }
 
 .will-vault__new-btn:hover {
-  background-color: var(--color-primary-dark);
+  opacity: 0.88;
 }
 
 .will-vault__content {
@@ -52,15 +56,15 @@
   gap: var(--spacing-md);
   padding: var(--spacing-2xl);
   color: var(--color-text-secondary);
-  font-size: var(--font-size-base);
+  font-size: var(--fs-body);
 }
 
 .will-vault__spinner {
   width: 24px;
   height: 24px;
-  border-radius: var(--radius-full);
-  border: 3px solid var(--color-primary-light);
-  border-top-color: var(--color-primary);
+  border-radius: var(--radius-pill);
+  border: 3px solid var(--color-border-strong);
+  border-top-color: var(--color-will);
   animation: spin 0.7s linear infinite;
   flex-shrink: 0;
 }
@@ -76,10 +80,10 @@
   gap: var(--spacing-sm);
   background-color: var(--color-error-light);
   border: 1px solid var(--color-error);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   padding: var(--spacing-md);
   color: var(--color-error);
-  font-size: var(--font-size-base);
+  font-size: var(--fs-body);
   margin-bottom: var(--spacing-lg);
 }
 
@@ -89,7 +93,7 @@
   border: 1px solid var(--color-error);
   border-radius: var(--radius-sm);
   color: var(--color-error);
-  font-size: var(--font-size-base);
+  font-size: var(--fs-body);
   padding: 0 var(--spacing-sm);
   min-height: var(--min-touch-target);
   cursor: pointer;
@@ -104,19 +108,21 @@
   gap: var(--spacing-md);
   padding: var(--spacing-2xl) var(--spacing-md);
   text-align: center;
-  color: var(--color-primary-light);
+  color: var(--color-border-strong);
 }
 
 .will-vault__empty-title {
-  font-size: var(--font-size-xl);
+  font-family: var(--font-serif);
+  font-size: var(--fs-h3);
   font-weight: 700;
   color: var(--color-text-primary);
+  letter-spacing: var(--ls-heading-ko);
 }
 
 .will-vault__empty-sub {
-  font-size: var(--font-size-base);
+  font-size: var(--fs-body);
   color: var(--color-text-secondary);
-  line-height: 1.6;
+  line-height: var(--lh-relaxed);
   max-width: 340px;
 }
 
@@ -124,21 +130,22 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  background-color: var(--color-primary);
-  color: var(--color-surface);
-  font-size: var(--font-size-base);
+  background-color: var(--color-will);
+  color: var(--color-text-on-dark);
+  font-size: var(--fs-body);
   font-weight: 700;
   padding: 0 var(--spacing-xl);
-  min-height: var(--min-touch-target);
+  height: var(--size-button-h);
+  min-height: var(--size-button-h);
   border: none;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-pill);
   cursor: pointer;
   margin-top: var(--spacing-md);
-  transition: background-color 0.2s;
+  transition: opacity var(--transition-base);
 }
 
 .will-vault__empty-btn:hover {
-  background-color: var(--color-primary-dark);
+  opacity: 0.88;
 }
 
 /* 목록 */
@@ -150,22 +157,28 @@
   margin-bottom: var(--spacing-xl);
 }
 
+/* 카드 — 종이 질감(surface-warm) + hairline border */
 .will-vault__card {
   display: flex;
   align-items: center;
   gap: var(--spacing-md);
-  background-color: var(--color-surface);
+  background-color: var(--color-surface-warm);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-card);
   padding: var(--spacing-md) var(--spacing-lg);
+  transition: border-color var(--transition-fast);
+}
+
+.will-vault__card:hover {
+  border-color: var(--color-border-strong);
 }
 
 .will-vault__card-icon {
   width: 48px;
   height: 48px;
-  border-radius: var(--radius-md);
-  background-color: var(--color-accent);
-  color: var(--color-primary);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-bg-alt);
+  color: var(--color-will);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -188,7 +201,7 @@
 }
 
 .will-vault__card-title {
-  font-size: var(--font-size-base);
+  font-size: var(--fs-body);
   font-weight: 700;
   color: var(--color-text-primary);
   white-space: nowrap;
@@ -197,7 +210,7 @@
 }
 
 .will-vault__card-date {
-  font-size: var(--font-size-sm);
+  font-size: var(--fs-caption);
   color: var(--color-text-muted);
 }
 
@@ -206,15 +219,15 @@
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  font-size: 12px;
+  font-size: var(--fs-caption);
   font-weight: 600;
   padding: 2px 8px;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-pill);
   white-space: nowrap;
 }
 
 .status-draft {
-  background-color: #f0f0f0;
+  background-color: var(--color-bg-alt);
   color: var(--color-text-secondary);
 }
 
@@ -224,8 +237,8 @@
 }
 
 .status-released {
-  background-color: #fef3c7;
-  color: #b45309;
+  background-color: var(--color-warm-accent-soft);
+  color: var(--color-will);
 }
 
 /* 이벤트 버튼 */
@@ -235,18 +248,18 @@
   justify-content: center;
   gap: var(--spacing-sm);
   width: 100%;
-  background-color: var(--color-accent);
-  border: 2px dashed var(--color-primary-light);
-  border-radius: var(--radius-md);
-  color: var(--color-primary-dark);
-  font-size: var(--font-size-base);
+  background-color: var(--color-surface-warm);
+  border: 2px dashed var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--color-will);
+  font-size: var(--fs-body);
   font-weight: 600;
   min-height: var(--min-touch-target);
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color var(--transition-base), border-color var(--transition-base);
 }
 
 .will-vault__event-btn:hover {
-  background-color: var(--color-primary-light);
-  color: var(--color-surface);
+  background-color: var(--color-bg-alt);
+  border-color: var(--color-will);
 }
