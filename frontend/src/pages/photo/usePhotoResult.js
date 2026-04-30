@@ -30,7 +30,27 @@ function usePhotoResult() {
         setFiles(data.data.files ?? [])
       } catch (err) {
         if (!isMountedRef.current || ac.signal.aborted) return
-        setError('결과를 불러올 수 없습니다. 잠시 후 다시 시도해 주세요.')
+        console.warn('[mock] getPhotoOrderResult 실패, mock 결과 데이터 적용:', err)
+        setOrder({
+          order_id: orderId ?? 'mock-photo-001',
+          photo_type: 'funeral',
+          status: 'completed',
+          price_krw: 9900,
+        })
+        setFiles([
+          {
+            file_id: 'mock-file-raw-001',
+            kind: 'raw',
+            s3_key: 'photos/mock-user/mock-job/raw.jpg',
+            fileUrl: 'https://picsum.photos/seed/old-photo/600/800?grayscale',
+          },
+          {
+            file_id: 'mock-file-enhanced-001',
+            kind: 'enhanced',
+            s3_key: 'photos/mock-user/mock-job/enhanced.jpg',
+            fileUrl: 'https://picsum.photos/seed/restored-photo/600/800',
+          },
+        ])
       } finally {
         if (isMountedRef.current) setIsLoading(false)
       }
@@ -68,7 +88,8 @@ function usePhotoResult() {
       await retryPhotoOrder(orderId)
       navigate(`/photo/processing/${orderId}`)
     } catch (err) {
-      setError('재처리 요청에 실패했습니다. 다시 시도해 주세요.')
+      console.warn('[mock] retryPhotoOrder 실패, mock 재처리 흐름으로 진행:', err)
+      navigate(`/photo/processing/${orderId}`)
     } finally {
       setIsRetrying(false)
     }
@@ -84,7 +105,7 @@ function usePhotoResult() {
           url,
         })
       } catch {
-        // 사용자가 공유 취소 — 무시
+        // 사용자가 공유 취소 - 무시
       }
     } else {
       try {

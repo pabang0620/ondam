@@ -58,8 +58,8 @@ export function useWillPhoto() {
 
       navigate('/will/preview')
     } catch (err) {
-      console.warn('[mock] 사진 업로드 API 실패 — mock 사진 데이터 사용', err)
-      const mockPhotoUrl = 'https://placehold.co/600x800/e5e7eb/6b7280?text=얼굴+사진'
+      console.warn('[mock] 사진 업로드 API 실패 - mock 사진 데이터 사용', err)
+      const mockPhotoUrl = 'https://picsum.photos/seed/face-photo/600/800'
       const mockS3Key = `wills/mock-user/face-photo-${Date.now()}.jpg`
       localStorage.setItem('will_photo_s3key', mockS3Key)
       localStorage.setItem('will_photo_url', mockPhotoUrl)

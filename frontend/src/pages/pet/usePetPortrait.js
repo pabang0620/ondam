@@ -16,17 +16,25 @@ export function usePetPortrait(petId) {
   const [generateError, setGenerateError] = useState(null)
   const [result, setResult] = useState(null)
 
+  const MOCK_MEDIA = [
+    { media_id: 'media-001', pet_id: petId, media_type: 'photo', file_url: 'https://picsum.photos/seed/dog1/600/600', caption: '공원 산책', taken_at: '2023-05-10', sort_order: 1 },
+    { media_id: 'media-002', pet_id: petId, media_type: 'photo', file_url: 'https://picsum.photos/seed/dog2/600/600', caption: '생일 파티', taken_at: '2023-03-15', sort_order: 2 },
+    { media_id: 'media-003', pet_id: petId, media_type: 'photo', file_url: 'https://picsum.photos/seed/dog3/600/600', caption: '겨울 눈밭', taken_at: '2023-01-20', sort_order: 3 },
+  ]
+
   const fetchMedia = useCallback(async () => {
     if (!petId) return
     setIsLoading(true)
     try {
       const res = await petApi.getPetMedia(petId)
       if (res.data.success) setMedia(res.data.data ?? [])
-    } catch {
-      // silent — 미디어 없으면 빈 배열
+    } catch (err) {
+      console.warn('[mock] usePetPortrait.fetchMedia - 백엔드 응답 없음, mock 미디어로 대체', err)
+      setMedia(MOCK_MEDIA)
     } finally {
       setIsLoading(false)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [petId])
 
   useEffect(() => {
@@ -34,6 +42,12 @@ export function usePetPortrait(petId) {
     fetchMedia()
     return () => ac.abort()
   }, [fetchMedia])
+
+  const MOCK_PORTRAIT_URLS = {
+    oil: 'https://picsum.photos/seed/portrait-oil/600/600',
+    watercolor: 'https://picsum.photos/seed/portrait-watercolor/600/600',
+    illustration: 'https://picsum.photos/seed/portrait-illustration/600/600',
+  }
 
   const handleGenerate = async () => {
     if (!selectedStyle || !selectedMediaId) return
@@ -72,7 +86,7 @@ export function usePetPortrait(petId) {
               return
             }
 
-            const { status, progress, portraitUrl } = statusRes.data.data ?? {}
+            const { status, portraitUrl } = statusRes.data.data ?? {}
 
             if (status === 'completed') {
               clearInterval(pollInterval)
@@ -85,7 +99,7 @@ export function usePetPortrait(petId) {
               clearInterval(pollInterval)
               reject(new Error('AI 초상화 생성에 실패했습니다. 다시 시도해 주세요.'))
             }
-            // pending / processing — 다음 interval 대기
+            // pending / processing - 다음 interval 대기
           } catch (err) {
             clearInterval(pollInterval)
             reject(err)
@@ -93,7 +107,10 @@ export function usePetPortrait(petId) {
         }, 2000)
       })
     } catch (err) {
-      setGenerateError(err.response?.data?.message || err.message || 'AI 초상화 생성에 실패했습니다.')
+      console.warn('[mock] usePetPortrait.handleGenerate - AI API 실패, 2.5초 시뮬레이션 후 mock 초상화 반환', err)
+      await new Promise((resolve) => setTimeout(resolve, 2500))
+      const mockUrl = MOCK_PORTRAIT_URLS[selectedStyle] ?? 'https://picsum.photos/seed/portrait-default/600/600'
+      setResult({ url: mockUrl })
     } finally {
       setIsGenerating(false)
     }

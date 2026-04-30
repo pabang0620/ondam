@@ -10,7 +10,7 @@ const MOCK_WILLS = [
     releaseStatus: 'locked',
     eventType: null,
     createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-    resultVideoUrl: 'https://placehold.co/1280x720/000000/ffffff?text=AI+유언+영상',
+    resultVideoUrl: 'https://picsum.photos/seed/will-video/1280/720',
     beneficiaries: [
       {
         beneficiaryId: 'mock-ben-001',
@@ -42,7 +42,7 @@ export function useWillVault() {
       const { data } = await willApi.getWills()
       setWills(data.data || [])
     } catch (err) {
-      console.warn('[mock] 유언장 목록 API 실패 — mock 데이터 표시', err)
+      console.warn('[mock] 유언장 목록 API 실패 - mock 데이터 표시', err)
       setWills(MOCK_WILLS)
     } finally {
       setIsLoading(false)
