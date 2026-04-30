@@ -50,7 +50,7 @@ export default function CancelSubscriptionModal({ isOpen, onClose, onConfirm, su
       style={{
         position: 'fixed',
         inset: 0,
-        background: 'rgba(0, 0, 0, 0.5)',
+        background: 'rgba(42, 40, 38, 0.45)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -77,9 +77,9 @@ export default function CancelSubscriptionModal({ isOpen, onClose, onConfirm, su
         <h2
           id="cancel-modal-title"
           style={{
-            fontSize: 'var(--font-size-lg)',
+            fontSize: 'var(--fs-body-lg)',
             fontWeight: 700,
-            color: 'var(--color-text-primary)',
+            color: 'var(--color-primary)',
           }}
         >
           구독을 해지하시겠습니까?
@@ -87,11 +87,11 @@ export default function CancelSubscriptionModal({ isOpen, onClose, onConfirm, su
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
           {nextBillingDate && (
-            <p style={{ fontSize: 'var(--font-size-base)', color: 'var(--color-text-secondary)', lineHeight: 1.7 }}>
-              <strong style={{ color: 'var(--color-text-primary)' }}>{nextBillingDate}까지</strong> 계속 이용하실 수 있습니다.
+            <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', lineHeight: 1.7 }}>
+              <strong style={{ color: 'var(--color-primary)' }}>{nextBillingDate}까지</strong> 계속 이용하실 수 있습니다.
             </p>
           )}
-          <p style={{ fontSize: 'var(--font-size-base)', color: 'var(--color-text-secondary)', lineHeight: 1.7 }}>
+          <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', lineHeight: 1.7 }}>
             해지 후에는 다음 결제일부터 서비스 이용이 제한됩니다.
           </p>
         </div>
@@ -103,13 +103,13 @@ export default function CancelSubscriptionModal({ isOpen, onClose, onConfirm, su
             disabled={isProcessing}
             style={{
               flex: 1,
-              minHeight: 'var(--min-touch-target)',
-              fontSize: 'var(--font-size-base)',
+              minHeight: 'var(--size-button-h)',
+              fontSize: 'var(--fs-button)',
               fontWeight: 600,
               background: 'none',
               color: 'var(--color-text-secondary)',
-              border: '1.5px solid var(--color-border)',
-              borderRadius: 'var(--radius-full)',
+              border: '1.5px solid var(--color-border-strong)',
+              borderRadius: 'var(--radius-pill)',
               cursor: isProcessing ? 'not-allowed' : 'pointer',
               opacity: isProcessing ? 0.7 : 1,
             }}
@@ -123,13 +123,13 @@ export default function CancelSubscriptionModal({ isOpen, onClose, onConfirm, su
             disabled={isProcessing}
             style={{
               flex: 1,
-              minHeight: 'var(--min-touch-target)',
-              fontSize: 'var(--font-size-base)',
+              minHeight: 'var(--size-button-h)',
+              fontSize: 'var(--fs-button)',
               fontWeight: 700,
               background: 'var(--color-error)',
-              color: '#fff',
+              color: 'var(--color-surface)',
               border: 'none',
-              borderRadius: 'var(--radius-full)',
+              borderRadius: 'var(--radius-pill)',
               cursor: isProcessing ? 'not-allowed' : 'pointer',
               opacity: isProcessing ? 0.7 : 1,
             }}

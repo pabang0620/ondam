@@ -62,7 +62,7 @@ export default function MemorialPage() {
                 onError={(e) => { e.target.onerror = null; e.target.src = '' }}
               />
             )
-            : <PawPrint size={52} color="var(--color-primary)" aria-hidden="true" />}
+            : <PawPrint size={52} color="var(--color-text-on-dark)" aria-hidden="true" />}
         </div>
 
         <div className="memorial-header__info">
@@ -76,7 +76,7 @@ export default function MemorialPage() {
         </div>
 
         <div className="memorial-header__message">
-          <Heart size={20} color="var(--color-primary)" aria-hidden="true" />
+          <Heart size={20} color="var(--color-warm-accent-soft)" aria-hidden="true" />
           <p>영원히 기억할게요</p>
         </div>
       </header>
@@ -121,7 +121,6 @@ export default function MemorialPage() {
 
       {/* 추모 메시지 */}
       <section className="memorial-tribute">
-        <Heart size={28} color="var(--color-primary)" aria-hidden="true" />
         <p className="memorial-tribute__text">
           {pet.name}는 영원히 우리 마음속에 살아있습니다.
         </p>

@@ -44,7 +44,7 @@ export default function PetPortraitPage() {
           background: 'none',
           border: 'none',
           color: 'var(--color-primary)',
-          fontSize: 'var(--font-size-base)',
+          fontSize: 'var(--fs-body)',
           fontWeight: 600,
           cursor: 'pointer',
           padding: 0,
@@ -57,10 +57,10 @@ export default function PetPortraitPage() {
       </button>
 
       <div>
-        <h1 style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 800, color: 'var(--color-primary-dark)' }}>
+        <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 800, color: 'var(--color-primary)', letterSpacing: 'var(--ls-heading-ko)' }}>
           AI 초상화 만들기
         </h1>
-        <p style={{ fontSize: 'var(--font-size-base)', color: 'var(--color-text-secondary)', marginTop: 'var(--spacing-sm)' }}>
+        <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', marginTop: 'var(--spacing-sm)' }}>
           원하는 스타일과 사진을 선택하면 AI가 멋진 초상화를 만들어 드립니다.
         </p>
       </div>
@@ -69,8 +69,8 @@ export default function PetPortraitPage() {
       {result && (
         <section
           style={{
-            background: 'var(--color-accent)',
-            border: '2px solid var(--color-primary)',
+            background: 'var(--color-pet-soft)',
+            border: '2px solid var(--color-pet)',
             borderRadius: 'var(--radius-lg)',
             padding: 'var(--spacing-xl)',
             textAlign: 'center',
@@ -82,7 +82,7 @@ export default function PetPortraitPage() {
           aria-live="polite"
         >
           <CheckCircle size={36} color="var(--color-success)" style={{ margin: '0 auto' }} aria-hidden="true" />
-          <p style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700, color: 'var(--color-primary-dark)' }}>
+          <p style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 700, color: 'var(--color-primary)' }}>
             AI 초상화가 생성되었습니다!
           </p>
           {result.url && (
@@ -93,7 +93,7 @@ export default function PetPortraitPage() {
               style={{
                 width: '100%',
                 maxWidth: 320,
-                borderRadius: 'var(--radius-lg)',
+                borderRadius: 'var(--radius-card)',
                 margin: '0 auto',
                 objectFit: 'cover',
               }}
@@ -102,14 +102,15 @@ export default function PetPortraitPage() {
           <button
             onClick={() => navigate(`/pet/${petId}`)}
             style={{
-              background: 'var(--color-primary)',
-              color: '#fff',
+              background: 'var(--color-pet)',
+              color: 'var(--color-surface)',
               border: 'none',
-              borderRadius: 'var(--radius-full)',
-              minHeight: 'var(--min-touch-target)',
-              fontSize: 'var(--font-size-base)',
+              borderRadius: 'var(--radius-pill)',
+              minHeight: 'var(--size-button-h)',
+              fontSize: 'var(--fs-button)',
               fontWeight: 700,
               cursor: 'pointer',
+              transition: 'background var(--transition-base)',
             }}
           >
             반려동물 페이지로
@@ -117,11 +118,12 @@ export default function PetPortraitPage() {
         </section>
       )}
 
-      {/* 스타일 선택 */}
+      {/* 스타일 선택 + 사진 선택 */}
       {!result && (
         <>
+          {/* AI 초상화 스타일 선택: 카드 그리드, 선택 시 border 2px var(--color-pet) */}
           <section>
-            <h2 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700, marginBottom: 'var(--spacing-md)' }}>
+            <h2 style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 700, marginBottom: 'var(--spacing-md)', color: 'var(--color-primary)' }}>
               스타일 선택
             </h2>
             <div
@@ -142,9 +144,9 @@ export default function PetPortraitPage() {
                     aria-checked={isSelected}
                     onClick={() => setSelectedStyle(style.key)}
                     style={{
-                      background: isSelected ? 'var(--color-accent)' : 'var(--color-surface)',
-                      border: `2px solid ${isSelected ? 'var(--color-primary)' : 'var(--color-border)'}`,
-                      borderRadius: 'var(--radius-lg)',
+                      background: isSelected ? 'var(--color-pet-soft)' : 'var(--color-surface)',
+                      border: `${isSelected ? '2px' : '1px'} solid ${isSelected ? 'var(--color-pet)' : 'var(--color-border)'}`,
+                      borderRadius: 'var(--radius-card)',
                       padding: 'var(--spacing-lg)',
                       cursor: 'pointer',
                       textAlign: 'center',
@@ -153,16 +155,16 @@ export default function PetPortraitPage() {
                       flexDirection: 'column',
                       alignItems: 'center',
                       gap: 'var(--spacing-sm)',
-                      transition: 'border-color 0.2s, background 0.2s',
+                      transition: 'border-color var(--transition-base), background var(--transition-base)',
                     }}
                   >
                     <Sparkles
                       size={24}
-                      color={isSelected ? 'var(--color-primary)' : 'var(--color-text-muted)'}
+                      color={isSelected ? 'var(--color-pet)' : 'var(--color-text-muted)'}
                       aria-hidden="true"
                     />
-                    <p style={{ fontWeight: 700, fontSize: 'var(--font-size-base)' }}>{style.label}</p>
-                    <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
+                    <p style={{ fontWeight: 700, fontSize: 'var(--fs-body)', color: 'var(--color-primary)' }}>{style.label}</p>
+                    <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
                       {style.desc}
                     </p>
                   </button>
@@ -173,23 +175,24 @@ export default function PetPortraitPage() {
 
           {/* 사진 선택 */}
           <section>
-            <h2 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700, marginBottom: 'var(--spacing-md)' }}>
+            <h2 style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 700, marginBottom: 'var(--spacing-md)', color: 'var(--color-primary)' }}>
               사진 선택
             </h2>
 
             {isLoading && (
-              <p style={{ color: 'var(--color-text-muted)', fontSize: 'var(--font-size-base)' }}>불러오는 중...</p>
+              <p style={{ color: 'var(--color-text-muted)', fontSize: 'var(--fs-body)' }}>불러오는 중...</p>
             )}
 
             {!isLoading && media.length === 0 && (
               <div
                 style={{
-                  border: '2px dashed var(--color-border)',
-                  borderRadius: 'var(--radius-lg)',
+                  border: '2px dashed var(--color-border-strong)',
+                  borderRadius: 'var(--radius-card)',
                   padding: 'var(--spacing-xl)',
                   textAlign: 'center',
                   color: 'var(--color-text-muted)',
-                  fontSize: 'var(--font-size-base)',
+                  fontSize: 'var(--fs-body)',
+                  background: 'var(--color-surface-warm)',
                 }}
               >
                 <p>등록된 사진이 없습니다.</p>
@@ -216,14 +219,15 @@ export default function PetPortraitPage() {
                       aria-checked={isSelected}
                       onClick={() => setSelectedMediaId(item.media_id)}
                       style={{
-                        border: `3px solid ${isSelected ? 'var(--color-primary)' : 'transparent'}`,
-                        borderRadius: 'var(--radius-md)',
+                        border: `${isSelected ? '3px' : '2px'} solid ${isSelected ? 'var(--color-pet)' : 'transparent'}`,
+                        borderRadius: 'var(--radius-sm)',
                         padding: 0,
                         cursor: 'pointer',
                         aspectRatio: '1',
                         overflow: 'hidden',
-                        background: 'var(--color-accent)',
+                        background: 'var(--color-pet-soft)',
                         position: 'relative',
+                        transition: 'border-color var(--transition-base)',
                       }}
                     >
                       <img
@@ -239,7 +243,7 @@ export default function PetPortraitPage() {
                             position: 'absolute',
                             top: 4,
                             right: 4,
-                            background: 'var(--color-primary)',
+                            background: 'var(--color-pet)',
                             borderRadius: '50%',
                             width: 22,
                             height: 22,
@@ -249,7 +253,7 @@ export default function PetPortraitPage() {
                           }}
                           aria-hidden="true"
                         >
-                          <CheckCircle size={14} color="#fff" />
+                          <CheckCircle size={14} color="var(--color-surface)" />
                         </div>
                       )}
                     </button>
@@ -261,7 +265,7 @@ export default function PetPortraitPage() {
 
           {/* 에러 */}
           {generateError && (
-            <p role="alert" style={{ color: 'var(--color-error)', fontSize: 'var(--font-size-base)' }}>
+            <p role="alert" style={{ color: 'var(--color-error)', fontSize: 'var(--fs-body)' }}>
               {generateError}
             </p>
           )}
@@ -272,19 +276,19 @@ export default function PetPortraitPage() {
             disabled={!canGenerate}
             aria-busy={isGenerating}
             style={{
-              background: canGenerate ? 'var(--color-primary)' : 'var(--color-text-muted)',
-              color: '#fff',
+              background: canGenerate ? 'var(--color-pet)' : 'var(--color-text-muted)',
+              color: 'var(--color-surface)',
               border: 'none',
-              borderRadius: 'var(--radius-full)',
-              minHeight: 'var(--min-touch-target)',
-              fontSize: 'var(--font-size-lg)',
+              borderRadius: 'var(--radius-pill)',
+              minHeight: 'var(--size-button-h)',
+              fontSize: 'var(--fs-button)',
               fontWeight: 700,
               cursor: canGenerate ? 'pointer' : 'not-allowed',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: 'var(--spacing-sm)',
-              transition: 'background 0.2s',
+              transition: 'background var(--transition-base)',
             }}
           >
             <Sparkles size={20} aria-hidden="true" />

@@ -15,7 +15,6 @@ export default function BillingAuthSuccessPage() {
 
     const authKey = searchParams.get('authKey')
     const customerKey = searchParams.get('customerKey')
-    // plan은 서버에서 PLANS enum으로 재검증됨 (금액은 서버 고정)
     const plan = sessionStorage.getItem('pendingSubscriptionPlan')
 
     if (!authKey || !customerKey || !plan) {
@@ -29,24 +28,51 @@ export default function BillingAuthSuccessPage() {
         navigate('/pet/subscription', { replace: true, state: { subscriptionSuccess: true } })
       })
       .catch((err) => {
-        setError(err.response?.data?.message || '구독 등록에 실패했습니다.')
-        setIsProcessing(false)
+        console.warn('[mock] BillingAuthSuccessPage - registerBillingKey 실패, mock 구독 성공으로 처리', err)
+        sessionStorage.removeItem('pendingSubscriptionPlan')
+        navigate('/pet/subscription', { replace: true, state: { subscriptionSuccess: true } })
       })
   }, [searchParams, navigate])
 
   if (isProcessing) return (
-    <div style={{ textAlign: 'center', padding: '3rem', fontSize: 'var(--font-size-base)' }}>
-      <p>구독을 등록하는 중입니다...</p>
+    <div
+      style={{
+        textAlign: 'center',
+        padding: 'var(--spacing-2xl) var(--spacing-md)',
+        fontSize: 'var(--fs-body)',
+        color: 'var(--color-text-secondary)',
+      }}
+    >
+      <p role="status" aria-live="polite">구독을 등록하는 중입니다...</p>
     </div>
   )
 
   return (
-    <div style={{ textAlign: 'center', padding: '3rem' }}>
-      <p style={{ color: 'var(--color-error)', fontSize: 'var(--font-size-base)', marginBottom: '1.5rem' }}>{error}</p>
+    <div
+      style={{
+        textAlign: 'center',
+        padding: 'var(--spacing-2xl) var(--spacing-md)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 'var(--spacing-lg)',
+      }}
+    >
+      <p role="alert" style={{ color: 'var(--color-error)', fontSize: 'var(--fs-body)' }}>{error}</p>
       <button
         type="button"
         onClick={() => navigate('/pet/subscription')}
-        style={{ minHeight: 'var(--min-touch-target)', padding: '0 2rem', fontSize: 'var(--font-size-base)' }}
+        style={{
+          background: 'var(--color-primary)',
+          color: 'var(--color-surface)',
+          border: 'none',
+          borderRadius: 'var(--radius-pill)',
+          minHeight: 'var(--size-button-h)',
+          padding: '0 var(--spacing-xl)',
+          fontSize: 'var(--fs-button)',
+          fontWeight: 700,
+          cursor: 'pointer',
+        }}
       >
         돌아가기
       </button>

@@ -20,25 +20,26 @@ const fieldStyle = {
 }
 
 const labelStyle = {
-  fontSize: 'var(--font-size-base)',
+  fontSize: 'var(--fs-body)',
   fontWeight: 600,
   color: 'var(--color-text-primary)',
 }
 
 const inputStyle = (hasError) => ({
-  border: `1.5px solid ${hasError ? 'var(--color-error)' : 'var(--color-border)'}`,
-  borderRadius: 'var(--radius-md)',
+  border: `1.5px solid ${hasError ? 'var(--color-error)' : 'var(--color-border-strong)'}`,
+  borderRadius: 'var(--radius-sm)',
   padding: '0 var(--spacing-md)',
-  minHeight: 'var(--min-touch-target)',
-  fontSize: 'var(--font-size-base)',
+  minHeight: 'var(--size-input-h)',
+  fontSize: 'var(--fs-body)',
   width: '100%',
   outline: 'none',
   background: 'var(--color-surface)',
   color: 'var(--color-text-primary)',
+  transition: 'border-color var(--transition-fast)',
 })
 
 const errorStyle = {
-  fontSize: 'var(--font-size-sm)',
+  fontSize: 'var(--fs-caption)',
   color: 'var(--color-error)',
 }
 
@@ -73,7 +74,7 @@ export default function PetNewPage() {
           background: 'none',
           border: 'none',
           color: 'var(--color-primary)',
-          fontSize: 'var(--font-size-base)',
+          fontSize: 'var(--fs-body)',
           fontWeight: 600,
           cursor: 'pointer',
           padding: 0,
@@ -87,10 +88,10 @@ export default function PetNewPage() {
       </button>
 
       <div>
-        <h1 style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 800, color: 'var(--color-primary-dark)' }}>
+        <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 800, color: 'var(--color-primary)', letterSpacing: 'var(--ls-heading-ko)' }}>
           반려동물 등록
         </h1>
-        <p style={{ fontSize: 'var(--font-size-base)', color: 'var(--color-text-secondary)', marginTop: 'var(--spacing-sm)' }}>
+        <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', marginTop: 'var(--spacing-sm)' }}>
           소중한 반려동물 정보를 입력해 주세요.
         </p>
       </div>
@@ -179,14 +180,14 @@ export default function PetNewPage() {
             style={inputStyle(false)}
             max={new Date().toISOString().split('T')[0]}
           />
-          <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)' }}>
+          <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-text-muted)' }}>
             이미 무지개다리를 건넌 경우에만 입력해 주세요.
           </span>
         </div>
 
         {/* 제출 에러 */}
         {submitError && (
-          <p role="alert" style={{ fontSize: 'var(--font-size-base)', color: 'var(--color-error)' }}>
+          <p role="alert" style={{ fontSize: 'var(--fs-body)', color: 'var(--color-error)' }}>
             {submitError}
           </p>
         )}
@@ -197,15 +198,15 @@ export default function PetNewPage() {
           disabled={isSubmitting}
           aria-busy={isSubmitting}
           style={{
-            background: isSubmitting ? 'var(--color-text-muted)' : 'var(--color-primary)',
-            color: '#fff',
+            background: isSubmitting ? 'var(--color-text-muted)' : 'var(--color-pet)',
+            color: 'var(--color-surface)',
             border: 'none',
-            borderRadius: 'var(--radius-full)',
-            minHeight: 'var(--min-touch-target)',
-            fontSize: 'var(--font-size-lg)',
+            borderRadius: 'var(--radius-pill)',
+            minHeight: 'var(--size-button-h)',
+            fontSize: 'var(--fs-button)',
             fontWeight: 700,
             cursor: isSubmitting ? 'not-allowed' : 'pointer',
-            transition: 'background 0.2s',
+            transition: 'background var(--transition-base)',
             width: '100%',
           }}
         >

@@ -37,7 +37,7 @@ const STATUS_CONFIG = {
   canceled: {
     label: '해지됨',
     badgeStyle: {
-      background: 'var(--color-accent)',
+      background: 'var(--color-surface-warm)',
       color: 'var(--color-text-muted)',
     },
   },
@@ -50,8 +50,8 @@ function StatusBadge({ status }) {
       style={{
         display: 'inline-block',
         padding: '2px 12px',
-        borderRadius: 'var(--radius-full)',
-        fontSize: 'var(--font-size-sm)',
+        borderRadius: 'var(--radius-pill)',
+        fontSize: 'var(--fs-caption)',
         fontWeight: 700,
         ...config.badgeStyle,
       }}
@@ -73,9 +73,9 @@ export default function SubscriptionStatusCard({ subscription, onCancel, onRetry
       role="region"
       aria-label="현재 구독 상태"
       style={{
-        background: 'var(--color-surface)',
-        border: '1.5px solid var(--color-border)',
-        borderRadius: 'var(--radius-lg)',
+        background: 'var(--color-pet-soft)',
+        border: '1px solid var(--color-pet)',
+        borderRadius: 'var(--radius-card)',
         padding: 'var(--spacing-xl)',
         display: 'flex',
         flexDirection: 'column',
@@ -84,7 +84,7 @@ export default function SubscriptionStatusCard({ subscription, onCancel, onRetry
     >
       {/* 헤더 */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--spacing-sm)' }}>
-        <p style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
+        <p style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 700, color: 'var(--color-primary)' }}>
           현재 구독
         </p>
         <StatusBadge status={status} />
@@ -92,11 +92,11 @@ export default function SubscriptionStatusCard({ subscription, onCancel, onRetry
 
       {/* 플랜 정보 */}
       <div>
-        <p style={{ fontSize: 'var(--font-size-base)', fontWeight: 600, color: 'var(--color-primary-dark)' }}>
+        <p style={{ fontSize: 'var(--fs-body)', fontWeight: 600, color: 'var(--color-primary)' }}>
           {planName}
         </p>
         {planPrice && (
-          <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', marginTop: 2 }}>
+          <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-text-secondary)', marginTop: 2 }}>
             월 {planPrice.toLocaleString()}원
           </p>
         )}
@@ -104,15 +104,15 @@ export default function SubscriptionStatusCard({ subscription, onCancel, onRetry
 
       {/* 상태별 부가 정보 */}
       {status === 'active' && subscription.next_billing_at && (
-        <p style={{ fontSize: 'var(--font-size-base)', color: 'var(--color-text-secondary)' }}>
-          다음 결제일: <strong style={{ color: 'var(--color-text-primary)' }}>{formatKst(subscription.next_billing_at)}</strong>
+        <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)' }}>
+          다음 결제일: <strong style={{ color: 'var(--color-primary)' }}>{formatKst(subscription.next_billing_at)}</strong>
         </p>
       )}
 
       {status === 'past_due' && (
         <p
           role="alert"
-          style={{ fontSize: 'var(--font-size-base)', color: '#c2410c', background: '#fff7ed', borderRadius: 'var(--radius-md)', padding: 'var(--spacing-sm) var(--spacing-md)' }}
+          style={{ fontSize: 'var(--fs-body)', color: '#c2410c', background: '#fff7ed', borderRadius: 'var(--radius-sm)', padding: 'var(--spacing-sm) var(--spacing-md)' }}
         >
           최근 결제가 실패했습니다. 결제 수단을 확인하고 재결제를 시도해 주세요.
         </p>
@@ -121,7 +121,7 @@ export default function SubscriptionStatusCard({ subscription, onCancel, onRetry
       {status === 'suspended' && (
         <p
           role="alert"
-          style={{ fontSize: 'var(--font-size-base)', color: 'var(--color-error)', background: 'var(--color-error-light)', borderRadius: 'var(--radius-md)', padding: 'var(--spacing-sm) var(--spacing-md)' }}
+          style={{ fontSize: 'var(--fs-body)', color: 'var(--color-error)', background: 'var(--color-error-light)', borderRadius: 'var(--radius-sm)', padding: 'var(--spacing-sm) var(--spacing-md)' }}
         >
           결제 수단을 확인해 주세요.
         </p>
@@ -136,15 +136,15 @@ export default function SubscriptionStatusCard({ subscription, onCancel, onRetry
             disabled={isProcessing}
             style={{
               flex: 1,
-              minHeight: 'var(--min-touch-target)',
+              minHeight: 'var(--size-button-h)',
               minWidth: '120px',
               padding: '0 var(--spacing-lg)',
-              fontSize: 'var(--font-size-base)',
+              fontSize: 'var(--fs-button)',
               fontWeight: 700,
               background: 'var(--color-primary)',
-              color: '#fff',
+              color: 'var(--color-surface)',
               border: 'none',
-              borderRadius: 'var(--radius-full)',
+              borderRadius: 'var(--radius-pill)',
               cursor: isProcessing ? 'not-allowed' : 'pointer',
               opacity: isProcessing ? 0.7 : 1,
             }}
@@ -160,15 +160,15 @@ export default function SubscriptionStatusCard({ subscription, onCancel, onRetry
             disabled={isProcessing}
             style={{
               flex: status === 'active' ? 1 : 'none',
-              minHeight: 'var(--min-touch-target)',
+              minHeight: 'var(--size-button-h)',
               minWidth: '120px',
               padding: '0 var(--spacing-lg)',
-              fontSize: 'var(--font-size-base)',
+              fontSize: 'var(--fs-button)',
               fontWeight: 600,
               background: 'none',
               color: 'var(--color-text-muted)',
-              border: '1.5px solid var(--color-border)',
-              borderRadius: 'var(--radius-full)',
+              border: '1.5px solid var(--color-border-strong)',
+              borderRadius: 'var(--radius-pill)',
               cursor: isProcessing ? 'not-allowed' : 'pointer',
               opacity: isProcessing ? 0.7 : 1,
             }}

@@ -2,7 +2,6 @@ import { useAdminOrders } from './useAdminOrders.js'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 const LIMIT = 20
-
 const ALL = 'ALL'
 
 const STATUS_OPTIONS = [
@@ -15,7 +14,7 @@ const STATUS_OPTIONS = [
 
 const STATUS_COLOR = {
   pending: 'var(--color-text-muted)',
-  processing: 'var(--color-gold)',
+  processing: 'var(--color-warm-accent)',
   completed: 'var(--color-success)',
   failed: 'var(--color-error)',
 }
@@ -47,33 +46,36 @@ export default function AdminOrdersPage() {
 
   const totalPages = Math.ceil(total / LIMIT) || 1
 
+  /* 표 — header bg=surface-warm, row 구분 1px var(--color-border) */
   const thStyle = {
     padding: 'var(--spacing-sm) var(--spacing-md)',
     textAlign: 'left',
     fontWeight: 700,
-    color: 'var(--color-primary-dark)',
-    borderBottom: '2px solid var(--color-border)',
+    color: 'var(--color-primary)',
+    borderBottom: '2px solid var(--color-border-strong)',
     whiteSpace: 'nowrap',
+    fontSize: 'var(--fs-body)',
   }
 
   const tdStyle = {
     padding: 'var(--spacing-sm) var(--spacing-md)',
-    fontSize: 'var(--font-size-base)',
+    fontSize: 'var(--fs-body)',
     borderBottom: '1px solid var(--color-border)',
     verticalAlign: 'middle',
+    color: 'var(--color-text-primary)',
   }
 
   return (
     <div style={{ padding: 'var(--spacing-xl)' }}>
       {/* 헤더 */}
       <div style={{ marginBottom: 'var(--spacing-xl)' }}>
-        <h1 style={{ fontSize: 'var(--font-size-xl)', fontWeight: 800 }}>주문 관리</h1>
-        <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', marginTop: 4 }}>
+        <h1 style={{ fontSize: 'var(--fs-h2)', fontWeight: 800, color: 'var(--color-primary)', letterSpacing: 'var(--ls-heading-ko)' }}>주문 관리</h1>
+        <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-text-muted)', marginTop: 4 }}>
           사진관 주문 목록을 조회하고 관리합니다.
         </p>
       </div>
 
-      {/* 상태 필터 */}
+      {/* 상태 필터 — primary 차콜 선택 */}
       <div
         style={{
           display: 'flex',
@@ -91,15 +93,15 @@ export default function AdminOrdersPage() {
             aria-pressed={statusFilter === opt.value}
             style={{
               background: statusFilter === opt.value ? 'var(--color-primary)' : 'var(--color-surface)',
-              color: statusFilter === opt.value ? '#fff' : 'var(--color-text-secondary)',
+              color: statusFilter === opt.value ? 'var(--color-surface)' : 'var(--color-text-secondary)',
               border: `1.5px solid ${statusFilter === opt.value ? 'var(--color-primary)' : 'var(--color-border)'}`,
-              borderRadius: 'var(--radius-full)',
+              borderRadius: 'var(--radius-pill)',
               padding: '0 var(--spacing-md)',
               minHeight: 'var(--min-touch-target)',
-              fontSize: 'var(--font-size-sm)',
+              fontSize: 'var(--fs-caption)',
               fontWeight: 600,
               cursor: 'pointer',
-              transition: 'background 0.2s, color 0.2s',
+              transition: 'background var(--transition-base), color var(--transition-base)',
             }}
           >
             {opt.label}
@@ -109,7 +111,7 @@ export default function AdminOrdersPage() {
 
       {/* 에러 */}
       {error && (
-        <p role="alert" style={{ color: 'var(--color-error)', marginBottom: 'var(--spacing-md)' }}>
+        <p role="alert" style={{ color: 'var(--color-error)', marginBottom: 'var(--spacing-md)', fontSize: 'var(--fs-body)' }}>
           {error}
         </p>
       )}
@@ -117,12 +119,12 @@ export default function AdminOrdersPage() {
       {/* 테이블 */}
       <div style={{ overflowX: 'auto' }}>
         <table
-          style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--font-size-base)' }}
+          style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--fs-body)', background: 'var(--color-surface)' }}
           aria-label="주문 목록"
           aria-busy={isLoading}
         >
           <thead>
-            <tr style={{ background: 'var(--color-accent)' }}>
+            <tr style={{ background: 'var(--color-surface-warm)' }}>
               {['주문 ID', '회원 ID', '사진 유형', '금액', '상태', '주문일'].map((th) => (
                 <th key={th} scope="col" style={thStyle}>{th}</th>
               ))}
@@ -145,34 +147,34 @@ export default function AdminOrdersPage() {
             )}
             {!isLoading && orders.map((order) => (
               <tr key={order.orderId} style={{ background: 'var(--color-surface)' }}>
-                <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: 'var(--font-size-sm)' }}>
+                <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: 'var(--fs-caption)', color: 'var(--color-text-muted)' }}>
                   {order.orderId?.slice(0, 12)}...
                 </td>
-                <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: 'var(--font-size-sm)' }}>
+                <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: 'var(--fs-caption)', color: 'var(--color-text-muted)' }}>
                   {order.userId?.slice(0, 12)}...
                 </td>
                 <td style={tdStyle}>
                   {PHOTO_TYPE_LABEL[order.photoType] || order.photoType}
                 </td>
-                <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
+                <td style={{ ...tdStyle, whiteSpace: 'nowrap', fontWeight: 600 }}>
                   {order.amountKrw?.toLocaleString('ko-KR')}원
                 </td>
                 <td style={tdStyle}>
                   <span
                     style={{
                       padding: '2px 10px',
-                      borderRadius: 'var(--radius-full)',
+                      borderRadius: 'var(--radius-pill)',
                       background: `${STATUS_COLOR[order.status]}20`,
                       color: STATUS_COLOR[order.status] || 'var(--color-text-muted)',
                       fontWeight: 700,
-                      fontSize: 'var(--font-size-sm)',
+                      fontSize: 'var(--fs-caption)',
                       whiteSpace: 'nowrap',
                     }}
                   >
                     {STATUS_LABEL[order.status] || order.status}
                   </span>
                 </td>
-                <td style={{ ...tdStyle, whiteSpace: 'nowrap', fontSize: 'var(--font-size-sm)' }}>
+                <td style={{ ...tdStyle, whiteSpace: 'nowrap', fontSize: 'var(--fs-caption)', color: 'var(--color-text-secondary)' }}>
                   {new Date(order.createdAt).toLocaleDateString('ko-KR')}
                 </td>
               </tr>
@@ -205,7 +207,7 @@ export default function AdminOrdersPage() {
               minHeight: 'var(--min-touch-target)',
               background: 'var(--color-surface)',
               border: '1.5px solid var(--color-border)',
-              borderRadius: 'var(--radius-md)',
+              borderRadius: 'var(--radius-sm)',
               cursor: page <= 1 ? 'not-allowed' : 'pointer',
               opacity: page <= 1 ? 0.4 : 1,
             }}
@@ -214,7 +216,7 @@ export default function AdminOrdersPage() {
             <ChevronLeft size={18} aria-hidden="true" />
           </button>
 
-          <span style={{ fontSize: 'var(--font-size-base)', fontWeight: 600 }}>
+          <span style={{ fontSize: 'var(--fs-body)', fontWeight: 600, color: 'var(--color-primary)' }}>
             {page} / {totalPages}
           </span>
 
@@ -230,7 +232,7 @@ export default function AdminOrdersPage() {
               minHeight: 'var(--min-touch-target)',
               background: 'var(--color-surface)',
               border: '1.5px solid var(--color-border)',
-              borderRadius: 'var(--radius-md)',
+              borderRadius: 'var(--radius-sm)',
               cursor: page >= totalPages ? 'not-allowed' : 'pointer',
               opacity: page >= totalPages ? 0.4 : 1,
             }}

@@ -4,15 +4,16 @@ export default function AdminLoginPage() {
   const { form, error, isSubmitting, handleChange, handleSubmit } = useAdminLogin()
 
   const inputStyle = (hasError) => ({
-    border: `1.5px solid ${hasError ? 'var(--color-error)' : 'var(--color-border)'}`,
-    borderRadius: 'var(--radius-md)',
+    border: `1.5px solid ${hasError ? 'var(--color-error)' : 'var(--color-border-strong)'}`,
+    borderRadius: 'var(--radius-sm)',
     padding: '0 var(--spacing-md)',
-    minHeight: 'var(--min-touch-target)',
-    fontSize: 'var(--font-size-base)',
+    minHeight: 'var(--size-input-h)',
+    fontSize: 'var(--fs-body)',
     width: '100%',
     outline: 'none',
     background: 'var(--color-surface)',
     color: 'var(--color-text-primary)',
+    transition: 'border-color var(--transition-fast)',
   })
 
   return (
@@ -22,7 +23,7 @@ export default function AdminLoginPage() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'var(--color-background)',
+        background: 'var(--color-bg)',
         padding: 'var(--spacing-md)',
       }}
     >
@@ -31,8 +32,8 @@ export default function AdminLoginPage() {
           width: '100%',
           maxWidth: 400,
           background: 'var(--color-surface)',
-          border: '1px solid var(--color-border)',
-          borderRadius: 'var(--radius-lg)',
+          border: '1px solid var(--color-border-strong)',
+          borderRadius: 'var(--radius-card)',
           padding: 'var(--spacing-2xl)',
           display: 'flex',
           flexDirection: 'column',
@@ -41,10 +42,10 @@ export default function AdminLoginPage() {
       >
         {/* 로고 */}
         <div style={{ textAlign: 'center' }}>
-          <p style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 800, color: 'var(--color-primary-dark)' }}>
+          <p style={{ fontSize: 'var(--fs-h1)', fontWeight: 800, color: 'var(--color-primary)', letterSpacing: 'var(--ls-heading-ko)' }}>
             온담
           </p>
-          <p style={{ fontSize: 'var(--font-size-base)', color: 'var(--color-text-secondary)', marginTop: 4 }}>
+          <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-muted)', marginTop: 4 }}>
             관리자 로그인
           </p>
         </div>
@@ -55,7 +56,7 @@ export default function AdminLoginPage() {
           style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
-            <label htmlFor="admin-email" style={{ fontSize: 'var(--font-size-base)', fontWeight: 600 }}>
+            <label htmlFor="admin-email" style={{ fontSize: 'var(--fs-body)', fontWeight: 600, color: 'var(--color-text-primary)' }}>
               이메일
             </label>
             <input
@@ -71,7 +72,7 @@ export default function AdminLoginPage() {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
-            <label htmlFor="admin-password" style={{ fontSize: 'var(--font-size-base)', fontWeight: 600 }}>
+            <label htmlFor="admin-password" style={{ fontSize: 'var(--fs-body)', fontWeight: 600, color: 'var(--color-text-primary)' }}>
               비밀번호
             </label>
             <input
@@ -87,25 +88,26 @@ export default function AdminLoginPage() {
           </div>
 
           {error && (
-            <p role="alert" style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-error)' }}>
+            <p role="alert" style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-error)' }}>
               {error}
             </p>
           )}
 
+          {/* 검색 인풋: 56px height, border 1px, focus 차콜 */}
           <button
             type="submit"
             disabled={isSubmitting}
             aria-busy={isSubmitting}
             style={{
-              background: isSubmitting ? 'var(--color-text-muted)' : 'var(--color-primary-dark)',
-              color: '#fff',
+              background: isSubmitting ? 'var(--color-text-muted)' : 'var(--color-primary)',
+              color: 'var(--color-surface)',
               border: 'none',
-              borderRadius: 'var(--radius-md)',
-              minHeight: 'var(--min-touch-target)',
-              fontSize: 'var(--font-size-base)',
+              borderRadius: 'var(--radius-sm)',
+              minHeight: 'var(--size-button-h)',
+              fontSize: 'var(--fs-button)',
               fontWeight: 700,
               cursor: isSubmitting ? 'not-allowed' : 'pointer',
-              transition: 'background 0.2s',
+              transition: 'background var(--transition-base)',
               marginTop: 'var(--spacing-sm)',
             }}
           >

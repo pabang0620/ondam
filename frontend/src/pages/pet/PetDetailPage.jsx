@@ -54,7 +54,7 @@ export default function PetDetailPage() {
   if (isLoading) {
     return (
       <main style={{ padding: 'var(--spacing-2xl)', textAlign: 'center' }}>
-        <p role="status" aria-live="polite" style={{ color: 'var(--color-text-muted)', fontSize: 'var(--font-size-base)' }}>불러오는 중...</p>
+        <p role="status" aria-live="polite" style={{ color: 'var(--color-text-muted)', fontSize: 'var(--fs-body)' }}>불러오는 중...</p>
       </main>
     )
   }
@@ -62,7 +62,7 @@ export default function PetDetailPage() {
   if (error || !pet) {
     return (
       <main style={{ padding: 'var(--spacing-2xl)', textAlign: 'center' }}>
-        <p role="alert" style={{ color: 'var(--color-error)', fontSize: 'var(--font-size-base)' }}>
+        <p role="alert" style={{ color: 'var(--color-error)', fontSize: 'var(--fs-body)' }}>
           {error || '반려동물 정보를 찾을 수 없습니다.'}
         </p>
         <button
@@ -70,12 +70,12 @@ export default function PetDetailPage() {
           style={{
             marginTop: 'var(--spacing-lg)',
             background: 'var(--color-primary)',
-            color: '#fff',
+            color: 'var(--color-surface)',
             border: 'none',
-            borderRadius: 'var(--radius-full)',
+            borderRadius: 'var(--radius-pill)',
             padding: '0 var(--spacing-xl)',
-            minHeight: 'var(--min-touch-target)',
-            fontSize: 'var(--font-size-base)',
+            minHeight: 'var(--size-button-h)',
+            fontSize: 'var(--fs-button)',
             fontWeight: 700,
             cursor: 'pointer',
           }}
@@ -109,7 +109,7 @@ export default function PetDetailPage() {
           background: 'none',
           border: 'none',
           color: 'var(--color-primary)',
-          fontSize: 'var(--font-size-base)',
+          fontSize: 'var(--fs-body)',
           fontWeight: 600,
           cursor: 'pointer',
           padding: 0,
@@ -121,11 +121,11 @@ export default function PetDetailPage() {
         목록으로
       </button>
 
-      {/* 프로필 카드 */}
+      {/* 프로필 카드 — surface-warm + pet-soft border + radius 20px */}
       <section
         style={{
-          background: 'var(--color-surface)',
-          border: '1px solid var(--color-border)',
+          background: 'var(--color-surface-warm)',
+          border: '1px solid var(--color-pet-soft)',
           borderRadius: 'var(--radius-lg)',
           padding: 'var(--spacing-xl)',
           display: 'flex',
@@ -134,13 +134,14 @@ export default function PetDetailPage() {
         }}
         aria-label={`${pet.name} 프로필`}
       >
-        {/* 아바타 */}
+        {/* 아바타 — 둥근 원형 */}
         <div
           style={{
             width: 80,
             height: 80,
             borderRadius: '50%',
-            background: 'var(--color-accent)',
+            background: 'var(--color-pet-soft)',
+            border: '2px solid var(--color-pet-soft)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -157,21 +158,22 @@ export default function PetDetailPage() {
                 onError={(e) => { e.target.onerror = null; e.target.src = '' }}
               />
             )
-            : <PawPrint size={36} color="var(--color-primary)" aria-hidden="true" />}
+            : <PawPrint size={36} color="var(--color-pet)" aria-hidden="true" />}
         </div>
 
         {/* 정보 */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
-            <h1 style={{ fontSize: 'var(--font-size-xl)', fontWeight: 800 }}>{pet.name}</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', flexWrap: 'wrap' }}>
+            <h1 style={{ fontSize: 'var(--fs-h2)', fontWeight: 800, color: 'var(--color-primary)' }}>{pet.name}</h1>
+            {/* 상태 뱃지: deceased = memorial soft */}
             {pet.pet_status === 'deceased' && (
               <span
                 style={{
-                  fontSize: 'var(--font-size-sm)',
-                  background: 'var(--color-accent)',
-                  color: 'var(--color-primary-dark)',
+                  fontSize: 'var(--fs-caption)',
+                  background: 'rgba(42, 58, 82, 0.10)',
+                  color: 'var(--color-memorial)',
                   padding: '2px 10px',
-                  borderRadius: 'var(--radius-full)',
+                  borderRadius: 'var(--radius-pill)',
                   fontWeight: 600,
                 }}
               >
@@ -179,12 +181,12 @@ export default function PetDetailPage() {
               </span>
             )}
           </div>
-          <p style={{ fontSize: 'var(--font-size-base)', color: 'var(--color-text-secondary)' }}>
+          <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)' }}>
             {SPECIES_LABEL[pet.species] || pet.species}
             {pet.breed ? ` · ${pet.breed}` : ''}
           </p>
           {pet.birth_date && (
-            <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)' }}>
+            <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-text-muted)' }}>
               {formatDate(pet.birth_date)}
               {pet.death_date ? ` ~ ${formatDate(pet.death_date)}` : ''}
             </p>
@@ -192,7 +194,7 @@ export default function PetDetailPage() {
         </div>
       </section>
 
-      {/* 추모 페이지 링크 (deceased) */}
+      {/* 추모 페이지 링크 (deceased) — memorial 네이비 톤 */}
       {pet.pet_status === 'deceased' && pet.memorial_slug && (
         <Link
           to={`/memorial/${pet.memorial_slug}`}
@@ -201,13 +203,14 @@ export default function PetDetailPage() {
             alignItems: 'center',
             justifyContent: 'center',
             gap: 'var(--spacing-sm)',
-            background: 'var(--color-accent)',
-            color: 'var(--color-primary-dark)',
-            borderRadius: 'var(--radius-lg)',
+            background: 'rgba(42, 58, 82, 0.08)',
+            color: 'var(--color-memorial)',
+            border: '1px solid rgba(42, 58, 82, 0.20)',
+            borderRadius: 'var(--radius-card)',
             padding: 'var(--spacing-md)',
-            minHeight: 'var(--min-touch-target)',
+            minHeight: 'var(--size-button-h)',
             fontWeight: 700,
-            fontSize: 'var(--font-size-base)',
+            fontSize: 'var(--fs-body)',
           }}
         >
           <Heart size={18} aria-hidden="true" />
@@ -225,27 +228,28 @@ export default function PetDetailPage() {
             marginBottom: 'var(--spacing-md)',
           }}
         >
-          <h2 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700 }}>
+          <h2 style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 700, color: 'var(--color-primary)' }}>
             사진 ({media.length})
           </h2>
 
           <div style={{ display: 'flex', gap: 'var(--spacing-sm)' }}>
-            {/* AI 초상화 */}
+            {/* AI 초상화 버튼 */}
             <button
               onClick={() => navigate(`/pet/${petId}/portrait`)}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 'var(--spacing-xs)',
-                background: 'var(--color-accent)',
-                color: 'var(--color-primary-dark)',
-                border: 'none',
-                borderRadius: 'var(--radius-full)',
+                background: 'var(--color-pet-soft)',
+                color: 'var(--color-primary)',
+                border: '1px solid var(--color-pet)',
+                borderRadius: 'var(--radius-pill)',
                 padding: '0 var(--spacing-md)',
                 minHeight: 'var(--min-touch-target)',
-                fontSize: 'var(--font-size-sm)',
+                fontSize: 'var(--fs-caption)',
                 fontWeight: 600,
                 cursor: 'pointer',
+                transition: 'background var(--transition-base)',
               }}
               aria-label="AI 초상화 만들기"
             >
@@ -253,7 +257,7 @@ export default function PetDetailPage() {
               AI 초상화
             </button>
 
-            {/* 사진 추가 */}
+            {/* 사진 추가 버튼 */}
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
@@ -262,16 +266,17 @@ export default function PetDetailPage() {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 'var(--spacing-xs)',
-                background: 'var(--color-primary)',
-                color: '#fff',
+                background: 'var(--color-pet)',
+                color: 'var(--color-surface)',
                 border: 'none',
-                borderRadius: 'var(--radius-full)',
+                borderRadius: 'var(--radius-pill)',
                 padding: '0 var(--spacing-md)',
                 minHeight: 'var(--min-touch-target)',
-                fontSize: 'var(--font-size-sm)',
+                fontSize: 'var(--fs-caption)',
                 fontWeight: 600,
                 cursor: isUploading ? 'not-allowed' : 'pointer',
                 opacity: isUploading ? 0.7 : 1,
+                transition: 'background var(--transition-base)',
               }}
             >
               <Camera size={16} aria-hidden="true" />
@@ -290,7 +295,7 @@ export default function PetDetailPage() {
         />
 
         {uploadError && (
-          <p role="alert" style={{ color: 'var(--color-error)', fontSize: 'var(--font-size-sm)', marginBottom: 'var(--spacing-md)' }}>
+          <p role="alert" style={{ color: 'var(--color-error)', fontSize: 'var(--fs-caption)', marginBottom: 'var(--spacing-md)' }}>
             {uploadError}
           </p>
         )}
@@ -298,12 +303,13 @@ export default function PetDetailPage() {
         {media.length === 0 && !isUploading && (
           <div
             style={{
-              border: '2px dashed var(--color-border)',
-              borderRadius: 'var(--radius-lg)',
+              border: '2px dashed var(--color-border-strong)',
+              borderRadius: 'var(--radius-card)',
               padding: 'var(--spacing-2xl)',
               textAlign: 'center',
               color: 'var(--color-text-muted)',
-              fontSize: 'var(--font-size-base)',
+              fontSize: 'var(--fs-body)',
+              background: 'var(--color-surface-warm)',
             }}
           >
             <Camera size={32} style={{ margin: '0 auto var(--spacing-md)' }} aria-hidden="true" />
@@ -312,6 +318,7 @@ export default function PetDetailPage() {
           </div>
         )}
 
+        {/* 미디어 갤러리 — hover: scale(1.02), border 변화 */}
         {media.length > 0 && (
           <div
             style={{
@@ -325,9 +332,19 @@ export default function PetDetailPage() {
                 key={item.media_id}
                 style={{
                   aspectRatio: '1',
-                  borderRadius: 'var(--radius-md)',
+                  borderRadius: 'var(--radius-card)',
                   overflow: 'hidden',
-                  background: 'var(--color-accent)',
+                  background: 'var(--color-pet-soft)',
+                  border: '1px solid var(--color-pet-soft)',
+                  transition: 'transform var(--transition-base), border-color var(--transition-base)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'scale(1.02)'
+                  e.currentTarget.style.borderColor = 'var(--color-pet)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)'
+                  e.currentTarget.style.borderColor = 'var(--color-pet-soft)'
                 }}
               >
                 <img
@@ -343,23 +360,24 @@ export default function PetDetailPage() {
         )}
       </section>
 
-      {/* 사망 등록 버튼 (alive 상태만) */}
+      {/* 사망 등록 섹션 (alive 상태만) */}
       {pet.pet_status === 'alive' && (
         <section
           style={{
             border: '1px solid var(--color-border)',
-            borderRadius: 'var(--radius-lg)',
+            borderRadius: 'var(--radius-card)',
             padding: 'var(--spacing-lg)',
             display: 'flex',
             flexDirection: 'column',
             gap: 'var(--spacing-md)',
+            background: 'var(--color-surface)',
           }}
         >
           <div style={{ display: 'flex', gap: 'var(--spacing-sm)', alignItems: 'flex-start' }}>
             <AlertTriangle size={18} color="var(--color-text-muted)" style={{ flexShrink: 0, marginTop: 2 }} aria-hidden="true" />
             <div>
-              <p style={{ fontSize: 'var(--font-size-base)', fontWeight: 700, marginBottom: 4 }}>무지개다리 등록</p>
-              <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
+              <p style={{ fontSize: 'var(--fs-body)', fontWeight: 700, marginBottom: 4, color: 'var(--color-primary)' }}>무지개다리 등록</p>
+              <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
                 {pet.name}가 무지개다리를 건넜다면 등록해 주세요.
                 추모 페이지가 생성됩니다.
               </p>
@@ -372,10 +390,10 @@ export default function PetDetailPage() {
             style={{
               background: 'none',
               color: 'var(--color-text-secondary)',
-              border: '1.5px solid var(--color-border)',
-              borderRadius: 'var(--radius-full)',
-              minHeight: 'var(--min-touch-target)',
-              fontSize: 'var(--font-size-base)',
+              border: '1.5px solid var(--color-border-strong)',
+              borderRadius: 'var(--radius-pill)',
+              minHeight: 'var(--size-button-h)',
+              fontSize: 'var(--fs-button)',
               fontWeight: 600,
               cursor: isStatusChanging ? 'not-allowed' : 'pointer',
               opacity: isStatusChanging ? 0.7 : 1,

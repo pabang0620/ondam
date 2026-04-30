@@ -4,11 +4,12 @@
   gap: var(--spacing-2xl);
 }
 
-/* Hero */
+/* Hero — 따뜻한 파스텔 테라코타 + 살구 베이스 */
 .pet-hero {
-  background: linear-gradient(135deg, var(--color-accent) 0%, #f5ece0 100%);
+  background: linear-gradient(135deg, var(--color-pet-soft) 0%, var(--color-surface-warm) 100%);
   padding: var(--spacing-2xl) var(--spacing-md);
   text-align: center;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .pet-hero__inner {
@@ -21,42 +22,43 @@
 }
 
 .pet-hero__icon {
-  color: var(--color-primary);
+  color: var(--color-pet);
 }
 
 .pet-hero__title {
-  font-size: var(--font-size-2xl);
+  font-size: var(--fs-h1);
   font-weight: 800;
-  color: var(--color-primary-dark);
+  color: var(--color-primary);
   line-height: 1.4;
+  letter-spacing: var(--ls-heading-ko);
 }
 
 .pet-hero__sub {
-  font-size: var(--font-size-lg);
+  font-size: var(--fs-body-lg);
   color: var(--color-text-secondary);
-  line-height: 1.7;
+  line-height: var(--lh-relaxed);
 }
 
 .pet-hero__cta {
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-sm);
-  background: var(--color-primary);
+  background: var(--color-pet);
   color: var(--color-surface);
   border: none;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-pill);
   padding: 0 var(--spacing-2xl);
-  min-height: var(--min-touch-target);
-  font-size: var(--font-size-lg);
+  min-height: var(--size-button-h);
+  font-size: var(--fs-button);
   font-weight: 700;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background var(--transition-base);
   min-width: 200px;
   justify-content: center;
 }
 
 .pet-hero__cta:hover {
-  background: var(--color-primary-dark);
+  background: var(--color-primary);
 }
 
 /* Section */
@@ -65,7 +67,9 @@
 }
 
 .pet-section--accent {
-  background: var(--color-accent);
+  background: var(--color-surface-warm);
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .pet-section__inner {
@@ -74,20 +78,21 @@
 }
 
 .pet-section__title {
-  font-size: var(--font-size-xl);
+  font-size: var(--fs-h2);
   font-weight: 700;
   color: var(--color-text-primary);
   margin-bottom: var(--spacing-lg);
+  letter-spacing: var(--ls-heading-ko);
 }
 
 .pet-section__sub {
-  font-size: var(--font-size-base);
+  font-size: var(--fs-body);
   color: var(--color-text-secondary);
   margin-top: calc(-1 * var(--spacing-md));
   margin-bottom: var(--spacing-lg);
 }
 
-/* Feature cards */
+/* Feature cards — 따뜻한 카드 */
 .pet-features-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -95,9 +100,9 @@
 }
 
 .pet-feature-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  background: var(--color-surface-warm);
+  border: 1px solid var(--color-pet-soft);
+  border-radius: var(--radius-card);
   padding: var(--spacing-lg);
   display: flex;
   flex-direction: column;
@@ -107,8 +112,8 @@
 .pet-feature-card__icon {
   width: 48px;
   height: 48px;
-  border-radius: var(--radius-md);
-  background: var(--color-accent);
+  border-radius: var(--radius-sm);
+  background: var(--color-pet-soft);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -116,16 +121,17 @@
 
 .pet-feature-card__title {
   font-weight: 700;
-  font-size: var(--font-size-lg);
+  font-size: var(--fs-body-lg);
+  color: var(--color-primary);
 }
 
 .pet-feature-card__desc {
-  font-size: var(--font-size-base);
+  font-size: var(--fs-body);
   color: var(--color-text-secondary);
-  line-height: 1.6;
+  line-height: var(--lh-relaxed);
 }
 
-/* Plan cards */
+/* Plan cards — 구독 카드: 살구 베이지 베이스 */
 .pet-plans-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -134,8 +140,8 @@
 
 .pet-plan-card {
   background: var(--color-surface);
-  border: 2px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-card);
   padding: var(--spacing-lg);
   display: flex;
   flex-direction: column;
@@ -144,7 +150,8 @@
 }
 
 .pet-plan-card--highlight {
-  border-color: var(--color-primary);
+  background: var(--color-pet-soft);
+  border: 2px solid var(--color-pet);
 }
 
 .pet-plan-card__badge {
@@ -152,24 +159,25 @@
   top: -12px;
   left: 50%;
   transform: translateX(-50%);
-  background: var(--color-primary);
+  background: var(--color-pet);
   color: var(--color-surface);
-  font-size: var(--font-size-sm);
+  font-size: var(--fs-caption);
   font-weight: 700;
-  padding: 2px 12px;
-  border-radius: var(--radius-full);
+  padding: 2px 14px;
+  border-radius: var(--radius-pill);
   white-space: nowrap;
 }
 
 .pet-plan-card__label {
-  font-size: var(--font-size-lg);
+  font-size: var(--fs-body-lg);
   font-weight: 700;
+  color: var(--color-primary);
 }
 
 .pet-plan-card__price {
-  font-size: var(--font-size-xl);
+  font-size: var(--fs-h2);
   font-weight: 800;
-  color: var(--color-primary-dark);
+  color: var(--color-primary);
 }
 
 .pet-plan-card__features {
@@ -181,7 +189,7 @@
 }
 
 .pet-plan-card__features li {
-  font-size: var(--font-size-base);
+  font-size: var(--fs-body);
   color: var(--color-text-secondary);
   padding-left: var(--spacing-md);
   position: relative;
@@ -198,26 +206,28 @@
 .pet-plan-card__btn {
   background: var(--color-surface);
   color: var(--color-primary);
-  border: 2px solid var(--color-primary);
-  border-radius: var(--radius-full);
-  min-height: var(--min-touch-target);
-  font-size: var(--font-size-base);
+  border: 1.5px solid var(--color-primary);
+  border-radius: var(--radius-pill);
+  min-height: var(--size-button-h);
+  font-size: var(--fs-button);
   font-weight: 700;
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
+  transition: background var(--transition-base), color var(--transition-base);
 }
 
 .pet-plan-card__btn:hover {
-  background: var(--color-accent);
+  background: var(--color-surface-warm);
 }
 
 .pet-plan-card__btn--primary {
-  background: var(--color-primary);
+  background: var(--color-pet);
   color: var(--color-surface);
+  border-color: var(--color-pet);
 }
 
 .pet-plan-card__btn--primary:hover {
-  background: var(--color-primary-dark);
+  background: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 /* Pet list */
@@ -232,20 +242,20 @@
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-xs);
-  background: var(--color-accent);
-  color: var(--color-primary-dark);
-  border: none;
-  border-radius: var(--radius-full);
+  background: var(--color-pet-soft);
+  color: var(--color-primary);
+  border: 1px solid var(--color-pet);
+  border-radius: var(--radius-pill);
   padding: 0 var(--spacing-md);
-  min-height: var(--min-touch-target);
-  font-size: var(--font-size-base);
+  min-height: var(--size-button-h);
+  font-size: var(--fs-button);
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background var(--transition-base), color var(--transition-base);
 }
 
 .pet-list-add:hover {
-  background: var(--color-primary-light);
+  background: var(--color-pet);
   color: var(--color-surface);
 }
 
@@ -255,30 +265,33 @@
   gap: var(--spacing-sm);
 }
 
+/* 펫 카드 — surface-warm + pet-soft border + radius 16~20px */
 .pet-list-item {
   display: flex;
   align-items: center;
   gap: var(--spacing-md);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  background: var(--color-surface-warm);
+  border: 1px solid var(--color-pet-soft);
+  border-radius: var(--radius-card);
   padding: var(--spacing-md);
-  min-height: var(--min-touch-target);
+  min-height: var(--size-button-h);
   cursor: pointer;
   text-align: left;
   width: 100%;
-  transition: border-color 0.2s;
+  transition: border-color var(--transition-base), background var(--transition-base);
 }
 
 .pet-list-item:hover {
-  border-color: var(--color-primary);
+  border-color: var(--color-pet);
+  background: var(--color-surface);
 }
 
 .pet-list-item__avatar {
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  background: var(--color-accent);
+  background: var(--color-pet-soft);
+  border: 2px solid var(--color-pet-soft);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -300,27 +313,29 @@
 }
 
 .pet-list-item__name {
-  font-size: var(--font-size-lg);
+  font-size: var(--fs-body-lg);
   font-weight: 700;
+  color: var(--color-primary);
 }
 
 .pet-list-item__species {
-  font-size: var(--font-size-sm);
+  font-size: var(--fs-caption);
   color: var(--color-text-secondary);
 }
 
+/* 상태 뱃지: deceased = memorial soft 톤 */
 .pet-list-item__badge {
   display: inline-block;
-  font-size: var(--font-size-sm);
-  background: var(--color-accent);
-  color: var(--color-primary-dark);
+  font-size: var(--fs-caption);
+  background: rgba(42, 58, 82, 0.10);
+  color: var(--color-memorial);
   padding: 1px 8px;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-pill);
   font-weight: 600;
 }
 
 .pet-list-empty {
-  font-size: var(--font-size-base);
+  font-size: var(--fs-body);
   color: var(--color-text-muted);
   text-align: center;
   padding: var(--spacing-2xl) 0;
@@ -348,11 +363,11 @@
   }
 
   .pet-hero__title {
-    font-size: var(--font-size-xl);
+    font-size: var(--fs-h2);
   }
 
   .pet-hero__sub {
-    font-size: var(--font-size-base);
+    font-size: var(--fs-body);
   }
 
   .pet-hero__cta {
@@ -367,7 +382,7 @@
   }
 
   .pet-section__title {
-    font-size: var(--font-size-lg);
+    font-size: var(--fs-h3);
   }
 
   .pet-features-grid {

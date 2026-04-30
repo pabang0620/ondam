@@ -15,33 +15,36 @@ export default function AdminUsersPage() {
     handlePageChange,
   } = useAdminUsers()
 
+  /* 표 — header bg=surface-warm, row 구분 1px var(--color-border) */
   const thStyle = {
     padding: 'var(--spacing-sm) var(--spacing-md)',
     textAlign: 'left',
     fontWeight: 700,
-    color: 'var(--color-primary-dark)',
-    borderBottom: '2px solid var(--color-border)',
+    color: 'var(--color-primary)',
+    borderBottom: '2px solid var(--color-border-strong)',
     whiteSpace: 'nowrap',
+    fontSize: 'var(--fs-body)',
   }
 
   const tdStyle = {
     padding: 'var(--spacing-sm) var(--spacing-md)',
-    fontSize: 'var(--font-size-base)',
+    fontSize: 'var(--fs-body)',
     borderBottom: '1px solid var(--color-border)',
     verticalAlign: 'middle',
+    color: 'var(--color-text-primary)',
   }
 
   return (
     <div style={{ padding: 'var(--spacing-xl)' }}>
       {/* 헤더 */}
       <div style={{ marginBottom: 'var(--spacing-xl)' }}>
-        <h1 style={{ fontSize: 'var(--font-size-xl)', fontWeight: 800 }}>회원 관리</h1>
-        <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', marginTop: 4 }}>
+        <h1 style={{ fontSize: 'var(--fs-h2)', fontWeight: 800, color: 'var(--color-primary)', letterSpacing: 'var(--ls-heading-ko)' }}>회원 관리</h1>
+        <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-text-muted)', marginTop: 4 }}>
           전체 회원 목록을 조회합니다. (총 {total.toLocaleString('ko-KR')}명)
         </p>
       </div>
 
-      {/* 검색 */}
+      {/* 검색 인풋 — 56px height, border 1px border-strong, focus 차콜 */}
       <form
         onSubmit={handleSearch}
         style={{
@@ -75,27 +78,30 @@ export default function AdminUsersPage() {
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="이메일 또는 닉네임 검색"
             style={{
-              border: '1.5px solid var(--color-border)',
-              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--color-border-strong)',
+              borderRadius: 'var(--radius-sm)',
               padding: '0 var(--spacing-md) 0 40px',
-              minHeight: 'var(--min-touch-target)',
-              fontSize: 'var(--font-size-base)',
+              minHeight: 'var(--size-input-h)',
+              fontSize: 'var(--fs-body)',
               width: '100%',
               outline: 'none',
               background: 'var(--color-surface)',
+              color: 'var(--color-text-primary)',
+              transition: 'border-color var(--transition-fast)',
             }}
           />
         </div>
+        {/* primary=차콜 버튼 */}
         <button
           type="submit"
           style={{
             background: 'var(--color-primary)',
-            color: '#fff',
+            color: 'var(--color-surface)',
             border: 'none',
-            borderRadius: 'var(--radius-md)',
+            borderRadius: 'var(--radius-sm)',
             padding: '0 var(--spacing-lg)',
-            minHeight: 'var(--min-touch-target)',
-            fontSize: 'var(--font-size-base)',
+            minHeight: 'var(--size-button-h)',
+            fontSize: 'var(--fs-button)',
             fontWeight: 700,
             cursor: 'pointer',
             whiteSpace: 'nowrap',
@@ -107,7 +113,7 @@ export default function AdminUsersPage() {
 
       {/* 에러 */}
       {error && (
-        <p role="alert" style={{ color: 'var(--color-error)', marginBottom: 'var(--spacing-md)' }}>
+        <p role="alert" style={{ color: 'var(--color-error)', marginBottom: 'var(--spacing-md)', fontSize: 'var(--fs-body)' }}>
           {error}
         </p>
       )}
@@ -115,12 +121,12 @@ export default function AdminUsersPage() {
       {/* 테이블 */}
       <div style={{ overflowX: 'auto' }}>
         <table
-          style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--font-size-base)' }}
+          style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--fs-body)', background: 'var(--color-surface)' }}
           aria-label="회원 목록"
           aria-busy={isLoading}
         >
           <thead>
-            <tr style={{ background: 'var(--color-accent)' }}>
+            <tr style={{ background: 'var(--color-surface-warm)' }}>
               {['닉네임', '이메일', '역할', '가입일', '구독'].map((th) => (
                 <th key={th} scope="col" style={thStyle}>{th}</th>
               ))}
@@ -143,23 +149,23 @@ export default function AdminUsersPage() {
             )}
             {!isLoading && users.map((user) => (
               <tr key={user.userId} style={{ background: 'var(--color-surface)' }}>
-                <td style={tdStyle}>{user.nickname || '—'}</td>
-                <td style={tdStyle}>{user.email}</td>
+                <td style={tdStyle}>{user.nickname || '-'}</td>
+                <td style={{ ...tdStyle, color: 'var(--color-text-secondary)' }}>{user.email}</td>
                 <td style={tdStyle}>
                   <span
                     style={{
                       padding: '2px 10px',
-                      borderRadius: 'var(--radius-full)',
-                      background: user.role === 'admin' ? '#ebf8ff' : 'var(--color-accent)',
-                      color: user.role === 'admin' ? '#3182ce' : 'var(--color-primary-dark)',
+                      borderRadius: 'var(--radius-pill)',
+                      background: user.role === 'admin' ? '#ebf8ff' : 'var(--color-surface-warm)',
+                      color: user.role === 'admin' ? '#3182ce' : 'var(--color-primary)',
                       fontWeight: 700,
-                      fontSize: 'var(--font-size-sm)',
+                      fontSize: 'var(--fs-caption)',
                     }}
                   >
                     {user.role === 'admin' ? '관리자' : '회원'}
                   </span>
                 </td>
-                <td style={{ ...tdStyle, whiteSpace: 'nowrap', fontSize: 'var(--font-size-sm)' }}>
+                <td style={{ ...tdStyle, whiteSpace: 'nowrap', fontSize: 'var(--fs-caption)', color: 'var(--color-text-secondary)' }}>
                   {new Date(user.createdAt).toLocaleDateString('ko-KR')}
                 </td>
                 <td style={tdStyle}>
@@ -168,17 +174,17 @@ export default function AdminUsersPage() {
                       <span
                         style={{
                           padding: '2px 10px',
-                          borderRadius: 'var(--radius-full)',
-                          background: 'var(--color-accent)',
-                          color: 'var(--color-primary-dark)',
+                          borderRadius: 'var(--radius-pill)',
+                          background: 'var(--color-surface-warm)',
+                          color: 'var(--color-primary)',
                           fontWeight: 700,
-                          fontSize: 'var(--font-size-sm)',
+                          fontSize: 'var(--fs-caption)',
                         }}
                       >
                         {user.subscriptionPlan}
                       </span>
                     )
-                    : <span style={{ color: 'var(--color-text-muted)', fontSize: 'var(--font-size-sm)' }}>없음</span>}
+                    : <span style={{ color: 'var(--color-text-muted)', fontSize: 'var(--fs-caption)' }}>없음</span>}
                 </td>
               </tr>
             ))}
@@ -210,7 +216,7 @@ export default function AdminUsersPage() {
               minHeight: 'var(--min-touch-target)',
               background: 'var(--color-surface)',
               border: '1.5px solid var(--color-border)',
-              borderRadius: 'var(--radius-md)',
+              borderRadius: 'var(--radius-sm)',
               cursor: page <= 1 ? 'not-allowed' : 'pointer',
               opacity: page <= 1 ? 0.4 : 1,
             }}
@@ -219,7 +225,7 @@ export default function AdminUsersPage() {
             <ChevronLeft size={18} aria-hidden="true" />
           </button>
 
-          <span style={{ fontSize: 'var(--font-size-base)', fontWeight: 600 }}>
+          <span style={{ fontSize: 'var(--fs-body)', fontWeight: 600, color: 'var(--color-primary)' }}>
             {page} / {totalPages}
           </span>
 
@@ -235,7 +241,7 @@ export default function AdminUsersPage() {
               minHeight: 'var(--min-touch-target)',
               background: 'var(--color-surface)',
               border: '1.5px solid var(--color-border)',
-              borderRadius: 'var(--radius-md)',
+              borderRadius: 'var(--radius-sm)',
               cursor: page >= totalPages ? 'not-allowed' : 'pointer',
               opacity: page >= totalPages ? 0.4 : 1,
             }}

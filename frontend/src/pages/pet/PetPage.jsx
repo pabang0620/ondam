@@ -116,7 +116,7 @@ function PetListItem({ pet }) {
 
 export default function PetPage() {
   const navigate = useNavigate()
-  const { isAuthenticated } = useAuthStore((s) => ({ isAuthenticated: s.isAuthenticated }))
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const { pets, isLoading } = usePet()
 
   const handlePlanSelect = (plan) => {
