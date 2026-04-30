@@ -8,19 +8,25 @@ export default function MainLayout() {
       className="flex flex-col min-h-screen"
       style={{
         backgroundColor: 'var(--color-bg)',
-        maxWidth: '100vw',
         overflowX: 'hidden',
       }}
     >
       <Header />
       <main
         className="flex-1 w-full"
-        style={{
-          maxWidth: '100vw',
-          overflowX: 'hidden',
-        }}
+        style={{ overflowX: 'hidden' }}
       >
-        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
+        {/* 최대 너비 1200px, 수평 중앙 정렬 — 모든 페이지 콘텐츠가 중앙에 위치 */}
+        <div
+          style={{
+            maxWidth: '1200px',
+            marginLeft: 'auto',
+            marginRight: 'auto',
+            width: '100%',
+            paddingLeft: 'clamp(16px, 4vw, 32px)',
+            paddingRight: 'clamp(16px, 4vw, 32px)',
+          }}
+        >
           <Outlet />
         </div>
       </main>

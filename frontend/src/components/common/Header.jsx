@@ -87,6 +87,9 @@ export default function Header() {
     setDrawerOpen((prev) => !prev)
   }, [])
 
+  // 로그인/회원가입 페이지에서는 인증 버튼 영역을 숨김
+  const isAuthPage = [ROUTES.LOGIN, ROUTES.JOIN].includes(location.pathname)
+
   const navLinkClass = ({ isActive }) =>
     [
       'text-base font-medium transition-colors',
@@ -153,112 +156,115 @@ export default function Header() {
 
           {/* 우측 영역: 데스크톱 인증 버튼 + 모바일 햄버거 */}
           <div className="flex items-center gap-3">
-            {/* 데스크톱 인증 버튼 */}
+            {/* 데스크톱 인증 버튼 — 인증 페이지(로그인/회원가입)에서는 숨김 */}
             <div className="hidden md:flex items-center gap-3">
-              {isAuthenticated ? (
-                <>
-                  <Link
-                    to={ROUTES.MY}
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      minHeight: 'var(--min-touch-target)',
-                      padding: '0 var(--spacing-lg)',
-                      borderRadius: 'var(--radius-sm)',
-                      border: '1px solid var(--color-border-strong)',
-                      color: 'var(--color-text-primary)',
-                      fontSize: 'var(--fs-body)',
-                      fontWeight: 500,
-                      transition: 'var(--transition-base)',
-                      backgroundColor: 'transparent',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'var(--color-surface-warm)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'transparent'
-                    }}
-                  >
-                    마이페이지
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={handleLogout}
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      minHeight: 'var(--min-touch-target)',
-                      padding: '0 var(--spacing-lg)',
-                      borderRadius: 'var(--radius-sm)',
-                      border: 'none',
-                      background: 'transparent',
-                      color: 'var(--color-text-secondary)',
-                      fontSize: 'var(--fs-body)',
-                      fontWeight: 500,
-                      cursor: 'pointer',
-                      transition: 'var(--transition-base)',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.color = 'var(--color-text-primary)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.color = 'var(--color-text-secondary)'
-                    }}
-                  >
-                    로그아웃
-                  </button>
-                </>
-              ) : (
-                <>
-                  <Link
-                    to={ROUTES.LOGIN}
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      minHeight: 'var(--min-touch-target)',
-                      padding: '0 var(--spacing-lg)',
-                      borderRadius: 'var(--radius-sm)',
-                      border: '1px solid var(--color-border-strong)',
-                      color: 'var(--color-text-primary)',
-                      fontSize: 'var(--fs-body)',
-                      fontWeight: 500,
-                      transition: 'var(--transition-base)',
-                      backgroundColor: 'transparent',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'var(--color-surface-warm)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'transparent'
-                    }}
-                  >
-                    로그인
-                  </Link>
-                  <Link
-                    to={ROUTES.JOIN}
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      minHeight: 'var(--min-touch-target)',
-                      padding: '0 var(--spacing-md)',
-                      borderRadius: 'var(--radius-sm)',
-                      backgroundColor: 'var(--color-primary)',
-                      color: 'var(--color-text-on-dark)',
-                      fontSize: 'var(--fs-body)',
-                      fontWeight: 600,
-                      transition: 'var(--transition-base)',
-                      border: 'none',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'var(--color-primary-soft)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'var(--color-primary)'
-                    }}
-                  >
-                    회원가입
-                  </Link>
-                </>
+              {/* 인증 페이지(로그인·회원가입)에서는 버튼 전체 숨김 */}
+              {!isAuthPage && (
+                isAuthenticated ? (
+                  <>
+                    <Link
+                      to={ROUTES.MY}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        minHeight: 'var(--min-touch-target)',
+                        padding: '0 var(--spacing-lg)',
+                        borderRadius: 'var(--radius-sm)',
+                        border: '1px solid var(--color-border-strong)',
+                        color: 'var(--color-text-primary)',
+                        fontSize: 'var(--fs-body)',
+                        fontWeight: 500,
+                        transition: 'var(--transition-base)',
+                        backgroundColor: 'transparent',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = 'var(--color-surface-warm)'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent'
+                      }}
+                    >
+                      마이페이지
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        minHeight: 'var(--min-touch-target)',
+                        padding: '0 var(--spacing-lg)',
+                        borderRadius: 'var(--radius-sm)',
+                        border: 'none',
+                        background: 'transparent',
+                        color: 'var(--color-text-secondary)',
+                        fontSize: 'var(--fs-body)',
+                        fontWeight: 500,
+                        cursor: 'pointer',
+                        transition: 'var(--transition-base)',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.color = 'var(--color-text-primary)'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.color = 'var(--color-text-secondary)'
+                      }}
+                    >
+                      로그아웃
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      to={ROUTES.LOGIN}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        minHeight: 'var(--min-touch-target)',
+                        padding: '0 var(--spacing-lg)',
+                        borderRadius: 'var(--radius-sm)',
+                        border: '1px solid var(--color-border-strong)',
+                        color: 'var(--color-text-primary)',
+                        fontSize: 'var(--fs-body)',
+                        fontWeight: 500,
+                        transition: 'var(--transition-base)',
+                        backgroundColor: 'transparent',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = 'var(--color-surface-warm)'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent'
+                      }}
+                    >
+                      로그인
+                    </Link>
+                    <Link
+                      to={ROUTES.JOIN}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        minHeight: 'var(--min-touch-target)',
+                        padding: '0 var(--spacing-md)',
+                        borderRadius: 'var(--radius-sm)',
+                        backgroundColor: 'var(--color-primary)',
+                        color: 'var(--color-text-on-dark)',
+                        fontSize: 'var(--fs-body)',
+                        fontWeight: 600,
+                        transition: 'var(--transition-base)',
+                        border: 'none',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = 'var(--color-primary-soft)'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'var(--color-primary)'
+                      }}
+                    >
+                      회원가입
+                    </Link>
+                  </>
+                )
               )}
             </div>
 
@@ -305,210 +311,212 @@ export default function Header() {
         </div>
       </header>
 
-      {/* 모바일 Drawer */}
-      {/* Backdrop */}
+      {/* 모바일 Drawer — drawerOpen=false 시 DOM에서 완전 제거 (스크린리더 노출 방지) */}
       {drawerOpen && (
-        <div
-          aria-hidden="true"
-          onClick={() => setDrawerOpen(false)}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 98,
-            backgroundColor: 'rgba(42, 40, 38, 0.45)',
-          }}
-        />
-      )}
-
-      {/* Drawer 패널 */}
-      <nav
-        id="mobile-drawer"
-        ref={drawerRef}
-        role="dialog"
-        aria-modal="true"
-        aria-label="모바일 메뉴"
-        className="md:hidden"
-        style={{
-          position: 'fixed',
-          top: 0,
-          right: 0,
-          bottom: 0,
-          zIndex: 99,
-          width: 'min(280px, 85vw)',
-          backgroundColor: 'var(--color-bg)',
-          borderLeft: '1px solid var(--color-border)',
-          display: 'flex',
-          flexDirection: 'column',
-          paddingTop: 'env(safe-area-inset-top, 0px)',
-          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-          transform: drawerOpen ? 'translateX(0)' : 'translateX(100%)',
-          transition: 'transform 0.25s ease',
-          overflowY: 'auto',
-          overflowX: 'hidden',
-        }}
-      >
-        {/* Drawer 상단: 닫기 버튼 */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: 'var(--spacing-md) var(--spacing-md)',
-            borderBottom: '1px solid var(--color-border)',
-            minHeight: 64,
-          }}
-        >
-          <span
-            style={{
-              fontFamily: 'var(--font-serif)',
-              fontWeight: 700,
-              fontSize: 'var(--fs-h3)',
-              letterSpacing: 'var(--ls-heading-ko)',
-              color: 'var(--color-text-primary)',
-            }}
-          >
-            온담
-          </span>
-          <button
-            type="button"
+        <>
+          {/* Backdrop */}
+          <div
+            aria-hidden="true"
             onClick={() => setDrawerOpen(false)}
-            aria-label="메뉴 닫기"
             style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 98,
+              backgroundColor: 'rgba(42, 40, 38, 0.45)',
+            }}
+          />
+
+          {/* Drawer 패널 */}
+          <nav
+            id="mobile-drawer"
+            ref={drawerRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="모바일 메뉴"
+            className="md:hidden"
+            style={{
+              position: 'fixed',
+              top: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 99,
+              width: 'min(280px, 85vw)',
+              backgroundColor: 'var(--color-bg)',
+              borderLeft: '1px solid var(--color-border)',
               display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: 'var(--min-touch-target)',
-              height: 'var(--min-touch-target)',
-              minHeight: 'var(--min-touch-target)',
-              border: 'none',
-              background: 'transparent',
-              cursor: 'pointer',
-              color: 'var(--color-text-secondary)',
-              fontSize: 24,
-              borderRadius: 'var(--radius-sm)',
+              flexDirection: 'column',
+              paddingTop: 'env(safe-area-inset-top, 0px)',
+              paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+              overflowY: 'auto',
+              overflowX: 'hidden',
             }}
           >
-            ×
-          </button>
-        </div>
-
-        {/* 메인 메뉴 */}
-        <div style={{ flex: 1, padding: 'var(--spacing-md) 0' }}>
-          {NAV_LINKS.map(({ to, label }) => (
-            <NavLink
-              key={to}
-              to={to}
-              style={({ isActive }) => ({
+            {/* Drawer 상단: 닫기 버튼 */}
+            <div
+              style={{
                 display: 'flex',
                 alignItems: 'center',
-                padding: 'var(--spacing-md) var(--spacing-lg)',
-                fontSize: 'var(--fs-body-lg)',
-                fontWeight: 500,
-                color: isActive ? 'var(--color-primary)' : 'var(--color-text-secondary)',
-                backgroundColor: isActive ? 'var(--color-surface-warm)' : 'transparent',
-                borderLeft: isActive
-                  ? '3px solid var(--color-warm-accent)'
-                  : '3px solid transparent',
-                transition: 'var(--transition-base)',
-                minHeight: 'var(--min-touch-target)',
-                textDecoration: 'none',
-              })}
+                justifyContent: 'space-between',
+                padding: 'var(--spacing-md) var(--spacing-md)',
+                borderBottom: '1px solid var(--color-border)',
+                minHeight: 64,
+              }}
             >
-              {label}
-            </NavLink>
-          ))}
-        </div>
-
-        {/* 인증 영역 */}
-        <div
-          style={{
-            borderTop: '1px solid var(--color-border)',
-            padding: 'var(--spacing-lg) var(--spacing-md)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 'var(--spacing-sm)',
-          }}
-        >
-          {isAuthenticated ? (
-            <>
-              <Link
-                to={ROUTES.MY}
+              <span
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  minHeight: 'var(--size-button-h)',
-                  borderRadius: 'var(--radius-sm)',
-                  border: '1px solid var(--color-border-strong)',
+                  fontFamily: 'var(--font-serif)',
+                  fontWeight: 700,
+                  fontSize: 'var(--fs-h3)',
+                  letterSpacing: 'var(--ls-heading-ko)',
                   color: 'var(--color-text-primary)',
-                  fontSize: 'var(--fs-body)',
-                  fontWeight: 500,
-                  textDecoration: 'none',
                 }}
               >
-                마이페이지
-              </Link>
+                온담
+              </span>
               <button
                 type="button"
-                onClick={handleLogout}
+                onClick={() => setDrawerOpen(false)}
+                aria-label="메뉴 닫기"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  minHeight: 'var(--size-button-h)',
-                  borderRadius: 'var(--radius-sm)',
+                  width: 'var(--min-touch-target)',
+                  height: 'var(--min-touch-target)',
+                  minHeight: 'var(--min-touch-target)',
                   border: 'none',
                   background: 'transparent',
-                  color: 'var(--color-text-secondary)',
-                  fontSize: 'var(--fs-body)',
-                  fontWeight: 500,
                   cursor: 'pointer',
+                  color: 'var(--color-text-secondary)',
+                  fontSize: 24,
+                  borderRadius: 'var(--radius-sm)',
                 }}
               >
-                로그아웃
+                ×
               </button>
-            </>
-          ) : (
-            <>
-              <Link
-                to={ROUTES.LOGIN}
+            </div>
+
+            {/* 메인 메뉴 */}
+            <div style={{ flex: 1, padding: 'var(--spacing-md) 0' }}>
+              {NAV_LINKS.map(({ to, label }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  style={({ isActive }) => ({
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: 'var(--spacing-md) var(--spacing-lg)',
+                    fontSize: 'var(--fs-body-lg)',
+                    fontWeight: 500,
+                    color: isActive ? 'var(--color-primary)' : 'var(--color-text-secondary)',
+                    backgroundColor: isActive ? 'var(--color-surface-warm)' : 'transparent',
+                    borderLeft: isActive
+                      ? '3px solid var(--color-warm-accent)'
+                      : '3px solid transparent',
+                    transition: 'var(--transition-base)',
+                    minHeight: 'var(--min-touch-target)',
+                    textDecoration: 'none',
+                  })}
+                >
+                  {label}
+                </NavLink>
+              ))}
+            </div>
+
+            {/* 인증 영역 — 인증 페이지에서는 숨김 */}
+            {!isAuthPage && (
+              <div
                 style={{
+                  borderTop: '1px solid var(--color-border)',
+                  padding: 'var(--spacing-lg) var(--spacing-md)',
                   display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  minHeight: 'var(--size-button-h)',
-                  borderRadius: 'var(--radius-sm)',
-                  border: '1px solid var(--color-border-strong)',
-                  color: 'var(--color-text-primary)',
-                  fontSize: 'var(--fs-body)',
-                  fontWeight: 500,
-                  textDecoration: 'none',
+                  flexDirection: 'column',
+                  gap: 'var(--spacing-sm)',
                 }}
               >
-                로그인
-              </Link>
-              <Link
-                to={ROUTES.JOIN}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  minHeight: 'var(--size-button-h)',
-                  borderRadius: 'var(--radius-sm)',
-                  backgroundColor: 'var(--color-primary)',
-                  color: 'var(--color-text-on-dark)',
-                  fontSize: 'var(--fs-body)',
-                  fontWeight: 600,
-                  textDecoration: 'none',
-                  border: 'none',
-                }}
-              >
-                회원가입
-              </Link>
-            </>
-          )}
-        </div>
-      </nav>
+                {isAuthenticated ? (
+                  <>
+                    <Link
+                      to={ROUTES.MY}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        minHeight: 'var(--size-button-h)',
+                        borderRadius: 'var(--radius-sm)',
+                        border: '1px solid var(--color-border-strong)',
+                        color: 'var(--color-text-primary)',
+                        fontSize: 'var(--fs-body)',
+                        fontWeight: 500,
+                        textDecoration: 'none',
+                      }}
+                    >
+                      마이페이지
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        minHeight: 'var(--size-button-h)',
+                        borderRadius: 'var(--radius-sm)',
+                        border: 'none',
+                        background: 'transparent',
+                        color: 'var(--color-text-secondary)',
+                        fontSize: 'var(--fs-body)',
+                        fontWeight: 500,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      로그아웃
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      to={ROUTES.LOGIN}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        minHeight: 'var(--size-button-h)',
+                        borderRadius: 'var(--radius-sm)',
+                        border: '1px solid var(--color-border-strong)',
+                        color: 'var(--color-text-primary)',
+                        fontSize: 'var(--fs-body)',
+                        fontWeight: 500,
+                        textDecoration: 'none',
+                      }}
+                    >
+                      로그인
+                    </Link>
+                    <Link
+                      to={ROUTES.JOIN}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        minHeight: 'var(--size-button-h)',
+                        borderRadius: 'var(--radius-sm)',
+                        backgroundColor: 'var(--color-primary)',
+                        color: 'var(--color-text-on-dark)',
+                        fontSize: 'var(--fs-body)',
+                        fontWeight: 600,
+                        textDecoration: 'none',
+                        border: 'none',
+                      }}
+                    >
+                      회원가입
+                    </Link>
+                  </>
+                )}
+              </div>
+            )}
+          </nav>
+        </>
+      )}
     </>
   )
 }
