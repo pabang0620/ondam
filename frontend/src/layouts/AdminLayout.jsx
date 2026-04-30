@@ -143,7 +143,7 @@ export default function AdminLayout() {
 
       {/* 메뉴 */}
       <nav
-        className="flex flex-col gap-1 px-3 py-4 flex-1"
+        className="flex flex-col gap-1 px-3 py-5 flex-1"
         aria-label="관리자 메뉴"
       >
         {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
@@ -155,7 +155,7 @@ export default function AdminLayout() {
               display: 'flex',
               alignItems: 'center',
               gap: 'var(--spacing-sm)',
-              padding: 'var(--spacing-sm) var(--spacing-sm)',
+              padding: 'var(--spacing-sm) var(--spacing-md)',
               borderRadius: 'var(--radius-sm)',
               fontSize: 'var(--fs-caption)',
               fontWeight: 500,
@@ -332,6 +332,7 @@ export default function AdminLayout() {
         </div>
 
         <main
+          className="p-4 sm:p-6 lg:p-8"
           style={{
             flex: 1,
             overflowY: 'auto',

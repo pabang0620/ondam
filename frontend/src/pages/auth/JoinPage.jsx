@@ -8,10 +8,11 @@ function StepIndicator({ current, total }) {
       {Array.from({ length: total }, (_, i) => i + 1).map((n) => (
         <div key={n} className="flex items-center gap-2">
           <div
-            className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
             style={{
               backgroundColor: n <= current ? 'var(--color-primary)' : 'var(--color-border)',
               color: n <= current ? 'var(--color-surface)' : 'var(--color-text-muted)',
+              transition: 'background-color var(--transition-base)',
             }}
             aria-current={n === current ? 'step' : undefined}
           >
@@ -19,9 +20,11 @@ function StepIndicator({ current, total }) {
           </div>
           {n < total && (
             <div
-              className="w-8 h-0.5 transition-all"
+              className="w-8"
               style={{
+                height: '2px',
                 backgroundColor: n < current ? 'var(--color-primary)' : 'var(--color-border)',
+                transition: 'background-color var(--transition-base)',
               }}
             />
           )}
@@ -33,11 +36,11 @@ function StepIndicator({ current, total }) {
 
 function InputField({ id, label, type = 'text', value, onChange, placeholder, disabled, autoComplete }) {
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-2">
       <label
         htmlFor={id}
         className="font-medium"
-        style={{ fontSize: 'var(--font-size-base)', color: 'var(--color-text-primary)' }}
+        style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-primary)' }}
       >
         {label}
       </label>
@@ -49,13 +52,16 @@ function InputField({ id, label, type = 'text', value, onChange, placeholder, di
         onChange={onChange}
         placeholder={placeholder}
         disabled={disabled}
-        className="w-full px-4 rounded-xl outline-none transition-all"
+        className="w-full outline-none"
         style={{
-          height: 'var(--min-touch-target)',
-          fontSize: 'var(--font-size-base)',
-          border: '1.5px solid var(--color-border)',
+          height: 'var(--size-input-h)',
+          padding: '0 16px',
+          fontSize: 'var(--fs-body)',
+          border: '1px solid var(--color-border)',
+          borderRadius: '10px',
           backgroundColor: 'var(--color-surface)',
           color: 'var(--color-text-primary)',
+          transition: 'border-color var(--transition-base)',
         }}
         onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--color-primary)' }}
         onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--color-border)' }}
@@ -83,15 +89,19 @@ export default function JoinPage() {
   } = useJoin()
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-7">
       <div className="text-center">
         <h1
           className="font-bold mb-1"
-          style={{ fontSize: 'var(--font-size-2xl)', color: 'var(--color-text-primary)' }}
+          style={{
+            fontSize: 'var(--fs-h2)',
+            color: 'var(--color-text-primary)',
+            letterSpacing: 'var(--ls-heading-ko)',
+          }}
         >
           회원가입
         </h1>
-        <p style={{ fontSize: 'var(--font-size-base)', color: 'var(--color-text-secondary)' }}>
+        <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)' }}>
           온담과 함께 소중한 기억을 간직하세요
         </p>
       </div>
@@ -100,7 +110,7 @@ export default function JoinPage() {
 
       {/* Step 1: 기본 정보 입력 */}
       {step === 1 && (
-        <form onSubmit={handleNextStep} noValidate className="flex flex-col gap-4">
+        <form onSubmit={handleNextStep} noValidate className="flex flex-col gap-5">
           <InputField
             id="join-email"
             label="이메일"
@@ -135,11 +145,13 @@ export default function JoinPage() {
           {error && (
             <p
               role="alert"
-              className="px-3 py-2 rounded-lg text-sm"
               style={{
+                fontSize: 'var(--fs-body)',
                 color: 'var(--color-error)',
-                backgroundColor: '#FFF5F5',
-                border: '1px solid #FED7D7',
+                backgroundColor: 'var(--color-error-light)',
+                border: '1px solid var(--color-error-muted)',
+                borderRadius: '10px',
+                padding: '10px 14px',
               }}
             >
               {error}
@@ -148,12 +160,17 @@ export default function JoinPage() {
 
           <button
             type="submit"
-            className="w-full rounded-xl font-semibold transition-opacity"
+            disabled={isLoading}
+            className="w-full font-semibold mt-2"
             style={{
-              minHeight: 'var(--min-touch-target)',
-              fontSize: 'var(--font-size-lg)',
+              height: 'var(--size-button-h)',
+              fontSize: 'var(--fs-button)',
               backgroundColor: 'var(--color-primary)',
               color: 'var(--color-surface)',
+              borderRadius: 'var(--radius-pill)',
+              border: 'none',
+              opacity: isLoading ? 0.65 : 1,
+              transition: 'opacity var(--transition-base)',
             }}
           >
             다음 단계
@@ -163,15 +180,22 @@ export default function JoinPage() {
 
       {/* Step 2: 동의 항목 */}
       {step === 2 && (
-        <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
           <div
-            className="rounded-xl p-4 flex flex-col gap-3"
-            style={{ backgroundColor: 'var(--color-accent)' }}
+            style={{
+              backgroundColor: 'var(--color-accent)',
+              borderRadius: 'var(--radius-card)',
+              padding: '20px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '14px',
+              border: '1px solid var(--color-border)',
+            }}
           >
             {/* 전체 동의 */}
             <label
               className="flex items-center gap-3 cursor-pointer"
-              style={{ minHeight: 'var(--min-touch-target)' }}
+              style={{ minHeight: 'var(--size-button-h)' }}
             >
               <input
                 type="checkbox"
@@ -182,20 +206,20 @@ export default function JoinPage() {
               />
               <span
                 className="font-bold"
-                style={{ fontSize: 'var(--font-size-lg)', color: 'var(--color-text-primary)' }}
+                style={{ fontSize: 'var(--fs-body-lg)', color: 'var(--color-text-primary)' }}
               >
                 전체 동의
               </span>
             </label>
 
-            <hr style={{ borderColor: 'var(--color-border)' }} />
+            <hr style={{ border: 'none', borderTop: '1px solid var(--color-border)' }} />
 
             {/* 개별 동의 항목 */}
             {consentItems.map((item) => (
               <label
                 key={item.type}
                 className="flex items-center gap-3 cursor-pointer"
-                style={{ minHeight: 'var(--min-touch-target)' }}
+                style={{ minHeight: 'var(--size-button-h)' }}
               >
                 <input
                   type="checkbox"
@@ -206,7 +230,7 @@ export default function JoinPage() {
                 />
                 <span
                   className="flex items-center gap-1"
-                  style={{ fontSize: 'var(--font-size-base)', color: 'var(--color-text-primary)' }}
+                  style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-primary)' }}
                 >
                   {item.label}
                   {item.required && (
@@ -222,11 +246,13 @@ export default function JoinPage() {
           {error && (
             <p
               role="alert"
-              className="px-3 py-2 rounded-lg text-sm"
               style={{
+                fontSize: 'var(--fs-body)',
                 color: 'var(--color-error)',
-                backgroundColor: '#FFF5F5',
-                border: '1px solid #FED7D7',
+                backgroundColor: 'var(--color-error-light)',
+                border: '1px solid var(--color-error-muted)',
+                borderRadius: '10px',
+                padding: '10px 14px',
               }}
             >
               {error}
@@ -238,13 +264,14 @@ export default function JoinPage() {
               type="button"
               onClick={() => setStep(1)}
               disabled={isLoading}
-              className="flex-1 rounded-xl font-semibold transition-colors"
+              className="flex-1 font-semibold"
               style={{
-                minHeight: 'var(--min-touch-target)',
-                fontSize: 'var(--font-size-base)',
-                border: '1.5px solid var(--color-border)',
+                height: 'var(--size-button-h)',
+                fontSize: 'var(--fs-body)',
+                border: '1px solid var(--color-border)',
                 backgroundColor: 'var(--color-surface)',
                 color: 'var(--color-text-secondary)',
+                borderRadius: 'var(--radius-pill)',
               }}
             >
               이전
@@ -253,13 +280,16 @@ export default function JoinPage() {
               type="submit"
               disabled={isLoading}
               aria-busy={isLoading}
-              className="flex-[2] rounded-xl font-semibold transition-opacity"
+              className="flex-[2] font-semibold"
               style={{
-                minHeight: 'var(--min-touch-target)',
-                fontSize: 'var(--font-size-lg)',
-                backgroundColor: isLoading ? 'var(--color-primary-light)' : 'var(--color-primary)',
+                height: 'var(--size-button-h)',
+                fontSize: 'var(--fs-button)',
+                backgroundColor: 'var(--color-primary)',
                 color: 'var(--color-surface)',
-                opacity: isLoading ? 0.7 : 1,
+                borderRadius: 'var(--radius-pill)',
+                border: 'none',
+                opacity: isLoading ? 0.65 : 1,
+                transition: 'opacity var(--transition-base)',
               }}
             >
               {isLoading ? '가입 중...' : '가입 완료'}
@@ -271,11 +301,11 @@ export default function JoinPage() {
       {/* 구분선 */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
         <hr style={{ flex: 1, border: 'none', borderTop: '1px solid var(--color-border)' }} />
-        <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)' }}>또는</span>
+        <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-text-muted)' }}>또는</span>
         <hr style={{ flex: 1, border: 'none', borderTop: '1px solid var(--color-border)' }} />
       </div>
 
-      {/* 카카오 시작하기 */}
+      {/* 카카오 시작하기 — 카카오 노란색 유지(접근성) */}
       <a
         href="/api/auth/kakao"
         style={{
@@ -284,20 +314,21 @@ export default function JoinPage() {
           justifyContent: 'center',
           gap: 'var(--spacing-sm)',
           width: '100%',
-          minHeight: 'var(--min-touch-target)',
+          height: 'var(--size-button-h)',
           background: '#FEE500',
-          color: '#000000',
-          border: 'none',
-          borderRadius: 'var(--radius-full)',
-          fontSize: 'var(--font-size-base)',
+          color: '#191600',
+          borderRadius: 'var(--radius-pill)',
+          fontSize: 'var(--fs-button)',
           fontWeight: 700,
           textDecoration: 'none',
-          cursor: 'pointer',
+          border: 'none',
         }}
       >
         <img
           src="https://developers.kakao.com/assets/img/about/logos/kakaolink/kakaolink_btn_small.png"
           alt=""
+          width={20}
+          height={20}
           style={{ width: 20, height: 20 }}
         />
         카카오로 시작하기
@@ -306,7 +337,7 @@ export default function JoinPage() {
       {/* 로그인 링크 */}
       <p
         className="text-center"
-        style={{ fontSize: 'var(--font-size-base)', color: 'var(--color-text-secondary)' }}
+        style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)' }}
       >
         이미 계정이 있으신가요?{' '}
         <Link

@@ -11,8 +11,8 @@ export default function Footer() {
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
       }}
     >
-      <div className="max-w-6xl mx-auto px-4 py-8 sm:py-10">
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6 sm:gap-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12 lg:py-16">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-8 sm:gap-12">
           {/* 브랜드 */}
           <div className="flex flex-col gap-2">
             <span
@@ -41,7 +41,7 @@ export default function Footer() {
           </div>
 
           {/* 링크 그룹: 모바일에서 가로 2열, 데스크톱에서 나란히 */}
-          <div className="grid grid-cols-2 sm:flex sm:flex-row gap-6 sm:gap-12">
+          <div className="grid grid-cols-2 sm:flex sm:flex-row gap-8 sm:gap-16">
             {/* 서비스 링크 */}
             <div className="flex flex-col gap-2">
               <span
@@ -130,8 +130,8 @@ export default function Footer() {
 
         <div
           style={{
-            marginTop: 'var(--spacing-xl)',
-            paddingTop: 'var(--spacing-lg)',
+            marginTop: 'var(--spacing-2xl)',
+            paddingTop: 'var(--spacing-xl)',
             borderTop: '1px solid var(--color-border)',
             fontSize: 'var(--fs-caption)',
             color: 'var(--color-text-muted)',

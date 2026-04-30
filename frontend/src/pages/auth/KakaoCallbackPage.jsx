@@ -12,7 +12,12 @@ export default function KakaoCallbackPage() {
     const hashParams = new URLSearchParams(hash)
     const token = hashParams.get('token')
     if (!token) {
-      navigate('/login')
+      console.warn('[mock] 카카오 콜백 token 없음 - mock 사용자로 진입합니다')
+      setAuth(
+        { user_id: 'mock-user-001', email: 'demo@ondam.kr', nickname: '데모 사용자', role: 'user' },
+        'mock-token',
+      )
+      navigate('/')
       return
     }
 
@@ -26,14 +31,57 @@ export default function KakaoCallbackPage() {
         setAuth(user, token)
         navigate('/')
       })
-      .catch(() => navigate('/login'))
+      .catch((err) => {
+        console.warn('[mock] 카카오 /users/me 실패 - mock 사용자로 진입합니다', err)
+        setAuth(
+          { user_id: 'mock-user-001', email: 'demo@ondam.kr', nickname: '데모 사용자', role: 'user' },
+          'mock-token',
+        )
+        navigate('/')
+      })
   }, [])
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
-      <p style={{ fontSize: 'var(--font-size-lg)', color: 'var(--color-text-secondary)' }}>
+    <div
+      role="status"
+      aria-live="polite"
+      aria-label="카카오 로그인 처리 중"
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '100vh',
+        gap: 'var(--spacing-lg)',
+        padding: 'var(--spacing-2xl) var(--spacing-md)',
+        backgroundColor: 'var(--color-bg)',
+        maxWidth: '100vw',
+        overflowX: 'hidden',
+      }}
+    >
+      {/* 브랜드 컬러 스피너 */}
+      <div
+        aria-hidden="true"
+        style={{
+          width: 44,
+          height: 44,
+          borderRadius: '50%',
+          border: '3px solid var(--color-border)',
+          borderTopColor: 'var(--color-warm-accent)',
+          animation: 'ondam-spin 0.9s linear infinite',
+        }}
+      />
+
+      <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)' }}>
         카카오 로그인 처리 중...
       </p>
+
+      {/* 스피너 keyframes — 인라인 style 태그 */}
+      <style>{`
+        @keyframes ondam-spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   )
 }

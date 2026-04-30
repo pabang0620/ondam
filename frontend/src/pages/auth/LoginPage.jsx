@@ -6,26 +6,30 @@ export default function LoginPage() {
   const { email, setEmail, password, setPassword, isLoading, error, handleSubmit } = useLogin()
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-7">
       <div className="text-center">
         <h1
           className="font-bold mb-1"
-          style={{ fontSize: 'var(--font-size-2xl)', color: 'var(--color-text-primary)' }}
+          style={{
+            fontSize: 'var(--fs-h2)',
+            color: 'var(--color-text-primary)',
+            letterSpacing: 'var(--ls-heading-ko)',
+          }}
         >
           로그인
         </h1>
-        <p style={{ fontSize: 'var(--font-size-base)', color: 'var(--color-text-secondary)' }}>
+        <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)' }}>
           온담에 오신 것을 환영합니다
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
+      <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
         {/* 이메일 */}
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-2">
           <label
             htmlFor="email"
             className="font-medium"
-            style={{ fontSize: 'var(--font-size-base)', color: 'var(--color-text-primary)' }}
+            style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-primary)' }}
           >
             이메일
           </label>
@@ -39,13 +43,16 @@ export default function LoginPage() {
             disabled={isLoading}
             aria-invalid={!!error}
             aria-describedby={error ? 'login-error' : undefined}
-            className="w-full px-4 rounded-xl outline-none transition-all"
+            className="w-full outline-none"
             style={{
-              height: 'var(--min-touch-target)',
-              fontSize: 'var(--font-size-base)',
-              border: '1.5px solid var(--color-border)',
+              height: 'var(--size-input-h)',
+              padding: '0 16px',
+              fontSize: 'var(--fs-body)',
+              border: '1px solid var(--color-border)',
+              borderRadius: '10px',
               backgroundColor: 'var(--color-surface)',
               color: 'var(--color-text-primary)',
+              transition: 'border-color var(--transition-base)',
             }}
             onFocus={(e) => {
               e.currentTarget.style.borderColor = 'var(--color-primary)'
@@ -57,11 +64,11 @@ export default function LoginPage() {
         </div>
 
         {/* 비밀번호 */}
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-2">
           <label
             htmlFor="password"
             className="font-medium"
-            style={{ fontSize: 'var(--font-size-base)', color: 'var(--color-text-primary)' }}
+            style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-primary)' }}
           >
             비밀번호
           </label>
@@ -75,13 +82,16 @@ export default function LoginPage() {
             disabled={isLoading}
             aria-invalid={!!error}
             aria-describedby={error ? 'login-error' : undefined}
-            className="w-full px-4 rounded-xl outline-none transition-all"
+            className="w-full outline-none"
             style={{
-              height: 'var(--min-touch-target)',
-              fontSize: 'var(--font-size-base)',
-              border: '1.5px solid var(--color-border)',
+              height: 'var(--size-input-h)',
+              padding: '0 16px',
+              fontSize: 'var(--fs-body)',
+              border: '1px solid var(--color-border)',
+              borderRadius: '10px',
               backgroundColor: 'var(--color-surface)',
               color: 'var(--color-text-primary)',
+              transition: 'border-color var(--transition-base)',
             }}
             onFocus={(e) => {
               e.currentTarget.style.borderColor = 'var(--color-primary)'
@@ -97,11 +107,13 @@ export default function LoginPage() {
           <p
             id="login-error"
             role="alert"
-            className="px-3 py-2 rounded-lg text-sm"
             style={{
+              fontSize: 'var(--fs-body)',
               color: 'var(--color-error)',
-              backgroundColor: '#FFF5F5',
-              border: '1px solid #FED7D7',
+              backgroundColor: 'var(--color-error-light)',
+              border: '1px solid var(--color-error-muted)',
+              borderRadius: '10px',
+              padding: '10px 14px',
             }}
           >
             {error}
@@ -113,13 +125,16 @@ export default function LoginPage() {
           type="submit"
           disabled={isLoading}
           aria-busy={isLoading}
-          className="w-full rounded-xl font-semibold transition-opacity"
+          className="w-full font-semibold mt-2"
           style={{
-            minHeight: 'var(--min-touch-target)',
-            fontSize: 'var(--font-size-lg)',
-            backgroundColor: isLoading ? 'var(--color-primary-light)' : 'var(--color-primary)',
+            height: 'var(--size-button-h)',
+            fontSize: 'var(--fs-button)',
+            backgroundColor: 'var(--color-primary)',
             color: 'var(--color-surface)',
-            opacity: isLoading ? 0.7 : 1,
+            borderRadius: 'var(--radius-pill)',
+            border: 'none',
+            opacity: isLoading ? 0.65 : 1,
+            transition: 'opacity var(--transition-base)',
           }}
         >
           {isLoading ? '로그인 중...' : '로그인'}
@@ -129,11 +144,11 @@ export default function LoginPage() {
       {/* 구분선 */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
         <hr style={{ flex: 1, border: 'none', borderTop: '1px solid var(--color-border)' }} />
-        <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)' }}>또는</span>
+        <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-text-muted)' }}>또는</span>
         <hr style={{ flex: 1, border: 'none', borderTop: '1px solid var(--color-border)' }} />
       </div>
 
-      {/* 카카오 로그인 */}
+      {/* 카카오 로그인 — 카카오 노란색 유지(접근성) */}
       <a
         href="/api/auth/kakao"
         style={{
@@ -142,20 +157,21 @@ export default function LoginPage() {
           justifyContent: 'center',
           gap: 'var(--spacing-sm)',
           width: '100%',
-          minHeight: 'var(--min-touch-target)',
+          height: 'var(--size-button-h)',
           background: '#FEE500',
-          color: '#000000',
-          border: 'none',
-          borderRadius: 'var(--radius-full)',
-          fontSize: 'var(--font-size-base)',
+          color: '#191600',
+          borderRadius: 'var(--radius-pill)',
+          fontSize: 'var(--fs-button)',
           fontWeight: 700,
           textDecoration: 'none',
-          cursor: 'pointer',
+          border: 'none',
         }}
       >
         <img
           src="https://developers.kakao.com/assets/img/about/logos/kakaolink/kakaolink_btn_small.png"
           alt=""
+          width={20}
+          height={20}
           style={{ width: 20, height: 20 }}
         />
         카카오로 로그인
@@ -164,7 +180,7 @@ export default function LoginPage() {
       {/* 회원가입 링크 */}
       <p
         className="text-center"
-        style={{ fontSize: 'var(--font-size-base)', color: 'var(--color-text-secondary)' }}
+        style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)' }}
       >
         아직 계정이 없으신가요?{' '}
         <Link

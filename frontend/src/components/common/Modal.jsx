@@ -83,13 +83,13 @@ export function Modal({ isOpen, onClose, title, children }) {
         backgroundColor: 'var(--color-surface)',
         border: '1px solid var(--color-border)',
         borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0',
-        padding: 'var(--spacing-xl) var(--spacing-md)',
+        padding: 'var(--spacing-xl) var(--spacing-lg)',
         width: '100%',
         maxWidth: '100vw',
         maxHeight: '90vh',
         overflowY: 'auto',
         overflowX: 'hidden',
-        paddingBottom: 'max(var(--spacing-xl), env(safe-area-inset-bottom, 0px))',
+        paddingBottom: 'max(var(--spacing-2xl), env(safe-area-inset-bottom, 0px))',
       }
     : {
         position: 'relative',
@@ -98,7 +98,7 @@ export function Modal({ isOpen, onClose, title, children }) {
         borderRadius: 'var(--radius-card)',
         padding: 'var(--spacing-xl)',
         width: '100%',
-        maxWidth: 480,
+        maxWidth: 520,
         maxHeight: '90vh',
         overflowY: 'auto',
         overflowX: 'hidden',
@@ -148,7 +148,7 @@ export function Modal({ isOpen, onClose, title, children }) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            marginBottom: title ? 'var(--spacing-lg)' : 0,
+            marginBottom: title ? 'var(--spacing-xl)' : 0,
           }}
         >
           {title && (

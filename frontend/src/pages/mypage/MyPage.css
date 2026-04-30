@@ -1,28 +1,53 @@
 .my-page {
+  /* 모바일 퍼스트: 전체 너비, 작은 패딩 */
+  width: 100%;
   max-width: 640px;
   margin: 0 auto;
-  padding: var(--spacing-xl) var(--spacing-md);
+  padding: var(--spacing-lg) var(--spacing-md) var(--spacing-2xl);
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xl);
+  gap: var(--spacing-lg);
+  /* 가로 스크롤 방지 */
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+@media (min-width: 640px) {
+  .my-page {
+    padding: var(--spacing-xl) var(--spacing-lg) var(--spacing-2xl);
+    gap: var(--spacing-xl);
+  }
 }
 
 .my-error {
-  font-size: var(--font-size-base);
+  font-size: var(--fs-body);
   color: var(--color-error);
   padding: var(--spacing-md);
   background: var(--color-error-light);
-  border-radius: var(--radius-md);
+  border: 1px solid var(--color-error-muted);
+  border-radius: var(--radius-card);
 }
 
+/* 프로필 카드 */
 .my-profile {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-lg);
+  border-radius: var(--radius-card);
+  /* 모바일: 충분한 내부 여백 */
+  padding: var(--spacing-lg) var(--spacing-md);
   display: flex;
   align-items: center;
   gap: var(--spacing-md);
+  /* 가로 스크롤 방지 */
+  min-width: 0;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .my-profile {
+    padding: var(--spacing-xl) var(--spacing-lg);
+    gap: var(--spacing-lg);
+  }
 }
 
 .my-profile__avatar {
@@ -30,6 +55,7 @@
   height: 64px;
   border-radius: 50%;
   background: var(--color-accent);
+  border: 1px solid var(--color-border);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -44,41 +70,64 @@
 }
 
 .my-profile__name {
-  font-size: var(--font-size-lg);
+  /* 모바일에서 긴 닉네임 넘침 방지 */
+  font-size: var(--fs-body);
   font-weight: 700;
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (min-width: 640px) {
+  .my-profile__name {
+    font-size: var(--fs-body-lg);
+  }
 }
 
 .my-profile__email {
-  font-size: var(--font-size-sm);
+  font-size: var(--fs-caption);
   color: var(--color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .my-profile__edit {
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-xs);
-  background: var(--color-accent);
-  color: var(--color-primary-dark);
-  border: none;
-  border-radius: var(--radius-full);
-  padding: 0 var(--spacing-md);
-  min-height: var(--min-touch-target);
-  font-size: var(--font-size-sm);
+  background: var(--color-bg-alt);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  /* 모바일: 최소 너비 확보, 패딩 조정 */
+  padding: 0 var(--spacing-sm);
+  min-height: var(--size-button-h);
+  min-width: 64px;
+  font-size: var(--fs-caption);
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
+  transition: background-color var(--transition-base);
+}
+
+@media (min-width: 640px) {
+  .my-profile__edit {
+    padding: 0 var(--spacing-md);
+  }
 }
 
 .my-profile__edit:hover {
-  background: var(--color-primary-light);
-  color: var(--color-surface);
+  background: var(--color-border-strong);
 }
 
+/* 탭 네비게이션 */
 .my-tabs {
   display: flex;
   gap: var(--spacing-xs);
-  border-bottom: 2px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -94,33 +143,42 @@
   background: none;
   border: none;
   border-bottom: 2px solid transparent;
-  margin-bottom: -2px;
-  padding: var(--spacing-sm) var(--spacing-md);
-  min-height: var(--min-touch-target);
-  font-size: var(--font-size-base);
+  margin-bottom: -1px;
+  /* 모바일: 패딩 축소로 320px에서도 모든 탭 접근 가능 */
+  padding: var(--spacing-sm) 10px;
+  min-height: var(--size-button-h);
+  font-size: var(--fs-caption);
   font-weight: 600;
   color: var(--color-text-secondary);
   cursor: pointer;
   white-space: nowrap;
-  transition: color 0.2s, border-color 0.2s;
+  transition: color var(--transition-base), border-color var(--transition-base);
+}
+
+@media (min-width: 480px) {
+  .my-tab-btn {
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: var(--fs-body);
+  }
 }
 
 .my-tab-btn--active {
   color: var(--color-primary);
-  border-bottom-color: var(--color-primary);
+  border-bottom-color: var(--color-warm-accent);
 }
 
 .my-tab-btn:hover:not(.my-tab-btn--active) {
   color: var(--color-text-primary);
 }
 
+/* 탭 패널 */
 .my-tab-panel {
   min-height: 200px;
-  padding-top: var(--spacing-md);
+  padding-top: var(--spacing-lg);
 }
 
 .my-tab-empty {
-  font-size: var(--font-size-base);
+  font-size: var(--fs-body);
   color: var(--color-text-muted);
   text-align: center;
   padding: var(--spacing-2xl) 0;
@@ -130,6 +188,7 @@
   padding: var(--spacing-md) 0;
 }
 
+/* 목록 아이템 */
 .my-list {
   list-style: none;
   display: flex;
@@ -144,9 +203,23 @@
   gap: var(--spacing-md);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-md);
-  min-height: var(--min-touch-target);
+  border-radius: var(--radius-card);
+  padding: var(--spacing-md) var(--spacing-lg);
+  min-height: var(--size-button-h);
+  transition: background-color var(--transition-base);
+  /* 가로 스크롤 방지 */
+  min-width: 0;
+}
+
+@media (min-width: 640px) {
+  .my-list-item {
+    gap: var(--spacing-lg);
+    padding: var(--spacing-md) var(--spacing-xl);
+  }
+}
+
+.my-list-item:hover {
+  background-color: var(--color-surface-warm);
 }
 
 .my-list-item__info {
@@ -154,20 +227,28 @@
   flex-direction: column;
   gap: 2px;
   flex: 1;
+  /* 텍스트 넘침 방지 */
+  min-width: 0;
+  overflow: hidden;
 }
 
 .my-list-item__title {
-  font-size: var(--font-size-base);
+  font-size: var(--fs-body);
   font-weight: 600;
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .my-list-item__date {
-  font-size: var(--font-size-sm);
+  font-size: var(--fs-caption);
   color: var(--color-text-muted);
+  white-space: nowrap;
 }
 
 .my-list-item__badge {
-  font-size: var(--font-size-sm);
+  font-size: var(--fs-caption);
   font-weight: 700;
   flex-shrink: 0;
 }

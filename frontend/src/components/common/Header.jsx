@@ -105,7 +105,7 @@ export default function Header() {
           paddingTop: 'env(safe-area-inset-top, 0px)',
         }}
       >
-        <div className="max-w-6xl mx-auto px-4 flex items-center justify-between h-16">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
           {/* 로고 */}
           <Link
             to={ROUTES.HOME}
@@ -135,7 +135,7 @@ export default function Header() {
           </Link>
 
           {/* 데스크톱 네비게이션 */}
-          <nav className="hidden md:flex items-center gap-6" aria-label="주요 메뉴">
+          <nav className="hidden md:flex items-center gap-8" aria-label="주요 메뉴">
             {NAV_LINKS.map(({ to, label }) => (
               <NavLink
                 key={to}
@@ -152,9 +152,9 @@ export default function Header() {
           </nav>
 
           {/* 우측 영역: 데스크톱 인증 버튼 + 모바일 햄버거 */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             {/* 데스크톱 인증 버튼 */}
-            <div className="hidden md:flex items-center gap-2">
+            <div className="hidden md:flex items-center gap-3">
               {isAuthenticated ? (
                 <>
                   <Link
@@ -163,7 +163,7 @@ export default function Header() {
                       display: 'inline-flex',
                       alignItems: 'center',
                       minHeight: 'var(--min-touch-target)',
-                      padding: '0 var(--spacing-md)',
+                      padding: '0 var(--spacing-lg)',
                       borderRadius: 'var(--radius-sm)',
                       border: '1px solid var(--color-border-strong)',
                       color: 'var(--color-text-primary)',
@@ -188,7 +188,7 @@ export default function Header() {
                       display: 'inline-flex',
                       alignItems: 'center',
                       minHeight: 'var(--min-touch-target)',
-                      padding: '0 var(--spacing-md)',
+                      padding: '0 var(--spacing-lg)',
                       borderRadius: 'var(--radius-sm)',
                       border: 'none',
                       background: 'transparent',
@@ -216,7 +216,7 @@ export default function Header() {
                       display: 'inline-flex',
                       alignItems: 'center',
                       minHeight: 'var(--min-touch-target)',
-                      padding: '0 var(--spacing-md)',
+                      padding: '0 var(--spacing-lg)',
                       borderRadius: 'var(--radius-sm)',
                       border: '1px solid var(--color-border-strong)',
                       color: 'var(--color-text-primary)',
@@ -423,7 +423,7 @@ export default function Header() {
         <div
           style={{
             borderTop: '1px solid var(--color-border)',
-            padding: 'var(--spacing-md)',
+            padding: 'var(--spacing-lg) var(--spacing-md)',
             display: 'flex',
             flexDirection: 'column',
             gap: 'var(--spacing-sm)',
