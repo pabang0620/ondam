@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { File } from 'buffer'
 import redis from '../../config/redis.js'
 import pool from '../../config/db.js'
-import { decryptBuffer, encryptString } from '../../utils/kms.js'
+import { encryptString } from '../../utils/kms.js'
 import { downloadFromS3, uploadToS3 } from '../../utils/s3.js'
 import { getIo } from '../../config/socket.js'
 
@@ -58,7 +58,7 @@ const insertNotification = async ({ userId, type, referenceId }) => {
 // ─── AI 처리 로직 ─────────────────────────────────────────────────────────────
 
 const processVideoGenerate = async (jobData, bullmqJobId) => {
-  const { willId, userId, photoS3Key, voiceS3KeyEncrypted } = jobData
+  const { willId, userId, photoS3Key } = jobData
 
   // 1. ai_jobs: running
   await updateAiJob(bullmqJobId, {
@@ -124,7 +124,8 @@ const processVideoGenerate = async (jobData, bullmqJobId) => {
     }
     const audioBuffer = Buffer.from(await ttsRes.arrayBuffer())
 
-    // Higgsfield Lipsync API 호출
+    // TODO [결정 3]: 립싱크 API 미확정 — Higgsfield / SadTalker / Hedra 중 선택 후 교체 필요
+    // 현재는 Higgsfield 플레이스홀더로 구현됨
     const formData = new FormData()
     formData.append('image', new File([photoBuffer], 'photo.jpg', { type: 'image/jpeg' }))
     formData.append('audio', new File([audioBuffer], 'tts_voice.mp3', { type: 'audio/mpeg' }))
