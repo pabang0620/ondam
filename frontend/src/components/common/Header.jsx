@@ -92,8 +92,8 @@ export default function Header() {
 
   const navLinkClass = ({ isActive }) =>
     [
-      'text-base font-medium transition-colors',
-      isActive ? 'border-b-2' : 'hover:opacity-80',
+      'flex items-center text-base font-medium transition-colors border-b-2',
+      isActive ? 'hover:opacity-100' : 'border-transparent hover:opacity-80',
     ].join(' ')
 
   return (
@@ -129,8 +129,11 @@ export default function Header() {
             <span
               className="hidden sm:inline"
               style={{
+                fontFamily: 'var(--font-serif)',
+                fontStyle: 'italic',
                 fontSize: 'var(--fs-caption)',
-                color: 'var(--color-text-muted)',
+                color: 'var(--color-warm-accent)',
+                letterSpacing: '0.02em',
               }}
             >
               AI 기억사진관
