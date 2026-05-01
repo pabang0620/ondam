@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { ROUTES } from '../../constants/routes.js'
+import logoUrl from '../../assets/logo.svg'
 
 export default function Footer() {
   return (
@@ -14,18 +15,14 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12 lg:py-16">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-8 sm:gap-12">
           {/* 브랜드 */}
-          <div className="flex flex-col gap-2">
-            <span
-              style={{
-                fontFamily: 'var(--font-serif)',
-                fontWeight: 700,
-                fontSize: 'var(--fs-body-lg)',
-                color: 'var(--color-text-primary)',
-                letterSpacing: 'var(--ls-heading-ko)',
-              }}
-            >
-              온담
-            </span>
+          <div className="flex flex-col gap-3">
+            <img
+              src={logoUrl}
+              alt="온담"
+              height={36}
+              width={135}
+              style={{ display: 'block' }}
+            />
             <p
               style={{
                 fontSize: 'var(--fs-caption)',

@@ -3,6 +3,8 @@ import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore.js'
 import { ROUTES } from '../../constants/routes.js'
 import apiClient from '../../config/apiClient.js'
+import logoUrl from '../../assets/logo.svg'
+import logoMarkUrl from '../../assets/logo-mark.svg'
 
 const NAV_LINKS = [
   { to: ROUTES.PHOTO, label: 'AI 사진관' },
@@ -112,32 +114,25 @@ export default function Header() {
           {/* 로고 */}
           <Link
             to={ROUTES.HOME}
-            className="flex items-center gap-2"
+            className="flex items-center"
             aria-label="온담 홈으로 이동"
           >
-            <span
-              style={{
-                fontFamily: 'var(--font-serif)',
-                fontWeight: 700,
-                fontSize: 'var(--fs-h3)',
-                letterSpacing: 'var(--ls-heading-ko)',
-                color: 'var(--color-text-primary)',
-              }}
-            >
-              온담
-            </span>
-            <span
-              className="hidden sm:inline"
-              style={{
-                fontFamily: 'var(--font-serif)',
-                fontStyle: 'italic',
-                fontSize: 'var(--fs-caption)',
-                color: 'var(--color-warm-accent)',
-                letterSpacing: '0.02em',
-              }}
-            >
-              AI 기억사진관
-            </span>
+            {/* 모바일: 마크만 */}
+            <img
+              src={logoMarkUrl}
+              alt="온담"
+              height={36}
+              width={36}
+              className="sm:hidden"
+            />
+            {/* 데스크톱: 전체 로고 */}
+            <img
+              src={logoUrl}
+              alt="온담 - AI 기억사진관"
+              height={40}
+              width={150}
+              className="hidden sm:block"
+            />
           </Link>
 
           {/* 데스크톱 네비게이션 */}
