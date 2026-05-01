@@ -26,6 +26,7 @@ import notificationRoutes from './domains/notification/notificationRoutes.js'
 import adminRoutes from './domains/admin/adminRoutes.js'
 import uploadRoutes from './domains/common/uploadRoutes.js'
 import './queues/billingWorker.js'
+import './jobs/workers/notificationWorker.js'
 import { billingQueue } from './queues/billingQueue.js'
 
 const app = express()
