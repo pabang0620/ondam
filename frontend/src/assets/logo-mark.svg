@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" fill="none">
+  <!-- 외곽 링 -->
+  <circle cx="40" cy="40" r="34" stroke="#2A2826" stroke-width="2" fill="none"/>
+
+  <!-- 골드 물방울 (더 크게) -->
+  <path d="M40 12 C62 26 59 52 40 66 C21 52 18 26 40 12Z" fill="#C9A24B"/>
+
+  <!-- 하이라이트 -->
+  <ellipse cx="32" cy="28" rx="3.5" ry="7.5" fill="rgba(255,255,255,0.30)" transform="rotate(-18 32 28)"/>
+</svg>
