@@ -101,6 +101,43 @@ export function useWillRecord() {
     }
   }, [recordedBlob, duration, navigate])
 
+  const handleFileUpload = useCallback((file) => {
+    if (!file) return
+
+    if (!file.type.startsWith('audio/')) {
+      setUploadError('오디오 파일만 업로드할 수 있습니다. (mp3, m4a, wav 등)')
+      return
+    }
+
+    const MAX_BYTES = 100 * 1024 * 1024 // 100MB
+    if (file.size > MAX_BYTES) {
+      setUploadError('파일 크기가 너무 큽니다. 100MB 이하 파일을 사용해 주세요.')
+      return
+    }
+
+    setUploadError(null)
+
+    const url = URL.createObjectURL(file)
+
+    // AudioContext로 duration 추출 (실패해도 0으로 진행)
+    const ac = new AudioContext()
+    fetch(url)
+      .then((res) => res.arrayBuffer())
+      .then((buf) => ac.decodeAudioData(buf))
+      .then((decoded) => {
+        setDuration(Math.round(decoded.duration))
+      })
+      .catch(() => {
+        setDuration(0)
+      })
+      .finally(() => {
+        ac.close()
+      })
+
+    setRecordedBlob(file)
+    setAudioUrl(url)
+  }, [])
+
   const formatDuration = (sec) => {
     const m = Math.floor(sec / 60).toString().padStart(2, '0')
     const s = (sec % 60).toString().padStart(2, '0')
@@ -119,5 +156,6 @@ export function useWillRecord() {
     stopRecording,
     resetRecording,
     handleUpload,
+    handleFileUpload,
   }
 }

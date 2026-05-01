@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { willApi } from './willApi.js'
 
@@ -11,7 +11,6 @@ export function useWillPayment() {
 
   const [isPaying, setIsPaying] = useState(false)
   const [payError, setPayError] = useState(null)
-  const pendingRef = useRef(false)
 
   const handlePay = useCallback(async () => {
     if (!willId) {
@@ -19,8 +18,7 @@ export function useWillPayment() {
       return
     }
 
-    if (pendingRef.current) return
-    pendingRef.current = true
+    if (isPaying) return
 
     setIsPaying(true)
     setPayError(null)
@@ -47,14 +45,11 @@ export function useWillPayment() {
       // 4단계: 처리 페이지 이동
       navigate(`/will/processing/${willId}`)
     } catch (err) {
-      console.warn('[mock] 결제 API 실패 - 1.5초 후 처리 페이지로 이동 (시뮬레이션)', err)
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-      navigate(`/will/processing/${willId}`)
+      setPayError(err?.response?.data?.message || err?.message || '결제 처리 중 오류가 발생했습니다.')
     } finally {
       setIsPaying(false)
-      pendingRef.current = false
     }
-  }, [willId, navigate])
+  }, [willId, isPaying, navigate])
 
   return {
     willId,

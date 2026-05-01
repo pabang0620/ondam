@@ -8,27 +8,9 @@ import { ROUTES } from '../../constants/routes.js'
 import './PetSubscriptionPage.css'
 
 const PLANS = [
-  {
-    key: 'pet_archive',
-    name: '반려동물 아카이브',
-    price: 9900,
-    desc: '반려동물 추억 무제한 보관 + AI 초상화',
-    highlight: true,
-  },
-  {
-    key: 'will_premium',
-    name: 'AI 유언장 프리미엄',
-    price: 29900,
-    desc: 'AI 유언 영상 생성 + 추모관',
-    highlight: false,
-  },
-  {
-    key: 'all',
-    name: '전체 이용권',
-    price: 39900,
-    desc: '모든 기능 무제한 이용',
-    highlight: false,
-  },
+  { key: 'pet_archive', name: '반려동물 아카이브', price: 4900, desc: '반려동물 추억 무제한 보관 + AI 초상화', highlight: true },
+  { key: 'will_premium', name: 'AI 유언장 프리미엄', price: 1900, desc: 'AI 유언 영상 생성 + 추모관', highlight: false },
+  { key: 'all', name: '전체 이용권', price: 9900, desc: '모든 기능 무제한 이용', highlight: false },
 ]
 
 function PlanCard({ plan, isCurrent, isProcessing, isRedirecting, onSubscribe }) {

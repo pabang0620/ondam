@@ -117,6 +117,7 @@ export default function App() {
             <Route path={ROUTES.PET_PORTRAIT} element={<PetPortraitPage />} />
 
             <Route path={ROUTES.MY} element={<MyPage />} />
+            <Route path="/my/edit" element={<MyPage />} />
           </Route>
 
           {/* 인증 레이아웃 */}

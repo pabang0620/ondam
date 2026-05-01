@@ -1,9 +1,12 @@
+import { useRef } from 'react'
 import { useWillRecord } from './useWillRecord.js'
-import { Mic, MicOff, Upload, RotateCcw, AlertCircle } from 'lucide-react'
+import { Mic, MicOff, Upload, RotateCcw, AlertCircle, FileAudio } from 'lucide-react'
 import WillStepHeader from './WillStepHeader.jsx'
 import './WillRecordPage.css'
 
 export default function WillRecordPage() {
+  const fileInputRef = useRef(null)
+
   const {
     isRecording,
     recordedBlob,
@@ -15,6 +18,7 @@ export default function WillRecordPage() {
     stopRecording,
     resetRecording,
     handleUpload,
+    handleFileUpload,
   } = useWillRecord()
 
   return (
@@ -23,12 +27,13 @@ export default function WillRecordPage() {
 
       <div className="will-record__content">
         <div className="will-record__guide-box">
-          <p className="will-record__guide-title">녹음 안내</p>
+          <p className="will-record__guide-title">이렇게 만들어집니다</p>
+          <p className="will-record__flow-highlight">녹음하신 목소리가 영상의 음성이 됩니다</p>
           <ul className="will-record__guide-list">
-            <li>조용한 장소에서 녹음해 주세요.</li>
-            <li>10분 ~ 30분 분량을 권장합니다.</li>
-            <li>가족에게 하고 싶은 말을 자유롭게 말씀해 주세요.</li>
-            <li>목소리가 잘 들리도록 마이크와 15cm 이내 거리를 유지해 주세요.</li>
+            <li>사진 + 녹음 → AI가 사진 속 어르신이 직접 말씀하시는 영상 생성</li>
+            <li>가족에게 전하고 싶은 말을 자연스럽게 말씀해 주세요</li>
+            <li>조용한 장소에서 10분~30분 분량을 권장합니다</li>
+            <li>마이크와 15cm 이내 거리를 유지해 주세요</li>
           </ul>
         </div>
 
@@ -75,6 +80,38 @@ export default function WillRecordPage() {
             </div>
           )}
         </div>
+
+        {/* 파일 업로드 섹션 — recordedBlob이 없을 때만 표시 */}
+        {!recordedBlob && (
+          <div className="will-record__file-upload-area">
+            <div className="will-record__divider">또는 오디오 파일 업로드</div>
+            <p className="will-record__file-upload-hint">
+              이미 녹음된 파일이 있으시면 업로드하세요
+            </p>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="audio/*"
+              hidden
+              aria-hidden="true"
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) handleFileUpload(file)
+                // 같은 파일 재선택 가능하도록 초기화
+                e.target.value = ''
+              }}
+            />
+            <button
+              type="button"
+              className="will-record__file-upload"
+              onClick={() => fileInputRef.current?.click()}
+              aria-label="오디오 파일 선택하여 업로드"
+            >
+              <FileAudio size={20} aria-hidden="true" />
+              파일 업로드
+            </button>
+          </div>
+        )}
 
         {/* 오디오 미리듣기 */}
         {audioUrl && (

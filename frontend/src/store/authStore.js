@@ -1,5 +1,7 @@
 import { create } from 'zustand'
 
+const IS_DEV = import.meta.env.DEV
+
 // 개발 환경에서 모든 페이지(admin 포함) 접근 가능하도록 admin role 부여
 const MOCK_USER = {
   user_id: 'mock-user-001',
@@ -12,9 +14,9 @@ const MOCK_USER = {
 let _initAuthPromise = null
 
 export const useAuthStore = create((set) => ({
-  user: MOCK_USER,
-  accessToken: 'mock-token',
-  isAuthenticated: true,
+  user: IS_DEV ? MOCK_USER : null,
+  accessToken: IS_DEV ? 'mock-token' : null,
+  isAuthenticated: IS_DEV,
 
   setAuth: (user, accessToken) =>
     set({ user, accessToken, isAuthenticated: true }),
@@ -40,12 +42,13 @@ export const useAuthStore = create((set) => ({
           set({ user: data.data.user, accessToken: data.data.accessToken, isAuthenticated: true })
         }
       } catch {
-        // refresh 실패 시 mock 사용자로 폴백 (백엔드 미연결 개발 환경)
-        set({
-          user: MOCK_USER,
-          accessToken: 'mock-token',
-          isAuthenticated: true,
-        })
+        if (IS_DEV) {
+          // 개발 환경에서만 mock으로 폴백 (백엔드 미연결 개발 환경)
+          set({ user: MOCK_USER, accessToken: 'mock-token', isAuthenticated: true })
+        } else {
+          // 프로덕션: 인증 실패 → 로그아웃 상태
+          set({ user: null, accessToken: null, isAuthenticated: false })
+        }
       }
     })()
 

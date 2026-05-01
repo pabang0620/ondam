@@ -16,7 +16,6 @@
 .will-record__guide-box {
   background-color: var(--color-surface-warm);
   border-left: 4px solid var(--color-will);
-  border-radius: var(--radius-sm);
   padding: var(--spacing-md) var(--spacing-lg);
 }
 
@@ -220,6 +219,66 @@
 
 .will-record__upload:not(:disabled):hover {
   opacity: 0.88;
+}
+
+/* 파일 업로드 섹션 */
+.will-record__file-upload-area {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+/* 파일 업로드 구분선 */
+.will-record__divider {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  color: var(--color-text-secondary);
+  font-size: var(--fs-caption);
+}
+.will-record__divider::before,
+.will-record__divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background-color: var(--color-border);
+}
+
+/* 파일 업로드 힌트 텍스트 */
+.will-record__file-upload-hint {
+  text-align: center;
+  font-size: var(--fs-caption);
+  color: var(--color-text-secondary);
+}
+
+/* 파일 업로드 버튼 */
+.will-record__file-upload {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  width: 100%;
+  background-color: var(--color-surface);
+  color: var(--color-will);
+  font-size: var(--fs-button);
+  font-weight: 600;
+  height: var(--size-button-h);
+  min-height: var(--size-button-h);
+  border: 2px solid var(--color-will);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+.will-record__file-upload:hover {
+  background-color: var(--color-surface-warm);
+}
+
+/* 안내 강조 행 */
+.will-record__flow-highlight {
+  font-weight: 700;
+  color: var(--color-will);
+  font-size: var(--fs-body);
+  margin-bottom: var(--spacing-xs);
 }
 
 /* ── 반응형: 모바일 (< 640px) ── */

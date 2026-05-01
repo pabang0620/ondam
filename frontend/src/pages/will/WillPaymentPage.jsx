@@ -4,7 +4,7 @@ import WillStepHeader from './WillStepHeader.jsx'
 import './WillPaymentPage.css'
 
 export default function WillPaymentPage() {
-  const { isPaying, payError, handlePay } = useWillPayment()
+  const { isPaying, payError, handlePay, amount } = useWillPayment()
 
   return (
     <div className="will-payment-page">
@@ -25,14 +25,14 @@ export default function WillPaymentPage() {
                 <li><CheckCircle size={14} aria-hidden="true" /> 유가족 전달</li>
               </ul>
             </div>
-            <span className="will-payment__item-price">49,000원</span>
+            <span className="will-payment__item-price">{amount.toLocaleString()}원</span>
           </div>
 
           <div className="will-payment__divider" aria-hidden="true" />
 
           <div className="will-payment__total">
             <span className="will-payment__total-label">합계</span>
-            <span className="will-payment__total-price">49,000원</span>
+            <span className="will-payment__total-price">{amount.toLocaleString()}원</span>
           </div>
         </section>
 
@@ -58,7 +58,7 @@ export default function WillPaymentPage() {
           aria-busy={isPaying}
         >
           <CreditCard size={22} aria-hidden="true" />
-          {isPaying ? '결제 처리 중...' : '49,000원 결제하기'}
+          {isPaying ? '결제 처리 중...' : `${amount.toLocaleString()}원 결제하기`}
         </button>
 
         <p className="will-payment__secure-note">
