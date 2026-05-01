@@ -27,12 +27,13 @@ export default function WillRecordPage() {
 
       <div className="will-record__content">
         <div className="will-record__guide-box">
-          <p className="will-record__guide-title">이렇게 만들어집니다</p>
-          <p className="will-record__flow-highlight">녹음하신 목소리가 영상의 음성이 됩니다</p>
+          <p className="will-record__guide-title">목소리 샘플 녹음</p>
+          <p className="will-record__flow-highlight">이 녹음으로 AI가 목소리를 학습합니다</p>
           <ul className="will-record__guide-list">
-            <li>사진 + 녹음 → AI가 사진 속 어르신이 직접 말씀하시는 영상 생성</li>
-            <li>가족에게 전하고 싶은 말을 자연스럽게 말씀해 주세요</li>
-            <li>조용한 장소에서 10분~30분 분량을 권장합니다</li>
+            <li>가족에게 하실 말씀은 다음 단계(유언장 내용)에서 텍스트로 작성해 주세요</li>
+            <li>AI가 이 목소리로 작성하신 내용을 읽어드립니다</li>
+            <li>어떤 말씀을 하셔도 됩니다 — AI가 목소리 패턴만 학습합니다</li>
+            <li>조용한 장소에서 1~5분 분량을 권장합니다</li>
             <li>마이크와 15cm 이내 거리를 유지해 주세요</li>
           </ul>
         </div>

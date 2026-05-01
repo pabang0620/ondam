@@ -95,15 +95,39 @@ const processVideoGenerate = async (jobData, bullmqJobId) => {
     // 사진 S3 다운로드
     const photoBuffer = await downloadFromS3(photoS3Key)
 
-    // 음성 KMS 복호화 → S3 다운로드
-    const encryptedBuf = Buffer.from(voiceS3KeyEncrypted, 'base64')
-    const voiceS3Key = await decryptBuffer(encryptedBuf)
-    const audioBuffer = await downloadFromS3(voiceS3Key)
+    // contentText, elevenlabsVoiceId 검증
+    const { elevenlabsVoiceId, contentText } = jobData
+    if (!contentText || contentText.trim().length === 0) {
+      throw new Error('유언장 내용이 없습니다. 텍스트를 작성해 주세요.')
+    }
+    if (!elevenlabsVoiceId) {
+      throw new Error('목소리 클론이 완료되지 않았습니다. 잠시 후 다시 시도해 주세요.')
+    }
+
+    // ElevenLabs TTS: 클론된 목소리로 텍스트 읽기
+    const ttsRes = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${elevenlabsVoiceId}`, {
+      method: 'POST',
+      headers: {
+        'xi-api-key': process.env.ELEVENLABS_API_KEY,
+        'Content-Type': 'application/json',
+        'Accept': 'audio/mpeg',
+      },
+      body: JSON.stringify({
+        text: contentText,
+        model_id: 'eleven_multilingual_v2',
+        voice_settings: { stability: 0.5, similarity_boost: 0.75 },
+      }),
+    })
+    if (!ttsRes.ok) {
+      const errText = await ttsRes.text()
+      throw new Error(`ElevenLabs TTS 오류 (${ttsRes.status}): ${errText}`)
+    }
+    const audioBuffer = Buffer.from(await ttsRes.arrayBuffer())
 
     // Higgsfield Lipsync API 호출
     const formData = new FormData()
     formData.append('image', new File([photoBuffer], 'photo.jpg', { type: 'image/jpeg' }))
-    formData.append('audio', new File([audioBuffer], 'voice.mp3', { type: 'audio/mpeg' }))
+    formData.append('audio', new File([audioBuffer], 'tts_voice.mp3', { type: 'audio/mpeg' }))
 
     const lipsyncRes = await fetch('https://api.higgsfield.ai/v1/generations/lipsync', {
       method: 'POST',
