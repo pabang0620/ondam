@@ -60,7 +60,7 @@
 
 #### 2-1. 핵심 결과물
 > **고인이 직접 유언을 읽어주는 AI 영상**  
-> ElevenLabs 음성 복제 + D-ID 아바타 영상 = 사랑하는 사람의 목소리로 전달되는 영원한 메시지
+> ElevenLabs 음성 복제 + 립싱크 AI(TBD) = 사랑하는 사람의 목소리로 전달되는 영원한 메시지
 
 #### 2-2. 기능 명세
 
@@ -73,7 +73,7 @@
 | 5 | 사진 업로드 | 얼굴 사진 1장 (고인 얼굴) | P0 |
 | 6 | 미리보기 확인 | 텍스트+음성 검증 후 최종 결정 | P0 |
 | 7 | 결제 | 톱 페이먼츠 (49,000원) | P0 |
-| 8 | AI 유언 영상 생성 | D-ID (사진+음성+텍스트→말하는 영상) | P0 |
+| 8 | AI 유언 영상 생성 | 립싱크 AI (사진+TTS음성→말하는 영상, TBD: Higgsfield/Hedra/SadTalker 검토 중) | P0 |
 | 9 | 재생성 1회 | 텍스트 수정 후 영상 재생성 | P1 |
 | 10 | 암호화 보관 | AWS KMS (사망 전 유가족 접근 불가) | P0 |
 | 11 | 사후 공개 트리거 | 유가족: 사망증명서 업로드 → 관리자 검토·승인 | P0 |
@@ -340,7 +340,7 @@ ondam.kr/memorial/lele-2015
 | **화질 복원** | Real-ESRGAN | 흐림·노이즈 제거 | 무료(오픈소스) |
 | **배경 제거** | remove.bg API | 배경 자동 제거 | $0.05/이미지 |
 | **음성 복제** | ElevenLabs | 음성 클론 + 텍스트→음성 | $0.30~1/1k자 |
-| **영상 생성** | D-ID | 사진+음성→말하는 영상 | $0.05~0.2/분 |
+| **영상 생성 (립싱크)** | TBD | 사진+TTS음성→말하는 영상 ([결정 3] 미확정) | 미정 |
 | **AI 정장 합성** | OpenAI GPT-4o | 프롬프트 최적화 | $0.015/1k입력토큰 |
 | **OAuth** | 카카오 | 소셜 로그인 | 무료 |
 
@@ -971,19 +971,22 @@ const { Worker } = require('bullmq');
 const willVideoWorker = new Worker('will_video', async (job) => {
   const { willId, voiceCloneId, message } = job.data;
   
-  // 1. ElevenLabs 음성 생성
+  // 1. TTS 음성 생성 (ElevenLabs 클론된 목소리로 텍스트 읽기)
   const audio = await elevenLabsApi.textToSpeech(message, voiceCloneId);
-  
-  // 2. D-ID 영상 생성
-  const video = await didApi.createAvatar({
-    source_url: photoUrl,
-    script: { type: 'text', subtitles: true, input: message }
+
+  // 2. 진행률 갱신
+  await job.updateProgress(50);
+
+  // 3. 립싱크 영상 생성 (API TBD: Higgsfield / SadTalker / Hedra 중 선택)
+  const video = await lipsyncApi.generate({
+    photo: photoBuffer,
+    audio: audioBuffer,
   });
   
-  // 3. 진행률 갱신
+  // 4. 진행률 갱신
   await job.updateProgress(80);
   
-  // 4. 결과 저장
+  // 5. 결과 저장
   return { videoUrl: video.video_url };
 }, { connection: redis });
 
@@ -1060,7 +1063,7 @@ AWS_KMS_KEY_ID=***
 # AI API
 OPENAI_API_KEY=***
 ELEVENLABS_API_KEY=***
-DID_API_KEY=***
+LIPSYNC_API_KEY=***        # TBD: Higgsfield / SadTalker / Hedra 결정 후 교체
 REMOVEBG_API_KEY=***
 
 # Toss Payments
@@ -1107,5 +1110,5 @@ BACKEND_URL=https://api.ondam.kr
 
 ---
 
-**최종 수정**: 2026-04-19  
+**최종 수정**: 2026-05-01  
 **다음 리뷰**: 2026-05-31

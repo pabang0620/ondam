@@ -1,6 +1,7 @@
 # 온담 AI 스택 조사 보고서
 
 **작성일**: 2026-04-19  
+**최종 업데이트**: 2026-05-01 — AI 파이프라인 흐름 명확화, 코드베이스 상태 업데이트  
 **상태**: 결정 대기 중 (옵션 정리 완료)
 
 ---
@@ -17,7 +18,7 @@
 | 영역 | 선택 | 근거 |
 |------|------|------|
 | **이미지 처리 전체** | Gemini | 사용자 선호 ("이미지 관련 전부 다 Gemini로") |
-| **영상 생성** | Higgsfield | 사용자 확인 ("광고에서 퀄리티 좋고, 커뮤니티에서도 많이 씀") |
+| **영상 생성** | 립싱크 AI (TBD) | [결정 3] 미확정 — Higgsfield 코드 플레이스홀더로 구현 중, 최종 선택 필요 |
 | **음성 복제** | ElevenLabs | 초기부터 확정, 변경 없음 |
 
 ### 사용자 제시 AI 파이프라인 (유언장 플로우)
@@ -29,9 +30,12 @@
       ↓
 [Gemini] → 일상복 사진 생성 (자연스러운 복장)
       ↓
-[ElevenLabs] → 음성 클론 + 유언 텍스트 → 음성 파일
+[ElevenLabs - STEP 1] → 목소리 샘플 녹음으로 목소리 클론 생성
       ↓
-[Higgsfield] → 일상복 사진 + 음성 → 말하는 영상 (립싱크)
+[ElevenLabs - STEP 2] → 클론된 목소리 + 유언 텍스트 → TTS 음성 파일
+      ↓
+[립싱크 AI - TBD] → 일상복 사진 + TTS 음성 → 말하는 영상
+  (후보: Higgsfield / SadTalker / Hedra / HeyGen / D-ID — [결정 3] 참조)
 ```
 
 ---
@@ -299,7 +303,7 @@ Gemini는 투명 PNG 출력이 불가능하므로 배경 제거는 별도 처리
 |------|-------------|---------|
 | `photoWorker.js` | AI_MOCK=true (모의 처리) | Gemini API 실제 연동 필요 |
 | `voiceWorker.js` | AI_MOCK=true (모의 처리) | ElevenLabs API 실제 연동 필요 |
-| `videoWorker.js` | AI_MOCK=true, D-ID TODO 주석 | Higgsfield API로 교체 필요 |
+| `videoWorker.js` | Higgsfield 플레이스홀더 구현 완료 (실제 API 키 필요) | [결정 3] 최종 확정 후 API 교체 필요 |
 | `notificationWorker.js` | Coolsms/Gmail 구조만 작성 | API 키 연동 필요 |
 
 PRD.md의 AI 스택 섹션도 Gemini + Higgsfield 기준으로 업데이트 필요.
