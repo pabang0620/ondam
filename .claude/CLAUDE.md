@@ -13,7 +13,7 @@
 - **DB**: MySQL 8.4, InnoDB, utf8mb4
 - **스키마 파일**: `ondam_schema.sql` (프로젝트 루트)
 - **작업 큐**: BullMQ + Redis (AI 처리 비동기)
-- **AI API**: OpenAI, ElevenLabs, D-ID, remove.bg
+- **AI API**: OpenAI, ElevenLabs, Sync.so/MuseTalk/D-ID(립싱크, LIPSYNC_PROVIDER로 교체), remove.bg
 - **결제**: 토스페이먼츠 빌링 API (정기결제)
 - **암호화**: AWS KMS (민감 데이터)
 - **시간대**: `process.env.TZ = 'Asia/Seoul'` (Node.js) + MySQL `SET time_zone = '+09:00'` (DB)
@@ -84,7 +84,7 @@ ondam-api-linker             → API-프론트 연결 검증
 ```
 
 ### 2. AI 처리 - BullMQ 큐 경유 필수
-AI API 호출(OpenAI, ElevenLabs, D-ID)은 **절대 HTTP 요청 핸들러 안에서 직접 호출 금지**.
+AI API 호출(OpenAI, ElevenLabs, Sync.so/MuseTalk/D-ID)은 **절대 HTTP 요청 핸들러 안에서 직접 호출 금지**.
 반드시 BullMQ 큐에 작업 추가 → 워커에서 처리 → 결과 DB 업데이트 → 프론트 폴링/웹소켓 알림.
 
 ```js

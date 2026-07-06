@@ -8,7 +8,7 @@
 |--------|------|---------|
 | `photo` | 사진 배경 제거, 화질 개선, 컬러라이징, 복원 | remove.bg, OpenAI |
 | `voiceClone` | 고인 음성 클론 생성 | ElevenLabs |
-| `videoGenerate` | AI 말하는 영상 생성 (사진 + 음성) | D-ID |
+| `videoGenerate` | AI 말하는 영상 생성 (사진 + 음성) | Sync.so / MuseTalk(Fal.ai) / D-ID (LIPSYNC_PROVIDER로 선택) |
 | `notification` | 이메일/SMS 발송 | Coolsms, Nodemailer |
 
 ## 사용 방법

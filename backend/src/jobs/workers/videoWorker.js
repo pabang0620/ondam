@@ -1,11 +1,12 @@
 import { Worker } from 'bullmq'
 import { v4 as uuidv4 } from 'uuid'
-import { File } from 'buffer'
 import redis from '../../config/redis.js'
 import pool from '../../config/db.js'
 import { encryptString } from '../../utils/kms.js'
-import { downloadFromS3, uploadToS3 } from '../../utils/s3.js'
+import { downloadFromS3, uploadToS3, deleteFromS3 } from '../../utils/s3.js'
 import { getIo } from '../../config/socket.js'
+import { getLipsyncAdapter } from '../../services/lipsync/index.js'
+import { pollUntilComplete, assertAllowedHost } from '../../services/lipsync/pollHelper.js'
 
 const QUEUE_NAME = 'videoGenerate'
 const AI_MOCK = process.env.AI_MOCK === 'true'
@@ -88,10 +89,6 @@ const processVideoGenerate = async (jobData, bullmqJobId) => {
     resultVideoS3KeyEncrypted = encrypted.toString('base64')
     resultVideoKmsKeyId = kmsKeyId
   } else {
-    if (!process.env.HIGGSFIELD_API_KEY) {
-      throw Object.assign(new Error('HIGGSFIELD_API_KEY 환경변수가 설정되지 않았습니다'), { status: 500 })
-    }
-
     // 사진 S3 다운로드
     const photoBuffer = await downloadFromS3(photoS3Key)
 
@@ -124,69 +121,42 @@ const processVideoGenerate = async (jobData, bullmqJobId) => {
     }
     const audioBuffer = Buffer.from(await ttsRes.arrayBuffer())
 
-    // TODO [결정 3]: 립싱크 API 미확정 — Higgsfield / SadTalker / Hedra 중 선택 후 교체 필요
-    // 현재는 Higgsfield 플레이스홀더로 구현됨
-    const formData = new FormData()
-    formData.append('image', new File([photoBuffer], 'photo.jpg', { type: 'image/jpeg' }))
-    formData.append('audio', new File([audioBuffer], 'tts_voice.mp3', { type: 'audio/mpeg' }))
-
-    const lipsyncRes = await fetch('https://api.higgsfield.ai/v1/generations/lipsync', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${process.env.HIGGSFIELD_API_KEY}` },
-      body: formData,
-    })
-
-    if (!lipsyncRes.ok) {
-      const errText = await lipsyncRes.text()
-      throw new Error(`Higgsfield API 오류 (${lipsyncRes.status}): ${errText}`)
+    // 립싱크 벤더 어댑터 경유 영상 생성 (LIPSYNC_PROVIDER 환경변수로 벤더 교체 가능: sync/musetalk/did)
+    const adapter = getLipsyncAdapter()
+    if (!adapter.isConfigured()) {
+      throw Object.assign(
+        new Error(`${adapter.name} 립싱크 벤더의 API 키가 설정되지 않았습니다`),
+        { status: 500 },
+      )
     }
 
-    const lipsyncData = await lipsyncRes.json()
-    const generationId = lipsyncData.id
+    const { externalJobId, stagingS3Keys } = await adapter.submit({ photoBuffer, audioBuffer })
 
-    if (!generationId) {
-      throw new Error('Higgsfield API 응답에서 generation id를 찾을 수 없습니다')
-    }
-
-    // 완료 폴링 (최대 30회, 10초 간격 = 5분)
-    let videoUrl = null
-    for (let attempt = 0; attempt < 30; attempt++) {
-      await new Promise((r) => setTimeout(r, 10000))
-
-      const pollRes = await fetch(`https://api.higgsfield.ai/v1/generations/${generationId}`, {
-        headers: { Authorization: `Bearer ${process.env.HIGGSFIELD_API_KEY}` },
-      })
-
-      if (!pollRes.ok) {
-        const errText = await pollRes.text()
-        throw new Error(`Higgsfield 폴링 오류 (${pollRes.status}): ${errText}`)
-      }
-
-      const pollData = await pollRes.json()
-
-      if (pollData.status === 'completed') {
-        if (!pollData.video_url) {
-          throw new Error('Higgsfield completed 상태이나 video_url이 없습니다')
-        }
-        videoUrl = pollData.video_url
-        break
-      }
-
-      if (pollData.status === 'failed') {
-        throw new Error(`Higgsfield 영상 생성 실패: ${pollData.error ?? 'unknown error'}`)
+    let videoUrl
+    try {
+      // 완료 폴링 (최대 30회, 10초 간격 = 5분)
+      videoUrl = await pollUntilComplete(
+        async () => {
+          const { status, videoUrl: polledUrl } = await adapter.poll(externalJobId)
+          if (status === 'completed') {
+            return { done: true, value: polledUrl }
+          }
+          return { done: false }
+        },
+        { maxAttempts: 30, intervalMs: 10000 },
+      )
+    } finally {
+      // 립싱크 벤더가 lipsync-staging/{vendor}/{stagingId}/... 경로에 올린 임시 파일 정리
+      // 폴링 성공/실패 무관하게 실행. best-effort - 정리 실패가 전체 잡 실패로 이어지면 안 됨
+      try {
+        await Promise.all((stagingS3Keys ?? []).map((key) => deleteFromS3(key)))
+      } catch (cleanupErr) {
+        console.error('[videoWorker] 립싱크 스테이징 오브젝트 정리 실패:', cleanupErr.message)
       }
     }
 
-    if (!videoUrl) {
-      throw new Error('Higgsfield 영상 생성 타임아웃 (5분 초과)')
-    }
-
-    // SSRF 방어 - Higgsfield 도메인 검증
-    const allowedHost = 'higgsfield.ai'
-    const parsedVideoUrl = new URL(videoUrl)
-    if (!parsedVideoUrl.hostname.endsWith(allowedHost)) {
-      throw new Error(`허용되지 않는 영상 URL 호스트: ${parsedVideoUrl.hostname}`)
-    }
+    // SSRF 방어 - 활성 벤더의 허용 호스트만 통과
+    assertAllowedHost(videoUrl, adapter.allowedResultHosts)
 
     // 완성된 영상 다운로드
     const videoRes = await fetch(videoUrl)

@@ -1,4 +1,4 @@
-import { S3Client, GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3'
+import { S3Client, GetObjectCommand, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 
 const s3Client = new S3Client({ region: process.env.AWS_REGION })
@@ -110,6 +110,27 @@ export const uploadToS3 = async (s3Key, buffer, { contentType, useKms = false } 
     if (err.status) throw err  // 이미 래핑된 에러는 그대로 전파
     throw Object.assign(
       new Error(`S3 업로드 실패 (${s3Key}): ${err.message}`),
+      { status: 500 },
+    )
+  }
+}
+
+/**
+ * S3 오브젝트 삭제 (립싱크 스테이징 파일 등 임시 오브젝트 정리용)
+ * @param {string} s3Key
+ * @returns {Promise<void>}
+ */
+export const deleteFromS3 = async (s3Key) => {
+  try {
+    const command = new DeleteObjectCommand({
+      Bucket: getS3Bucket(),
+      Key: s3Key,
+    })
+    await s3Client.send(command)
+  } catch (err) {
+    if (err.status) throw err
+    throw Object.assign(
+      new Error(`S3 삭제 실패 (${s3Key}): ${err.message}`),
       { status: 500 },
     )
   }

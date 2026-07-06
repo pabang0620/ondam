@@ -28,7 +28,7 @@ AI 기억사진관 - AI로 기억을 간직하는 통합 플랫폼
 **AI API**
 - OpenAI (사진 처리)
 - ElevenLabs (음성 클론)
-- D-ID (AI 영상 생성)
+- Sync.so / MuseTalk / D-ID (AI 영상 생성, 립싱크 벤더 교체 가능)
 - remove.bg (배경 제거)
 
 **결제**

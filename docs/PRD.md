@@ -576,10 +576,10 @@ CREATE TABLE wills (
   voice_sample_id INT NOT NULL,
   will_number VARCHAR(20) UNIQUE NOT NULL,     -- e.g., WILL-20260419-001
   status ENUM('draft','submitted','processing','completed','archived','released'),
-  ENC_video_data VARBINARY(512),               -- D-ID 영상 (KMS 암호화)
+  ENC_video_data VARBINARY(512),               -- 립싱크 벤더 영상 (KMS 암호화, Sync.so/MuseTalk/D-ID 중 택1)
   kms_key_id VARCHAR(100),
   video_key_s3 VARCHAR(255),                   -- S3 동영상 키
-  d_id_video_id VARCHAR(100),                  -- D-ID API video_id
+  lipsync_external_job_id VARCHAR(100),        -- 립싱크 벤더 외부 작업 ID (벤더 무관)
   thumbnail_url VARCHAR(500),
   total_beneficiaries INT,
   progress_percent INT DEFAULT 0,
@@ -653,7 +653,7 @@ CREATE TABLE will_release_requests (
   KEY(status), KEY(will_id)
 );
 
--- 15. avatar_sessions (D-ID API 세션 추적)
+-- 15. avatar_sessions (립싱크 벤더 세션 추적)
 CREATE TABLE avatar_sessions (
   id INT AUTO_INCREMENT PRIMARY KEY,
   will_id INT NOT NULL,

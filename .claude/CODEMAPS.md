@@ -183,7 +183,7 @@ canceled (소프트 삭제 적용)
 | `willService.js` | AI 유언 영상 생성 로직 |
 | `willRepository.js` | wills 테이블 CRUD |
 
-**AI 통합**: OpenAI (텍스트), ElevenLabs (음성), D-ID (영상)
+**AI 통합**: OpenAI (텍스트), ElevenLabs (음성), Sync.so/MuseTalk/D-ID (영상, LIPSYNC_PROVIDER로 교체 가능)
 
 **BullMQ 큐**: willQueue
 - `voiceClone` (음성 생성)
@@ -400,7 +400,7 @@ REDIS_PORT=6379
 S3_BUCKET=ondam-prod
 S3_REGION=ap-northeast-2
 
-# OpenAI, ElevenLabs, D-ID 등
+# OpenAI, ElevenLabs, Sync.so/MuseTalk/D-ID 등
 OPENAI_API_KEY=***
 ELEVENLABS_API_KEY=***
 DID_API_KEY=***
