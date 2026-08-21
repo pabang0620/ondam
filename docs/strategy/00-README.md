@@ -14,8 +14,24 @@
 | [05-execution-phases.md](05-execution-phases.md) | Phase 1~3 게이트와 완료 판정 기준 | 전체 |
 | [06-dev-backlog.md](06-dev-backlog.md) | **코딩 AI에게 넘기는 개발 태스크 명세** (파일 경로·수용 기준 포함) | 구현 |
 | [07-risk-legal.md](07-risk-legal.md) | 리스크 레지스터·법률·윤리 체크리스트 | 전체 |
+| [08-lipsync-vendor-comparison.md](08-lipsync-vendor-comparison.md) | 립싱크 벤더 실사 (D-ID 확정) | 기획 + 구현 |
+| [09-unit-economics.md](09-unit-economics.md) | 상품별 원가·마진 모델, 티어 판단 근거 | 기획·의사결정 |
+| [10-personas-and-journey.md](10-personas-and-journey.md) | 페르소나 4종·고객 여정·카피 채널 매트릭스 | 기획·마케팅 |
+| [11-brand-messaging.md](11-brand-messaging.md) | 네이밍·태그라인·톤·표현 규칙(카피 SSOT) | 기획·마케팅 |
 
-> **세부 기획(기능 단위 상세)은 `docs/specs/SPEC-00~08`에 있다** (2026-08-21 추가). 충돌 시 우선순위: SPEC > strategy > PRD. 코딩 AI에게는 DEV 태스크 + 해당 SPEC을 함께 주입한다.
+> **세부 기획(기능 단위 상세)은 `docs/specs/SPEC-00~08`에 있다**. 충돌 시 우선순위: SPEC > strategy > PRD. 코딩 AI에게는 DEV 태스크 + 해당 SPEC을 함께 주입한다.
+> **전체 문서 지도·현황은 [../PLANNING-INDEX.md](../PLANNING-INDEX.md)** 참조 (2026-08-21 신설).
+
+## 결정 현황 (2026-08-21 현재)
+
+| 항목 | 상태 |
+|---|---|
+| 명칭 "마지막 영상 편지" | ✅ 확정 |
+| 포지셔닝(생전 기록·자녀 결제·쐐기→코어) | ✅ 확정(분석 기반) |
+| 립싱크 벤더 D-ID | ✅ 1차 확정(실검증 DEV-01 잔여) |
+| 보관 구독(월 1,900원) 폐지 | ⏳ 오너 승인 대기 |
+| 영상 편지 가격 티어 | ⏳ 오너 승인 대기 (09 문서 권장: 베이직 단일가 출시 후 순차 확대) |
+| 추모관 접근 모델 이원화 | ⏳ 오너 승인 대기 (memorial_access_code 정책과 직결) |
 
 ## 코딩 AI에게 작업을 맡길 때
 

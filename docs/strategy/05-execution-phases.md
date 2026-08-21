@@ -2,6 +2,25 @@
 
 > 일정·기간 견적은 두지 않는다. 각 Phase는 **완료 판정 기준(게이트)** 충족 시 다음으로 넘어간다.
 > 개발 태스크 상세는 [06-dev-backlog.md](06-dev-backlog.md)의 태스크 ID 참조.
+>
+> **2026-08-21 현행화**: 전체 코드 감사([../review/2026-08-21-full-audit.md](../review/2026-08-21-full-audit.md))에서 배포 차단 결함(BLOCKER 6·HIGH 8)이 확인됐다. 현재 코드는 가입·결제·핵심기능이 실제로 동작하지 않는 상태다. 따라서 아래 Phase 1보다 앞에 **Phase 0(결함 개선)**을 신설한다. Phase 0을 통과하기 전에는 어떤 출시도 없다.
+
+## Phase 0: 결함 개선 (신설, 최우선 - 이것 없이는 출시 불가)
+
+목표: 감사에서 드러난 "동작하지 않는 상태"를 "돈 받아도 되는 상태"로 되돌린다. 상세 실행은 [../review/remediation-plan.md](../review/remediation-plan.md), 재발 방지 규약은 [../guidelines/DEVELOPMENT_GUIDELINES.md](../guidelines/DEVELOPMENT_GUIDELINES.md).
+
+| 작업 | 태스크 ID | 게이트 기준 |
+|---|---|---|
+| 스키마·enums 재동기화 | DEV-22 | 마이그레이션 적용(사용자 실행) + 코드 반영. 가입·주문·펫초상화·추모관·구독취소 실제 성공 |
+| 결제 금액·소유권 서버검증 | DEV-23 | 금액 조작·타인 targetId 차단, 정상 결제 통과 |
+| 프론트 mock 폴백 제거 | DEV-24 | 실패가 실패로 보임(성공 위장 0건). 이후 수정의 검증 가능해짐 |
+| 토스 결제 왕복 실구현 | DEV-25 | 사진관·유언편지 실결제 E2E |
+| 결제 크론·retry·알림 ENUM | DEV-26 | 정기결제 실제 발화, 재시도 성공, 유가족 알림 발송 |
+| 인증·세션·보안·잔여 HIGH | DEV-27~29 | 공개페이지 접근·세션유지·OAuth state·rate limit 등 |
+
+**Phase 0 종료 게이트**: BLOCKER 6 + HIGH 8 해소 + code-reviewer APPROVED + 핵심 플로우 E2E 통과. 이 게이트 전에는 Phase 2(출시)로 못 간다.
+
+> 아래 Phase 1~4는 결함이 없다는 전제의 원래 로드맵이다. Phase 0 통과 후 유효하다. 일부 항목(DEV-03 스키마 정리, DEV-05 명칭 등)은 Phase 0에 흡수됐다.
 
 ## Phase 1: 제품 리스크 해소 (출시 전 필수)
 
