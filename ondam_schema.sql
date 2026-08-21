@@ -908,47 +908,13 @@ ALTER TABLE photo_orders
 -- [9] KST 타임존 세팅 (DB 연결 풀 초기화 외 마이그레이션 실행 시 보정)
 SET time_zone = '+09:00';
 
--- [10] subscription_payment_logs 신규 테이블 생성
+-- [10] subscription_payment_logs 신규 테이블 생성 (이력 참고용 - 정의 실체는 601행 참조)
 --      구독 정기결제 시도 이력 추적 (append-only)
 --      billing_cycle_date + attempt_no 복합 UNIQUE 로 사이클 내 중복 시도 방지
-CREATE TABLE IF NOT EXISTS subscription_payment_logs (
-  id                     BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  log_id                 CHAR(36) NOT NULL UNIQUE COMMENT 'UUID - 외부 노출용',
-
-  subscription_id        CHAR(36) NOT NULL COMMENT 'subscriptions.subscription_id 참조',
-  user_id                CHAR(36) NOT NULL COMMENT 'users.user_id 비정규화 (조회 최적화)',
-
-  billing_cycle_date     DATE NOT NULL COMMENT '결제 사이클 기준일 (구독 시작일 기준 매월 동일 일)',
-  attempt_no             TINYINT UNSIGNED NOT NULL DEFAULT 1 COMMENT '해당 사이클 내 시도 순서 (1~N)',
-
-  log_status             ENUM('pending','success','failed','retry_scheduled','abandoned') NOT NULL DEFAULT 'pending',
-  attempt_type           ENUM('initial','recurring','retry') NOT NULL DEFAULT 'recurring',
-
-  toss_payment_key       VARCHAR(200) NULL UNIQUE COMMENT '성공 시 토스 결제 키',
-  toss_order_id          VARCHAR(64) NOT NULL COMMENT '토스 주문 ID',
-
-  amount_krw             INT UNSIGNED NOT NULL,
-
-  attempted_at           DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '결제 요청 전송 시각',
-  succeeded_at           DATETIME NULL,
-  failed_at              DATETIME NULL,
-
-  fail_code              VARCHAR(50) NULL COMMENT '토스 원본 에러 코드 (예: REJECT_CARD_COMPANY)',
-  fail_category          ENUM('card_expired','insufficient_funds','card_blocked','network_error','unknown') NULL,
-  fail_reason            VARCHAR(500) NULL COMMENT '사용자 노출 메시지',
-
-  next_retry_at          DATETIME NULL COMMENT 'retry_scheduled 상태일 때만 값 존재',
-
-  created_at             DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-  UNIQUE KEY uq_sub_pay_logs_cycle_attempt (subscription_id, billing_cycle_date, attempt_no),
-  UNIQUE KEY uq_sub_pay_logs_toss_order    (toss_order_id),
-  INDEX idx_sub_pay_logs_sub_created  (subscription_id, created_at DESC),
-  INDEX idx_sub_pay_logs_user_status  (user_id, log_status, created_at DESC),
-  INDEX idx_sub_pay_logs_status_retry (log_status, next_retry_at),
-  INDEX idx_sub_pay_logs_cycle        (billing_cycle_date, log_status)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  COMMENT='구독 정기결제 시도 로그 (append-only)';
+--      ※ 2026-08-21 정리: 이 CREATE TABLE 은 상단 CREATE TABLE 섹션(599~638행)의
+--        정의와 byte-identical 한 중복이었다. 스냅샷 파일은 상단 섹션을 스키마
+--        정본으로 삼고, 마이그레이션 이력 섹션은 "왜 이렇게 됐는지" 서술만 남긴다.
+--        중복 CREATE TABLE 제거 - 실행 시 영향 없음 (IF NOT EXISTS라 항상 no-op였음).
 
 -- [11] subscriptions ENUM 확장 + 결제 실패 추적 컬럼 추가
 --      sub_status 에 'suspended' 추가: past_due 유예 만료 후 접근 차단 상태

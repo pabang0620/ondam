@@ -118,6 +118,24 @@
 ### DEV-21. 사진관 업로드 프리체크 + 인물 선택 - `TODO`
 - 명세: [SPEC-08](../specs/SPEC-08-photo-product.md) 2절. 결제 전 해상도·얼굴 검출 차단, 경고 후 진행 로그, 단체사진 인물 선택.
 
+## 전체 감사 파생 태스크 (2026-08-21, BLOCKER/HIGH)
+
+> 근거: `docs/review/2026-08-21-full-audit.md` (5개 에이전트 병렬 감사). 실행 순서·상세는 `docs/review/remediation-plan.md`.
+> 규약: `docs/guidelines/DEVELOPMENT_GUIDELINES.md` (재발 방지 G1~G9). 각 태스크에 이 문서를 함께 준다.
+
+| ID | 태스크 | 심각도 | 의존 |
+|---|---|---|---|
+| DEV-22 | 스키마·enums.ts 재동기화 (마이그레이션 생성 완료, 실행·코드반영 잔여) | BLOCKER | 뿌리, 선행 |
+| DEV-23 | 결제 금액·소유권 서버 검증 | BLOCKER | DEV-22 |
+| DEV-24 | 프론트 mock 성공폴백 제거/DEV 게이트 (40곳) | BLOCKER | DEV-22 후 검증용 |
+| DEV-25 | 토스 결제 왕복 실구현 (사진관·유언장) | BLOCKER | DEV-23 |
+| DEV-26 | 정기결제 크론(v5 pattern)·retryPayment·알림 ENUM·유가족 알림 | BLOCKER | DEV-22 |
+| DEV-27 | 인증·세션 프론트 (공개페이지 접근·세션복원·관리자토큰) | HIGH | 병렬 |
+| DEV-28 | 보안 묶음 (OAuth state·S3키 소유권·rate limit·에러노출) | HIGH | 병렬 |
+| DEV-29 | 나머지 HIGH 로직 (H-07~H-14) | HIGH | DEV-22 |
+
+- DEV-22 마이그레이션 파일: `docs/migrations/2026-08-21-schema-drift-fix.{up,down}.sql` + README. **실행은 사용자가 백업 후 직접.**
+
 ## 백로그 외 기록 사항 (태스크 아님, 인지용)
 
 - 문서상 개발 브랜치가 `claude`로 명시돼 있으나 실제로는 `master` 직접 작업 중 → 브랜치 전략은 사용자 결정 사항. 코딩 AI가 임의로 브랜치 체계를 바꾸지 않는다.

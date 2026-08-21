@@ -2,6 +2,7 @@
 // 온담(ondam) ENUM SSOT
 // DB 스키마(ondam_schema.sql)와 반드시 동기화 유지
 // Created: 2026-04-19
+// Last synced with DB: 2026-08-21 (drift fix - see docs/migrations/2026-08-21-schema-drift-fix.README.md)
 //
 // 사용 규칙:
 //   - DB ENUM 값 변경 시 이 파일을 먼저 수정 → 마이그레이션 파일 생성
@@ -39,7 +40,17 @@ export const PHOTO_ORDER_STATUS = [
 ] as const
 export type PhotoOrderStatus = typeof PHOTO_ORDER_STATUS[number]
 
-export const PHOTO_TYPE = ['funeral', 'id', 'job'] as const
+export const PHOTO_TYPE = [
+  'funeral',
+  'id',
+  'job',
+  'enhance',
+  'colorize',
+  'restore',
+  'removebg',
+  'portrait',
+  'casual',
+] as const
 export type PhotoType = typeof PHOTO_TYPE[number]
 
 export const PHOTO_FILE_KIND = ['raw', 'enhanced'] as const
@@ -57,7 +68,7 @@ export const VOICE_CLONE_STATUS = [
 ] as const
 export type VoiceCloneStatus = typeof VOICE_CLONE_STATUS[number]
 
-export const WILL_STATUS = ['draft', 'active', 'released', 'revoked'] as const
+export const WILL_STATUS = ['draft', 'paid', 'active', 'released', 'revoked'] as const
 export type WillStatus = typeof WILL_STATUS[number]
 
 export const WILL_RELEASE_POLICY = [
@@ -127,6 +138,7 @@ export type SubscriptionPlan = typeof SUBSCRIPTION_PLAN[number]
 export const SUBSCRIPTION_STATUS = [
   'active',
   'past_due',
+  'suspended',
   'canceled',
 ] as const
 export type SubscriptionStatus = typeof SUBSCRIPTION_STATUS[number]
@@ -156,6 +168,7 @@ export const AI_JOB_TARGET_TYPE = [
   'voice_sample',
   'will',
   'avatar_session',
+  'pet',
 ] as const
 export type AiJobTargetType = typeof AI_JOB_TARGET_TYPE[number]
 
@@ -165,6 +178,8 @@ export type AiJobTargetType = typeof AI_JOB_TARGET_TYPE[number]
 
 export const NOTIFICATION_TYPE = [
   'photo_complete',
+  'voice_clone_complete',
+  'will_video_ready',
   'will_release_request',
   'will_released',
   'payment_done',
