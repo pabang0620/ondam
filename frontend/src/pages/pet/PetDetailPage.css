@@ -70,3 +70,13 @@
     padding: var(--spacing-lg) var(--spacing-md) 32px;
   }
 }
+
+/* 추모 페이지 설정 저장 에러 - 회색 빈 상태와 시각적으로 구분되는 에러 박스 */
+.pet-detail-memorial-error {
+  font-size: var(--fs-body);
+  color: var(--color-error);
+  padding: var(--spacing-md);
+  background: var(--color-error-light);
+  border: 1px solid var(--color-error-muted);
+  border-radius: var(--radius-card);
+}

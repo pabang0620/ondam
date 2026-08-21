@@ -12,12 +12,8 @@ export default function KakaoCallbackPage() {
     const hashParams = new URLSearchParams(hash)
     const token = hashParams.get('token')
     if (!token) {
-      console.warn('[mock] 카카오 콜백 token 없음 - mock 사용자로 진입합니다')
-      setAuth(
-        { user_id: 'mock-user-001', email: 'demo@ondam.kr', nickname: '데모 사용자', role: 'user' },
-        'mock-token',
-      )
-      navigate('/')
+      // FIX: DEV-24 - 토큰 없이 가짜 사용자로 로그인시키지 않는다. 로그인 페이지로 되돌린다
+      navigate('/login', { replace: true })
       return
     }
 
@@ -31,13 +27,9 @@ export default function KakaoCallbackPage() {
         setAuth(user, token)
         navigate('/')
       })
-      .catch((err) => {
-        console.warn('[mock] 카카오 /users/me 실패 - mock 사용자로 진입합니다', err)
-        setAuth(
-          { user_id: 'mock-user-001', email: 'demo@ondam.kr', nickname: '데모 사용자', role: 'user' },
-          'mock-token',
-        )
-        navigate('/')
+      .catch(() => {
+        // FIX: DEV-24 - 사용자 정보 조회 실패를 가짜 사용자로 위장하지 않는다
+        navigate('/login', { replace: true })
       })
   }, [])
 

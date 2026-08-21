@@ -22,7 +22,7 @@ const updateAiJob = async (bullmqJobId, fields) => {
   const values = [...entries.map(([, v]) => v), bullmqJobId]
 
   await pool.execute(
-    `UPDATE ai_jobs SET ${setClauses}, updated_at = NOW() WHERE bullmq_job_id = ?`,
+    `UPDATE ai_jobs SET ${setClauses}, updated_at = NOW() WHERE bullmq_job_id = ? AND deleted_at IS NULL`,
     values,
   )
 }
@@ -40,7 +40,7 @@ const updateWill = async (willId, fields) => {
   const values = [...entries.map(([, v]) => v), willId]
 
   await pool.execute(
-    `UPDATE wills SET ${setClauses}, updated_at = NOW() WHERE will_id = ?`,
+    `UPDATE wills SET ${setClauses}, updated_at = NOW() WHERE will_id = ? AND deleted_at IS NULL`,
     values,
   )
 }

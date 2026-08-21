@@ -1,46 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { mypageApi } from './mypageApi.js'
-import { useAuthStore } from '../../store/authStore.js'
-
-const MOCK_PHOTO_ORDERS = [
-  {
-    orderId: 'mock-order-001',
-    photoType: 'funeral',
-    status: 'completed',
-    createdAt: '2025-10-12T09:00:00.000Z',
-  },
-  {
-    orderId: 'mock-order-002',
-    photoType: 'id',
-    status: 'processing',
-    createdAt: '2025-11-05T14:30:00.000Z',
-  },
-  {
-    orderId: 'mock-order-003',
-    photoType: 'funeral',
-    status: 'pending',
-    createdAt: '2026-01-20T11:15:00.000Z',
-  },
-]
-
-const MOCK_WILLS = [
-  {
-    willId: 'mock-will-0001-uuid',
-    title: '소중한 가족에게 남기는 말',
-    status: 'completed',
-    createdAt: '2025-09-01T08:00:00.000Z',
-  },
-]
-
-const MOCK_NOTIFICATION_SETTINGS = {
-  emailMarketing: false,
-  pushOrder: true,
-  pushWill: true,
-  pushPromotion: false,
-}
 
 export function useMy() {
-  const authUser = useAuthStore((s) => s.user)
   const [user, setUser] = useState(null)
   const [photoOrders, setPhotoOrders] = useState([])
   const [wills, setWills] = useState([])
@@ -48,6 +9,7 @@ export function useMy() {
   const [notificationSettings, setNotificationSettings] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [settingsError, setSettingsError] = useState(null)
   const [isSettingsUpdating, setIsSettingsUpdating] = useState(false)
 
   const fetchAll = useCallback(async () => {
@@ -65,30 +27,21 @@ export function useMy() {
       if (willsRes.data.success) setWills(willsRes.data.data ?? [])
       if (unreadRes.data.success) setUnreadCount(unreadRes.data.data?.count ?? 0)
     } catch (err) {
-      console.warn('[mock] 마이페이지 API 실패 - mock 데이터로 대체합니다', err)
-      setUser(
-        authUser
-          ? {
-              nickname: authUser.nickname || '데모 사용자',
-              email: authUser.email || 'demo@ondam.kr',
-            }
-          : { nickname: '데모 사용자', email: 'demo@ondam.kr' },
-      )
-      setPhotoOrders(MOCK_PHOTO_ORDERS)
-      setWills(MOCK_WILLS)
-      setUnreadCount(0)
+      // FIX: DEV-24 - 마이페이지 조회 실패를 가짜 데이터로 위장하지 않는다
+      setError(err?.response?.data?.message ?? '마이페이지 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.')
     } finally {
       setIsLoading(false)
     }
-  }, [authUser])
+  }, [])
 
   const fetchNotificationSettings = useCallback(async () => {
+    setSettingsError(null)
     try {
       const res = await mypageApi.getNotificationSettings()
       if (res.data.success) setNotificationSettings(res.data.data)
     } catch (err) {
-      console.warn('[mock] 알림 설정 API 실패 - mock 데이터로 대체합니다', err)
-      setNotificationSettings(MOCK_NOTIFICATION_SETTINGS)
+      // FIX: DEV-24 - 알림 설정 조회 실패를 가짜 데이터로 위장하지 않는다
+      setSettingsError(err?.response?.data?.message ?? '알림 설정을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.')
     }
   }, [])
 
@@ -121,6 +74,7 @@ export function useMy() {
     notificationSettings,
     isLoading,
     error,
+    settingsError,
     isSettingsUpdating,
     fetchNotificationSettings,
     handleToggleNotification,

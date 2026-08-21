@@ -16,21 +16,24 @@ export function useWillEvent() {
   const [contentText, setContentText] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState(null)
+  const [willsError, setWillsError] = useState(null)
 
   useEffect(() => {
     const ac = new AbortController()
 
     const load = async () => {
+      setWillsError(null)
       try {
         const { data } = await willApi.getWills()
         const list = (data.data || []).filter((w) => w.status === 'active')
         setWills(list)
         if (list.length > 0) setSelectedWillId(list[0].id || list[0].willId)
       } catch (err) {
-        console.warn('[mock] 유언장 목록 API 실패 - mock 활성 유언장 사용', err)
-        const mockList = [{ willId: 'mock-will-001', title: '사랑하는 가족에게', status: 'active' }]
-        setWills(mockList)
-        setSelectedWillId('mock-will-001')
+        // FIX: DEV-27 - 조회 실패를 빈 목록으로 조용히 흘려보내지 않는다. 빈 목록은
+        // "유언장이 없음"으로 보여 조회 실패를 사용자가 오인하게 되고, 그 상태로 제출하면
+        // voiceSampleId가 빈 값으로 전송돼 서버 400을 유발한다(G2-2).
+        setWills([])
+        setWillsError(err?.response?.data?.message ?? '유언장 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.')
       }
     }
 
@@ -41,6 +44,16 @@ export function useWillEvent() {
   const handleSubmit = useCallback(async () => {
     if (!contentText.trim()) {
       setSubmitError('이벤트 메시지를 입력해 주세요.')
+      return
+    }
+
+    // FIX: DEV-27 - 목록 조회 실패(willsError)나 유언장이 아직 없는 경우 selectedWillId가
+    // 빈 문자열이다. 이 상태로 제출하면 voiceSampleId가 빈 값으로 전송돼 서버 400을
+    // 유발하므로, 여기서 먼저 막고 사용자에게 원인을 알려준다.
+    if (!selectedWillId) {
+      setSubmitError(
+        willsError ?? '사용할 유언장이 없습니다. 먼저 유언장을 등록해 주세요.',
+      )
       return
     }
 
@@ -64,18 +77,17 @@ export function useWillEvent() {
       const willId = data.data?.willId || data.data?.id
       navigate(`/will/payment?willId=${willId}`)
     } catch (err) {
-      console.warn('[mock] 이벤트 유언장 생성 API 실패 - mock will_id 사용', err)
-      const mockWillId = 'mock-event-will-' + Date.now().toString(36)
-      localStorage.setItem('will_current_id', mockWillId)
-      navigate(`/will/payment?willId=${mockWillId}`)
+      // FIX: DEV-24 - 생성 실패를 가짜 will_id로 위장해 결제 단계로 진행시키지 않는다
+      setSubmitError(err?.response?.data?.message ?? '이벤트 영상 생성에 실패했습니다. 잠시 후 다시 시도해 주세요.')
     } finally {
       setIsSubmitting(false)
       pendingRef.current = false
     }
-  }, [contentText, eventType, selectedWillId, navigate])
+  }, [contentText, eventType, selectedWillId, willsError, navigate])
 
   return {
     wills,
+    willsError,
     selectedWillId,
     setSelectedWillId,
     eventTypes: EVENT_TYPES,

@@ -1,4 +1,5 @@
-import { useParams, Link } from 'react-router-dom'
+import { useState } from 'react'
+import { useParams, useSearchParams, Link } from 'react-router-dom'
 import { Heart, PawPrint } from 'lucide-react'
 import { useMemorial } from './useMemorial.js'
 import './MemorialPage.css'
@@ -17,7 +18,22 @@ function formatDate(dateStr) {
 
 export default function MemorialPage() {
   const { slug } = useParams()
-  const { pet, media, isLoading, error } = useMemorial(slug)
+  const [searchParams] = useSearchParams()
+  // FIX: DEV-30 - 링크에 ?accessCode=가 실려 오면 그 값으로 바로 조회한다.
+  const initialAccessCode = searchParams.get('accessCode') || ''
+  const { pet, media, isLoading, error, retryWithAccessCode } = useMemorial(slug, initialAccessCode)
+
+  const [codeInput, setCodeInput] = useState('')
+  const [isRetrying, setIsRetrying] = useState(false)
+
+  const handleCodeSubmit = async (e) => {
+    e.preventDefault()
+    const code = codeInput.trim()
+    if (!code || isRetrying) return
+    setIsRetrying(true)
+    await retryWithAccessCode(code)
+    setIsRetrying(false)
+  }
 
   if (isLoading) {
     return (
@@ -34,6 +50,49 @@ export default function MemorialPage() {
       <main className="memorial-page">
         <div className="memorial-error">
           <p role="alert">{error || '추모 페이지를 찾을 수 없습니다.'}</p>
+
+          {/* FIX: DEV-30 - 링크 없이 코드만 전달받은 가족을 위한 수동 입력 폴백 */}
+          <form
+            onSubmit={handleCodeSubmit}
+            style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)', width: '100%', maxWidth: 320 }}
+          >
+            <label htmlFor="memorial-access-code" style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)' }}>
+              가족에게 받은 접근 코드가 있다면 입력해 주세요
+            </label>
+            <input
+              id="memorial-access-code"
+              type="text"
+              value={codeInput}
+              onChange={(e) => setCodeInput(e.target.value)}
+              style={{
+                minHeight: 'var(--size-input-h)',
+                fontSize: 'var(--fs-body)',
+                padding: '0 var(--spacing-md)',
+                border: '1.5px solid var(--color-border-strong)',
+                borderRadius: 'var(--radius-sm)',
+                background: 'var(--color-surface)',
+                color: 'var(--color-text-primary)',
+              }}
+            />
+            <button
+              type="submit"
+              disabled={isRetrying}
+              aria-busy={isRetrying}
+              style={{
+                minHeight: 'var(--size-button-h)',
+                fontSize: 'var(--fs-button)',
+                fontWeight: 700,
+                background: 'var(--color-memorial)',
+                color: 'var(--color-text-on-dark)',
+                border: 'none',
+                borderRadius: 'var(--radius-pill)',
+                cursor: isRetrying ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {isRetrying ? '확인 중...' : '확인하기'}
+            </button>
+          </form>
+
           <Link to="/" className="memorial-home-link">온담 홈으로</Link>
         </div>
       </main>

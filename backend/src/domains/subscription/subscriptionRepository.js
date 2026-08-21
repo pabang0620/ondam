@@ -3,18 +3,24 @@ import { v4 as uuidv4 } from 'uuid'
 
 /**
  * 구독 생성
+ * @param {object} params
+ * @param {import('mysql2/promise').PoolConnection|null} conn - 트랜잭션 내에서 실행할 때 전달 (DEV-26)
  */
-export const createSubscription = async ({
-  subscriptionId,
-  userId,
-  plan,
-  billingKeyEncrypted,
-  billingKmsKeyId,
-  priceKrw,
-  nextBillingAt,
-  lastBilledAt,
-}) => {
-  const [result] = await pool.execute(
+export const createSubscription = async (
+  {
+    subscriptionId,
+    userId,
+    plan,
+    billingKeyEncrypted,
+    billingKmsKeyId,
+    priceKrw,
+    nextBillingAt,
+    lastBilledAt,
+  },
+  conn = null
+) => {
+  const executor = conn ?? pool
+  const [result] = await executor.execute(
     `INSERT INTO subscriptions
        (subscription_id, user_id, plan, sub_status,
         toss_billing_key_encrypted, billing_kms_key_id,
@@ -22,7 +28,9 @@ export const createSubscription = async ({
      SELECT ?, ?, ?, 'active', ?, ?, ?, ?, ?
      WHERE NOT EXISTS (
        SELECT 1 FROM subscriptions
-       WHERE user_id = ? AND plan = ? AND sub_status = 'active' AND deleted_at IS NULL
+       WHERE user_id = ? AND plan = ?
+         AND sub_status IN ('active', 'past_due', 'suspended')
+         AND deleted_at IS NULL
      )`,
     [
       subscriptionId,
@@ -38,16 +46,19 @@ export const createSubscription = async ({
     ]
   )
   if (result.affectedRows === 0) {
-    throw Object.assign(new Error('이미 구독 중인 플랜입니다'), { status: 409 })
+    throw Object.assign(new Error('이미 구독 중이거나(연체/정지 포함) 진행 중인 플랜입니다'), { status: 409 })
   }
-  return findSubscriptionById(subscriptionId)
+  return findSubscriptionById(subscriptionId, conn)
 }
 
 /**
  * subscription_id(UUID)로 단건 조회
+ * @param {string} subscriptionId
+ * @param {import('mysql2/promise').PoolConnection|null} conn - 트랜잭션 내에서 읽어야 할 때 전달
  */
-export const findSubscriptionById = async (subscriptionId) => {
-  const [rows] = await pool.execute(
+export const findSubscriptionById = async (subscriptionId, conn = null) => {
+  const executor = conn ?? pool
+  const [rows] = await executor.execute(
     `SELECT subscription_id, user_id, plan, sub_status,
             billing_kms_key_id, price_krw,
             next_billing_at, last_billed_at,
@@ -62,15 +73,19 @@ export const findSubscriptionById = async (subscriptionId) => {
 }
 
 /**
- * 활성 구독 단건 조회 (중복 구독 확인용)
+ * 중복 구독 판정용 조회 (신규 구독 생성 전 차단 목적)
+ * active뿐 아니라 past_due/suspended도 포함한다 - 연체·정지 구독을 그대로 둔 채
+ * 재구독하면 구독이 2개가 되고, 연체 건은 계속 과금 대상으로 남는다 (DEV-26 task 7)
  */
-export const findActiveSubscription = async (userId, plan) => {
+export const findBlockingSubscription = async (userId, plan) => {
   const [rows] = await pool.execute(
     `SELECT subscription_id, user_id, plan, sub_status,
             price_krw, next_billing_at, last_billed_at,
             created_at
      FROM subscriptions
-     WHERE user_id = ? AND plan = ? AND sub_status = 'active' AND deleted_at IS NULL
+     WHERE user_id = ? AND plan = ?
+       AND sub_status IN ('active', 'past_due', 'suspended')
+       AND deleted_at IS NULL
      LIMIT 1`,
     [userId, plan]
   )
@@ -94,15 +109,24 @@ export const findSubscriptionsByUserId = async (userId) => {
 }
 
 /**
- * 구독 상태 변경 + subscription_logs INSERT (트랜잭션)
+ * 구독 상태 변경 + subscription_logs INSERT
+ *
+ * [DEV-26 수정] 이전에는 params.conn을 받아놓고 실제로는 무시한 채 매번 자체
+ * pool.getConnection()으로 별도 트랜잭션을 열었다("트랜잭션 주석이 거짓" 사고 -
+ * G4-3). 호출자가 conn을 넘기면 그 커넥션/트랜잭션을 그대로 사용해 실행만 하고
+ * commit/rollback/release는 호출자가 책임진다. conn이 없으면(하위호환) 이 함수가
+ * 자체 트랜잭션을 관리한다.
+ * @param {string} subscriptionId
+ * @param {{subStatus, prevStatus, changedBy, changedByType, reason, conn?}} params
  */
 export const updateSubscriptionStatus = async (
   subscriptionId,
-  { subStatus, prevStatus, changedBy, changedByType, reason }
+  { subStatus, prevStatus, changedBy, changedByType, reason, conn: externalConn }
 ) => {
-  const conn = await pool.getConnection()
+  const ownsTransaction = !externalConn
+  const conn = externalConn ?? await pool.getConnection()
   try {
-    await conn.beginTransaction()
+    if (ownsTransaction) await conn.beginTransaction()
 
     await conn.execute(
       `UPDATE subscriptions
@@ -120,15 +144,15 @@ export const updateSubscriptionStatus = async (
       [logId, subscriptionId, prevStatus, subStatus, changedBy, changedByType, reason ?? null]
     )
 
-    await conn.commit()
+    if (ownsTransaction) await conn.commit()
   } catch (err) {
-    await conn.rollback()
+    if (ownsTransaction) await conn.rollback()
     throw err
   } finally {
-    conn.release()
+    if (ownsTransaction) conn.release()
   }
 
-  return findSubscriptionById(subscriptionId)
+  return findSubscriptionById(subscriptionId, externalConn)
 }
 
 /**
@@ -148,9 +172,11 @@ export const updateNextBilling = async (subscriptionId, { nextBillingAt, lastBil
 
 /**
  * 구독 취소 - sub_status='canceled', canceled_at, cancel_reason 업데이트
+ * [DEV-26 수정] conn을 받아놓고 무시하던 버그 수정 - 전달받으면 그 커넥션으로 실행
  */
-export const cancelSubscription = async (subscriptionId, { cancelReason }) => {
-  await pool.execute(
+export const cancelSubscription = async (subscriptionId, { cancelReason, conn = null } = {}) => {
+  const executor = conn ?? pool
+  await executor.execute(
     `UPDATE subscriptions
      SET sub_status = 'canceled',
          canceled_at = NOW(),
@@ -161,7 +187,7 @@ export const cancelSubscription = async (subscriptionId, { cancelReason }) => {
      WHERE subscription_id = ? AND deleted_at IS NULL`,
     [cancelReason ?? '사용자 취소', subscriptionId]
   )
-  return findSubscriptionById(subscriptionId)
+  return findSubscriptionById(subscriptionId, conn)
 }
 
 /**
@@ -169,9 +195,11 @@ export const cancelSubscription = async (subscriptionId, { cancelReason }) => {
  * 허용 필드: subStatus, failCount, lastBilledAt, nextBillingAt, gracePeriodUntil, suspendedAt, lastFailedAt
  * @param {string} subscriptionId
  * @param {object} fields
+ * @param {import('mysql2/promise').PoolConnection|null} conn - 트랜잭션 내에서 실행할 때 전달 (DEV-26)
  * @returns {Promise<object>}
  */
-export const updateSubscriptionBilling = async (subscriptionId, fields) => {
+export const updateSubscriptionBilling = async (subscriptionId, fields, conn = null) => {
+  const executor = conn ?? pool
   const FIELD_MAP = {
     subStatus: 'sub_status',
     failCount: 'fail_count',
@@ -194,15 +222,15 @@ export const updateSubscriptionBilling = async (subscriptionId, fields) => {
     setClauses.push('fail_count = fail_count + 1')
   }
 
-  if (setClauses.length === 0) return findSubscriptionById(subscriptionId)
+  if (setClauses.length === 0) return findSubscriptionById(subscriptionId, conn)
 
-  await pool.execute(
+  await executor.execute(
     `UPDATE subscriptions
      SET ${setClauses.join(', ')}, updated_at = NOW()
      WHERE subscription_id = ? AND deleted_at IS NULL`,
     [...values, subscriptionId]
   )
-  return findSubscriptionById(subscriptionId)
+  return findSubscriptionById(subscriptionId, conn)
 }
 
 /**

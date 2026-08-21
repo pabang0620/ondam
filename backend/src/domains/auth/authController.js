@@ -3,7 +3,14 @@
  */
 
 import * as authService from './authService.js'
-import { getKakaoAuthUrl, handleKakaoCallback } from './kakaoAuthService.js'
+import {
+  getKakaoAuthUrl,
+  handleKakaoCallback,
+  generateKakaoState,
+  verifyKakaoState,
+  KAKAO_STATE_COOKIE,
+  KAKAO_STATE_COOKIE_OPTIONS,
+} from './kakaoAuthService.js'
 import { created, success } from '../../utils/response.js'
 
 const RT_COOKIE = 'rt'
@@ -115,29 +122,50 @@ export const saveConsents = async (req, res, next) => {
 
 /**
  * GET /api/auth/kakao
- * 카카오 인증 URL로 리다이렉트
+ * CSRF 방지용 state를 생성해 HttpOnly 쿠키에 저장하고, 카카오 인증 URL로 리다이렉트
  */
 export const kakaoLogin = (req, res) => {
-  const url = getKakaoAuthUrl()
-  res.redirect(url)
+  const state = generateKakaoState()
+  res.cookie(KAKAO_STATE_COOKIE, state, KAKAO_STATE_COOKIE_OPTIONS)
+  res.redirect(getKakaoAuthUrl(state))
 }
 
 /**
  * GET /api/auth/kakao/callback
- * 카카오 인가 코드 수신 → 토큰 교환 → 사용자 조회/생성 → 프론트 리다이렉트
+ * state 검증(CSRF 방지) → 카카오 인가 코드 수신 → 토큰 교환 → 사용자 조회/생성 → 프론트 리다이렉트
  */
 export const kakaoCallback = async (req, res, next) => {
+  const frontUrl = process.env.CLIENT_URL || 'http://localhost:5173'
+
+  const clearStateCookie = () =>
+    res.clearCookie(KAKAO_STATE_COOKIE, {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+    })
+
   try {
-    const { code } = req.query
+    const { code, state } = req.query
     if (!code) {
       throw Object.assign(new Error('카카오 인증 코드가 없습니다'), { status: 400 })
     }
+
+    try {
+      verifyKakaoState(req.cookies?.[KAKAO_STATE_COOKIE], state)
+    } catch (stateErr) {
+      // state 불일치(위조·재사용 시도)를 원문 에러로 노출하지 않고, 프론트가 이미
+      // 갖고 있는 실패 처리 경로(토큰 없는 콜백 → /login 리다이렉트,
+      // KakaoCallbackPage.jsx)를 그대로 재사용한다 - token 프래그먼트를 붙이지 않는다
+      clearStateCookie()
+      return res.redirect(`${frontUrl}/auth/kakao/callback`)
+    }
+
+    clearStateCookie()
 
     const { accessToken, refreshToken, user } = await handleKakaoCallback(code)
 
     res.cookie(RT_COOKIE, refreshToken, RT_COOKIE_OPTIONS)
 
-    const frontUrl = process.env.CLIENT_URL || 'http://localhost:5173'
     res.redirect(`${frontUrl}/auth/kakao/callback#token=${accessToken}`)
   } catch (err) {
     next(err)

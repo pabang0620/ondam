@@ -36,17 +36,8 @@ export function useAdminLogin() {
         navigate(ROUTES.ADMIN, { replace: true })
       }
     } catch (err) {
-      console.warn('[mock] 관리자 로그인 API 실패 - mock 토큰으로 진행합니다', err)
-      const mockToken = 'mock-admin-token'
-      const mockUser = {
-        userId: 'mock-admin-001',
-        email: form.email || 'admin@ondam.kr',
-        nickname: '관리자',
-        role: 'admin',
-      }
-      localStorage.setItem('adminToken', mockToken)
-      setAuth(mockUser, mockToken)
-      navigate(ROUTES.ADMIN, { replace: true })
+      // FIX: DEV-24 - 관리자 로그인 실패를 가짜 토큰으로 위장해 /admin에 진입시키지 않는다
+      setError(err?.response?.data?.message ?? '이메일 또는 비밀번호가 올바르지 않습니다. 다시 확인해 주세요.')
     } finally {
       setIsSubmitting(false)
     }

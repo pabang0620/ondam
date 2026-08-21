@@ -38,10 +38,12 @@ export const findByEmail = async (email) => {
 /**
  * UUID로 사용자 조회 (소프트삭제 제외)
  * @param {string} userId  - UUID (user_id 컬럼)
+ * @param {import('mysql2/promise').PoolConnection|null} conn - 트랜잭션 내에서 읽어야 할 때 전달 (커밋 전 자기 트랜잭션 값을 봐야 하는 경우)
  * @returns {Promise<object|null>}
  */
-export const findByUserId = async (userId) => {
-  const [rows] = await pool.query(
+export const findByUserId = async (userId, conn = null) => {
+  const executor = conn ?? pool
+  const [rows] = await executor.query(
     `SELECT id, user_id, email, phone, nickname, profile_image_url,
             role, email_verified_at, phone_verified_at,
             is_active, created_at
@@ -56,30 +58,30 @@ export const findByUserId = async (userId) => {
 /**
  * 사용자 생성
  * @param {{ userId: string, email: string, nickname: string, passwordHash: string }} param
+ * @param {import('mysql2/promise').PoolConnection|null} conn - 트랜잭션 내에서 실행할 때 전달
  * @returns {Promise<object>} 생성된 사용자 전체 필드
  */
-export const createUser = async ({ userId, email, nickname, passwordHash }) => {
-  await pool.query(
+export const createUser = async ({ userId, email, nickname, passwordHash }, conn = null) => {
+  const executor = conn ?? pool
+  await executor.execute(
     `INSERT INTO users (user_id, email, nickname, password_hash)
      VALUES (?, ?, ?, ?)`,
     [userId, email, nickname, passwordHash]
   )
-  return findByUserId(userId)
+  return findByUserId(userId, conn)
 }
 
 /**
  * 동의 이력 저장 (append-only)
  * @param {{ consentId: string, userId: string, consentType: string, isAgreed: number, ipAddress: string|null, userAgent: string|null }} param
+ * @param {import('mysql2/promise').PoolConnection|null} conn - 트랜잭션 내에서 실행할 때 전달
  */
-export const createConsent = async ({
-  consentId,
-  userId,
-  consentType,
-  isAgreed,
-  ipAddress,
-  userAgent,
-}) => {
-  await pool.query(
+export const createConsent = async (
+  { consentId, userId, consentType, isAgreed, ipAddress, userAgent },
+  conn = null
+) => {
+  const executor = conn ?? pool
+  await executor.execute(
     `INSERT INTO user_consents (consent_id, user_id, consent_type, is_agreed, ip_address, user_agent)
      VALUES (?, ?, ?, ?, ?, ?)`,
     [consentId, userId, consentType, isAgreed ? 1 : 0, ipAddress ?? null, userAgent ?? null]

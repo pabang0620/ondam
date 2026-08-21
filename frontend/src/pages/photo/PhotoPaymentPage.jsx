@@ -4,7 +4,10 @@ import usePhotoPayment from './usePhotoPayment.js'
 function PhotoPaymentPage() {
   const { orderId, amount, isPaying, error, handlePay } = usePhotoPayment()
 
-  const formattedAmount = amount.toLocaleString('ko-KR')
+  // FIX: DEV-29 - amount는 더 이상 하드코딩 상수가 아니라 서버 조회 결과라 초기값이
+  // null일 수 있다(로딩 중). 실제 결제 금액은 handlePay 내부에서 그 순간의 prepare
+  // 응답 값을 쓰므로 이 표시값과 무관하게 정확하다.
+  const formattedAmount = amount == null ? '확인 중...' : `${amount.toLocaleString('ko-KR')}원`
 
   if (!orderId) {
     return (
@@ -87,7 +90,7 @@ function PhotoPaymentPage() {
         >
           <span style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 700, color: 'var(--color-text-primary)' }}>결제 금액</span>
           <span style={{ fontSize: 28, fontWeight: 800, color: 'var(--color-photo)' }}>
-            {formattedAmount}원
+            {formattedAmount}
           </span>
         </div>
       </section>
@@ -161,7 +164,7 @@ function PhotoPaymentPage() {
         ) : (
           <>
             <CreditCard size={20} />
-            {formattedAmount}원 결제하기
+            {formattedAmount} 결제하기
           </>
         )}
       </button>

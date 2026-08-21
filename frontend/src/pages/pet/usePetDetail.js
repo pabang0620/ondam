@@ -1,79 +1,28 @@
 import { useState, useEffect, useCallback } from 'react'
 import { petApi } from './petApi.js'
 
-const MOCK_PETS = {
-  'mock-pet-001': {
-    pet_id: 'mock-pet-001',
-    user_id: 'mock-user-001',
-    name: '콩이',
-    species: 'dog',
-    breed: '골든리트리버',
-    pet_status: 'alive',
-    birth_date: '2018-03-15',
-    death_date: null,
-    memorial_slug: null,
-    profile_image_url: 'https://picsum.photos/seed/golden-retriever/600/600',
-  },
-  'mock-pet-002': {
-    pet_id: 'mock-pet-002',
-    user_id: 'mock-user-001',
-    name: '나비',
-    species: 'cat',
-    breed: '코리안숏헤어',
-    pet_status: 'deceased',
-    birth_date: '2010-06-01',
-    death_date: '2024-02-14',
-    memorial_slug: 'navi-2024',
-    profile_image_url: 'https://picsum.photos/seed/shorthair-cat/600/600',
-  },
-}
-
-const MOCK_MEDIA = {
-  'mock-pet-001': [
-    { media_id: 'media-001', pet_id: 'mock-pet-001', media_type: 'photo', file_url: 'https://picsum.photos/seed/dog1/600/600', caption: '공원 산책', taken_at: '2023-05-10', sort_order: 1 },
-    { media_id: 'media-002', pet_id: 'mock-pet-001', media_type: 'photo', file_url: 'https://picsum.photos/seed/dog2/600/600', caption: '생일 파티', taken_at: '2023-03-15', sort_order: 2 },
-    { media_id: 'media-003', pet_id: 'mock-pet-001', media_type: 'photo', file_url: 'https://picsum.photos/seed/dog3/600/600', caption: '겨울 눈밭', taken_at: '2023-01-20', sort_order: 3 },
-    { media_id: 'media-004', pet_id: 'mock-pet-001', media_type: 'photo', file_url: 'https://picsum.photos/seed/dog4/600/600', caption: '낮잠 중', taken_at: '2022-11-05', sort_order: 4 },
-    { media_id: 'media-005', pet_id: 'mock-pet-001', media_type: 'photo', file_url: 'https://picsum.photos/seed/dog5/600/600', caption: '목욕 후', taken_at: '2022-08-30', sort_order: 5 },
-    { media_id: 'media-006', pet_id: 'mock-pet-001', media_type: 'photo', file_url: 'https://picsum.photos/seed/dog6/600/600', caption: '가족 사진', taken_at: '2022-05-05', sort_order: 6 },
-    { media_id: 'media-007', pet_id: 'mock-pet-001', media_type: 'video', file_url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', caption: '공 놀이', taken_at: '2023-07-01', sort_order: 7 },
-  ],
-  'mock-pet-002': [
-    { media_id: 'media-101', pet_id: 'mock-pet-002', media_type: 'photo', file_url: 'https://picsum.photos/seed/cat1/600/600', caption: '창가에서', taken_at: '2023-10-10', sort_order: 1 },
-    { media_id: 'media-102', pet_id: 'mock-pet-002', media_type: 'photo', file_url: 'https://picsum.photos/seed/cat2/600/600', caption: '따뜻한 햇살', taken_at: '2023-06-15', sort_order: 2 },
-  ],
-}
-
-function getMockPet(petId) {
-  return MOCK_PETS[petId] ?? {
-    pet_id: petId,
-    user_id: 'mock-user-001',
-    name: '우리 아이',
-    species: 'dog',
-    breed: '',
-    pet_status: 'alive',
-    birth_date: null,
-    death_date: null,
-    memorial_slug: null,
-    profile_image_url: 'https://picsum.photos/seed/pet-default/600/600',
-  }
-}
-
-function getMockMedia(petId) {
-  return MOCK_MEDIA[petId] ?? []
-}
-
 export function usePetDetail(petId) {
   const [pet, setPet] = useState(null)
   const [media, setMedia] = useState([])
-  const [isLoading, setIsLoading] = useState(false)
+  // FIX: DEV-31 - useMemorial과 동일한 깜빡임. 초기값 false면 첫 페인트에서
+  // PetDetailPage의 `error || !pet` 분기가 먼저 걸려 "반려동물 정보를 찾을 수
+  // 없습니다"가 한 프레임 노출된다.
+  const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadError, setUploadError] = useState(null)
   const [isStatusChanging, setIsStatusChanging] = useState(false)
+  const [statusChangeError, setStatusChangeError] = useState(null)
+  const [isSavingMemorial, setIsSavingMemorial] = useState(false)
+  const [memorialSaveError, setMemorialSaveError] = useState(null)
 
   const fetchDetail = useCallback(async () => {
-    if (!petId) return
+    // petId가 없으면 조회 자체가 불가능하다 - 초기값이 true이므로 여기서 내려주지
+    // 않으면 "불러오는 중..."에서 영원히 멈춘다.
+    if (!petId) {
+      setIsLoading(false)
+      return
+    }
     setIsLoading(true)
     setError(null)
     try {
@@ -84,9 +33,8 @@ export function usePetDetail(petId) {
       if (petRes.data.success) setPet(petRes.data.data)
       if (mediaRes.data.success) setMedia(mediaRes.data.data ?? [])
     } catch (err) {
-      console.warn('[mock] usePetDetail.fetchDetail - 백엔드 응답 없음, mock 데이터로 대체', err)
-      setPet(getMockPet(petId))
-      setMedia(getMockMedia(petId))
+      // FIX: DEV-24 - 반려동물 상세 조회 실패를 가짜 데이터로 위장하지 않는다
+      setError(err?.response?.data?.message ?? '반려동물 정보를 불러오지 못했습니다.')
     } finally {
       setIsLoading(false)
     }
@@ -97,16 +45,6 @@ export function usePetDetail(petId) {
     fetchDetail()
     return () => ac.abort()
   }, [fetchDetail])
-
-  // mock blob URL cleanup - unmount 시 생성된 objectURL 해제
-  useEffect(() => {
-    return () => {
-      setMedia((prev) => {
-        prev.filter((m) => m._isMockBlob).forEach((m) => URL.revokeObjectURL(m.file_url))
-        return prev
-      })
-    }
-  }, [])
 
   const handleMediaUpload = async (file) => {
     if (!file) return
@@ -124,19 +62,8 @@ export function usePetDetail(petId) {
         setMedia((prev) => [...prev, addRes.data.data])
       }
     } catch (err) {
-      console.warn('[mock] usePetDetail.handleMediaUpload - 업로드 실패, mock 사진 추가', err)
-      const mockObjectUrl = URL.createObjectURL(file)
-      const mockMedia = {
-        media_id: `mock-upload-${Date.now()}`,
-        pet_id: petId,
-        media_type: 'photo',
-        file_url: mockObjectUrl,
-        caption: '업로드된 사진',
-        taken_at: new Date().toISOString(),
-        sort_order: media.length + 1,
-        _isMockBlob: true,
-      }
-      setMedia((prev) => [...prev, mockMedia])
+      // FIX: DEV-24 - 사진 업로드 실패를 가짜 blob 사진 추가로 위장하지 않는다
+      setUploadError(err?.response?.data?.message ?? '사진 업로드에 실패했습니다. 잠시 후 다시 시도해 주세요.')
     } finally {
       setIsUploading(false)
     }
@@ -145,16 +72,44 @@ export function usePetDetail(petId) {
   const handleStatusChange = async () => {
     if (isStatusChanging) return
     setIsStatusChanging(true)
+    setStatusChangeError(null)
     try {
       const res = await petApi.updatePetStatus(petId, 'deceased')
       if (res.data.success) {
         setPet((prev) => ({ ...prev, pet_status: 'deceased', ...res.data.data }))
       }
     } catch (err) {
-      console.warn('[mock] usePetDetail.handleStatusChange - API 실패, 로컬 상태만 변경', err)
-      setPet((prev) => prev ? { ...prev, pet_status: 'deceased', memorial_slug: `memorial-${petId}` } : prev)
+      // FIX: DEV-24 - 상태 변경 API 실패를 로컬에서만 성공 처리하지 않는다
+      setStatusChangeError(err?.response?.data?.message ?? '무지개다리 등록에 실패했습니다. 잠시 후 다시 시도해 주세요.')
     } finally {
       setIsStatusChanging(false)
+    }
+  }
+
+  // FIX: DEV-30 - 추모 페이지 접근 코드를 설정할 수 있는 유일한 API(PUT /api/pet/:petId)를
+  // 호출하는 곳이 프론트에 하나도 없어서, 어떤 사용자도 코드를 설정할 수 없었고 그 결과
+  // 모든 펫 추모 페이지가 영구 404였다(백엔드가 "접근 코드 없으면 비공개"로 확정했기 때문).
+  // memorialSlug도 같은 이유로 함께 받는다 - 추모 페이지 URL(/memorial/:slug) 자체가
+  // slug 없이는 존재할 수 없어서, 코드만 설정 가능하게 해서는 여전히 페이지에 도달할
+  // 방법이 없다(PetDetailPage의 "추모 페이지 보기" 링크도 pet.memorial_slug가 있어야만
+  // 렌더된다).
+  const handleUpdateMemorialSettings = async ({ memorialSlug, memorialAccessCode }) => {
+    if (isSavingMemorial) return
+    setIsSavingMemorial(true)
+    setMemorialSaveError(null)
+    try {
+      const res = await petApi.updatePet(petId, { memorialSlug, memorialAccessCode })
+      if (res.data.success) {
+        setPet((prev) => ({ ...prev, ...res.data.data }))
+        return true
+      }
+      return false
+    } catch (err) {
+      // FIX: DEV-24 - 저장 실패를 로컬에서만 성공 처리하지 않는다
+      setMemorialSaveError(err?.response?.data?.message ?? '추모 페이지 설정 저장에 실패했습니다. 잠시 후 다시 시도해 주세요.')
+      return false
+    } finally {
+      setIsSavingMemorial(false)
     }
   }
 
@@ -166,8 +121,12 @@ export function usePetDetail(petId) {
     isUploading,
     uploadError,
     isStatusChanging,
+    statusChangeError,
+    isSavingMemorial,
+    memorialSaveError,
     handleMediaUpload,
     handleStatusChange,
+    handleUpdateMemorialSettings,
     refetch: fetchDetail,
   }
 }

@@ -45,6 +45,7 @@ function PhotoResultPage() {
     isLoading,
     isRetrying,
     error,
+    retryError,
     handleDownload,
     handleRetry,
     handleShare,
@@ -166,6 +167,13 @@ function PhotoResultPage() {
           )}
         </div>
       </section>
+
+      {/* 재처리 에러 */}
+      {retryError && (
+        <p role="alert" style={{ color: 'var(--color-error)', fontSize: 'var(--fs-body)' }}>
+          {retryError}
+        </p>
+      )}
 
       {/* 액션 버튼 영역 */}
       <section

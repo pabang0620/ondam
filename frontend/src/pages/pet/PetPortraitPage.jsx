@@ -9,6 +9,8 @@ export default function PetPortraitPage() {
   const {
     media,
     isLoading,
+    mediaError,
+    refetchMedia,
     styles,
     selectedStyle,
     setSelectedStyle,
@@ -171,7 +173,46 @@ export default function PetPortraitPage() {
               <p style={{ color: 'var(--color-text-muted)', fontSize: 'var(--fs-body)' }}>불러오는 중...</p>
             )}
 
-            {!isLoading && media.length === 0 && (
+            {/* FIX: DEV-27 - 조회 실패를 "등록된 사진 없음"과 구분해서 보여준다 (G2-2) */}
+            {!isLoading && mediaError && (
+              <div
+                role="alert"
+                style={{
+                  border: '1px solid var(--color-error-muted)',
+                  borderRadius: 'var(--radius-card)',
+                  padding: 'var(--spacing-lg)',
+                  textAlign: 'center',
+                  color: 'var(--color-error)',
+                  fontSize: 'var(--fs-body)',
+                  background: 'var(--color-error-light)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 'var(--spacing-sm)',
+                }}
+              >
+                <p>{mediaError}</p>
+                <button
+                  type="button"
+                  onClick={refetchMedia}
+                  style={{
+                    alignSelf: 'center',
+                    background: 'none',
+                    border: '1.5px solid var(--color-error-muted)',
+                    borderRadius: 'var(--radius-pill)',
+                    color: 'var(--color-error)',
+                    fontSize: 'var(--fs-body)',
+                    fontWeight: 600,
+                    minHeight: 'var(--min-touch-target)',
+                    padding: '0 var(--spacing-lg)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  다시 시도
+                </button>
+              </div>
+            )}
+
+            {!isLoading && !mediaError && media.length === 0 && (
               <div
                 style={{
                   border: '2px dashed var(--color-border-strong)',
@@ -188,7 +229,7 @@ export default function PetPortraitPage() {
               </div>
             )}
 
-            {!isLoading && media.length > 0 && (
+            {!isLoading && !mediaError && media.length > 0 && (
               <div
                 className="pet-portrait-photo-grid"
                 role="radiogroup"

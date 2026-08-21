@@ -10,7 +10,7 @@ export const requireAuth = (req, res, next) => {
   if (!token) return unauthorized(res, '로그인이 필요합니다')
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET)
+    const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] })
     req.user = decoded
     next()
   } catch (err) {
@@ -38,7 +38,7 @@ export const optionalAuth = (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1]
   if (token) {
     try {
-      req.user = jwt.verify(token, process.env.JWT_SECRET)
+      req.user = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] })
     } catch {
       req.user = null
     }

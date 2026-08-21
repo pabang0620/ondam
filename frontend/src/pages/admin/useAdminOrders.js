@@ -3,59 +3,6 @@ import { adminApi } from './adminApi.js'
 
 const ALL = 'ALL'
 
-const MOCK_ORDERS = [
-  {
-    orderId: 'mock-ord-001',
-    userId: 'mock-u-001',
-    userName: '이민준',
-    userEmail: 'minjun@example.com',
-    photoType: 'funeral',
-    status: 'completed',
-    amountKrw: 29000,
-    createdAt: '2026-03-10T10:00:00.000Z',
-  },
-  {
-    orderId: 'mock-ord-002',
-    userId: 'mock-u-002',
-    userName: '박서연',
-    userEmail: 'seoyeon@example.com',
-    photoType: 'id',
-    status: 'paid',
-    amountKrw: 19000,
-    createdAt: '2026-03-15T14:20:00.000Z',
-  },
-  {
-    orderId: 'mock-ord-003',
-    userId: 'mock-u-003',
-    userName: '최준혁',
-    userEmail: 'junhyuk@example.com',
-    photoType: 'funeral',
-    status: 'processing',
-    amountKrw: 29000,
-    createdAt: '2026-04-01T09:30:00.000Z',
-  },
-  {
-    orderId: 'mock-ord-004',
-    userId: 'mock-u-004',
-    userName: '정수아',
-    userEmail: 'sua@example.com',
-    photoType: 'id',
-    status: 'refunded',
-    amountKrw: 19000,
-    createdAt: '2026-04-10T16:45:00.000Z',
-  },
-  {
-    orderId: 'mock-ord-005',
-    userId: 'mock-u-005',
-    userName: '한지우',
-    userEmail: 'jiwoo@example.com',
-    photoType: 'funeral',
-    status: 'pending',
-    amountKrw: 29000,
-    createdAt: '2026-04-28T08:10:00.000Z',
-  },
-]
-
 export function useAdminOrders() {
   const [orders, setOrders] = useState([])
   const [page, setPage] = useState(1)
@@ -74,12 +21,10 @@ export function useAdminOrders() {
         setTotal(data.meta?.total ?? 0)
       }
     } catch (err) {
-      console.warn('[mock] 주문 목록 API 실패 - mock 데이터로 대체합니다', err)
-      const filtered = status === ALL
-        ? MOCK_ORDERS
-        : MOCK_ORDERS.filter((o) => o.status === status)
-      setOrders(filtered)
-      setTotal(filtered.length)
+      // FIX: DEV-24 - 주문 목록 조회 실패를 가짜 데이터로 위장하지 않는다
+      setError(err?.response?.data?.message ?? '주문 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.')
+      setOrders([])
+      setTotal(0)
     } finally {
       setIsLoading(false)
     }

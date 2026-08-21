@@ -6,8 +6,19 @@ import { getPresignedUrl, extractS3KeyFromUrl } from '../../utils/s3.js'
 import { voiceCloneQueue, videoGenerateQueue } from '../../jobs/queue.js'
 import pool from '../../config/db.js'
 
-// 90일(초)
-const WATCH_URL_EXPIRES = 90 * 24 * 60 * 60
+// AWS SigV4 presigned URL은 최대 604,800초(7일)까지만 발급 가능하다(G7-1).
+// 90일은 SPEC-05가 정의한 "열람 링크(초대 토큰) 자체"의 유효기간이지, S3
+// presigned URL의 만료 시간이 아니다 - 이 둘을 분리해서 다룬다.
+// getWatchUrl은 매 호출마다 DB에 암호화 저장된 s3Key로부터 presigned URL을
+// 새로 발급한다(캐시하지 않음). 즉 초대 토큰이 유효한 90일 동안은 열람할 때마다
+// 짧은 수명의 새 서명 URL이 발급되므로, 토큰 자체의 90일 유효기간과 무관하게
+// 항상 유효한 링크로 재생할 수 있다.
+const WATCH_URL_EXPIRES = 24 * 60 * 60 // 1일(초) - 매 열람마다 재발급되므로 짧게 유지
+
+// 유언 영상 편지 - 베이직 단일가 (2026-08-21 오너 확정). 가격은 서버가 결정하는
+// 단일 정본이며 클라이언트 입력(priceKrw)을 받지 않는다. payment 도메인의
+// preparePayment는 wills.price_krw(이 값으로 저장된 스냅샷)를 조회해 검증한다.
+const WILL_BASIC_PRICE_KRW = 49000
 
 // ─── 음성 샘플 ────────────────────────────────────────────────────────────────
 
@@ -19,6 +30,17 @@ const WATCH_URL_EXPIRES = 90 * 24 * 60 * 60
  * consentId는 클라이언트에서 받지 않고 findVoiceConsent 결과의 consent_id 사용
  */
 export const uploadVoiceSample = async (userId, { s3Key, durationSec, fileSize }) => {
+  // S3 키 소유권 검증 (온담 보안 규칙 G9-4) - uploadMiddleware.js가 발급하는 키는
+  // `{folder}/{userId}/{uuid}.ext` 형태다. 클라이언트가 문자열을 조작해 타인의
+  // 음성 파일 키를 제출하면 원본 화자의 동의 없이 타인 명의로 음성 클론이 생성될
+  // 수 있으므로, 접두사가 본인 userId와 일치하는지 서버에서 반드시 확인한다.
+  if (!s3Key.startsWith(`wills/${userId}/`)) {
+    throw Object.assign(
+      new Error('본인이 업로드한 파일만 등록할 수 있습니다'),
+      { status: 403 },
+    )
+  }
+
   // 음성권 동의 확인 (온담 보안 규칙 §3)
   // user_consents 테이블에서 consent_type='voice' 최신 row 조회 - is_agreed=1이어야 통과
   const consentRow = await repo.findVoiceConsent(userId)
@@ -94,7 +116,7 @@ export const getVoiceSampleStatus = async (userId, voiceSampleId) => {
  */
 export const createWill = async (
   userId,
-  { voiceSampleId, title, contentText, releasePolicy, beneficiaries = [], priceKrw, eventType },
+  { voiceSampleId, title, contentText, releasePolicy, beneficiaries = [], eventType },
 ) => {
   // 음성 샘플 소유권 + ready 상태 확인
   const sample = await repo.findVoiceSampleById(voiceSampleId)
@@ -134,7 +156,7 @@ export const createWill = async (
       title,
       contentText,
       releasePolicy: releasePolicy ?? 'manual_admin',
-      priceKrw: priceKrw ?? 29900,
+      priceKrw: WILL_BASIC_PRICE_KRW,
       eventType: eventType ?? null,
     },
     beneficiariesData,
@@ -330,7 +352,10 @@ export const requestRelease = async (token, { deathCertS3Key, deathCertUrl }) =>
   if (!will) {
     throw Object.assign(new Error('유언장을 찾을 수 없습니다'), { status: 404 })
   }
-  if (!['active', 'completed'].includes(will.status)) {
+  // wills.status ENUM에는 'completed'가 존재하지 않는다(유령값) - 실제로 영상까지
+  // 생성 완료된 유언장은 status='active' 그대로 유지되고 release_status로 공개 여부만
+  // 구분한다. 'completed'는 죽은 조건이라 제거했다.
+  if (will.status !== 'active') {
     throw Object.assign(new Error('활성화된 유언장만 공개 요청이 가능합니다'), { status: 400 })
   }
   if (will.release_status === 'released') {

@@ -3,6 +3,13 @@ import jwt from 'jsonwebtoken'
 import { v4 as uuidv4 } from 'uuid'
 import * as adminRepository from './adminRepository.js'
 import { notificationQueue } from '../../jobs/queue.js'
+import pool from '../../config/db.js'
+
+// 사후 공개 알림 문구 (SPEC-04 5절 - 민감 발송 문구 원칙)
+// 죽음을 직접 언급하는 단어를 최소화하고, 열람을 강요하지 않는 톤을 쓴다.
+const RELEASE_EMAIL_SUBJECT = '온담 - 소중한 분이 남긴 영상이 도착했습니다'
+const buildReleaseMessage = (recipientName) =>
+  `${recipientName ? recipientName + '님, ' : ''}소중한 분이 남긴 영상이 도착했습니다. 마음의 준비가 되실 때 열어보세요.`
 
 // ─── 관리자 로그인 ────────────────────────────────────────────────────────────
 
@@ -85,16 +92,53 @@ export const approveRelease = async (adminId, requestId, { ipAddress, userAgent 
   await adminRepository.updateWillReleaseStatus(request.will_id, 'released')
 
   // 유가족에게 알림 발송 큐 등록
+  // [DEV-26 수정] notificationWorker의 dispatch는 type ∈ {'sms','email','push'} +
+  // {to, message} 형태를 기대하는데, 프로듀서가 {type:'will_released', userId, ...}
+  // 형태로 넣고 있어 항상 default 분기("알 수 없는 알림 타입")에서 예외가 나 3회
+  // 재시도 후 실패 - 이메일/SMS 발송이 0건이었다. 워커 계약에 맞춰 enqueue한다.
   const beneficiaries = await adminRepository.findWillBeneficiaries(request.will_id)
   for (const beneficiary of beneficiaries) {
-    await notificationQueue.add('release_approved', {
-      type: 'will_released',
-      userId: beneficiary.user_id,
-      willId: request.will_id,
-      requestId,
-      recipientEmail: beneficiary.email,
-      recipientPhone: beneficiary.phone,
-    })
+    // findWillBeneficiaries는 wb(will_beneficiaries)와 u(users)를 LEFT JOIN한다.
+    // 비회원 수혜자는 u쪽이 전부 NULL이므로 wb 쪽 값(beneficiary_email/phone)으로
+    // 폴백한다. email은 will_beneficiaries에서 NOT NULL이라 항상 값이 있다.
+    const recipientEmail = beneficiary.email ?? beneficiary.beneficiary_email
+    const recipientPhone = beneficiary.phone ?? beneficiary.beneficiary_phone
+    const message = buildReleaseMessage(beneficiary.name)
+
+    try {
+      if (recipientEmail) {
+        await notificationQueue.add('release_approved', {
+          type: 'email',
+          to: recipientEmail,
+          subject: RELEASE_EMAIL_SUBJECT,
+          message,
+        })
+      }
+      if (recipientPhone) {
+        await notificationQueue.add('release_approved', {
+          type: 'sms',
+          to: recipientPhone,
+          message,
+        })
+      }
+
+      // in-app 알림도 함께 기록한다. 비회원 수혜자는 beneficiary.user_id가 null이므로
+      // (users 테이블에 계정이 없음) in-app 알림 대상이 아니다 - 건너뛰고 에러 내지 않는다.
+      if (beneficiary.user_id) {
+        await pool.execute(
+          `INSERT INTO notifications
+             (notification_id, user_id, notification_type, target_type, target_id, title, message, created_at)
+           VALUES (?, ?, 'will_released', 'will', ?, '영상이 도착했습니다', ?, NOW())`,
+          [uuidv4(), beneficiary.user_id, request.will_id, message]
+        )
+      }
+    } catch (notifyErr) {
+      // 알림 발송 실패가 공개 승인 자체(감사 로그 포함)를 막지 않는다 (G6, 비차단)
+      console.error(
+        `[adminService] 유가족 알림 처리 실패 (승인은 유지) beneficiaryId=${beneficiary.beneficiary_id}:`,
+        notifyErr.message
+      )
+    }
   }
 
   await adminRepository.createAuditLog({

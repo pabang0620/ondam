@@ -1,35 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { willApi } from './willApi.js'
 
-const MOCK_WILLS = [
-  {
-    willId: 'mock-will-001',
-    title: '사랑하는 가족에게',
-    status: 'active',
-    releasePolicy: 'manual_admin',
-    releaseStatus: 'locked',
-    eventType: null,
-    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-    resultVideoUrl: 'https://picsum.photos/seed/will-video/1280/720',
-    beneficiaries: [
-      {
-        beneficiaryId: 'mock-ben-001',
-        name: '김민준',
-        relationship: 'child',
-        email: 'minjun@example.com',
-        verifiedAt: null,
-      },
-      {
-        beneficiaryId: 'mock-ben-002',
-        name: '이지은',
-        relationship: 'spouse',
-        email: 'jieun@example.com',
-        verifiedAt: new Date().toISOString(),
-      },
-    ],
-  },
-]
-
 export function useWillVault() {
   const [wills, setWills] = useState([])
   const [isLoading, setIsLoading] = useState(true)
@@ -42,8 +13,8 @@ export function useWillVault() {
       const { data } = await willApi.getWills()
       setWills(data.data || [])
     } catch (err) {
-      console.warn('[mock] 유언장 목록 API 실패 - mock 데이터 표시', err)
-      setWills(MOCK_WILLS)
+      // FIX: DEV-24 - 목록 조회 실패를 가짜 유언장으로 위장하지 않는다
+      setFetchError(err?.response?.data?.message ?? '유언장 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.')
     } finally {
       setIsLoading(false)
     }

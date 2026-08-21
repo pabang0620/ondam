@@ -5,6 +5,7 @@ import './WillEventPage.css'
 export default function WillEventPage() {
   const {
     wills,
+    willsError,
     selectedWillId,
     setSelectedWillId,
     eventTypes,
@@ -43,6 +44,14 @@ export default function WillEventPage() {
             ))}
           </div>
         </div>
+
+        {/* FIX: DEV-27 - 목록 조회 실패를 "유언장 없음"과 구분해서 보여준다 (G2-2) */}
+        {willsError && (
+          <div className="will-event__error" role="alert">
+            <AlertCircle size={18} aria-hidden="true" />
+            {willsError}
+          </div>
+        )}
 
         {/* 기존 유언장 선택 */}
         {wills.length > 0 && (

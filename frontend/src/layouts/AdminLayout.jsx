@@ -15,6 +15,7 @@ const SIDEBAR_WIDTH = 224 // 14rem = w-56
 
 export default function AdminLayout() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const isAuthInitialized = useAuthStore((s) => s.isAuthInitialized)
   const user = useAuthStore((s) => s.user)
   const location = useLocation()
 
@@ -74,7 +75,31 @@ export default function AdminLayout() {
 
   const toggleSidebar = useCallback(() => setSidebarOpen((prev) => !prev), [])
 
-  if (!isAuthenticated || user?.role !== 'admin') {
+  // FIX: DEV-28 - PrivateRoute와 동일한 초기화 경쟁 상태 방어. initAuth()가 끝나기 전에는
+  // isAuthenticated 판정을 보류하고 로딩을 렌더한다.
+  // 주의: /auth/refresh는 role:'admin'을 포함한 user를 복원하므로, 일반 로그인(rt 쿠키)만
+  // 가진 admin 계정도 새로고침 후 role='admin'으로 복원된다 - "관리자 세션은 새로고침 시
+  // 복원되지 않는다"는 이전 가정은 사실이 아니었다. 문제는 role 복원과 별개로 adminToken
+  // (localStorage, 관리자 API 전용 Authorization 헤더)은 복원되지 않는다는 점이다.
+  // role만 보고 통과시키면 adminApiClient 요청에 토큰이 실리지 않아 401 → 로그인으로
+  // 튕김 → 로그인 페이지가 role만 보고 다시 여기로 되돌려보내는 무한루프가 발생했다.
+  // 그래서 adminToken 보유 여부를 접근 가드에 함께 포함한다.
+  if (!isAuthInitialized) {
+    return (
+      <div className="flex items-center justify-center min-h-screen" role="status" aria-label="인증 확인 중">
+        <div
+          className="w-10 h-10 rounded-full border-4 border-t-transparent animate-spin"
+          style={{ borderColor: 'var(--color-primary)', borderTopColor: 'transparent' }}
+        />
+        <p style={{ marginLeft: 'var(--spacing-md)', fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)' }}>
+          로그인 정보를 확인하고 있어요
+        </p>
+      </div>
+    )
+  }
+
+  const hasAdminToken = !!localStorage.getItem('adminToken')
+  if (!isAuthenticated || user?.role !== 'admin' || !hasAdminToken) {
     return <Navigate to={ROUTES.ADMIN_LOGIN} replace />
   }
 

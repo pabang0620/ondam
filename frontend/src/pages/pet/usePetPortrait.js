@@ -12,29 +12,27 @@ export function usePetPortrait(petId) {
   const [selectedStyle, setSelectedStyle] = useState(null)
   const [selectedMediaId, setSelectedMediaId] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [mediaError, setMediaError] = useState(null)
   const [isGenerating, setIsGenerating] = useState(false)
   const [generateError, setGenerateError] = useState(null)
   const [result, setResult] = useState(null)
 
-  const MOCK_MEDIA = [
-    { media_id: 'media-001', pet_id: petId, media_type: 'photo', file_url: 'https://picsum.photos/seed/dog1/600/600', caption: '공원 산책', taken_at: '2023-05-10', sort_order: 1 },
-    { media_id: 'media-002', pet_id: petId, media_type: 'photo', file_url: 'https://picsum.photos/seed/dog2/600/600', caption: '생일 파티', taken_at: '2023-03-15', sort_order: 2 },
-    { media_id: 'media-003', pet_id: petId, media_type: 'photo', file_url: 'https://picsum.photos/seed/dog3/600/600', caption: '겨울 눈밭', taken_at: '2023-01-20', sort_order: 3 },
-  ]
-
   const fetchMedia = useCallback(async () => {
     if (!petId) return
     setIsLoading(true)
+    setMediaError(null)
     try {
       const res = await petApi.getPetMedia(petId)
       if (res.data.success) setMedia(res.data.data ?? [])
     } catch (err) {
-      console.warn('[mock] usePetPortrait.fetchMedia - 백엔드 응답 없음, mock 미디어로 대체', err)
-      setMedia(MOCK_MEDIA)
+      // FIX: DEV-27 - 조회 실패를 빈 목록으로 조용히 흘려보내지 않는다. 빈 목록은
+      // "등록된 사진이 없습니다"로 표시돼 조회 실패를 사용자가 오인하게 된다.
+      // 실패는 별도 에러 상태로 화면에 노출한다(G2-2).
+      setMedia([])
+      setMediaError(err?.response?.data?.message ?? '사진 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.')
     } finally {
       setIsLoading(false)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [petId])
 
   useEffect(() => {
@@ -42,12 +40,6 @@ export function usePetPortrait(petId) {
     fetchMedia()
     return () => ac.abort()
   }, [fetchMedia])
-
-  const MOCK_PORTRAIT_URLS = {
-    oil: 'https://picsum.photos/seed/portrait-oil/600/600',
-    watercolor: 'https://picsum.photos/seed/portrait-watercolor/600/600',
-    illustration: 'https://picsum.photos/seed/portrait-illustration/600/600',
-  }
 
   const handleGenerate = async () => {
     if (!selectedStyle || !selectedMediaId) return
@@ -107,10 +99,8 @@ export function usePetPortrait(petId) {
         }, 2000)
       })
     } catch (err) {
-      console.warn('[mock] usePetPortrait.handleGenerate - AI API 실패, 2.5초 시뮬레이션 후 mock 초상화 반환', err)
-      await new Promise((resolve) => setTimeout(resolve, 2500))
-      const mockUrl = MOCK_PORTRAIT_URLS[selectedStyle] ?? 'https://picsum.photos/seed/portrait-default/600/600'
-      setResult({ url: mockUrl })
+      // FIX: DEV-24 - AI 초상화 생성 실패를 가짜 이미지로 위장하지 않는다
+      setGenerateError(err?.response?.data?.message ?? err?.message ?? 'AI 초상화 생성에 실패했습니다. 잠시 후 다시 시도해 주세요.')
     } finally {
       setIsGenerating(false)
     }
@@ -119,6 +109,8 @@ export function usePetPortrait(petId) {
   return {
     media,
     isLoading,
+    mediaError,
+    refetchMedia: fetchMedia,
     styles: STYLES,
     selectedStyle,
     setSelectedStyle,

@@ -3,21 +3,61 @@
  * 카카오 인증 URL 생성 및 콜백 처리 전용
  */
 
+import crypto from 'crypto'
 import { v4 as uuidv4 } from 'uuid'
 import { signAccessToken, signRefreshToken, hashToken } from './authService.js'
 import * as authRepository from './authRepository.js'
 
 const REFRESH_TOKEN_EXPIRES_MS = 30 * 24 * 60 * 60 * 1000 // 30일
 
+// ─── OAuth state (CSRF 방지) ──────────────────────────────────────────────────
+//
+// 카카오 인가 URL에 state가 없으면, 공격자가 자기 계정의 인가 코드로 피해자를
+// 콜백 URL로 유도해 피해자를 공격자 계정으로 로그인시킬 수 있다(로그인 CSRF).
+// state를 서버가 생성해 HttpOnly 쿠키에 저장하고, 콜백에서 쿠키값과 쿼리값을
+// 대조해 요청이 우리가 발급한 인가 URL에서 온 것인지 검증한다.
+
+export const KAKAO_STATE_COOKIE = 'kakao_oauth_state'
+
+export const KAKAO_STATE_COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'lax',
+  maxAge: 5 * 60 * 1000, // 5분 - 로그인 왕복에 충분, 탈취 노출 시간 최소화
+}
+
 /**
- * 카카오 인증 URL 반환
+ * CSRF 방지용 state 토큰 생성
  * @returns {string}
  */
-export const getKakaoAuthUrl = () => {
+export const generateKakaoState = () => crypto.randomBytes(32).toString('hex')
+
+/**
+ * 콜백에서 쿠키에 저장된 state와 쿼리로 전달된 state를 대조
+ * 불일치·부재 시 401 에러를 throw한다 (컨트롤러는 catch 없이 next(err)로 위임하면 됨)
+ * @param {string|undefined} cookieState - req.cookies[KAKAO_STATE_COOKIE]
+ * @param {string|undefined} queryState  - req.query.state
+ */
+export const verifyKakaoState = (cookieState, queryState) => {
+  if (!cookieState || !queryState || cookieState !== queryState) {
+    throw Object.assign(
+      new Error('유효하지 않은 로그인 요청입니다. 다시 시도해 주세요.'),
+      { status: 401 },
+    )
+  }
+}
+
+/**
+ * 카카오 인증 URL 반환
+ * @param {string} state - generateKakaoState()로 생성해 쿠키에도 저장한 값
+ * @returns {string}
+ */
+export const getKakaoAuthUrl = (state) => {
   const params = new URLSearchParams({
     client_id: process.env.KAKAO_CLIENT_ID,
     redirect_uri: process.env.KAKAO_REDIRECT_URI,
     response_type: 'code',
+    state,
   })
   return `https://kauth.kakao.com/oauth/authorize?${params.toString()}`
 }
@@ -75,7 +115,10 @@ const fetchKakaoUserInfo = async (kakaoAccessToken) => {
   const data = await res.json()
 
   const kakaoId = String(data.id)
-  const email = data.kakao_account?.email ?? null
+  // users.email은 NOT NULL - 카카오 계정이 이메일 제공에 동의하지 않으면
+  // kakao_account.email이 없다. users.email UNIQUE 제약과도 충돌하지 않도록
+  // kakaoId를 포함한 플레이스홀더 이메일을 생성해 가입이 항상 성공하게 한다.
+  const email = data.kakao_account?.email ?? `kakao_${kakaoId}@kakao.local`
   const nickname =
     data.kakao_account?.profile?.nickname ??
     data.properties?.nickname ??

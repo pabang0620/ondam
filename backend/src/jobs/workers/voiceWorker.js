@@ -21,7 +21,7 @@ const updateAiJob = async (bullmqJobId, fields) => {
   const values = [...entries.map(([, v]) => v), bullmqJobId]
 
   await pool.execute(
-    `UPDATE ai_jobs SET ${setClauses}, updated_at = NOW() WHERE bullmq_job_id = ?`,
+    `UPDATE ai_jobs SET ${setClauses}, updated_at = NOW() WHERE bullmq_job_id = ? AND deleted_at IS NULL`,
     values,
   )
 }
@@ -35,7 +35,7 @@ const updateVoiceSample = async (voiceSampleId, fields) => {
   const values = [...entries.map(([, v]) => v), voiceSampleId]
 
   await pool.execute(
-    `UPDATE voice_samples SET ${setClauses}, updated_at = NOW() WHERE voice_sample_id = ?`,
+    `UPDATE voice_samples SET ${setClauses}, updated_at = NOW() WHERE voice_sample_id = ? AND deleted_at IS NULL`,
     values,
   )
 }
@@ -114,14 +114,19 @@ const processVoiceClone = async (jobData, bullmqJobId) => {
   })
 
   // 4-1. 알림 생성 - 음성 클론 완료 (실패해도 잡 전체를 실패시키지 않음)
+  // 주의: notifications.target_type ENUM에는 'voice_sample'이 없다
+  // (ENUM: photo_order/will/will_release_request/payment/subscription/pet/avatar_session).
+  // voiceSampleId는 wills.will_id가 아니라서 target_type='will'로 바꿔치기하면
+  // target_id가 실제로는 존재하지 않는 will_id를 가리키는 거짓 FK가 되어 더 위험하다.
+  // 안전한 선택지로 target_type/target_id를 모두 NULL로 두었다(컬럼 NULL 허용).
   const notifId = uuidv4()
   await pool.execute(
     `INSERT INTO notifications
        (notification_id, user_id, notification_type, target_type, target_id,
         title, message, is_read, created_at)
-     VALUES (?, ?, 'voice_clone_complete', 'voice_sample', ?,
+     VALUES (?, ?, 'voice_clone_complete', NULL, NULL,
              '음성 클론 완료', '음성 클론이 완료되었습니다. 이제 유언 영상을 생성할 수 있습니다.', 0, NOW())`,
-    [notifId, userId, voiceSampleId],
+    [notifId, userId],
   ).catch((dbErr) => console.error('[voiceWorker] 알림 INSERT 실패:', dbErr.message))
 
   // 5. ai_jobs: completed

@@ -5,6 +5,10 @@ import './WillPaymentPage.css'
 
 export default function WillPaymentPage() {
   const { isPaying, payError, handlePay, amount } = useWillPayment()
+  // FIX: DEV-29 - amount는 더 이상 하드코딩 상수가 아니라 서버 조회 결과라 초기값이
+  // null일 수 있다(로딩 중). 화면 표시 문구만 로딩 상태를 대비하고, 실제 결제 금액은
+  // handlePay 내부에서 항상 그 순간의 prepare 응답 값을 쓰므로 이 표시값과 무관하게 정확하다.
+  const displayAmount = amount == null ? '확인 중...' : `${amount.toLocaleString()}원`
 
   return (
     <div className="will-payment-page">
@@ -25,14 +29,14 @@ export default function WillPaymentPage() {
                 <li><CheckCircle size={14} aria-hidden="true" /> 유가족 전달</li>
               </ul>
             </div>
-            <span className="will-payment__item-price">{amount.toLocaleString()}원</span>
+            <span className="will-payment__item-price">{displayAmount}</span>
           </div>
 
           <div className="will-payment__divider" aria-hidden="true" />
 
           <div className="will-payment__total">
             <span className="will-payment__total-label">합계</span>
-            <span className="will-payment__total-price">{amount.toLocaleString()}원</span>
+            <span className="will-payment__total-price">{displayAmount}</span>
           </div>
         </section>
 
@@ -50,6 +54,9 @@ export default function WillPaymentPage() {
         )}
 
         {/* 결제 버튼 */}
+        {/* FIX: DEV-29 - amount==null(표시용 조회 실패/지연)이어도 버튼을 막지 않는다.
+            handlePay는 amount 상태와 무관하게 클릭 시점에 preparePayment로 서버 정본
+            금액을 다시 확인하므로, 표시 조회 실패가 결제 자체를 영구히 막게 하지 않는다. */}
         <button
           type="button"
           className="will-payment__pay-btn"
@@ -58,7 +65,7 @@ export default function WillPaymentPage() {
           aria-busy={isPaying}
         >
           <CreditCard size={22} aria-hidden="true" />
-          {isPaying ? '결제 처리 중...' : `${amount.toLocaleString()}원 결제하기`}
+          {isPaying ? '결제 처리 중...' : `${displayAmount} 결제하기`}
         </button>
 
         <p className="will-payment__secure-note">

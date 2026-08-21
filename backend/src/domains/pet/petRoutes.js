@@ -5,23 +5,36 @@
 
 import { Router } from 'express'
 import { z } from 'zod'
+import rateLimit from 'express-rate-limit'
 import { validate } from '../../middleware/validate.js'
 import { requireAuth } from '../../middleware/auth.js'
 import * as petController from './petController.js'
+import { PET_SPECIES, PET_STATUS, PET_MEDIA_TYPE } from '../../../../shared/constants/enums.js'
 
 const router = Router()
+
+// AI 처리 비용 방지 - will/photo 도메인과 동일 패턴(G9-1). 초상화 생성은 실제
+// AI 비용이 발생하는 엔드포인트라 반드시 필요하다.
+const aiLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1시간
+  max: 20,                   // 시간당 최대 20회
+  keyGenerator: (req) => req.user?.userId ?? req.ip,
+  message: { success: false, message: 'AI 초상화 요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+})
 
 // ---------------------------------------------------------------------------
 // Zod 스키마
 // ---------------------------------------------------------------------------
 
 const speciesEnum = z.enum(
-  ['dog', 'cat', 'rabbit', 'bird', 'hamster', 'fish', 'reptile', 'other'],
+  PET_SPECIES,
   { errorMap: () => ({ message: '유효하지 않은 동물 종류입니다' }) }
 )
 
 const petStatusEnum = z.enum(
-  ['alive', 'deceased', 'unknown'],
+  PET_STATUS,
   { errorMap: () => ({ message: '유효하지 않은 상태입니다' }) }
 )
 
@@ -65,6 +78,14 @@ const updatePetSchema = z.object({
       .regex(/^[a-z0-9-]+$/, '슬러그는 소문자, 숫자, 하이픈만 사용 가능합니다')
       .optional()
       .nullable(),
+    // 추모관 접근 코드 (SPEC-03) - 설정 시에만 펫 추모 페이지 열람 가능,
+    // 미설정(NULL)이면 기본 비공개
+    memorialAccessCode: z
+      .string()
+      .min(6, '접근 코드는 6자 이상이어야 합니다')
+      .max(50)
+      .optional()
+      .nullable(),
   }),
 })
 
@@ -79,7 +100,7 @@ const updateStatusSchema = z.object({
 })
 
 const mediaTypeEnum = z.enum(
-  ['photo', 'video'],
+  PET_MEDIA_TYPE,
   { errorMap: () => ({ message: '유효하지 않은 미디어 타입입니다' }) }
 )
 
@@ -135,7 +156,7 @@ router.patch('/:petId/status', validate(updateStatusSchema), petController.updat
 router.delete('/:petId', validate(petIdParam), petController.deletePet)
 
 router.get('/:petId/portrait/status', validate(petIdParam), petController.getPortraitStatus)
-router.post('/:petId/portrait', validate(petIdParam), petController.requestPortrait)
+router.post('/:petId/portrait', aiLimiter, validate(petIdParam), petController.requestPortrait)
 
 router.post('/:petId/media', validate(addMediaSchema), petController.addMedia)
 router.get('/:petId/media', validate(getMediaSchema), petController.getMedia)

@@ -69,10 +69,8 @@ export function useWillPreview() {
       localStorage.setItem('will_current_id', willId)
       navigate(`/will/payment?willId=${willId}`)
     } catch (err) {
-      console.warn('[mock] 유언장 생성 API 실패 - mock will_id 사용', err)
-      const mockWillId = 'mock-will-' + Date.now().toString(36)
-      localStorage.setItem('will_current_id', mockWillId)
-      navigate(`/will/payment?willId=${mockWillId}`)
+      // FIX: DEV-24 - 생성 실패를 가짜 will_id로 위장해 결제 단계로 진행시키지 않는다
+      setSubmitError(err?.response?.data?.message ?? '유언장 생성에 실패했습니다. 잠시 후 다시 시도해 주세요.')
     } finally {
       setIsSubmitting(false)
     }

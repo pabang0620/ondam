@@ -4,6 +4,7 @@ import rateLimit from 'express-rate-limit'
 import { requireAuth } from '../../middleware/auth.js'
 import { validate } from '../../middleware/validate.js'
 import * as willController from './willController.js'
+import { WILL_RELEASE_POLICY, WILL_EVENT_TYPE } from '../../../../shared/constants/enums.js'
 
 const router = Router()
 
@@ -38,9 +39,11 @@ const createWillSchema = z.object({
     voiceSampleId: z.string().uuid('유효한 UUID'),
     title: z.string().trim().min(1, '제목을 입력하세요').max(200),
     contentText: z.string().trim().min(1, '유언 내용을 입력하세요').max(5000, '유언 내용은 5000자 이하여야 합니다'),
-    releasePolicy: z.enum(['manual_admin', 'inactivity_family_vote', 'immediate']).default('manual_admin'),
-    priceKrw: z.coerce.number().int().positive().optional(),
-    eventType: z.enum(['death', 'incapacity', 'anniversary']).optional(),
+    releasePolicy: z.enum(WILL_RELEASE_POLICY).default('manual_admin'),
+    // priceKrw는 클라이언트 입력을 받지 않는다 - 가격은 서버(willService의
+    // WILL_BASIC_PRICE_KRW)가 단일 정본으로 결정한다. 결제 단계(preparePayment)의
+    // 서버검증을 우회해 will 생성 단계에서 가격을 임의로 지정하는 경로를 차단.
+    eventType: z.enum(WILL_EVENT_TYPE).optional(),
     beneficiaries: z.array(
       z.object({
         name: z.string().trim().min(1, '수혜자 이름을 입력하세요').max(100),

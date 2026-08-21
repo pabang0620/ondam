@@ -58,12 +58,8 @@ export function useWillPhoto() {
 
       navigate('/will/preview')
     } catch (err) {
-      console.warn('[mock] 사진 업로드 API 실패 - mock 사진 데이터 사용', err)
-      const mockPhotoUrl = 'https://picsum.photos/seed/face-photo/600/800'
-      const mockS3Key = `wills/mock-user/face-photo-${Date.now()}.jpg`
-      localStorage.setItem('will_photo_s3key', mockS3Key)
-      localStorage.setItem('will_photo_url', mockPhotoUrl)
-      navigate('/will/preview')
+      // FIX: DEV-24 - 업로드 실패를 가짜 사진으로 위장해 다음 단계로 진행시키지 않는다
+      setUploadError(err?.response?.data?.message ?? '사진 업로드에 실패했습니다. 잠시 후 다시 시도해 주세요.')
     } finally {
       setIsUploading(false)
     }

@@ -6,6 +6,11 @@ import { v4 as uuidv4 } from 'uuid'
 import * as petRepository from './petRepository.js'
 import { photoQueue } from '../../jobs/queue.js'
 import pool from '../../config/db.js'
+import { AI_JOB_TARGET_TYPE } from '../../../../shared/constants/enums.js'
+
+// AI_JOB_TARGET_TYPE 배열에서 조회 - 오타 시 undefined가 되어 INSERT가 즉시
+// 실패하므로(NOT NULL) 리터럴 오타가 조용히 DB에 들어가는 것을 방지한다
+const TARGET_TYPE_PET = AI_JOB_TARGET_TYPE.find((t) => t === 'pet')
 
 // ---------------------------------------------------------------------------
 // 펫
@@ -156,8 +161,9 @@ export const getMedia = async (userId, petId, { page, limit }) => {
  * AI 초상화 요청 (소유자 확인)
  * 1. 펫 소유권 확인
  * 2. 대표 사진(최신 photo) 조회
- * 3. photoQueue에 portrait 작업 추가
- * 4. ai_jobs 레코드 생성
+ * 3. ai_jobs 레코드 생성 (큐 등록보다 먼저 - G6-3, 고아 잡 방지)
+ * 4. photoQueue에 portrait 작업 추가 (ai_jobs와 동일한 jobId를 BullMQ job id로 고정해
+ *    photoWorker의 bullmq_job_id 기반 UPDATE가 정확히 매칭되도록 함)
  */
 export const requestPortrait = async (userId, petId) => {
   // 소유권 확인
@@ -171,21 +177,21 @@ export const requestPortrait = async (userId, petId) => {
 
   const jobId = uuidv4()
 
-  // BullMQ 큐에 작업 추가
-  const bullJob = await photoQueue.add('portrait', {
-    type: 'portrait',
-    petId,
-    userId,
-    photoUrl: photo.file_url,
-  })
-
-  // ai_jobs 레코드 생성
+  // ai_jobs 레코드 생성 - 큐 등록보다 먼저 성공시켜 DB 없는 고아 잡을 방지
   await pool.execute(
     `INSERT INTO ai_jobs
        (job_id, user_id, job_type, job_status, target_type, target_id, bullmq_job_id, queue_name, progress, created_at, updated_at)
-     VALUES (?, ?, 'photo_enhance', 'queued', 'pet', ?, ?, 'photo', 0, NOW(), NOW())`,
-    [jobId, userId, petId, String(bullJob.id)]
+     VALUES (?, ?, 'photo_enhance', 'queued', ?, ?, ?, 'photo', 0, NOW(), NOW())`,
+    [jobId, userId, TARGET_TYPE_PET, petId, jobId]
   )
+
+  // BullMQ 큐에 작업 추가 - photoWorker가 기대하는 필드 계약(petId/userId/photoUrl)에 맞춤,
+  // jobId를 BullMQ job id로 고정
+  await photoQueue.add('portrait', {
+    petId,
+    userId,
+    photoUrl: photo.file_url,
+  }, { jobId })
 
   return { jobId, status: 'queued' }
 }

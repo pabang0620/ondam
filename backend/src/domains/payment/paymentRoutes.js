@@ -17,13 +17,13 @@ const paymentLimiter = rateLimit({
 })
 
 // 결제 준비 스키마
+// amountKrw는 클라이언트 입력을 받지 않는다 (G3) - 서버가 targetId로 실제 가격을 조회해 정본으로 사용한다.
 const prepareSchema = z.object({
   body: z.object({
     targetType: z.enum(['photo_order', 'will_order', 'subscription'], {
       errorMap: () => ({ message: 'targetType은 photo_order, will_order, subscription 중 하나여야 합니다' }),
     }),
     targetId: z.string().uuid('유효한 UUID를 입력하세요'),
-    amountKrw: z.number().int('정수 금액이어야 합니다').positive('금액은 0보다 커야 합니다'),
   }),
 })
 

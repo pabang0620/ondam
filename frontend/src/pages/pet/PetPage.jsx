@@ -117,7 +117,7 @@ function PetListItem({ pet }) {
 export default function PetPage() {
   const navigate = useNavigate()
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
-  const { pets, isLoading } = usePet()
+  const { pets, isLoading, error } = usePet()
 
   const handlePlanSelect = (plan) => {
     if (!isAuthenticated) {
@@ -193,14 +193,18 @@ export default function PetPage() {
             </div>
 
             {isLoading && (
-              <p className="pet-list-empty">불러오는 중...</p>
+              <p className="pet-list-empty" role="status">불러오는 중...</p>
             )}
 
-            {!isLoading && pets.length === 0 && (
+            {!isLoading && error && (
+              <p className="pet-list-empty" role="alert">{error}</p>
+            )}
+
+            {!isLoading && !error && pets.length === 0 && (
               <p className="pet-list-empty">아직 등록된 반려동물이 없습니다.</p>
             )}
 
-            {!isLoading && pets.length > 0 && (
+            {!isLoading && !error && pets.length > 0 && (
               <div className="pet-list">
                 {pets.map((pet) => (
                   <PetListItem key={pet.pet_id} pet={pet} />

@@ -28,9 +28,10 @@ export default function BillingAuthSuccessPage() {
         navigate('/pet/subscription', { replace: true, state: { subscriptionSuccess: true } })
       })
       .catch((err) => {
-        console.warn('[mock] BillingAuthSuccessPage - registerBillingKey 실패, mock 구독 성공으로 처리', err)
+        // FIX: DEV-24 - 빌링키 등록 실패를 구독 성공으로 위장하지 않는다
         sessionStorage.removeItem('pendingSubscriptionPlan')
-        navigate('/pet/subscription', { replace: true, state: { subscriptionSuccess: true } })
+        setIsProcessing(false)
+        setError(err?.response?.data?.message ?? '구독 등록에 실패했습니다. 다시 시도해 주세요.')
       })
   }, [searchParams, navigate])
 

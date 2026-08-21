@@ -1,38 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { adminApi } from './adminApi.js'
 
-const PLACEHOLDER = 'https://picsum.photos/seed/document-sample/600/800'
-
-const MOCK_RELEASES = [
-  {
-    releaseId: 'mock-rel-001',
-    willId: 'will-uuid-001',
-    requesterName: '김민수',
-    requesterEmail: 'minsu@example.com',
-    deathCertificateUrl: PLACEHOLDER,
-    status: 'pending',
-    createdAt: '2026-04-20T10:00:00.000Z',
-  },
-  {
-    releaseId: 'mock-rel-002',
-    willId: 'will-uuid-002',
-    requesterName: '이지혜',
-    requesterEmail: 'jihye@example.com',
-    deathCertificateUrl: PLACEHOLDER,
-    status: 'pending',
-    createdAt: '2026-04-25T13:30:00.000Z',
-  },
-  {
-    releaseId: 'mock-rel-003',
-    willId: 'will-uuid-003',
-    requesterName: '박동현',
-    requesterEmail: 'donghyun@example.com',
-    deathCertificateUrl: PLACEHOLDER,
-    status: 'pending',
-    createdAt: '2026-04-28T09:15:00.000Z',
-  },
-]
-
 export function useAdminRelease() {
   const [releases, setReleases] = useState([])
   const [isLoading, setIsLoading] = useState(false)
@@ -47,8 +15,8 @@ export function useAdminRelease() {
       const { data } = await adminApi.getReleases(1, 20)
       if (data.success) setReleases(data.data ?? [])
     } catch (err) {
-      console.warn('[mock] 공개 요청 목록 API 실패 - mock 데이터로 대체합니다', err)
-      setReleases(MOCK_RELEASES)
+      // FIX: DEV-24 - 목록 조회 실패를 가짜 데이터로 위장하지 않는다
+      setError(err?.response?.data?.message ?? '사후공개 요청 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.')
     } finally {
       setIsLoading(false)
     }
@@ -70,10 +38,8 @@ export function useAdminRelease() {
         prev.map((r) => r.releaseId === id ? { ...r, status: 'approved' } : r),
       )
     } catch (err) {
-      console.warn('[mock] 승인 API 실패 - 로컬 상태에서 처리합니다', err)
-      setReleases((prev) =>
-        prev.map((r) => r.releaseId === id ? { ...r, status: 'approved' } : r),
-      )
+      // FIX: DEV-24 - 승인 API 실패를 로컬 상태만 바꿔 성공처럼 보이게 하지 않는다
+      setActionError(err?.response?.data?.message ?? '승인 처리에 실패했습니다. 잠시 후 다시 시도해 주세요.')
     } finally {
       setProcessingId(null)
     }
@@ -89,10 +55,8 @@ export function useAdminRelease() {
         prev.map((r) => r.releaseId === id ? { ...r, status: 'rejected' } : r),
       )
     } catch (err) {
-      console.warn('[mock] 거절 API 실패 - 로컬 상태에서 처리합니다', err)
-      setReleases((prev) =>
-        prev.map((r) => r.releaseId === id ? { ...r, status: 'rejected' } : r),
-      )
+      // FIX: DEV-24 - 거절 API 실패를 로컬 상태만 바꿔 성공처럼 보이게 하지 않는다
+      setActionError(err?.response?.data?.message ?? '거절 처리에 실패했습니다. 잠시 후 다시 시도해 주세요.')
     } finally {
       setProcessingId(null)
     }

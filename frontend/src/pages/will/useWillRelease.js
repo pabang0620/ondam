@@ -51,8 +51,8 @@ export function useWillRelease() {
       await willApi.submitRelease(token, { deathCertS3Key, deathCertUrl })
       setIsSubmitted(true)
     } catch (err) {
-      console.warn('[mock] 사후 공개 제출 API 실패 - mock 제출 완료 처리', err)
-      setIsSubmitted(true)
+      // FIX: DEV-24 - 서류 제출 실패를 제출 완료로 위장하지 않는다 (유가족이 실제로 접수되지 않은 걸 모르게 됨)
+      setSubmitError(err?.response?.data?.message ?? '서류 제출에 실패했습니다. 잠시 후 다시 시도해 주세요.')
     } finally {
       setIsSubmitting(false)
       pendingRef.current = false

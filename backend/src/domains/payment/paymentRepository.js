@@ -86,6 +86,26 @@ export const findPaymentByOrderId = async (tossOrderId) => {
 }
 
 /**
+ * FOR UPDATE 락을 걸어 toss_order_id로 결제 행 조회 - 트랜잭션 내에서만 사용
+ * 동일 orderId에 대한 동시 confirm 요청을 직렬화하기 위한 비관적 락
+ * @param {object} conn - pool.getConnection()으로 획득한 커넥션
+ * @param {string} tossOrderId
+ */
+export const findPaymentByOrderIdForUpdate = async (conn, tossOrderId) => {
+  const [rows] = await conn.execute(
+    `SELECT payment_id, user_id, target_type, target_id,
+            toss_payment_key, toss_order_id, amount_krw, status,
+            paid_at, canceled_at, cancel_reason, fail_reason,
+            created_at, updated_at
+     FROM payments
+     WHERE toss_order_id = ? AND deleted_at IS NULL
+     FOR UPDATE`,
+    [tossOrderId]
+  )
+  return rows[0] ?? null
+}
+
+/**
  * 결제 완료 처리: status='done', toss_payment_key, paid_at 업데이트
  */
 export const updatePaymentDone = async (paymentId, { tossPaymentKey, paidAt }) => {
@@ -103,11 +123,17 @@ export const updatePaymentDone = async (paymentId, { tossPaymentKey, paidAt }) =
 
 /**
  * 결제 실패 처리: status='failed', fail_reason 업데이트
+ *
+ * [HIGH #3 수정] toss_payment_key를 임시값(payment_id)으로 원복한다. 원복하지
+ * 않으면 confirmPayment의 선점(claim) 판정(`toss_payment_key !== payment_id`)이
+ * 계속 "이미 선점됨"으로 남아, status='failed'와 맞물려 사용자가 같은 결제 건으로
+ * 다시는 재시도할 수 없는 영구 데드엔드가 된다.
  */
 export const updatePaymentFailed = async (paymentId, { failReason }) => {
   await pool.execute(
     `UPDATE payments
      SET status = 'failed',
+         toss_payment_key = payment_id,
          fail_reason = ?,
          updated_at = NOW()
      WHERE payment_id = ? AND deleted_at IS NULL`,

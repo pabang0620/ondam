@@ -1,9 +1,19 @@
-import { Link } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { useLogin } from './useLogin.js'
 import { ROUTES } from '../../constants/routes.js'
+import { useAuthStore } from '../../store/authStore.js'
 
 export default function LoginPage() {
   const { email, setEmail, password, setPassword, isLoading, error, handleSubmit } = useLogin()
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const isAuthInitialized = useAuthStore((s) => s.isAuthInitialized)
+
+  // FIX: DEV-27 - 이미 유효한 세션으로 /login에 들어오면 로그인 화면에 갇히지 않고 홈으로.
+  // 초기화가 끝나기 전에는 아직 판정할 수 없으므로 로그인 폼을 그대로 보여준다
+  // (초기화가 끝나 인증됨으로 밝혀지면 그때 아래에서 리다이렉트된다).
+  if (isAuthInitialized && isAuthenticated) {
+    return <Navigate to={ROUTES.HOME} replace />
+  }
 
   return (
     <div className="flex flex-col gap-9">

@@ -1,11 +1,16 @@
 // ==========================================================================
-// 온담(ondam) ENUM SSOT
+// 온담(ondam) ENUM SSOT (타입 전용)
 // DB 스키마(ondam_schema.sql)와 반드시 동기화 유지
 // Created: 2026-04-19
 // Last synced with DB: 2026-08-21 (drift fix - see docs/migrations/2026-08-21-schema-drift-fix.README.md)
 //
+// 주의(2026-08-21 DEV-22): 백엔드는 빌드 스텝 없는 Node.js ESM이라 이 .ts 파일을
+// 런타임에 import할 수 없다. 런타임 SSOT는 같은 디렉토리의 enums.js다.
+// 이 파일은 타입 정의·프론트(TS/번들러 환경)용으로 유지한다.
+// 값을 바꿀 때는 반드시 enums.js도 함께 수정해 100% 동일하게 유지할 것.
+//
 // 사용 규칙:
-//   - DB ENUM 값 변경 시 이 파일을 먼저 수정 → 마이그레이션 파일 생성
+//   - DB ENUM 값 변경 시 이 파일 + enums.js를 함께 수정 → 마이그레이션 파일 생성
 //   - Zod 스키마: z.enum(ENUM_CONSTANT) 형태로 import해서 참조
 //   - 이 파일에 하드코딩된 문자열을 Zod 내부에서 중복 선언 금지
 // ==========================================================================
@@ -23,6 +28,8 @@ export const CONSENT_TYPE = [
   'voice',
   'ai_generation',
   'posthumous_release',
+  'terms',
+  'marketing',
 ] as const
 export type ConsentType = typeof CONSENT_TYPE[number]
 
@@ -91,6 +98,11 @@ export const WILL_RELEASE_REQ_STATUS = [
   'rejected',
 ] as const
 export type WillReleaseReqStatus = typeof WILL_RELEASE_REQ_STATUS[number]
+
+// wills.event_type - 기존에 이 파일에서 누락되어 있던 것을 DEV-22에서 보완
+// (DB: wills.event_type ENUM('death','incapacity','anniversary') NULL)
+export const WILL_EVENT_TYPE = ['death', 'incapacity', 'anniversary'] as const
+export type WillEventType = typeof WILL_EVENT_TYPE[number]
 
 // --------------------------------------------------------------------------
 // 반려동물 아카이브 (서비스 3)

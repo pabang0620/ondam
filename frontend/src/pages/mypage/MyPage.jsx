@@ -182,9 +182,13 @@ function SubscriptionTab() {
   )
 }
 
-function NotificationsTab({ settings, onToggle, isUpdating }) {
+function NotificationsTab({ settings, settingsError, onToggle, isUpdating }) {
+  if (settingsError) {
+    return <p className="my-error" role="alert">{settingsError}</p>
+  }
+
   if (!settings) {
-    return <p className="my-tab-empty">알림 설정을 불러오는 중...</p>
+    return <p className="my-tab-empty" role="status">알림 설정을 불러오는 중...</p>
   }
 
   const NOTIFICATION_KEYS = [
@@ -228,6 +232,7 @@ export default function MyPage() {
     notificationSettings,
     isLoading,
     error,
+    settingsError,
     isSettingsUpdating,
     fetchNotificationSettings,
     handleToggleNotification,
@@ -302,6 +307,7 @@ export default function MyPage() {
         {activeTab === 'notifications' && (
           <NotificationsTab
             settings={notificationSettings}
+            settingsError={settingsError}
             onToggle={handleToggleNotification}
             isUpdating={isSettingsUpdating}
           />

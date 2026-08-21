@@ -50,11 +50,13 @@ export const willApi = {
     apiClient.post('/auth/consents', { consents }),
 
   // 결제 준비
-  preparePayment: (willId, amountKrw) =>
+  // FIX: DEV-29 - 금액은 서버가 targetId로 조회한 wills.price_krw를 정본으로 쓴다
+  // (백엔드 preparePayment는 body의 amountKrw를 아예 읽지 않는다). 클라이언트가
+  // 금액을 보내는 것 자체가 "가격이 두 곳에 존재한다"는 오해를 유발하므로 보내지 않는다.
+  preparePayment: (willId) =>
     apiClient.post('/payments/prepare', {
       targetType: 'will_order',
       targetId: willId,
-      amountKrw,
     }),
 
   // 결제 확인

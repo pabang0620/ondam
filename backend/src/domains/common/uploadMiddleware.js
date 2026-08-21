@@ -48,7 +48,7 @@ const AUDIO_MAX_BYTES = 200 * 1024 * 1024  // 200 MB
 const buildStorage = (folder, useKms = false) =>
   multerS3({
     s3,
-    bucket: process.env.AWS_BUCKET_NAME,
+    bucket: process.env.S3_BUCKET,
     contentType: multerS3.AUTO_CONTENT_TYPE,
     ...(useKms && {
       serverSideEncryption: 'aws:kms',

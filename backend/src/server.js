@@ -27,11 +27,29 @@ import adminRoutes from './domains/admin/adminRoutes.js'
 import uploadRoutes from './domains/common/uploadRoutes.js'
 import './queues/billingWorker.js'
 import './jobs/workers/notificationWorker.js'
-import { billingQueue } from './queues/billingQueue.js'
+import { registerBillingScanDueScheduler } from './queues/billingQueue.js'
 
 const app = express()
 const httpServer = createServer(app)
 const PORT = process.env.PORT || 4000
+
+// ─── trust proxy ───────────────────────────────────────────────────────────────
+// express-rate-limit 등 req.ip 기반 미들웨어가 여러 limiter(authLimiter,
+// adminLoginLimiter, subscriptionLimiter, memorialLimiter 등)에서 키로 쓰인다.
+// 리버스 프록시(nginx 등) 뒤에 배포되면 trust proxy 미설정 시 req.ip가 프록시
+// IP 하나로 고정되어 전체 사용자가 하나의 rate limit 버킷을 공유하게 된다.
+// `trust proxy: true`(무조건 신뢰)는 클라이언트가 X-Forwarded-For를 위조해
+// 임의의 IP를 자처할 수 있어 rate limit을 그대로 우회당한다 - 사용하지 않는다.
+// 대신 홉 수(TRUST_PROXY_HOPS)를 지정하면 Express가 X-Forwarded-For 체인에서
+// 프록시가 실제로 추가한 마지막 N개 값만 신뢰하고, 그보다 앞(클라이언트가
+// 임의로 붙인 값)은 무시한다 - 위조로 우회 불가능하다.
+// 기본값 0 = 프록시 없음(로컬/직접 노출, req.ip를 소켓 주소 그대로 사용).
+// 프록시 뒤에 배포할 때만 .env에 TRUST_PROXY_HOPS를 프록시 홉 수(보통 1)로
+// 설정해야 한다 - 설정하지 않으면 위 회귀가 재발한다.
+const trustProxyHops = Number.parseInt(process.env.TRUST_PROXY_HOPS ?? '0', 10)
+if (Number.isInteger(trustProxyHops) && trustProxyHops > 0) {
+  app.set('trust proxy', trustProxyHops)
+}
 
 // ─── Socket.IO 초기화 ──────────────────────────────────────────────────────────
 
@@ -47,7 +65,7 @@ io.use((socket, next) => {
   const token = socket.handshake.auth?.token
   if (!token) return next(new Error('인증 토큰이 없습니다'))
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET)
+    const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] })
     socket.userId = decoded.userId
     next()
   } catch {
@@ -162,9 +180,20 @@ app.use((err, req, res, _next) => {
   const status = err.status || 500
   const isDev = process.env.NODE_ENV === 'development'
 
+  // 5xx(예상 못 한 서버 오류)는 프로덕션에서 원본 메시지를 절대 노출하지 않는다.
+  // mysql2 에러(err.message)는 테이블·컬럼명을 담고 있어 그대로 내려주면 내부
+  // 구조 유출 + 어르신 사용자에게 영문 DB 오류가 그대로 보이는 문제가 있었다
+  // (G9-5). 원본 메시지는 위 console.error로만 남긴다.
+  // 4xx는 의도적으로 던진 사용자 메시지(Object.assign(new Error(...), { status })이므로
+  // 그대로 전달한다.
+  const clientMessage =
+    status >= 500 && !isDev
+      ? '서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.'
+      : err.message || '서버 오류가 발생했습니다'
+
   res.status(status).json({
     success: false,
-    message: err.message || '서버 오류가 발생했습니다',
+    message: clientMessage,
     ...(isDev && status === 500 && { stack: err.stack }),
   })
 })
@@ -172,16 +201,9 @@ app.use((err, req, res, _next) => {
 httpServer.listen(PORT, () => {
   console.log(`[ondam] 서버 시작 - 포트 ${PORT} (${process.env.NODE_ENV})`)
 
-  // 구독 자동결제 scan-due 반복 job 등록 (이미 있으면 BullMQ가 skip)
-  billingQueue.add(
-    'scan-due',
-    {},
-    {
-      repeat: { cron: process.env.BILLING_SCAN_CRON || '0 3 * * *' },
-      jobId: 'billing-scan-due-repeat',
-    }
-  ).catch((err) => {
-    console.warn('[server] scan-due 반복 job 등록 실패:', err.message)
+  // 구독 자동결제 scan-due 반복 job 등록/갱신 (기동 시 반드시 확인 로그 남김 - DEV-26)
+  registerBillingScanDueScheduler().catch((err) => {
+    console.error('[server] scan-due 스케줄러 등록 실패:', err.message)
   })
 })
 

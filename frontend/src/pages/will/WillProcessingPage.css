@@ -139,7 +139,7 @@
 
 /* 에러 */
 .will-proc__error {
-  font-size: var(--fs-caption);
+  font-size: var(--fs-body);
   color: var(--color-error-muted);
 }
 

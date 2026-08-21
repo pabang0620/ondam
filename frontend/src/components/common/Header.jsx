@@ -81,6 +81,10 @@ export default function Header() {
     } catch {
       // 서버 오류가 발생해도 클라이언트 상태는 반드시 초기화
     }
+    // FIX: DEV-31 - clearUser()만 호출하면 localStorage의 adminToken이 남는다.
+    // 가드가 isAuthenticated도 함께 보므로 권한 우회는 없지만, 로그아웃 후에도
+    // 만료된 관리자 토큰이 남아 다음 요청에 실려 나가는 상태는 정리한다.
+    localStorage.removeItem('adminToken')
     clearUser()
     navigate(ROUTES.LOGIN)
   }

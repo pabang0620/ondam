@@ -11,6 +11,7 @@ function usePhotoResult() {
   const [isLoading, setIsLoading] = useState(true)
   const [isRetrying, setIsRetrying] = useState(false)
   const [error, setError] = useState(null)
+  const [retryError, setRetryError] = useState(null)
 
   const isMountedRef = useRef(true)
 
@@ -30,27 +31,8 @@ function usePhotoResult() {
         setFiles(data.data.files ?? [])
       } catch (err) {
         if (!isMountedRef.current || ac.signal.aborted) return
-        console.warn('[mock] getPhotoOrderResult 실패, mock 결과 데이터 적용:', err)
-        setOrder({
-          order_id: orderId ?? 'mock-photo-001',
-          photo_type: 'funeral',
-          status: 'completed',
-          price_krw: 9900,
-        })
-        setFiles([
-          {
-            file_id: 'mock-file-raw-001',
-            kind: 'raw',
-            s3_key: 'photos/mock-user/mock-job/raw.jpg',
-            fileUrl: 'https://picsum.photos/seed/old-photo/600/800?grayscale',
-          },
-          {
-            file_id: 'mock-file-enhanced-001',
-            kind: 'enhanced',
-            s3_key: 'photos/mock-user/mock-job/enhanced.jpg',
-            fileUrl: 'https://picsum.photos/seed/restored-photo/600/800',
-          },
-        ])
+        // FIX: DEV-24 - 결과 조회 실패를 가짜 사진으로 위장하지 않는다
+        setError(err?.response?.data?.message ?? '결과를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.')
       } finally {
         if (isMountedRef.current) setIsLoading(false)
       }
@@ -82,14 +64,14 @@ function usePhotoResult() {
     if (isRetrying) return
 
     setIsRetrying(true)
-    setError(null)
+    setRetryError(null)
 
     try {
       await retryPhotoOrder(orderId)
       navigate(`/photo/processing/${orderId}`)
     } catch (err) {
-      console.warn('[mock] retryPhotoOrder 실패, mock 재처리 흐름으로 진행:', err)
-      navigate(`/photo/processing/${orderId}`)
+      // FIX: DEV-24 - 재처리 요청 실패를 성공한 것처럼 처리 페이지로 이동시키지 않는다
+      setRetryError(err?.response?.data?.message ?? '재처리 요청에 실패했습니다. 잠시 후 다시 시도해 주세요.')
     } finally {
       setIsRetrying(false)
     }
@@ -124,6 +106,7 @@ function usePhotoResult() {
     isLoading,
     isRetrying,
     error,
+    retryError,
     handleDownload,
     handleRetry,
     handleShare,

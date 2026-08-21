@@ -20,15 +20,8 @@ export function useWillWatch() {
         const { data } = await willApi.watchWill(token)
         setWillData(data.data)
       } catch (err) {
-        console.warn('[mock] 유언 영상 조회 API 실패 - mock 영상 데이터 표시', err)
-        setWillData({
-          willId: 'mock-will-001',
-          title: '사랑하는 가족에게',
-          creatorName: '김온담',
-          resultVideoUrl: 'https://picsum.photos/seed/will-video/1280/720',
-          releasedAt: new Date().toISOString(),
-          message: '사랑하는 가족 여러분, 제가 살아있는 동안 전하지 못했던 말들을 이 영상에 담았습니다. 언제나 건강하고 행복하게 지내세요.',
-        })
+        // FIX: DEV-24 - 조회 실패를 가짜 유언 영상으로 위장하지 않는다
+        setFetchError(err?.response?.data?.message ?? '영상을 찾을 수 없습니다. 링크가 만료되었거나 올바르지 않습니다.')
       } finally {
         setIsLoading(false)
       }

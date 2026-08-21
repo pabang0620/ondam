@@ -7,11 +7,10 @@ import { success, created, paginated } from '../../utils/response.js'
  */
 export const preparePayment = async (req, res, next) => {
   try {
-    const { targetType, targetId, amountKrw } = req.body
+    const { targetType, targetId } = req.body
     const result = await paymentService.preparePayment(req.user.userId, {
       targetType,
       targetId,
-      amountKrw,
     })
     return created(res, result, '결제 준비 완료')
   } catch (err) {

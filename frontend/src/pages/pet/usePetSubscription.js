@@ -3,22 +3,6 @@ import { petApi } from './petApi.js'
 import { getTossPayments } from '../../lib/tossPayments.js'
 import { useAuthStore } from '../../store/authStore.js'
 
-const NEXT_BILLING_DATE = (() => {
-  const d = new Date()
-  d.setDate(d.getDate() + 30)
-  return d.toISOString()
-})()
-
-const MOCK_SUBSCRIPTION = {
-  subscriptionId: 'mock-sub-001',
-  userId: 'mock-user-001',
-  plan: 'pet_archive',
-  subStatus: 'active',
-  next_billing_at: NEXT_BILLING_DATE,
-  fail_count: 0,
-  amount: 9900,
-}
-
 export function usePetSubscription() {
   const user = useAuthStore((s) => s.user)
 
@@ -43,9 +27,8 @@ export function usePetSubscription() {
       if (plansRes.data.success) setPlans(plansRes.data.data ?? [])
       if (subRes.data.success) setCurrentSubscription(subRes.data.data?.[0] ?? null)
     } catch (err) {
-      console.warn('[mock] usePetSubscription.fetchData - 백엔드 응답 없음, mock 구독 데이터로 대체', err)
-      setPlans([])
-      setCurrentSubscription(MOCK_SUBSCRIPTION)
+      // FIX: DEV-24 - 구독 조회 실패를 가짜 구독으로 위장하지 않는다
+      setError(err?.response?.data?.message ?? '구독 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.')
     } finally {
       setIsLoading(false)
     }
@@ -71,20 +54,9 @@ export function usePetSubscription() {
       })
       // 리디렉트 발생 - 이후 코드 실행 안 됨
     } catch (err) {
-      console.warn('[mock] usePetSubscription.handleSubscribe - 토스 SDK 실패, mock 구독 성공 처리', err)
+      // FIX: DEV-24 - 토스 SDK 실패를 구독 성공으로 위장하지 않는다
       sessionStorage.removeItem('pendingSubscriptionPlan')
-      const nextBilling = new Date()
-      nextBilling.setDate(nextBilling.getDate() + 30)
-      setCurrentSubscription({
-        subscriptionId: `mock-sub-${Date.now()}`,
-        userId: user?.userId ?? 'mock-user-001',
-        plan: planKey,
-        subStatus: 'active',
-        next_billing_at: nextBilling.toISOString(),
-        fail_count: 0,
-        amount: planKey === 'pet_archive' ? 9900 : planKey === 'will_premium' ? 29900 : 39900,
-      })
-      setSuccessMessage('구독이 성공적으로 등록되었습니다. (시뮬레이션)')
+      setActionError(err?.response?.data?.message ?? err?.message ?? '결제 요청에 실패했습니다. 잠시 후 다시 시도해 주세요.')
       setIsRedirecting(false)
     }
   }
@@ -101,11 +73,8 @@ export function usePetSubscription() {
         setSuccessMessage('재결제가 완료되었습니다.')
       }
     } catch (err) {
-      console.warn('[mock] usePetSubscription.handleRetryPayment - API 실패, mock 재결제 성공 처리', err)
-      setCurrentSubscription((prev) =>
-        prev ? { ...prev, subStatus: 'active', fail_count: 0 } : prev,
-      )
-      setSuccessMessage('재결제가 완료되었습니다. (시뮬레이션)')
+      // FIX: DEV-24 - 재결제 실패를 성공으로 위장하지 않는다
+      setActionError(err?.response?.data?.message ?? '재결제에 실패했습니다. 카드 정보를 확인한 후 다시 시도해 주세요.')
     } finally {
       if (pendingRef.current) {
         setIsProcessing(false)
@@ -130,12 +99,8 @@ export function usePetSubscription() {
       setIsCancelModalOpen(false)
       setSuccessMessage('구독이 해지되었습니다.')
     } catch (err) {
-      console.warn('[mock] usePetSubscription.confirmCancel - API 실패, 로컬 상태만 canceled로 변경', err)
-      setCurrentSubscription((prev) =>
-        prev ? { ...prev, subStatus: 'canceled' } : null,
-      )
-      setIsCancelModalOpen(false)
-      setSuccessMessage('구독이 해지되었습니다. (시뮬레이션)')
+      // FIX: DEV-24 - 해지 API 실패를 로컬에서만 성공 처리하지 않는다 (정기결제가 실제로는 계속돼 환불 분쟁으로 이어짐)
+      setActionError(err?.response?.data?.message ?? '구독 해지에 실패했습니다. 잠시 후 다시 시도해 주세요.')
     } finally {
       if (pendingRef.current) {
         setIsProcessing(false)

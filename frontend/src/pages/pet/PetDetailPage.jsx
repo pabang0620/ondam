@@ -9,6 +9,7 @@ import {
   AlertTriangle,
 } from 'lucide-react'
 import { usePetDetail } from './usePetDetail.js'
+import MemorialSettingsSection from './MemorialSettingsSection.jsx'
 import './PetDetailPage.css'
 
 const SPECIES_LABEL = {
@@ -37,8 +38,12 @@ export default function PetDetailPage() {
     isUploading,
     uploadError,
     isStatusChanging,
+    statusChangeError,
+    isSavingMemorial,
+    memorialSaveError,
     handleMediaUpload,
     handleStatusChange,
+    handleUpdateMemorialSettings,
   } = usePetDetail(petId)
 
   const handleFileChange = (e) => {
@@ -178,10 +183,18 @@ export default function PetDetailPage() {
         </div>
       </section>
 
-      {/* 추모 페이지 링크 (deceased) — memorial 네이비 톤 */}
+      {/* 추모 페이지 링크 (deceased) - memorial 네이비 톤 */}
+      {/* FIX: DEV-31 - 접근 코드 없이 /memorial/:slug 로만 이동하면 소유자 본인도 항상
+          403이었다. 소유자 응답에는 memorial_access_code가 실리므로 쿼리로 붙여
+          바로 열리게 한다. 코드 미설정 상태면 기존처럼 코드 없이 이동한다
+          (아래 설정 섹션에서 코드를 만들도록 유도). */}
       {pet.pet_status === 'deceased' && pet.memorial_slug && (
         <Link
-          to={`/memorial/${pet.memorial_slug}`}
+          to={
+            pet.memorial_access_code
+              ? `/memorial/${pet.memorial_slug}?accessCode=${encodeURIComponent(pet.memorial_access_code)}`
+              : `/memorial/${pet.memorial_slug}`
+          }
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -200,6 +213,16 @@ export default function PetDetailPage() {
           <Heart size={18} aria-hidden="true" />
           추모 페이지 보기
         </Link>
+      )}
+
+      {/* 추모 페이지 접근 코드 설정 (deceased) - DEV-30 */}
+      {pet.pet_status === 'deceased' && (
+        <MemorialSettingsSection
+          pet={pet}
+          isSaving={isSavingMemorial}
+          saveError={memorialSaveError}
+          onSave={handleUpdateMemorialSettings}
+        />
       )}
 
       {/* 미디어 그리드 */}
@@ -279,7 +302,7 @@ export default function PetDetailPage() {
         />
 
         {uploadError && (
-          <p role="alert" style={{ color: 'var(--color-error)', fontSize: 'var(--fs-caption)', marginBottom: 'var(--spacing-md)' }}>
+          <p role="alert" style={{ color: 'var(--color-error)', fontSize: 'var(--fs-body)', marginBottom: 'var(--spacing-md)' }}>
             {uploadError}
           </p>
         )}
@@ -361,6 +384,11 @@ export default function PetDetailPage() {
               </p>
             </div>
           </div>
+          {statusChangeError && (
+            <p role="alert" style={{ color: 'var(--color-error)', fontSize: 'var(--fs-body)' }}>
+              {statusChangeError}
+            </p>
+          )}
           <button
             onClick={confirmStatusChange}
             disabled={isStatusChanging}

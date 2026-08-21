@@ -90,12 +90,8 @@ export function useWillRecord() {
       localStorage.setItem('will_audio_s3key', s3Key)
       navigate('/will/photo')
     } catch (err) {
-      console.warn('[mock] 음성 업로드 API 실패 - mock voice_sample_id 사용', err)
-      const mockVoiceSampleId = 'mock-voice-' + Date.now().toString(36)
-      const mockS3Key = `wills/mock-user/voice-sample-${Date.now()}.webm`
-      localStorage.setItem('will_voice_sample_id', mockVoiceSampleId)
-      localStorage.setItem('will_audio_s3key', mockS3Key)
-      navigate('/will/photo')
+      // FIX: DEV-24 - 업로드 실패를 가짜 voice_sample_id로 위장해 다음 단계로 진행시키지 않는다
+      setUploadError(err?.response?.data?.message ?? '음성 업로드에 실패했습니다. 잠시 후 다시 시도해 주세요.')
     } finally {
       setIsUploading(false)
     }

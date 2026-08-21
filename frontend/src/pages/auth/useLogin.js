@@ -37,17 +37,8 @@ export function useLogin() {
       setAuth(user, accessToken)
       navigate(ROUTES.HOME)
     } catch (err) {
-      console.warn('[mock] 로그인 API 실패 - mock 사용자로 진입합니다', err)
-      setAuth(
-        {
-          user_id: 'mock-user-001',
-          email: email || 'demo@ondam.kr',
-          nickname: '데모 사용자',
-          role: 'user',
-        },
-        'mock-token',
-      )
-      navigate(ROUTES.HOME)
+      // FIX: DEV-24 - 로그인 실패를 가짜 사용자로 위장하지 않고 실제 에러를 보여준다
+      setError(err?.response?.data?.message ?? '이메일 또는 비밀번호가 올바르지 않습니다. 다시 확인해 주세요.')
     } finally {
       setIsLoading(false)
     }

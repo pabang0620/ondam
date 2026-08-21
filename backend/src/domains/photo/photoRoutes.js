@@ -4,6 +4,7 @@ import rateLimit from 'express-rate-limit'
 import { requireAuth } from '../../middleware/auth.js'
 import { validate } from '../../middleware/validate.js'
 import * as photoController from './photoController.js'
+import { PHOTO_TYPE } from '../../../../shared/constants/enums.js'
 
 const router = Router()
 
@@ -27,8 +28,8 @@ const orderParamSchema = z.object({
 
 const createOrderSchema = z.object({
   body: z.object({
-    photoType: z.enum(['funeral', 'id', 'job', 'enhance', 'colorize', 'restore', 'removebg', 'portrait', 'casual'], {
-      errorMap: () => ({ message: "photoType은 'funeral', 'id', 'job', 'enhance', 'colorize', 'restore', 'removebg', 'portrait', 'casual' 중 하나여야 합니다" }),
+    photoType: z.enum(PHOTO_TYPE, {
+      errorMap: () => ({ message: `photoType은 ${PHOTO_TYPE.join(', ')} 중 하나여야 합니다` }),
     }),
     sourceImageUrl: z.string().url('유효한 URL이어야 합니다'),
   }),
