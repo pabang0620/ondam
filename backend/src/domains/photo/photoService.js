@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { photoQueue } from '../../jobs/queue.js'
 import * as photoRepository from './photoRepository.js'
 import { extractS3KeyFromUrl, getPresignedUrl } from '../../utils/s3.js'
+import { getVariantMeta } from './photoResultSet.js'
 import pool from '../../config/db.js'
 
 // ─── 주문 생성 ────────────────────────────────────────────────────────────────
@@ -136,30 +137,56 @@ export const getResult = async (orderId, userId) => {
   if (order.user_id !== userId) {
     throw Object.assign(new Error('접근 권한이 없습니다'), { status: 403 })
   }
-  if (order.status !== 'completed') {
+
+  const files = await photoRepository.findFilesByOrderId(orderId)
+
+  // SPEC-02 2절(부분 실패): 세트 4종 중 일부만 실패하면 주문 상태는 'failed'로
+  // 확정되지만(전액 환불 대상), 이미 성공한 결과물은 그대로 제공해야 한다
+  // ("결과물은 그대로 가져가게 둔다"). completed가 아니어도 결과물이 하나라도
+  // 있으면 조회를 허용한다. 결과물이 전혀 없는 처리중/실패 주문은 기존대로 차단.
+  if (order.status !== 'completed' && !(order.status === 'failed' && files.length > 0)) {
     throw Object.assign(
       new Error(`처리가 완료되지 않았습니다 (현재: ${order.status})`),
       { status: 400 },
     )
   }
 
-  const files = await photoRepository.findFilesByOrderId(orderId)
-
   const filesWithUrls = await Promise.all(
     files.map(async (file) => {
       const s3Key = file.s3_key || extractS3KeyFromUrl(file.file_url)
-      if (!s3Key) return file
+      // SPEC-08 결정1: kind ENUM('raw','enhanced')만으로는 세트 4종을 구분할 수
+      // 없어(스키마 변경 없이 해결) s3_key 파일명 접미사에서 라벨을 복원한다.
+      const variant = getVariantMeta(s3Key)
+      const variantFields = {
+        variantKey: variant?.key ?? null,
+        variantLabel: variant?.label ?? null,
+        variantOrder: variant?.order ?? null,
+      }
+
+      if (!s3Key) return { ...file, ...variantFields }
       try {
         const presignedUrl = await getPresignedUrl(s3Key, 3600) // 1시간
-        return { ...file, file_url: presignedUrl }
+        return { ...file, file_url: presignedUrl, ...variantFields }
       } catch (err) {
         console.error('[photoService] presignedUrl 생성 실패:', err.message)
-        return { ...file, file_url: null }
+        return { ...file, file_url: null, ...variantFields }
       }
     }),
   )
 
-  return { order, files: filesWithUrls }
+  // 표시 순서: 원본(raw) 먼저, 그 다음 세트 정의 순서(복원본→색감유지본→규격본→
+  // 정장본), 순서정보 없는 레거시 결과물은 생성 순서(findFilesByOrderId가 이미
+  // created_at ASC로 정렬) 그대로 맨 뒤에 유지한다.
+  const sortedFiles = [...filesWithUrls].sort((a, b) => {
+    if (a.kind === 'raw' && b.kind !== 'raw') return -1
+    if (b.kind === 'raw' && a.kind !== 'raw') return 1
+    if (a.variantOrder == null && b.variantOrder == null) return 0
+    if (a.variantOrder == null) return 1
+    if (b.variantOrder == null) return -1
+    return a.variantOrder - b.variantOrder
+  })
+
+  return { order, files: sortedFiles }
 }
 
 // ─── 실패 주문 재처리 ─────────────────────────────────────────────────────────

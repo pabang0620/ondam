@@ -4,7 +4,15 @@ import crypto from 'crypto'
 import { v4 as uuidv4 } from 'uuid'
 import * as adminRepository from './adminRepository.js'
 import { notificationQueue } from '../../jobs/queue.js'
+import { getPresignedUrl } from '../../utils/s3.js'
 import pool from '../../config/db.js'
+
+// 사망증명서 열람용 presigned URL 만료(초). "몇 분~1시간" 요구 중 짧은 쪽을 택함 -
+// 검수 화면 특성상 관리자가 문서를 열고 대조하는 데 필요한 시간은 대부분 수 분
+// 이내이고, 링크가 새 탭에 남아있는 동안의 노출 창을 최소화하는 쪽이 사망증명서
+// 같은 최고 민감도 서류엔 더 안전하다(G7-1: AWS SigV4 최대 7일, 과거 90일로 걸어
+// 실패한 이력이 있으므로 절대 그 근처로 가지 않는다).
+const DEATH_CERT_URL_EXPIRES_SEC = 10 * 60 // 10분
 
 // ─── 관리자 세션 토큰 (phase0-followups B-3) ─────────────────────────────────
 //
@@ -209,6 +217,36 @@ export const getPendingReleases = async ({ page, limit }) => {
       totalPages: Math.ceil(total / limit),
     },
   }
+}
+
+// ─── 사망증명서 열람 (presigned URL, 상세 열람 시점 발급) ─────────────────────────
+// SPEC-06 2절: "사망증명서 뷰어(KMS 복호화 열람, 열람 자체가 audit_logs 기록)".
+// death_cert_url 컬럼(영구 버킷 URL)은 절대 그대로 내려주지 않고, death_cert_s3_key로
+// 그때그때 짧은 만료의 presigned URL을 새로 발급한다. DB에 저장된 death_cert_url
+// 값 자체는 건드리지 않는다(기존 데이터 보존).
+export const getReleaseDocumentUrl = async (adminId, requestId, { ipAddress, userAgent } = {}) => {
+  const request = await adminRepository.findReleaseRequestById(requestId)
+  if (!request) {
+    throw Object.assign(new Error('공개 요청을 찾을 수 없습니다'), { status: 404 })
+  }
+
+  const url = await getPresignedUrl(request.death_cert_s3_key, DEATH_CERT_URL_EXPIRES_SEC)
+
+  // 증빙 열람 자체가 audit 기록 대상 (SPEC-06 2절, 수용 기준 2) - 승인/반려 여부와
+  // 무관하게 "누가 언제 이 사망증명서를 열어봤는지" 자체가 감사 대상이다.
+  await adminRepository.createAuditLog({
+    logId: uuidv4(),
+    actorId: adminId,
+    actorType: 'admin',
+    action: 'will_release_document_viewed',
+    targetType: 'will_release_request',
+    targetId: requestId,
+    ipAddress,
+    userAgent,
+    detail: { willId: request.will_id },
+  })
+
+  return { url, expiresInSeconds: DEATH_CERT_URL_EXPIRES_SEC }
 }
 
 // ─── 유언 공개 승인 ───────────────────────────────────────────────────────────

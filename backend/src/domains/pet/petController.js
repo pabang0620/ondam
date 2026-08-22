@@ -121,11 +121,25 @@ export const getPortraitStatus = async (req, res, next) => {
 }
 
 /**
+ * GET /api/pet/:petId/portrait/quota
+ * 남은 AI 초상화 매수 조회 (구독자 월 3매 / 무료 티어 평생 1회 체험)
+ */
+export const getPortraitQuota = async (req, res, next) => {
+  try {
+    const quota = await petService.getPortraitQuota(req.user.userId)
+    return success(res, quota)
+  } catch (err) {
+    next(err)
+  }
+}
+
+/**
  * POST /api/pet/:petId/portrait
  */
 export const requestPortrait = async (req, res, next) => {
   try {
-    const result = await petService.requestPortrait(req.user.userId, req.params.petId)
+    const { style, mediaId } = req.body
+    const result = await petService.requestPortrait(req.user.userId, req.params.petId, { style, mediaId })
     return success(res, result, 'AI 초상화 생성을 시작합니다')
   } catch (err) {
     next(err)

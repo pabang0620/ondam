@@ -118,8 +118,10 @@ export default function AdminReleasePage() {
     error,
     processingId,
     actionError,
+    documentLoadingId,
     handleApprove,
     handleReject,
+    handleViewDocument,
     refetch,
   } = useAdminRelease()
 
@@ -241,29 +243,31 @@ export default function AdminReleasePage() {
                     {new Date(release.createdAt).toLocaleDateString('ko-KR')}
                   </td>
                   <td style={{ padding: 'var(--spacing-md)' }}>
-                    {release.deathCertificateUrl
-                      ? (
-                        <a
-                          href={release.deathCertificateUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 4,
-                            color: 'var(--color-primary)',
-                            fontWeight: 600,
-                            fontSize: 'var(--fs-caption)',
-                            minHeight: 'var(--min-touch-target)',
-                          }}
-                        >
-                          보기
-                          <ExternalLink size={14} aria-hidden="true" />
-                        </a>
-                      )
-                      : (
-                        <span style={{ color: 'var(--color-text-muted)', fontSize: 'var(--fs-caption)' }}>없음</span>
-                      )}
+                    {/* [보안 수정] 목록에는 URL을 내려주지 않는다 - 클릭 시점에
+                        presigned URL을 새로 발급받아 새 탭으로 연다 (짧은 만료,
+                        열람 자체가 서버에서 audit_logs에 기록됨) */}
+                    <button
+                      type="button"
+                      onClick={() => handleViewDocument(release.releaseId)}
+                      disabled={documentLoadingId === release.releaseId}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 4,
+                        background: 'none',
+                        border: 'none',
+                        padding: 0,
+                        color: 'var(--color-primary)',
+                        fontWeight: 600,
+                        fontSize: 'var(--fs-caption)',
+                        minHeight: 'var(--min-touch-target)',
+                        cursor: documentLoadingId === release.releaseId ? 'not-allowed' : 'pointer',
+                        opacity: documentLoadingId === release.releaseId ? 0.6 : 1,
+                      }}
+                    >
+                      {documentLoadingId === release.releaseId ? '불러오는 중...' : '보기'}
+                      <ExternalLink size={14} aria-hidden="true" />
+                    </button>
                   </td>
                   <td style={{ padding: 'var(--spacing-md)' }}>
                     <span

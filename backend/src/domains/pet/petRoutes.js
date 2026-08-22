@@ -142,6 +142,30 @@ const getMediaSchema = z.object({
   }),
 })
 
+/**
+ * [DEV-33, 2026-08-22] AI 초상화 스타일 - `pet_media.portrait_style` DB 컬럼은
+ * 존재하지 않는다(ondam_schema.sql 실측, docs/PRD.md 기획 문서에만 있던 항목).
+ * 그래서 여기서는 실제 DB ENUM을 참조할 수 없고, 프론트에 이미 나가 있는
+ * usePetPortrait.js의 STYLES 키(oil/watercolor/illustration)를 유일한 기존
+ * 소스로 삼아 그대로 맞춘다. 이 프로젝트가 ENUM drift로 크게 고생한 이력이
+ * 있어(2026-08-21 schema-drift-fix) 실제로 존재하지 않는 DB 컬럼값을 임의로
+ * 만들어내지 않는다 - 컬럼이 생기기 전까지 이 값은 큐 페이로드로만 전달된다.
+ */
+const PORTRAIT_STYLES = ['oil', 'watercolor', 'illustration']
+
+const requestPortraitSchema = z.object({
+  params: z.object({
+    petId: z.string().uuid('유효하지 않은 petId입니다'),
+  }),
+  body: z.object({
+    style: z.enum(PORTRAIT_STYLES, {
+      errorMap: () => ({ message: '스타일은 oil, watercolor, illustration 중 하나여야 합니다' }),
+    }).optional().default('oil'),
+    // 어떤 원본 사진으로 만들지 - 생략 시 서비스가 최신 사진으로 대체(하위 호환)
+    mediaId: z.string().uuid('유효하지 않은 mediaId입니다').optional(),
+  }).optional().default({}),
+})
+
 // ---------------------------------------------------------------------------
 // 라우트
 // ---------------------------------------------------------------------------
@@ -156,7 +180,8 @@ router.patch('/:petId/status', validate(updateStatusSchema), petController.updat
 router.delete('/:petId', validate(petIdParam), petController.deletePet)
 
 router.get('/:petId/portrait/status', validate(petIdParam), petController.getPortraitStatus)
-router.post('/:petId/portrait', aiLimiter, validate(petIdParam), petController.requestPortrait)
+router.get('/:petId/portrait/quota', validate(petIdParam), petController.getPortraitQuota)
+router.post('/:petId/portrait', aiLimiter, validate(requestPortraitSchema), petController.requestPortrait)
 
 router.post('/:petId/media', validate(addMediaSchema), petController.addMedia)
 router.get('/:petId/media', validate(getMediaSchema), petController.getMedia)

@@ -131,6 +131,24 @@ export const getPendingReleases = async (req, res, next) => {
   }
 }
 
+// ─── GET /api/admin/releases/:id/document-url ─────────────────────────────────
+// 사망증명서 열람용 presigned URL을 상세 열람 시점에 그때그때 발급한다 (목록 조회
+// 시점에는 발급하지 않음 - 전건 발급은 낭비이고 불필요한 서명 URL을 늘린다)
+
+export const getReleaseDocumentUrl = async (req, res, next) => {
+  try {
+    const { id } = req.params
+    const adminId = req.user.adminId
+    const ipAddress = req.ip ?? req.headers['x-forwarded-for'] ?? null
+    const userAgent = req.headers['user-agent'] ?? null
+
+    const result = await adminService.getReleaseDocumentUrl(adminId, id, { ipAddress, userAgent })
+    return success(res, result, '사망증명서 열람 URL 발급 완료')
+  } catch (err) {
+    next(err)
+  }
+}
+
 // ─── POST /api/admin/releases/:id/approve ─────────────────────────────────────
 
 export const approveRelease = async (req, res, next) => {

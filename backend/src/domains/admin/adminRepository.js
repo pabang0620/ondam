@@ -109,11 +109,18 @@ export const getDashboardStats = async () => {
 
 // ─── will_release_requests ────────────────────────────────────────────────────
 
+// [보안 수정] death_cert_url(영구 버킷 URL)을 목록 응답에 그대로 내려주지 않는다.
+// death_cert_url 컬럼은 presigned URL이 아니라 uploadToS3/multerS3가 반환하는
+// `https://{bucket}.s3.{region}.amazonaws.com/{key}` 영구 위치 URL이다 - 버킷이
+// 비공개면 관리자가 눌러도 403(검수 불가), 공개면 사망증명서가 인터넷에 그대로
+// 노출된다. 목록은 열람 여부 판단에 필요한 메타데이터만 내려주고, 실제 서류
+// 열람은 상세 시점(GET /admin/releases/:id/document-url)에 짧은 만료의 presigned
+// URL을 그때그때 발급한다(전건 발급은 낭비이자 불필요한 서명 URL 확산).
 export const getPendingReleaseRequests = async ({ limit, offset }) => {
   const [rows] = await pool.query(
     `SELECT
        r.id, r.request_id AS releaseId, r.will_id, r.requested_by, r.beneficiary_id,
-       r.death_cert_url AS deathCertificateUrl, r.req_status AS status, r.reviewed_by, r.reviewed_at,
+       r.req_status AS status, r.reviewed_by, r.reviewed_at,
        r.reject_reason, r.created_at, r.updated_at,
        u.email AS requester_email, u.nickname AS requester_nickname
      FROM will_release_requests r

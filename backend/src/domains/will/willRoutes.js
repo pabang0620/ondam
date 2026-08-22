@@ -5,6 +5,7 @@ import { requireAuth } from '../../middleware/auth.js'
 import { validate } from '../../middleware/validate.js'
 import * as willController from './willController.js'
 import { WILL_RELEASE_POLICY, WILL_EVENT_TYPE } from '../../../../shared/constants/enums.js'
+import { multerErrorHandler } from '../common/uploadMiddleware.js'
 
 const router = Router()
 
@@ -14,6 +15,30 @@ const aiLimiter = rateLimit({
   max: 20,                   // 시간당 최대 20회
   keyGenerator: (req) => req.user?.userId ?? req.ip,
   message: { success: false, message: 'AI 처리 요청 한도를 초과했습니다' },
+  standardHeaders: true,
+  legacyHeaders: false,
+})
+
+// 사후 공개 요청 라우트(업로드 + 제출) 전용 - 무인증 경로라 IP+토큰 조합으로 남용 방지 (G9-1)
+const releaseLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1시간
+  max: 10,                   // 토큰 하나당 시간당 최대 10회(업로드 재시도 포함)
+  keyGenerator: (req) => `${req.ip}:${req.params.token ?? ''}`,
+  message: { success: false, message: '요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+})
+
+// [보안 수정] /watch/:token에 rate limiter가 없던 문제(G9-1) 대응. 정보 조회(GET)와
+// 본인 확인(POST verify) 둘 다 여기로 묶는다 - IP+토큰 조합 기준이라 다른 유가족의
+// 정상 접근을 막지 않으면서, 한 토큰에 대한 무차별 대입성 트래픽만 제한한다.
+// 오입력 5회 잠금(Redis, willService)이 1차 방어선이고, 이 limiter는 그 카운터
+// 자체를 소진시키려는 자동화 트래픽을 걸러내는 2차 방어선이다.
+const watchLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15분
+  max: 30,                   // 페이지 새로고침 + 본인 확인 재시도 여유분 포함
+  keyGenerator: (req) => `${req.ip}:${req.params.token ?? ''}`,
+  message: { success: false, message: '요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.' },
   standardHeaders: true,
   legacyHeaders: false,
 })
@@ -96,6 +121,21 @@ const watchTokenSchema = z.object({
   }),
 })
 
+const verifyWatchAccessSchema = z.object({
+  params: z.object({
+    token: z.string().length(64, '유효하지 않은 토큰입니다'),
+  }),
+  body: z.object({
+    phoneLast4: z.string().regex(/^\d{4}$/, '휴대폰 번호 뒤 4자리(숫자 4개)를 입력하세요'),
+  }),
+})
+
+const releaseTokenParamSchema = z.object({
+  params: z.object({
+    token: z.string().length(64, '유효하지 않은 토큰입니다'),
+  }),
+})
+
 // ─── 인증 필요 라우트 ──────────────────────────────────────────────────────────
 
 router.post(
@@ -152,16 +192,41 @@ router.get(
 
 // ─── 비회원 라우트 ─────────────────────────────────────────────────────────────
 
+// 사망증명서 업로드 - 초대 토큰으로 인증(계정 불필요). 토큰 검증 → S3(KMS 암호화) 업로드
+// 순서: releaseLimiter(남용 방지) → validate(토큰 형식) → attachReleaseContext(토큰 실재 확인 +
+// will/beneficiary 스코프 확정, req.releaseContext 주입) → 컨트롤러(그 스코프로만 S3 키 생성)
+router.post(
+  '/release/:token/upload',
+  releaseLimiter,
+  validate(releaseTokenParamSchema),
+  willController.attachReleaseContext,
+  willController.uploadReleaseDocument,
+)
+
 router.post(
   '/release/:token',
+  releaseLimiter,
   validate(requestReleaseSchema),
   willController.requestRelease,
 )
 
+// [보안 수정] 진입 시에는 최소 정보만(영상 URL 없음). 본인 확인 통과 후에만
+// verify 라우트가 영상 URL을 내려준다.
 router.get(
   '/watch/:token',
+  watchLimiter,
   validate(watchTokenSchema),
-  willController.getWatchUrl,
+  willController.getWatchInfo,
 )
+
+router.post(
+  '/watch/:token/verify',
+  watchLimiter,
+  validate(verifyWatchAccessSchema),
+  willController.verifyWatchAccess,
+)
+
+// multer 에러(파일 크기 초과·허용되지 않는 형식 등)를 400으로 정규화
+router.use(multerErrorHandler)
 
 export default router

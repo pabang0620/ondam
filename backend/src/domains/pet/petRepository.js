@@ -301,6 +301,43 @@ export const findLatestAiJob = async (petId) => {
 }
 
 /**
+ * 사용자의 이번 달(KST) AI 초상화 생성 횟수
+ *
+ * [DEV-32] 스키마 변경 없이 기존 ai_jobs만으로 카운트한다 - target_type='pet' +
+ * job_type='photo_enhance' 조합이 반려동물 초상화 생성의 유일한 발생 경로다
+ * (petService.requestPortrait 참조). job_status='failed'는 제외한다 - 생성
+ * 실패는 사용자 귀책이 아니므로 한도에서 소진시키지 않는다. queued/running
+ * 상태는 포함시킨다 - 완료 전에도 자원을 점유한 시도로 보고, 실패로 확정되는
+ * 순간 다음 조회부터 자동으로 카운트에서 빠진다(별도 보정 로직 불필요).
+ * YEAR/MONTH(created_at)는 서버 TZ가 Asia/Seoul로 고정돼 있어(server.js) KST
+ * 기준 월 경계와 일치한다.
+ */
+export const countMonthlyPortraitJobs = async (userId) => {
+  const [[{ cnt }]] = await pool.query(
+    `SELECT COUNT(*) AS cnt FROM ai_jobs
+     WHERE user_id = ? AND target_type = 'pet' AND job_type = 'photo_enhance'
+       AND job_status != 'failed'
+       AND YEAR(created_at) = YEAR(NOW()) AND MONTH(created_at) = MONTH(NOW())
+       AND deleted_at IS NULL`,
+    [userId]
+  )
+  return cnt
+}
+
+/**
+ * 사용자의 전체 기간 AI 초상화 생성 횟수 (무료 티어 평생 1회 체험 한도 판정용)
+ */
+export const countAllTimePortraitJobs = async (userId) => {
+  const [[{ cnt }]] = await pool.query(
+    `SELECT COUNT(*) AS cnt FROM ai_jobs
+     WHERE user_id = ? AND target_type = 'pet' AND job_type = 'photo_enhance'
+       AND job_status != 'failed' AND deleted_at IS NULL`,
+    [userId]
+  )
+  return cnt
+}
+
+/**
  * 펫의 가장 최근 사진 1장 조회
  */
 export const findLatestPhoto = async (petId) => {

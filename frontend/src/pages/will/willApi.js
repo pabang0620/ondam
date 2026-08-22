@@ -29,13 +29,21 @@ export const willApi = {
   getWillStatus: (willId) =>
     apiClient.get(`/will/wills/${willId}/status`),
 
+  // 사망증명서 업로드 (비회원, 초대 토큰 경유 - 계정 불필요)
+  uploadDeathCertificate: (token, formData) =>
+    apiClient.post(`/will/release/${token}/upload`, formData),
+
   // 사후 공개 요청 (비회원)
   submitRelease: (token, data) =>
     apiClient.post(`/will/release/${token}`, data),
 
-  // 유언 영상 조회 (비회원)
-  watchWill: (token) =>
+  // 유언 영상 열람 - 진입 시 최소 정보만 (수신인 이름, 잠금 여부) - 영상 URL 없음
+  getWatchInfo: (token) =>
     apiClient.get(`/will/watch/${token}`),
+
+  // 본인 확인 (휴대폰 뒤 4자리) - 성공 시에만 영상 URL 발급
+  verifyWatchAccess: (token, phoneLast4) =>
+    apiClient.post(`/will/watch/${token}/verify`, { phoneLast4 }),
 
   // 파일 업로드 (오디오)
   uploadAudio: (formData) =>

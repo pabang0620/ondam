@@ -260,6 +260,18 @@ export const findBeneficiaryByToken = async (token) => {
   return rows[0] ?? null
 }
 
+/**
+ * 본인 확인 성공 시각 기록 (스키마에 이미 존재하는 verified_at 컬럼을 채운다)
+ */
+export const updateBeneficiaryVerifiedAt = async (beneficiaryId) => {
+  await pool.execute(
+    `UPDATE will_beneficiaries
+     SET verified_at = NOW(), updated_at = NOW()
+     WHERE beneficiary_id = ? AND deleted_at IS NULL`,
+    [beneficiaryId],
+  )
+}
+
 // ─── will_release_requests ────────────────────────────────────────────────────
 
 export const createReleaseRequest = async ({
@@ -375,6 +387,47 @@ export const findAiJobByTarget = async (targetId) => {
     [targetId],
   )
   return rows[0] ?? null
+}
+
+// ─── audit_logs (열람 본인 확인 - SPEC-05 2절 "잠금·비정상 접근은 audit_logs 기록") ───
+// admin 도메인이 소유한 테이블은 아니지만, adminService.js도 notifications 테이블에
+// 직접 INSERT하는 동일한 관례(도메인 경계를 넘는 공용 테이블은 pool.execute로 직접
+// 기록, 다른 도메인 리포지토리를 import하지 않음)를 따른다.
+//
+// audit_logs.actor_id는 NOT NULL이고 actor_type은 ENUM('user','admin','system')이라
+// "완전한 익명"(토큰 자체가 존재하지 않는 요청)은 기록할 신원이 없어 여기 남기지
+// 않는다 - 그런 요청은 releaseLimiter/watchLimiter의 IP+token 기반 rate limit이
+// 1차 방어선이다. 토큰이 실재해 beneficiary가 특정된 경우(본인확인 성공/실패/잠금)만
+// beneficiary_id를 actor_id로, actor_type='user'로 기록한다(로그인 계정은 아니지만
+// ENUM에 '비회원 접근자'에 대응하는 값이 없어 사람 주체 중 가장 가까운 값을 쓴다).
+export const createAuditLog = async ({
+  logId,
+  actorId,
+  actorType,
+  action,
+  targetType,
+  targetId,
+  ipAddress,
+  userAgent,
+  detail,
+}) => {
+  await pool.execute(
+    `INSERT INTO audit_logs
+       (log_id, actor_id, actor_type, action, target_type, target_id,
+        ip_address, user_agent, detail, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+    [
+      logId,
+      actorId,
+      actorType,
+      action,
+      targetType ?? null,
+      targetId ?? null,
+      ipAddress ?? null,
+      userAgent ?? null,
+      detail ? JSON.stringify(detail) : null,
+    ],
+  )
 }
 
 // ─── 트랜잭션: 유언장 + 수혜자 일괄 생성 ─────────────────────────────────────────

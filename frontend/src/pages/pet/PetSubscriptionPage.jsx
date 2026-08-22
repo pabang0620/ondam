@@ -8,11 +8,15 @@ import { ROUTES } from '../../constants/routes.js'
 import './PetSubscriptionPage.css'
 
 // FIX: HIGH-2 - will_premium(유언장 보관 구독)은 오너 확정에 따라 폐지되었고,
-// 백엔드 subscriptionRoutes.js의 zod enum(['pet_archive', 'all'])에서도 이미 제거됐다.
+// 백엔드 subscriptionRoutes.js의 zod enum(['pet_archive'])에서도 이미 제거됐다.
 // 이 카드가 남아 있으면 사용자가 토스 빌링 인증까지 마친 뒤 400을 받는다.
+//
+// [DEV-32, 2026-08-22 오너 확정] `all`(전체 이용권, 9,900원) 플랜도 동일한
+// 이유로 제거했다 - 어느 기획 문서에도 없는 유령 플랜이었고, 백엔드
+// subscriptionService.js의 PLANS/subscriptionRoutes.js의 zod enum에서도 이미
+// 제거됐다. 펫 아카이브는 티어를 나누지 않고 pet_archive 단일가로 확정한다.
 const PLANS = [
-  { key: 'pet_archive', name: '반려동물 아카이브', price: 4900, desc: '반려동물 추억 무제한 보관 + AI 초상화', highlight: true },
-  { key: 'all', name: '전체 이용권', price: 9900, desc: '모든 기능 무제한 이용', highlight: false },
+  { key: 'pet_archive', name: '반려동물 아카이브', price: 4900, desc: '반려동물 추억 보관 + AI 초상화 월 3장', highlight: true },
 ]
 
 function PlanCard({ plan, isCurrent, isProcessing, isRedirecting, onSubscribe }) {
@@ -158,6 +162,11 @@ export default function PetSubscriptionPage() {
 
   const currentPlanKey = currentSubscription?.plan ?? null
 
+  // [DEV-32] pet_archive 단일 플랜이라 "다른 플랜"이 없다. 이미 pet_archive를
+  // 구독 중이면(레거시 all/will_premium 구독은 예외 - 갈아탈 옵션으로 남겨둔다)
+  // 빈 그리드+의미 없는 "다른 플랜으로 변경" 헤더를 보여주지 않는다.
+  const otherPlans = PLANS.filter((plan) => !(hasActiveSubscription && plan.key === currentPlanKey))
+
   return (
     <main className="pet-subscription-page">
       {/* 뒤로가기 */}
@@ -271,8 +280,8 @@ export default function PetSubscriptionPage() {
         </p>
       )}
 
-      {/* 플랜 목록 */}
-      {!isLoading && (
+      {/* 플랜 목록 - 이미 pet_archive 구독 중이면 갈아탈 다른 플랜이 없어 숨긴다 */}
+      {!isLoading && otherPlans.length > 0 && (
         <>
           {hasActiveSubscription && (
             <h2 style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
@@ -284,7 +293,7 @@ export default function PetSubscriptionPage() {
             className="pet-subscription-plans-grid"
             style={{ paddingTop: hasActiveSubscription ? 0 : 'var(--spacing-md)' }}
           >
-            {PLANS.map((plan) => (
+            {otherPlans.map((plan) => (
               <PlanCard
                 key={plan.key}
                 plan={plan}
@@ -315,6 +324,7 @@ export default function PetSubscriptionPage() {
           <li>구독은 매월 자동 결제됩니다.</li>
           <li>해지 시 당월 이용 기간은 유지됩니다.</li>
           <li>플랜 변경은 다음 결제일부터 적용됩니다.</li>
+          <li>AI 초상화는 매달 3장까지 만들 수 있어요. 다음 달 1일에 다시 채워집니다.</li>
         </ul>
       </section>
 

@@ -1,3 +1,7 @@
+// 2026-08-22 판매 보류 결정으로 라우트에서 제외됨. 되살리려면 라우트만 복구.
+// (결정2: 이벤트 영상 19,900원 상품은 상품 목록에서 제외됨. 이 파일은 삭제하지
+// 않고 보존한다. 되살릴 경우 App.jsx의 WillEventPage 라우트 등록과 routes.js의
+// WILL_EVENT를 복구하면 된다.)
 import { useWillEvent } from './useWillEvent.js'
 import { AlertCircle } from 'lucide-react'
 import './WillEventPage.css'

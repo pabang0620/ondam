@@ -20,16 +20,22 @@ import pool from '../../config/db.js'
  * 구독 플랜 상수
  *
  * [DEV-17, 2026-08-21 오너 확정] 유언장 보관 구독(will_premium, 월 1,900원)은
- * 폐지 - 보관비를 단건 가격에 내재화하기로 했다. 여기서 제거하면 getPlans()
- * 목록·subscribe()의 `if (!PLANS[plan])` 체크·subscriptionRoutes.js의 zod
- * enum 모두에서 신규 가입이 막힌다. 이미 will_premium으로 구독 중인 기존 행은
- * 삭제·강제취소하지 않았으므로, 아래처럼 PLANS에 없는 plan 값을 조회할 수 있는
- * 모든 지점(cancelSubscription/retryPayment/billingWorker)은 이미
+ * 폐지 - 보관비를 단건 가격에 내재화하기로 했다.
+ *
+ * [DEV-32, 2026-08-22 오너 확정] `all`(9,900원, 전체 이용권) 플랜도 폐지한다.
+ * 어느 기획 문서에도 근거가 없는 유령 플랜이었다. 펫 아카이브는 티어를 나누지
+ * 않고 `pet_archive` 4,900원 단일가로 확정한다(영상 편지도 베이직 단일가로
+ * 동일 원칙 적용, 데이터 없이 티어를 나누지 않는다는 일관성).
+ *
+ * 위 두 플랜 모두 여기서 제거하면 getPlans() 목록·subscribe()의
+ * `if (!PLANS[plan])` 체크·subscriptionRoutes.js의 zod enum에서 신규 가입이
+ * 막힌다. 이미 all/will_premium으로 구독 중인 기존 행은 삭제·강제취소하지
+ * 않았으므로, 아래처럼 PLANS에 없는 plan 값을 조회할 수 있는 모든 지점
+ * (cancelSubscription/retryPayment/billingWorker)은 이미
  * `PLANS[plan] ?? 대체값` 폴백을 갖고 있어 죽지 않는다.
  */
 export const PLANS = {
-  pet_archive: { price: 4900, name: '반려동물 스탠다드' },
-  all: { price: 9900, name: '전체' },
+  pet_archive: { price: 4900, name: '반려동물 아카이브' },
 }
 
 /**

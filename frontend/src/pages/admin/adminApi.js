@@ -16,6 +16,11 @@ export const adminApi = {
   getReleases: (page = 1, limit = 20) =>
     adminApiClient.get('/admin/releases', { params: { page, limit } }),
 
+  // 사망증명서 열람 URL - 상세 열람 시점에 그때그때 짧은 만료로 발급받는다
+  // (목록 응답에는 URL이 없다 - 영구 버킷 URL을 그대로 내려주지 않기 위함)
+  getReleaseDocumentUrl: (id) =>
+    adminApiClient.get(`/admin/releases/${id}/document-url`),
+
   approveRelease: (id) =>
     adminApiClient.post(`/admin/releases/${id}/approve`),
 

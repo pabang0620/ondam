@@ -1,3 +1,8 @@
+// 2026-08-22 판매 보류 결정으로 라우트에서 제외됨. 되살리려면 라우트만 복구.
+// (결정2: 죽음과 무관한 축하 이벤트 영상은 "기억을 간직하는 곳" 포지셔닝을
+// 흐리고, 1인 운영에서 핵심 상품도 아직 실환경 검증 전이라는 근거로 상품에서
+// 제외됨. 이 파일 자체는 삭제하지 않고 보존한다. 되살릴 경우 App.jsx의
+// WillEventPage 라우트 등록과 routes.js의 WILL_EVENT를 복구하면 된다.)
 import { useState, useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { willApi } from './willApi.js'

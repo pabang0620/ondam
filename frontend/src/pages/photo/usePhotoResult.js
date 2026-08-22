@@ -47,7 +47,12 @@ function usePhotoResult() {
   }, [orderId])
 
   const rawFile = files.find((f) => f.kind === 'raw')
-  const enhancedFile = files.find((f) => f.kind === 'enhanced')
+  // FIX: 결정1(2026-08-22) - 9,900원 주문 1건은 세트 4종(용도별로 다를 수 있음)을
+  // 반환한다. 기존에는 .find()로 1장만 골라 나머지가 화면에서 사라졌다.
+  const enhancedFiles = files.filter((f) => f.kind === 'enhanced')
+  // SPEC-02 2절: 세트 일부만 실패해도 성공분은 제공한다. 이 경우 order.status는
+  // 'failed'(전액 환불 대상)이지만 enhancedFiles는 1장 이상 존재할 수 있다.
+  const isPartialFailure = order?.status === 'failed' && enhancedFiles.length > 0
 
   const handleDownload = useCallback((fileUrl, fileName) => {
     const a = document.createElement('a')
@@ -59,6 +64,16 @@ function usePhotoResult() {
     a.click()
     document.body.removeChild(a)
   }, [])
+
+  // 전체 저장 - 별도 zip 생성 백엔드 없이, 개별 다운로드를 순차 트리거한다.
+  // 브라우저 다운로드 팝업 차단을 피하려 약간의 간격을 둔다.
+  const handleDownloadAll = useCallback(() => {
+    enhancedFiles.forEach((file, idx) => {
+      setTimeout(() => {
+        handleDownload(file.file_url, `ondam_${file.variantKey ?? idx + 1}.jpg`)
+      }, idx * 400)
+    })
+  }, [enhancedFiles, handleDownload])
 
   const handleRetry = useCallback(async () => {
     if (isRetrying) return
@@ -102,12 +117,14 @@ function usePhotoResult() {
     orderId,
     order,
     rawFile,
-    enhancedFile,
+    enhancedFiles,
+    isPartialFailure,
     isLoading,
     isRetrying,
     error,
     retryError,
     handleDownload,
+    handleDownloadAll,
     handleRetry,
     handleShare,
   }

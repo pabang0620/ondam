@@ -106,6 +106,126 @@
   object-fit: contain;
 }
 
+/* ── 본인 확인 화면 (VerifyStep) ── */
+.will-watch__verify {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+  color: var(--color-warm-accent);
+  text-align: center;
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.will-watch__verify-desc {
+  font-size: var(--fs-body);
+  color: rgba(245, 239, 230, 0.72);
+  line-height: var(--lh-relaxed);
+}
+
+.will-watch__verify-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-sm);
+}
+
+.will-watch__verify-label {
+  font-size: var(--fs-body);
+  color: var(--color-text-on-dark);
+  font-weight: 600;
+}
+
+/* 어르신 UX 규칙: 입력창도 최소 48px 높이 + 16px 이상 폰트. 숫자 4자리라 큰 글자로
+   보이게 letter-spacing을 넉넉히 준다 */
+.will-watch__verify-input {
+  width: 100%;
+  max-width: 220px;
+  min-height: var(--min-touch-target);
+  font-size: 28px;
+  letter-spacing: 12px;
+  text-align: center;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--color-warm-accent);
+  background: rgba(245, 239, 230, 0.06);
+  color: var(--color-text-on-dark);
+  outline: none;
+}
+
+.will-watch__verify-input:focus {
+  border-color: var(--color-warm-accent);
+  box-shadow: 0 0 0 3px rgba(214, 172, 108, 0.25);
+}
+
+.will-watch__verify-error {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  color: var(--color-error-muted);
+  font-size: var(--fs-body);
+  line-height: var(--lh-relaxed);
+}
+
+.will-watch__verify-button {
+  min-height: var(--min-touch-target);
+  min-width: 120px;
+  padding: 0 var(--spacing-xl);
+  border-radius: var(--radius-pill);
+  border: none;
+  background: var(--color-warm-accent);
+  color: #1A1715;
+  font-size: var(--fs-button);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.will-watch__verify-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.will-watch__verify-hint {
+  font-size: var(--fs-caption);
+  color: rgba(245, 239, 230, 0.5);
+  margin-top: var(--spacing-sm);
+}
+
+/* ── 준비 화면 (PrepareStep) - 자동재생 없이 사용자가 직접 눌러야 재생 ── */
+.will-watch__prepare {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+  color: var(--color-warm-accent);
+  text-align: center;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.will-watch__prepare-desc {
+  font-size: var(--fs-body-lg);
+  color: rgba(245, 239, 230, 0.78);
+  line-height: var(--lh-relaxed);
+}
+
+.will-watch__prepare-button {
+  min-height: var(--min-touch-target);
+  min-width: 160px;
+  padding: 0 var(--spacing-xl);
+  margin-top: var(--spacing-sm);
+  border-radius: var(--radius-pill);
+  border: none;
+  background: var(--color-warm-accent);
+  color: #1A1715;
+  font-size: var(--fs-button);
+  font-weight: 700;
+  cursor: pointer;
+}
+
 /* 만료 안내 */
 .will-watch__expire-notice {
   display: flex;

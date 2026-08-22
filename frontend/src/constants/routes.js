@@ -22,6 +22,8 @@ export const ROUTES = {
   WILL_PAYMENT_FAIL: '/will/payment/fail',
   WILL_PROCESSING: '/will/processing/:willId',
   WILL_VAULT: '/will/vault',
+  // 2026-08-22 판매 보류 결정(결정2)으로 App.jsx에 이 라우트가 등록되어 있지
+  // 않다. 상수 자체는 보존(되살릴 때 참조용). 실제 접근 경로 없음.
   WILL_EVENT: '/will/event',
   WILL_RELEASE: '/release/:token',
   WILL_WATCH: '/watch/:token',

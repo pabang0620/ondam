@@ -3,16 +3,15 @@ import { UploadCloud, ImageIcon, Loader2 } from 'lucide-react'
 import usePhotoOrder from './usePhotoOrder.js'
 import './PhotoOrderPage.css'
 
+// FIX: 결정1(2026-08-22) - 사용자는 "용도" 1개만 고른다(SPEC-08 1절 "선택지를
+// 늘리지 않는다"). 용도를 고르면 시스템이 그에 맞는 결과물 세트(4종)를 전부
+// 자동 생성하므로, 화질복원/컬러화/배경제거 등을 개별 처리 옵션처럼 보여주는
+// 탭은 제거했다(이 옵션들은 photo_orders.photo_type ENUM에는 남아있지만
+// usePhotoOrder.js의 PHOTO_TYPE_LABELS도 이미 이 3종만 정의하고 있었다).
 const PHOTO_TYPES = [
-  { type: 'funeral', label: '장례 사진', desc: '고인의 영정 사진을 단정하게 보정합니다' },
-  { type: 'id', label: '증명 사진', desc: '증명사진 규격에 맞게 배경·복장을 정리합니다' },
-  { type: 'job', label: '취업 사진', desc: '취업용 사진을 깔끔하고 전문적으로 만듭니다' },
-  { type: 'enhance', label: '화질 복원', desc: '흐릿하고 손상된 사진을 선명하게 복원합니다' },
-  { type: 'colorize', label: '흑백 컬러', desc: '흑백 사진에 자연스러운 색채를 입혀 드립니다' },
-  { type: 'restore', label: '사진 복원', desc: '긁히거나 낡은 사진을 원본에 가깝게 복원합니다' },
-  { type: 'removebg', label: '배경 제거', desc: '배경을 깔끔하게 제거하고 투명 배경으로 저장합니다' },
-  { type: 'portrait', label: 'AI 초상화', desc: 'AI로 예술적인 인물 초상화를 생성합니다' },
-  { type: 'casual', label: '캐주얼 보정', desc: '자연스럽고 생기있는 일상 사진으로 보정합니다' },
+  { type: 'funeral', label: '장례 사진', desc: '고인의 영정 사진을 단정하게 보정하고, 정장 합성·증명 규격본 등 결과물 4종을 드립니다' },
+  { type: 'id', label: '증명 사진', desc: '증명사진 규격에 맞게 배경·복장을 정리하고, 결과물 4종을 드립니다' },
+  { type: 'job', label: '취업 사진', desc: '취업용 사진을 깔끔하고 전문적으로 만들고, 결과물 4종을 드립니다' },
 ]
 
 function PhotoOrderPage() {
@@ -61,7 +60,7 @@ function PhotoOrderPage() {
           AI 사진관 주문
         </h1>
         <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>
-          사진 종류를 선택하고 원본 사진을 업로드해 주세요.
+          용도를 선택하고 원본 사진을 업로드해 주세요. 사진 1장으로 결과물 4종을 만들어 드려요.
         </p>
       </header>
 

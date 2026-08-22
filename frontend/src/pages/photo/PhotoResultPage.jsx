@@ -1,4 +1,4 @@
-import { Download, RefreshCw, Share2, Loader2, AlertCircle } from 'lucide-react'
+import { Download, RefreshCw, Share2, Loader2, AlertCircle, DownloadCloud } from 'lucide-react'
 import usePhotoResult from './usePhotoResult.js'
 import './PhotoResultPage.css'
 
@@ -38,15 +38,83 @@ function PhotoImage({ src, alt, label }) {
   )
 }
 
+// 결과물 세트 카드 - 각 항목 개별 다운로드 (SPEC-08 3절: "세트 4종 개별 다운로드")
+function ResultSetCard({ file, index, onDownload }) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 'var(--spacing-sm)',
+        background: 'var(--color-surface)',
+        border: '1px solid var(--color-border)',
+        borderRadius: 'var(--radius-card)',
+        padding: 'var(--spacing-md)',
+      }}
+    >
+      <p
+        style={{
+          fontSize: 'var(--fs-body)',
+          fontWeight: 700,
+          color: 'var(--color-text-primary)',
+          textAlign: 'center',
+        }}
+      >
+        {file.variantLabel ?? `결과물 ${index + 1}`}
+      </p>
+      <img
+        src={file.file_url}
+        alt={file.variantLabel ?? `AI 보정 결과물 ${index + 1}`}
+        loading="lazy"
+        onError={(e) => {
+          e.target.onerror = null
+          e.target.style.display = 'none'
+        }}
+        style={{
+          width: '100%',
+          aspectRatio: '3 / 4',
+          objectFit: 'cover',
+          borderRadius: 'var(--radius-card)',
+          border: '1px solid var(--color-border)',
+          background: 'var(--color-bg-alt)',
+        }}
+      />
+      <button
+        onClick={() => onDownload(file.file_url, `ondam_${file.variantKey ?? index + 1}.jpg`)}
+        style={{
+          width: '100%',
+          minHeight: 'var(--min-touch-target)',
+          background: 'var(--color-photo)',
+          color: 'var(--color-text-on-dark)',
+          border: 'none',
+          borderRadius: 'var(--radius-pill)',
+          fontSize: 'var(--fs-body)',
+          fontWeight: 700,
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 'var(--spacing-sm)',
+        }}
+      >
+        <Download size={18} />
+        다운로드
+      </button>
+    </div>
+  )
+}
+
 function PhotoResultPage() {
   const {
     rawFile,
-    enhancedFile,
+    enhancedFiles,
+    isPartialFailure,
     isLoading,
     isRetrying,
     error,
     retryError,
     handleDownload,
+    handleDownloadAll,
     handleRetry,
     handleShare,
   } = usePhotoResult()
@@ -114,9 +182,33 @@ function PhotoResultPage() {
           처리 완료
         </h1>
         <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>
-          AI가 사진을 성공적으로 복원했습니다. 결과물을 확인해 보세요.
+          {enhancedFiles.length > 0
+            ? `AI가 사진을 성공적으로 복원했습니다. 결과물 ${enhancedFiles.length}장을 확인해 보세요.`
+            : 'AI가 사진을 성공적으로 복원했습니다. 결과물을 확인해 보세요.'}
         </p>
       </header>
+
+      {/* 부분 실패 안내 - SPEC-02 2절: 성공분은 제공, 전체는 전액 환불 대상 */}
+      {isPartialFailure && (
+        <section
+          role="alert"
+          style={{
+            background: 'var(--color-error-light)',
+            border: '1px solid var(--color-error)',
+            borderRadius: 'var(--radius-sm)',
+            padding: 'var(--spacing-md)',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: 'var(--spacing-sm)',
+          }}
+        >
+          <AlertCircle size={22} color="var(--color-error)" style={{ flexShrink: 0, marginTop: 2 }} aria-hidden="true" />
+          <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-error)', lineHeight: 'var(--lh-relaxed)' }}>
+            일부 결과물 생성에 실패했어요. 성공한 결과물은 아래에서 그대로 받으실 수 있고,
+            결제하신 금액은 전액 환불해 드립니다. 문의사항은 전화로 연락해 주세요.
+          </p>
+        </section>
+      )}
 
       {/* Before / After */}
       <section aria-label="원본과 보정본 비교">
@@ -125,7 +217,7 @@ function PhotoResultPage() {
         </h2>
         <div className="photo-result__before-after">
           {rawFile ? (
-            <PhotoImage src={rawFile.fileUrl} alt="원본 사진" label="Before" />
+            <PhotoImage src={rawFile.file_url} alt="원본 사진" label="Before" />
           ) : (
             <div
               style={{
@@ -145,8 +237,8 @@ function PhotoResultPage() {
             </div>
           )}
 
-          {enhancedFile ? (
-            <PhotoImage src={enhancedFile.fileUrl} alt="AI 보정된 사진" label="After" />
+          {enhancedFiles[0] ? (
+            <PhotoImage src={enhancedFiles[0].file_url} alt="AI 보정된 사진" label="After" />
           ) : (
             <div
               style={{
@@ -168,6 +260,26 @@ function PhotoResultPage() {
         </div>
       </section>
 
+      {/* 결과물 세트 - SPEC-08 3절: 세트 4종 개별 다운로드 + 전체 저장 */}
+      {enhancedFiles.length > 0 && (
+        <section aria-label="결과물 세트">
+          <h2 style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 700, marginBottom: 20, color: 'var(--color-text-primary)' }}>
+            결과물 세트 ({enhancedFiles.length}장)
+          </h2>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
+              gap: 'var(--spacing-md)',
+            }}
+          >
+            {enhancedFiles.map((file, idx) => (
+              <ResultSetCard key={file.file_id ?? idx} file={file} index={idx} onDownload={handleDownload} />
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* 재처리 에러 */}
       {retryError && (
         <p role="alert" style={{ color: 'var(--color-error)', fontSize: 'var(--fs-body)' }}>
@@ -183,10 +295,10 @@ function PhotoResultPage() {
           gap: 12,
         }}
       >
-        {/* 다운로드 */}
-        {enhancedFile && (
+        {/* 전체 저장 - 항목이 2장 이상일 때만 노출 */}
+        {enhancedFiles.length > 1 && (
           <button
-            onClick={() => handleDownload(enhancedFile.fileUrl, 'ondam_enhanced.jpg')}
+            onClick={handleDownloadAll}
             style={{
               width: '100%',
               height: 'var(--size-button-h)',
@@ -207,14 +319,14 @@ function PhotoResultPage() {
             onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.88' }}
             onMouseLeave={(e) => { e.currentTarget.style.opacity = '1' }}
           >
-            <Download size={22} />
-            보정본 다운로드
+            <DownloadCloud size={22} />
+            전체 저장 ({enhancedFiles.length}장)
           </button>
         )}
 
         {rawFile && (
           <button
-            onClick={() => handleDownload(rawFile.fileUrl, 'ondam_original.jpg')}
+            onClick={() => handleDownload(rawFile.file_url, 'ondam_original.jpg')}
             style={{
               width: '100%',
               height: 'var(--size-button-h)',

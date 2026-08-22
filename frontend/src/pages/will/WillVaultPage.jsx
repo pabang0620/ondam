@@ -96,17 +96,10 @@ export default function WillVaultPage() {
           </ul>
         )}
 
-        {/* 이벤트 영상 추가 버튼 */}
-        {!isLoading && wills.length > 0 && (
-          <button
-            type="button"
-            className="will-vault__event-btn"
-            onClick={() => navigate('/will/event')}
-          >
-            <Plus size={18} aria-hidden="true" />
-            이벤트 추가 영상 만들기 (19,900원)
-          </button>
-        )}
+        {/* 2026-08-22 판매 보류 결정(결정2)으로 이벤트 영상 진입 버튼 제외.
+            /will/event 라우트 자체가 App.jsx에서 비활성화되어 있어 버튼을 남겨두면
+            눌러도 404로 가는 죽은 링크가 된다. 되살리려면 App.jsx 라우트 복구와
+            함께 이 버튼도 복구한다. */}
       </div>
     </div>
   )

@@ -76,7 +76,7 @@ function PhotoPaymentPage() {
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--fs-body)' }}>서비스</span>
-          <span style={{ fontSize: 'var(--fs-body)', fontWeight: 600, color: 'var(--color-text-primary)' }}>AI 사진관 1세트</span>
+          <span style={{ fontSize: 'var(--fs-body)', fontWeight: 600, color: 'var(--color-text-primary)' }}>AI 사진관 1세트 (결과물 4장)</span>
         </div>
 
         <div

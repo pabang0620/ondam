@@ -36,14 +36,16 @@ const publicPlansLimiter = rateLimit({
 
 // 빌링키 발급 + 구독 시작 스키마 (authKey + customerKey 방식)
 // [DEV-17] will_premium(유언장 보관 구독)은 폐지되어 신규 가입 플랜 목록에서
-// 제거했다. 기존 will_premium 구독 행은 그대로 두되(강제취소·삭제 안 함), 이
-// enum을 통해 "새로 이 플랜으로 가입"하는 경로만 막는다.
+// 제거했다. [DEV-32, 2026-08-22 오너 확정] all(전체 이용권, 9,900원)도 동일하게
+// 폐지 - 펫 아카이브는 pet_archive 단일가로 확정한다. 기존 will_premium/all
+// 구독 행은 그대로 두되(강제취소·삭제 안 함), 이 enum을 통해 "새로 이 플랜으로
+// 가입"하는 경로만 막는다.
 const billingAuthSchema = z.object({
   body: z.object({
     authKey: z.string().min(1, 'authKey는 필수입니다'),
     customerKey: z.string().uuid('customerKey는 유효한 UUID여야 합니다'),
-    plan: z.enum(['pet_archive', 'all'], {
-      errorMap: () => ({ message: 'plan은 pet_archive, all 중 하나여야 합니다' }),
+    plan: z.enum(['pet_archive'], {
+      errorMap: () => ({ message: 'plan은 pet_archive여야 합니다' }),
     }),
   }),
 })
@@ -51,8 +53,8 @@ const billingAuthSchema = z.object({
 // 구독 시작 스키마 (POST / - 하위 호환 유지)
 const subscribeSchema = z.object({
   body: z.object({
-    plan: z.enum(['pet_archive', 'all'], {
-      errorMap: () => ({ message: 'plan은 pet_archive, all 중 하나여야 합니다' }),
+    plan: z.enum(['pet_archive'], {
+      errorMap: () => ({ message: 'plan은 pet_archive여야 합니다' }),
     }),
     authKey: z.string().min(1, 'authKey는 필수입니다'),
     customerKey: z.string().uuid('customerKey는 유효한 UUID여야 합니다'),

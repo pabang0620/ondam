@@ -33,7 +33,9 @@ const WillPaymentSuccessPage = lazy(() => import('./pages/will/WillPaymentSucces
 const WillPaymentFailPage = lazy(() => import('./pages/will/WillPaymentFailPage.jsx'))
 const WillProcessingPage = lazy(() => import('./pages/will/WillProcessingPage.jsx'))
 const WillVaultPage = lazy(() => import('./pages/will/WillVaultPage.jsx'))
-const WillEventPage = lazy(() => import('./pages/will/WillEventPage.jsx'))
+// 2026-08-22 판매 보류 결정(결정2)으로 WillEventPage 라우트 제외. 되살리려면
+// 아래 lazy import 복구 + 라우트 등록 복구 + WillVaultPage.jsx 진입 버튼 복구.
+// const WillEventPage = lazy(() => import('./pages/will/WillEventPage.jsx'))
 const WillReleasePage = lazy(() => import('./pages/will/WillReleasePage.jsx'))
 const WillWatchPage = lazy(() => import('./pages/will/WillWatchPage.jsx'))
 const PetPage = lazy(() => import('./pages/pet/PetPage.jsx'))
@@ -114,7 +116,9 @@ export default function App() {
             <Route path={ROUTES.WILL_PAYMENT_FAIL} element={<WillPaymentFailPage />} />
             <Route path={ROUTES.WILL_PROCESSING} element={<WillProcessingPage />} />
             <Route path={ROUTES.WILL_VAULT} element={<WillVaultPage />} />
-            <Route path={ROUTES.WILL_EVENT} element={<WillEventPage />} />
+            {/* 2026-08-22 판매 보류 결정(결정2)으로 이벤트 영상 라우트 제외.
+                되살리려면 위 lazy import 복구 후 이 줄의 주석을 해제한다. */}
+            {/* <Route path={ROUTES.WILL_EVENT} element={<WillEventPage />} /> */}
 
             <Route path={ROUTES.PET} element={<PetPage />} />
             <Route path={ROUTES.PET_SUBSCRIPTION} element={<PetSubscriptionPage />} />

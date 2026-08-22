@@ -86,6 +86,26 @@ export const findPaymentByOrderId = async (tossOrderId) => {
 }
 
 /**
+ * target_type + target_id로 가장 최근 결제 1건 조회 (시스템 자동 환불용 -
+ * paymentService.refundForAiFailure 전용). 사용자 소유권 검증 없이 대상 기준으로만
+ * 찾는다 - 호출자(워커)가 이미 시스템 주체이기 때문.
+ */
+export const findLatestPaymentByTarget = async (targetType, targetId) => {
+  const [rows] = await pool.execute(
+    `SELECT payment_id, user_id, target_type, target_id,
+            toss_payment_key, toss_order_id, amount_krw, status,
+            paid_at, canceled_at, cancel_reason, fail_reason,
+            created_at, updated_at
+     FROM payments
+     WHERE target_type = ? AND target_id = ? AND deleted_at IS NULL
+     ORDER BY created_at DESC
+     LIMIT 1`,
+    [targetType, targetId]
+  )
+  return rows[0] ?? null
+}
+
+/**
  * FOR UPDATE 락을 걸어 toss_order_id로 결제 행 조회 - 트랜잭션 내에서만 사용
  * 동일 orderId에 대한 동시 confirm 요청을 직렬화하기 위한 비관적 락
  * @param {object} conn - pool.getConnection()으로 획득한 커넥션

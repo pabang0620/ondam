@@ -450,6 +450,105 @@ export const cancelPayment = async (userId, paymentId, { cancelReason }) => {
 }
 
 /**
+ * AI 처리 최종 실패 시 시스템 자동 환불 (SPEC-02 2절, DEV-08)
+ * - photoWorker/videoWorker가 ai_jobs 최종 실패(재시도 소진)를 확정한 뒤 호출한다.
+ * - cancelPayment(사용자 셀프 취소)와 달리 호출자 userId 소유권 검증이 없다 - 워커가
+ *   시스템 주체로 호출하기 때문. 대신 target_type/target_id로 결제를 찾는다.
+ * - **중복 환불 가드**: `status='done' AND cancel_reason IS NULL` 조건의 단일 UPDATE로
+ *   원자적 선점(claim)한다 - confirmPayment가 toss_payment_key를 선점 마커로 쓰는 것과
+ *   동일한 아이디어(멱등키 역할). 두 번째 호출은 이미 cancel_reason이 채워져 있어
+ *   WHERE절에 걸리지 않고 affectedRows=0이 되어 자연스럽게 스킵된다. 토스 API를 두 번
+ *   호출할 일이 없다.
+ * - **불확정 결제 방어**: 선점(claim)에 실패했는데 완료(done) 결제 자체가 없다면,
+ *   결제가 아직 확정되지 않은 상태(선점 중/미결제)에서 AI가 실패한 것이다. 이 경우
+ *   토스에 청구된 적이 없으므로 취소 API를 호출하지 않고 그대로 반환한다(청구도
+ *   안 됐는데 "환불했다"고 안내하면 거짓 안내가 된다).
+ * @returns {Promise<{refunded: boolean, reason?: string, payment: object|null}>}
+ */
+export const refundForAiFailure = async (targetType, targetId, { reason }) => {
+  const claimMarker = `[SYSTEM_REFUND_CLAIMED] ${reason ?? 'AI 처리 실패'}`.slice(0, 500)
+
+  const [claimResult] = await pool.execute(
+    `UPDATE payments
+     SET cancel_reason = ?, updated_at = NOW()
+     WHERE target_type = ? AND target_id = ? AND status = 'done' AND cancel_reason IS NULL
+     ORDER BY created_at DESC
+     LIMIT 1`,
+    [claimMarker, targetType, targetId],
+  )
+
+  if (claimResult.affectedRows === 0) {
+    const existing = await paymentRepository.findLatestPaymentByTarget(targetType, targetId)
+    if (!existing || existing.status !== 'done') {
+      // 완료된 결제가 없다 - 선점 중(아직 confirm 전)이거나 애초에 결제가 시작되지
+      // 않은 상태에서 AI가 실패했다는 뜻. 환불할 대상이 없으므로 토스를 호출하지 않는다.
+      return { refunded: false, reason: 'no_completed_payment', payment: existing ?? null }
+    }
+    // done인데 claim에 실패했다면 cancel_reason이 이미 채워져 있다는 뜻 - 직전에
+    // 이 함수(또는 사용자의 셀프 취소)가 이미 처리했거나 처리를 시도한 것이다.
+    return { refunded: false, reason: 'already_processed', payment: existing }
+  }
+
+  const payment = await paymentRepository.findLatestPaymentByTarget(targetType, targetId)
+
+  // ── 토스페이먼츠 취소 API 호출 (cancelPayment와 동일한 엔드포인트 재사용) ──
+  let tossResponse
+  try {
+    const res = await fetch(TOSS_CANCEL_URL(payment.toss_payment_key), {
+      method: 'POST',
+      headers: {
+        Authorization: getTossAuthHeader(),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ cancelReason: reason ?? 'AI 처리 실패로 인한 자동 환불' }),
+      signal: AbortSignal.timeout(TOSS_CONFIRM_TIMEOUT_MS),
+    })
+    tossResponse = await res.json()
+    if (!res.ok) {
+      throw new Error(tossResponse?.message ?? '토스 환불 실패')
+    }
+  } catch (err) {
+    // 환불 실패 - 조용히 삼키지 않는다. payments.status는 실제 청구 상태를 정확히
+    // 반영해야 하므로 'done'을 그대로 둔다(돈이 실제로는 반환되지 않았으므로 임의로
+    // 'canceled'로 바꾸면 거짓 기록이 된다). fail_reason에 사유를 남기고 크게
+    // 로그를 찍어 관리자가 수동 환불하도록 한다. cancel_reason의 claim 마커는
+    // [SYSTEM_REFUND_FAILED]로 갱신해 실패 사실 자체는 남기되, 무한 자동 재시도는
+    // 막는다(다음 자동 호출도 cancel_reason IS NULL 조건에 걸려 스킵된다 - 수동
+    // 개입이 필요한 건이라 자동 재시도 대상이 아니다).
+    const failMsg = err.message ?? '토스 환불 API 오류'
+    await pool.execute(
+      `UPDATE payments SET fail_reason = ?, cancel_reason = ?, updated_at = NOW() WHERE payment_id = ?`,
+      [
+        `자동 환불 실패 (수동 환불 필요): ${failMsg}`.slice(0, 500),
+        `[SYSTEM_REFUND_FAILED] ${reason ?? 'AI 처리 실패'}`.slice(0, 500),
+        payment.payment_id,
+      ],
+    )
+    console.error(
+      '[paymentService] AI 실패 자동 환불 - 토스 취소 API 오류 (수동 환불 필요):',
+      { paymentId: payment.payment_id, targetType, targetId, tossPaymentKey: payment.toss_payment_key, error: failMsg },
+    )
+    return { refunded: false, reason: 'refund_api_failed', payment }
+  }
+
+  const updatedPayment = await paymentRepository.updatePaymentCanceled(payment.payment_id, {
+    cancelReason: reason ?? 'AI 처리 실패로 인한 자동 환불',
+  })
+
+  // target 상태 환원 - cancelPayment와 동일한 기존 함수 재사용 (photo_order→refunded,
+  // will_order→draft). 실패해도 환불 자체는 이미 완료된 상태이므로 로그만 남긴다
+  // (cancelPayment와 동일한 관례).
+  await _revertTargetStatus(targetType, targetId).catch((e) =>
+    console.error(
+      '[paymentService] refundForAiFailure target 상태 환원 실패 - 수동 확인 필요:',
+      { paymentId: payment.payment_id, targetType, targetId, error: e.message },
+    ),
+  )
+
+  return { refunded: true, payment: updatedPayment }
+}
+
+/**
  * 내 결제 목록 조회 (페이지네이션)
  */
 export const getPayments = async (userId, { page = 1, limit = 20 }) => {

@@ -117,6 +117,15 @@ router.get(
   adminController.getPendingReleases,
 )
 
+router.get(
+  '/releases/:id/document-url',
+  requireAuth,
+  requireAdmin,
+  adminApiLimiter,
+  validate(releaseIdSchema),
+  adminController.getReleaseDocumentUrl,
+)
+
 router.post(
   '/releases/:id/approve',
   requireAuth,

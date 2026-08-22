@@ -79,4 +79,8 @@ export const petApi = {
   // AI 초상화 상태 조회
   getPortraitStatus: (petId) =>
     apiClient.get(`/pet/${petId}/portrait/status`),
+
+  // AI 초상화 남은 매수 조회 (구독자 월 3매 / 무료 티어 평생 1회 체험)
+  getPortraitQuota: (petId) =>
+    apiClient.get(`/pet/${petId}/portrait/quota`),
 }

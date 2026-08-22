@@ -6,8 +6,12 @@ import { ROUTES } from '../../constants/routes.js'
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
+// 결정3(2026-08-22): 약관을 게시해도 동의가 선택이면 계약 편입이 다투어질 수
+// 있다는 법무 검토 결과로 terms를 필수 동의로 변경. validateStep2가
+// CONSENT_ITEMS의 required만 보고 검증하므로 이 값만 바꾸면 UI(별표 표시)와
+// 검증 로직에 자동 반영된다.
 const CONSENT_ITEMS = [
-  { type: 'terms', label: '이용약관 동의', required: false },
+  { type: 'terms', label: '이용약관 동의 (필수)', required: true },
   { type: 'privacy', label: '개인정보 수집 및 이용 동의 (필수)', required: true },
   { type: 'marketing', label: '마케팅 정보 수신 동의 (선택)', required: false },
 ]

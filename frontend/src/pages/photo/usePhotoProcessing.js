@@ -30,7 +30,10 @@ function usePhotoProcessing() {
         if (event.status === 'completed') {
           navigate(`/photo/result/${orderId}`)
         } else {
-          setError('사진 처리에 실패했습니다. 다시 시도해 주세요.')
+          // FIX: 결정1(2026-08-22) - 세트 일부만 실패해도 성공한 결과물은 결과
+          // 페이지에서 보여준다(SPEC-02 2절). 전량 실패면 결과 페이지가 자체적으로
+          // "결과를 불러오지 못했습니다" 오류를 보여준다(usePhotoResult.js).
+          navigate(`/photo/result/${orderId}`)
         }
       }
     },
@@ -58,7 +61,10 @@ function usePhotoProcessing() {
           navigate(`/photo/result/${orderId}`)
         } else if (newStatus === 'failed') {
           clearInterval(intervalRef.current)
-          setError('사진 처리에 실패했습니다. 다시 시도해 주세요.')
+          // FIX: 결정1(2026-08-22) - 세트 일부만 실패해도 성공한 결과물은 결과
+          // 페이지에서 보여준다(SPEC-02 2절). 전량 실패면 결과 페이지가 자체적으로
+          // "결과를 불러오지 못했습니다" 오류를 보여준다(usePhotoResult.js).
+          navigate(`/photo/result/${orderId}`)
         }
       } catch (err) {
         if (!isMountedRef.current) return

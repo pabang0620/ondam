@@ -9,13 +9,36 @@ const STYLES = [
 
 export function usePetPortrait(petId) {
   const [media, setMedia] = useState([])
-  const [selectedStyle, setSelectedStyle] = useState(null)
+  // [DEV-33] 아무것도 고르지 않고 진행하는 어르신 사용자를 위해 첫 번째 스타일을
+  // 기본 선택 상태로 시작한다(null이면 버튼이 계속 비활성 상태로 남는다).
+  const [selectedStyle, setSelectedStyle] = useState(STYLES[0].key)
   const [selectedMediaId, setSelectedMediaId] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
   const [mediaError, setMediaError] = useState(null)
   const [isGenerating, setIsGenerating] = useState(false)
   const [generateError, setGenerateError] = useState(null)
   const [result, setResult] = useState(null)
+  // 남은 AI 초상화 매수 (구독자 월 3매 / 무료 티어 평생 1회 체험) - null이면 아직 조회 전
+  const [quota, setQuota] = useState(null)
+  const [quotaError, setQuotaError] = useState(null)
+
+  const fetchQuota = useCallback(async () => {
+    if (!petId) return
+    setQuotaError(null)
+    try {
+      const res = await petApi.getPortraitQuota(petId)
+      if (res.data.success) setQuota(res.data.data)
+    } catch (err) {
+      // 조회 실패 시 매수를 알 수 없으므로 임의로 "생성 가능"으로 단정하지 않는다.
+      // 버튼은 quota가 null이 아닐 때만 남은 매수 기준으로 활성화되므로, 조회
+      // 실패 상태에서는 안내 문구만 노출하고 생성 버튼은 비활성 유지된다.
+      setQuotaError(err?.response?.data?.message ?? '남은 초상화 매수를 불러오지 못했습니다.')
+    }
+  }, [petId])
+
+  useEffect(() => {
+    fetchQuota()
+  }, [fetchQuota])
 
   const fetchMedia = useCallback(async () => {
     if (!petId) return
@@ -23,7 +46,17 @@ export function usePetPortrait(petId) {
     setMediaError(null)
     try {
       const res = await petApi.getPetMedia(petId)
-      if (res.data.success) setMedia(res.data.data ?? [])
+      if (res.data.success) {
+        const list = res.data.data ?? []
+        setMedia(list)
+        // [DEV-33] 사진도 스타일과 마찬가지로 기본 선택을 채워 어르신이 아무것도
+        // 고르지 않고 진행하는 경우를 방지한다. 이미 고른 사진이 있으면 덮어쓰지 않는다.
+        setSelectedMediaId((prev) => {
+          if (prev) return prev
+          const firstPhoto = list.find((m) => m.media_type === 'photo')
+          return firstPhoto?.media_id ?? prev
+        })
+      }
     } catch (err) {
       // FIX: DEV-27 - 조회 실패를 빈 목록으로 조용히 흘려보내지 않는다. 빈 목록은
       // "등록된 사진이 없습니다"로 표시돼 조회 실패를 사용자가 오인하게 된다.
@@ -50,8 +83,9 @@ export function usePetPortrait(petId) {
     setResult(null)
 
     try {
-      // 1단계: 초상화 생성 요청 (백엔드에서 params 불필요)
-      const res = await petApi.createPortrait(petId, {})
+      // 1단계: 초상화 생성 요청 - [DEV-33] 선택한 스타일/사진을 실제로 전송한다.
+      // 이전에는 빈 객체({})만 보내 사용자가 무엇을 골라도 결과에 반영되지 않았다.
+      const res = await petApi.createPortrait(petId, { style: selectedStyle, mediaId: selectedMediaId })
       if (!res.data.success) {
         throw new Error(res.data.message || 'AI 초상화 생성 요청에 실패했습니다.')
       }
@@ -100,9 +134,12 @@ export function usePetPortrait(petId) {
       })
     } catch (err) {
       // FIX: DEV-24 - AI 초상화 생성 실패를 가짜 이미지로 위장하지 않는다
+      // [DEV-32] 실패한 시도는 매수에서 제외되므로(백엔드 petRepository 참조)
+      // 실패 후에도 quota를 다시 불러와 화면의 남은 매수를 최신 상태로 맞춘다.
       setGenerateError(err?.response?.data?.message ?? err?.message ?? 'AI 초상화 생성에 실패했습니다. 잠시 후 다시 시도해 주세요.')
     } finally {
       setIsGenerating(false)
+      fetchQuota()
     }
   }
 
@@ -120,5 +157,7 @@ export function usePetPortrait(petId) {
     generateError,
     result,
     handleGenerate,
+    quota,
+    quotaError,
   }
 }
