@@ -11,9 +11,24 @@ import photoWorker from './workers/photoWorker.js'
 import voiceWorker from './workers/voiceWorker.js'
 import videoWorker from './workers/videoWorker.js'
 import notificationWorker from './workers/notificationWorker.js'
+import willReminderWorker from '../queues/willReminderWorker.js'
+import { registerWillReminderScheduler } from '../queues/willReminderQueue.js'
+import giftReminderWorker from '../queues/giftReminderWorker.js'
+import { registerGiftReminderScheduler } from '../queues/giftReminderQueue.js'
 
 console.error('[ondam-workers] BullMQ 워커 시작됨')
-console.error('[ondam-workers] 활성 큐: photo, voiceClone, videoGenerate, notification')
+console.error('[ondam-workers] 활성 큐: photo, voiceClone, videoGenerate, notification, will-reminder, gift-reminder')
+
+// SPEC-04 미열람 리마인드 반복 스캔 등록 - billingQueue의 scan-due와 동일 패턴.
+// server.js는 다른 에이전트 소유라 여기(워커 전용 프로세스, 상시 구동)에서 등록한다.
+registerWillReminderScheduler().catch((err) => {
+  console.error('[ondam-workers] will-reminder 스케줄러 등록 실패:', err.message)
+})
+
+// SPEC-01 3-3/4-6 선물 미수행 리마인드 반복 스캔 등록 - 위와 동일 패턴
+registerGiftReminderScheduler().catch((err) => {
+  console.error('[ondam-workers] gift-reminder 스케줄러 등록 실패:', err.message)
+})
 
 // ─── Graceful Shutdown ────────────────────────────────────────────────────────
 
@@ -26,6 +41,8 @@ const shutdown = async (signal) => {
       voiceWorker.close(),
       videoWorker.close(),
       notificationWorker.close(),
+      willReminderWorker.close(),
+      giftReminderWorker.close(),
     ])
     console.error('[ondam-workers] 모든 워커 정상 종료')
     process.exit(0)

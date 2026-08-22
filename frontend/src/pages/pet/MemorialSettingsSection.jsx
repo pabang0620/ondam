@@ -27,9 +27,14 @@ const inputStyle = {
 // 함께 내려준다. 따라서 새로고침 이후에도 소유자 본인은 현재 코드를 이 화면에서 다시
 // 확인할 수 있다. 기존의 "저장 후에는 다시 확인할 수 없다" 안내는 사실과 달라졌으므로
 // 문구를 실제 동작에 맞춰 수정했고, 입력란에도 현재 코드를 채워 보여준다.
+// FIX: DEV-16 - 추모 페이지 공개/비공개 토글. 기본값은 항상 비공개(pet.is_public이
+// 없거나 0이면 false)이며, 사용자가 명시적으로 체크해야만 공개로 전환된다(안전 기본값
+// - SPEC-03, 마이그레이션 b README 3절과 동일한 원칙). 공개로 켜면 접근 코드 없이도
+// 누구나 볼 수 있다는 점을 쉬운 말로 안내한다(어르신 UX).
 export default function MemorialSettingsSection({ pet, isSaving, saveError, onSave }) {
   const [slug, setSlug] = useState(pet.memorial_slug || pet.pet_id)
   const [code, setCode] = useState(pet.memorial_access_code || generateAccessCode())
+  const [isPublic, setIsPublic] = useState(Boolean(pet.is_public))
   const [savedCode, setSavedCode] = useState(null)
   const [copied, setCopied] = useState(false)
 
@@ -39,7 +44,7 @@ export default function MemorialSettingsSection({ pet, isSaving, saveError, onSa
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!canSave || isSaving) return
-    const ok = await onSave({ memorialSlug: slug.trim(), memorialAccessCode: trimmedCode })
+    const ok = await onSave({ memorialSlug: slug.trim(), memorialAccessCode: trimmedCode, isPublic })
     if (ok) {
       setSavedCode(trimmedCode)
       setCopied(false)
@@ -83,6 +88,39 @@ export default function MemorialSettingsSection({ pet, isSaving, saveError, onSa
       </div>
 
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: 'var(--spacing-sm)',
+            padding: 'var(--spacing-md)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 'var(--radius-sm)',
+            background: 'var(--color-bg-subtle, var(--color-surface))',
+          }}
+        >
+          <input
+            id="memorial-is-public"
+            type="checkbox"
+            checked={isPublic}
+            onChange={(e) => setIsPublic(e.target.checked)}
+            style={{ width: 24, height: 24, minWidth: 24, marginTop: 2, cursor: 'pointer' }}
+            aria-describedby="memorial-is-public-help"
+          />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <label
+              htmlFor="memorial-is-public"
+              style={{ fontSize: 'var(--fs-body)', fontWeight: 700, color: 'var(--color-text-primary)', cursor: 'pointer' }}
+            >
+              추모 페이지 공개하기
+            </label>
+            <p id="memorial-is-public-help" style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
+              공개하면 링크를 아는 누구나 접근 코드 없이 볼 수 있어요. 체크하지 않으면
+              기본값인 비공개로 유지되고, 아래 접근 코드를 아는 가족만 볼 수 있어요.
+            </p>
+          </div>
+        </div>
+
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
           <label htmlFor="memorial-slug" style={{ fontSize: 'var(--fs-body)', fontWeight: 600, color: 'var(--color-text-primary)' }}>
             추모 페이지 주소
@@ -143,6 +181,7 @@ export default function MemorialSettingsSection({ pet, isSaving, saveError, onSa
           <p id="memorial-code-help" style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-muted)' }}>
             숫자 6자리를 추천해요. 가족에게 전화로 알려주기 쉬워요. 지금 설정된 코드는 이 화면에서 언제든 다시
             확인할 수 있으니, 잊어버리셔도 걱정하지 않으셔도 됩니다.
+            {isPublic && ' (지금은 공개로 설정되어 있어 이 코드는 사용되지 않아요. 나중에 비공개로 바꾸면 다시 필요해요.)'}
           </p>
         </div>
 

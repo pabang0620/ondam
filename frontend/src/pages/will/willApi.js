@@ -45,6 +45,10 @@ export const willApi = {
   verifyWatchAccess: (token, phoneLast4) =>
     apiClient.post(`/will/watch/${token}/verify`, { phoneLast4 }),
 
+  // 열람 링크 연장 요청 (만료 후 재발급, SPEC-05 3절)
+  requestWatchExtension: (token) =>
+    apiClient.post(`/will/watch/${token}/extend`),
+
   // 파일 업로드 (오디오)
   uploadAudio: (formData) =>
     apiClient.post('/uploads/audio', formData),

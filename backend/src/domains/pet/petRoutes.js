@@ -86,6 +86,9 @@ const updatePetSchema = z.object({
       .max(50)
       .optional()
       .nullable(),
+    // 추모 페이지 공개 여부 (SPEC-03, DEV-16) - true면 접근 코드 없이 공개.
+    // 기본값(생략 시)은 DB DEFAULT 0(비공개) 그대로 유지 - 안전 기본값.
+    isPublic: z.boolean().optional(),
   }),
 })
 

@@ -25,6 +25,7 @@ import subscriptionRoutes from './domains/subscription/subscriptionRoutes.js'
 import notificationRoutes from './domains/notification/notificationRoutes.js'
 import adminRoutes from './domains/admin/adminRoutes.js'
 import uploadRoutes from './domains/common/uploadRoutes.js'
+import giftRoutes from './domains/gift/giftRoutes.js'
 import './queues/billingWorker.js'
 import './jobs/workers/notificationWorker.js'
 import { registerBillingScanDueScheduler } from './queues/billingQueue.js'
@@ -126,6 +127,7 @@ app.use('/api/subscriptions', subscriptionRoutes)
 app.use('/api/notifications', notificationRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/uploads', uploadRoutes)
+app.use('/api/gifts', giftRoutes)
 
 // 헬스체크
 app.get('/api/health', (req, res) => {

@@ -52,6 +52,36 @@ export const getPresignedUrl = async (s3Key, expiresInSeconds) => {
 }
 
 /**
+ * S3 객체의 서명된 "다운로드"(첨부) URL 생성 - SPEC-05 2절 4번(원본 다운로드 제공).
+ * getPresignedUrl과 달리 응답에 Content-Disposition: attachment를 실어 브라우저가
+ * 새 탭에서 재생하는 대신 파일로 저장하도록 강제한다. 기존 getPresignedUrl의
+ * 시그니처·동작은 건드리지 않는다(재생용 인라인 URL은 그대로 유지).
+ *
+ * downloadFilename은 사람이 알아볼 수 있는 이름(예: "마지막영상편지_홍길동.mp4")을
+ * 그대로 넘기면 된다 - RFC 6266/5987에 따라 filename*=UTF-8''(퍼센트 인코딩)으로
+ * 실어 한글이 깨지지 않게 하고, 구형 브라우저를 위한 ASCII 전용 filename= 폴백도
+ * 함께 넣는다(한글이 포함된 문자열을 그대로 quoted-string에 넣으면 헤더가 깨진다).
+ *
+ * @param {string} s3Key
+ * @param {number} expiresInSeconds
+ * @param {string} [downloadFilename] - 사람이 읽을 다운로드 파일명(확장자 포함)
+ * @returns {Promise<string>} 서명된 다운로드 URL
+ */
+export const getPresignedDownloadUrl = async (s3Key, expiresInSeconds, downloadFilename) => {
+  const asciiFallback = 'ondam_video.mp4'
+  const contentDisposition = downloadFilename
+    ? `attachment; filename="${asciiFallback}"; filename*=UTF-8''${encodeURIComponent(downloadFilename)}`
+    : 'attachment'
+
+  const command = new GetObjectCommand({
+    Bucket: getS3Bucket(),
+    Key: s3Key,
+    ResponseContentDisposition: contentDisposition,
+  })
+  return getSignedUrl(s3Client, command, { expiresIn: expiresInSeconds })
+}
+
+/**
  * S3 오브젝트를 Buffer로 다운로드
  * @param {string} s3Key
  * @returns {Promise<Buffer>}

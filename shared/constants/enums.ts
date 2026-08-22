@@ -2,7 +2,9 @@
 // 온담(ondam) ENUM SSOT (타입 전용)
 // DB 스키마(ondam_schema.sql)와 반드시 동기화 유지
 // Created: 2026-04-19
-// Last synced with DB: 2026-08-21 (drift fix - see docs/migrations/2026-08-21-schema-drift-fix.README.md)
+// Last synced with DB: 2026-08-22 (migrations a/b/c integrated into ondam_schema.sql +
+// gift domain, audit_logs anonymous actor, notification_type expansion - see
+// docs/migrations/ READMEs and ondam_schema.sql migration history log at file end)
 //
 // 주의(2026-08-21 DEV-22): 백엔드는 빌드 스텝 없는 Node.js ESM이라 이 .ts 파일을
 // 런타임에 import할 수 없다. 런타임 SSOT는 같은 디렉토리의 enums.js다.
@@ -134,6 +136,7 @@ export const PAYMENT_TARGET_TYPE = [
   'photo_order',
   'will_order',
   'subscription',
+  'gift_order',
 ] as const
 export type PaymentTargetType = typeof PAYMENT_TARGET_TYPE[number]
 
@@ -185,6 +188,25 @@ export const AI_JOB_TARGET_TYPE = [
 export type AiJobTargetType = typeof AI_JOB_TARGET_TYPE[number]
 
 // --------------------------------------------------------------------------
+// 선물하기 (SPEC-01) - 자녀 결제 → 부모(무계정) 수행
+// --------------------------------------------------------------------------
+
+export const GIFT_PRODUCT_TYPE = ['photo', 'will'] as const
+export type GiftProductType = typeof GIFT_PRODUCT_TYPE[number]
+
+export const GIFT_STATUS = [
+  'paid',
+  'link_sent',
+  'opened',
+  'in_progress',
+  'completed',
+  'declined',
+  'refunded',
+  'expired',
+] as const
+export type GiftStatus = typeof GIFT_STATUS[number]
+
+// --------------------------------------------------------------------------
 // 알림
 // --------------------------------------------------------------------------
 
@@ -196,10 +218,15 @@ export const NOTIFICATION_TYPE = [
   'will_released',
   'payment_done',
   'payment_failed',
+  'payment_pending',
   'subscription_renewed',
   'subscription_canceled',
   'pet_memorial_shared',
   'admin_notice',
+  'gift_link_sent',
+  'gift_completed',
+  'gift_declined',
+  'ai_processing_refunded',
 ] as const
 export type NotificationType = typeof NOTIFICATION_TYPE[number]
 
@@ -211,6 +238,7 @@ export const NOTIFICATION_TARGET_TYPE = [
   'subscription',
   'pet',
   'avatar_session',
+  'gift_order',
 ] as const
 export type NotificationTargetType = typeof NOTIFICATION_TARGET_TYPE[number]
 
@@ -224,5 +252,6 @@ export type ChangedByType = typeof CHANGED_BY_TYPE[number]
 export const ADMIN_ROLE = ['super', 'manager', 'reviewer'] as const
 export type AdminRole = typeof ADMIN_ROLE[number]
 
-export const ACTOR_TYPE = ['user', 'admin', 'system'] as const
+// audit_logs 전용 - 'anonymous'는 인증 전 행위(로그인 실패 등), actor_id NULL과 짝을 이룸
+export const ACTOR_TYPE = ['user', 'admin', 'system', 'anonymous'] as const
 export type ActorType = typeof ACTOR_TYPE[number]

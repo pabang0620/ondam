@@ -7,6 +7,7 @@ import { downloadFromS3, uploadToS3, extractS3KeyFromUrl } from '../../utils/s3.
 import { getIo } from '../../config/socket.js'
 import { buildResultSet } from '../../domains/photo/photoResultSet.js'
 import * as paymentService from '../../domains/payment/paymentService.js'
+import { refundGiftFallback } from '../../domains/gift/giftShared.js'
 
 const QUEUE_NAME = 'photo'
 const AI_MOCK = process.env.AI_MOCK === 'true'
@@ -49,11 +50,13 @@ const updatePhotoOrder = async (orderId, fields) => {
 
 // photo_files.mime_type/file_size는 NOT NULL(기본값 없음) - 누락 시 INSERT가 항상
 // 실패해 AI 처리 성공 후 결과 저장이 깨진다. photoRepository.savePhotoFile과 동일하게 채운다.
-const insertPhotoFile = async ({ fileId, orderId, kind, fileUrl, s3Key, mimeType, fileSize }) => {
+// [2026-08-22 컷오버] variant 컬럼 신설(마이그레이션 c) - s3_key 파일명 접미사 우회를
+// 걷어내고 컬럼에 직접 기록한다. raw(원본) 기록 경로는 variant 개념이 없으므로 null.
+const insertPhotoFile = async ({ fileId, orderId, kind, variant, fileUrl, s3Key, mimeType, fileSize }) => {
   await pool.execute(
-    `INSERT INTO photo_files (file_id, order_id, kind, file_url, s3_key, mime_type, file_size, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
-    [fileId, orderId, kind, fileUrl, s3Key, mimeType, fileSize],
+    `INSERT INTO photo_files (file_id, order_id, kind, variant, file_url, s3_key, mime_type, file_size, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+    [fileId, orderId, kind, variant ?? null, fileUrl, s3Key, mimeType, fileSize],
   )
 }
 
@@ -101,15 +104,36 @@ const finalizeOrderFailure = async ({ orderId, userId, failReason }) => {
       return { refunded: false, reason: 'refund_call_threw' }
     })
 
-  const message = refundResult.refunded
+  // [마감 공백 처리] photo_order 경로에서 결제를 못 찾았다면(no_completed_payment)
+  // 선물로 결제된 콘텐츠일 수 있다 - gift 역조회로 환불을 재시도한다(완료 보고 2절).
+  // 자녀가 선물했는데 AI가 실패하면 지금까지는 환불이 전혀 나가지 않았다.
+  let effectiveRefund = refundResult
+  if (refundResult.reason === 'no_completed_payment') {
+    const giftFallback = await refundGiftFallback({
+      productType: 'photo',
+      contentId: orderId,
+      reason: `AI 처리 실패: ${failReason}`,
+    }).catch((err) => {
+      console.error('[photoWorker] gift 환불 역조회 실패:', orderId, err.message)
+      return null
+    })
+    if (giftFallback?.refundResult?.refunded) {
+      effectiveRefund = giftFallback.refundResult
+    }
+  }
+
+  const message = effectiveRefund.refunded
     ? '죄송합니다. 사진 처리에 실패해 결제하신 금액을 전액 환불해 드렸어요. 카드사에 따라 환불 반영까지 며칠 걸릴 수 있어요. 다시 시도해 보시겠어요?'
-    : refundResult.reason === 'no_completed_payment'
+    : effectiveRefund.reason === 'no_completed_payment'
       ? '사진 처리에 실패했습니다. 결제된 내역이 없어 별도 환불 없이 종료돼요. 다시 시도해 보시겠어요?'
       : '죄송합니다. 사진 처리에 실패했고, 환불 처리 중 문제가 발생했습니다. 저희가 곧 확인해서 환불해 드릴게요. 급하시면 고객센터로 연락해 주세요.'
 
+  // [2026-08-22 컷오버] AI 실패 자동 환불 통지는 payment_failed(결제 자체 실패)를
+  // 의미상 오용해 왔다. 마이그레이션 c로 notifications.notification_type ENUM에
+  // 전용 값 'ai_processing_refunded'가 추가되어 이제 정확한 타입으로 기록한다.
   await insertNotification({
     userId,
-    type: 'payment_failed',
+    type: 'ai_processing_refunded',
     targetType: 'photo_order',
     referenceId: orderId,
     title: '사진 처리 실패 안내',
@@ -211,6 +235,7 @@ const ensureRawFileRecorded = async ({ orderId, s3Key, sourceFileSize }) => {
     fileId: uuidv4(),
     orderId,
     kind: 'raw',
+    variant: null, // 원본에는 세트 변형 개념이 없다 (3-2절 참고)
     fileUrl: `https://${process.env.S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${s3Key}`,
     s3Key,
     mimeType: 'image/jpeg',
@@ -245,6 +270,7 @@ const runVariantWithRetry = async ({ variant, genai, Modality, base64, orderId, 
         fileId: uuidv4(),
         orderId,
         kind: 'enhanced',
+        variant: variant.key,
         fileUrl: resultUrl,
         s3Key: resultS3Key,
         mimeType: 'image/jpeg',

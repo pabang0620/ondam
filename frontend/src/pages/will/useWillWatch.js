@@ -1,14 +1,15 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { willApi } from './willApi.js'
 
 // 화면 단계 - SPEC-05 2절 순서를 그대로 따른다
 // info(진입 정보 로딩) → verify(본인 확인 입력) → prepare(마음의 준비 화면) → playing(재생)
-// locked/error는 각 단계에서 벗어나는 예외 경로
+// locked/expired/error는 각 단계에서 벗어나는 예외 경로
 const PHASE = {
   LOADING: 'loading',
   VERIFY: 'verify',
   LOCKED: 'locked',
+  EXPIRED: 'expired', // SPEC-05 3절 - 열람 링크(90일) 만료, 연장 요청 가능
   PREPARE: 'prepare',
   PLAYING: 'playing',
   ERROR: 'error',
@@ -16,6 +17,7 @@ const PHASE = {
 
 export function useWillWatch() {
   const { token } = useParams()
+  const navigate = useNavigate()
   const [phase, setPhase] = useState(PHASE.LOADING)
   const [beneficiaryName, setBeneficiaryName] = useState('')
   const [willTitle, setWillTitle] = useState('')
@@ -23,6 +25,8 @@ export function useWillWatch() {
   const [fetchError, setFetchError] = useState(null)
   const [verifyError, setVerifyError] = useState(null)
   const [isVerifying, setIsVerifying] = useState(false)
+  const [isExtending, setIsExtending] = useState(false)
+  const [extendError, setExtendError] = useState(null)
 
   useEffect(() => {
     if (!token) return
@@ -37,7 +41,9 @@ export function useWillWatch() {
         const info = data.data
         setBeneficiaryName(info?.beneficiaryName ?? '')
         setWillTitle(info?.willTitle ?? '')
-        if (info?.locked) {
+        if (info?.expired) {
+          setPhase(PHASE.EXPIRED)
+        } else if (info?.locked) {
           setPhase(PHASE.LOCKED)
         } else {
           setPhase(PHASE.VERIFY)
@@ -69,6 +75,9 @@ export function useWillWatch() {
       if (status === 423) {
         setPhase(PHASE.LOCKED)
         setVerifyError(message ?? '본인 확인 시도 횟수를 초과했습니다. 고객센터로 문의해 주세요.')
+      } else if (status === 410) {
+        // 정보 조회 이후 만료된 경우(defense in depth) - 만료 화면으로 전환
+        setPhase(PHASE.EXPIRED)
       } else {
         setVerifyError(message ?? '휴대폰 번호 뒤 4자리를 다시 확인해 주세요.')
       }
@@ -82,6 +91,27 @@ export function useWillWatch() {
     setPhase(PHASE.PLAYING)
   }, [])
 
+  // 만료 화면의 "연장 요청하기" 버튼 - 새 토큰을 발급받아 그 페이지로 바로 이동시킨다
+  // (SPEC-05 3절, 재발급마다 구토큰 무효화는 서버가 처리)
+  const requestExtension = useCallback(async () => {
+    if (!token || isExtending) return
+    setIsExtending(true)
+    setExtendError(null)
+    try {
+      const { data } = await willApi.requestWatchExtension(token)
+      const newToken = data?.data?.token
+      if (newToken) {
+        navigate(`/watch/${newToken}`, { replace: true })
+      } else {
+        setExtendError('링크 연장에 실패했습니다. 잠시 후 다시 시도해 주세요.')
+      }
+    } catch (err) {
+      setExtendError(err?.response?.data?.message ?? '링크 연장 요청에 실패했습니다. 잠시 후 다시 시도해 주세요.')
+    } finally {
+      setIsExtending(false)
+    }
+  }, [token, isExtending, navigate])
+
   return {
     phase,
     beneficiaryName,
@@ -90,8 +120,11 @@ export function useWillWatch() {
     fetchError,
     verifyError,
     isVerifying,
+    isExtending,
+    extendError,
     submitVerification,
     startPlayback,
+    requestExtension,
   }
 }
 

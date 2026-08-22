@@ -12,27 +12,26 @@ import { usePet } from './usePet.js'
 import { ROUTES } from '../../constants/routes.js'
 import './PetPage.css'
 
+// [정합성 수정, 2026-08-22] 펫 구독은 pet_archive 단일 플랜(4,900원)으로 확정됐다.
+// 정본: PetSubscriptionPage.jsx + backend subscriptionService.js의 PLANS.
+// 이전 3티어(무료/스탠다드 4,900/프리미엄 9,900) 표기는 백엔드 zod enum(['pet_archive'])이
+// 이미 거부하는 죽은 동선이었다.
 const PLANS = [
   {
     key: 'free',
     label: '무료',
     price: '0원',
-    features: ['반려동물 1마리 등록', '사진 10장 보관', '기본 프로필 페이지'],
+    features: ['반려동물 사진 보관', 'AI 초상화 평생 1회 체험', '기본 프로필 페이지'],
     highlight: false,
+    selectable: false,
   },
   {
-    key: 'standard',
-    label: '스탠다드',
+    key: 'pet_archive',
+    label: '반려동물 아카이브',
     price: '4,900원/월',
-    features: ['반려동물 3마리', '사진 100장 보관', 'AI 초상화 1회', '추모 페이지 공개'],
+    features: ['반려동물 사진 무제한 보관', 'AI 초상화 월 3장', '추모 페이지 공개'],
     highlight: true,
-  },
-  {
-    key: 'premium',
-    label: '프리미엄',
-    price: '9,900원/월',
-    features: ['무제한 반려동물', '사진 무제한', 'AI 초상화 무제한', '추모 페이지 공개', '전용 슬러그'],
-    highlight: false,
+    selectable: true,
   },
 ]
 
@@ -66,13 +65,17 @@ function PlanCard({ plan, onSelect }) {
           <li key={f}>{f}</li>
         ))}
       </ul>
-      <button
-        className={`pet-plan-card__btn${plan.highlight ? ' pet-plan-card__btn--primary' : ''}`}
-        onClick={() => onSelect(plan.key)}
-        aria-label={`${plan.label} 플랜 선택`}
-      >
-        선택하기
-      </button>
+      {plan.selectable ? (
+        <button
+          className={`pet-plan-card__btn${plan.highlight ? ' pet-plan-card__btn--primary' : ''}`}
+          onClick={() => onSelect(plan.key)}
+          aria-label={`${plan.label} 플랜 선택`}
+        >
+          구독하기
+        </button>
+      ) : (
+        <p className="pet-plan-card__note">가입 시 자동으로 적용돼요</p>
+      )}
     </div>
   )
 }

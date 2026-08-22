@@ -39,9 +39,19 @@ export const ROUTES = {
 
   MY: '/my',
 
+  GIFT_NEW: '/gift/new',
+  GIFT_PAYMENT: '/gift/payment',
+  GIFT_PAYMENT_SUCCESS: '/gift/payment/success',
+  GIFT_PAYMENT_FAIL: '/gift/payment/fail',
+  GIFT_MINE: '/gift/mine',
+  GIFT_PERFORM: '/gift/perform/:token',
+  GIFT_PERFORM_PHOTO: '/gift/perform/:token/photo',
+  GIFT_PERFORM_WILL: '/gift/perform/:token/will',
+
   ADMIN_LOGIN: '/admin/login',
   ADMIN: '/admin',
   ADMIN_RELEASE: '/admin/release',
   ADMIN_ORDERS: '/admin/orders',
   ADMIN_USERS: '/admin/users',
+  ADMIN_AD_SPEND: '/admin/ad-spend',
 }

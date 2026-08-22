@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from 'uuid'
 import pool from '../../config/db.js'
 
 // ─── users (음성권 동의 확인 전용) ───────────────────────────────────────────────
@@ -100,6 +101,21 @@ export const findUserProfileImageUrl = async (userId) => {
     [userId],
   )
   return rows[0]?.profile_image_url ?? null
+}
+
+/**
+ * 유언장 작성자(=영상 속 고인)의 닉네임 조회 - 다운로드 파일명 표시용
+ * (SPEC-05 2절 4번). users 테이블에 실명 컬럼이 없어(nickname만 존재) 이를
+ * "고인 이름" 대용으로 쓴다.
+ * @param {string} userId
+ * @returns {Promise<string|null>} nickname
+ */
+export const findUserNicknameById = async (userId) => {
+  const [rows] = await pool.execute(
+    `SELECT nickname FROM users WHERE user_id = ? AND deleted_at IS NULL LIMIT 1`,
+    [userId],
+  )
+  return rows[0]?.nickname ?? null
 }
 
 // ─── wills ────────────────────────────────────────────────────────────────────
@@ -270,6 +286,88 @@ export const updateBeneficiaryVerifiedAt = async (beneficiaryId) => {
      WHERE beneficiary_id = ? AND deleted_at IS NULL`,
     [beneficiaryId],
   )
+}
+
+/**
+ * 열람 기록 (SPEC-05 2절, 마이그레이션 c README 4절 1번 지침)
+ * video_watched_at은 COALESCE로 최초 1회만 설정, watch_count는 호출마다 +1.
+ * issueWatchVideoUrl(본인 확인 통과 후 영상 URL 발급 시점)에서만 호출한다.
+ */
+export const recordWatch = async (beneficiaryId) => {
+  await pool.execute(
+    `UPDATE will_beneficiaries
+     SET video_watched_at = COALESCE(video_watched_at, NOW()),
+         watch_count = watch_count + 1,
+         updated_at = NOW()
+     WHERE beneficiary_id = ? AND deleted_at IS NULL`,
+    [beneficiaryId],
+  )
+}
+
+/**
+ * 열람 링크(초대 토큰) 연장 재발급 (SPEC-05 3절) - 구토큰을 새 토큰으로 교체하고
+ * 만료 시각을 갱신한다. "구토큰 무효화"는 별도 컬럼 없이 invite_token 자체를
+ * 교체하는 것으로 구현한다 - 이전 토큰으로는 findBeneficiaryByToken이 더 이상
+ * 조회되지 않으므로 즉시 무효화된다.
+ */
+export const extendBeneficiaryToken = async (beneficiaryId, { newToken, tokenExpiresAt }) => {
+  await pool.execute(
+    `UPDATE will_beneficiaries
+     SET invite_token = ?, token_expires_at = ?, updated_at = NOW()
+     WHERE beneficiary_id = ? AND deleted_at IS NULL`,
+    [newToken, tokenExpiresAt, beneficiaryId],
+  )
+}
+
+/**
+ * SPEC-04 미열람 리마인드 - 만료 임박(withinDays 이내) + 미열람 수신인을 PK 커서로
+ * 배치 스캔한다. LIMIT/OFFSET 페이지네이션은 스캔 도중 다른 행이 삽입/삭제되면
+ * 대상이 밀리며 누락·중복 발송될 수 있어 쓰지 않는다(backend-patterns 컨벤션) -
+ * will_beneficiaries.id(내부 AUTO_INCREMENT PK, 외부 노출 없음)로 커서를 이동한다.
+ * idx_will_beneficiaries_expiry_watch(token_expires_at, video_watched_at) 활용 대상.
+ */
+export const findReminderCandidatesBatch = async ({ cursorId, withinDays, batchSize }) => {
+  const [rows] = await pool.execute(
+    `SELECT id, beneficiary_id, will_id, name, phone, invite_token, token_expires_at
+     FROM will_beneficiaries
+     WHERE id > ?
+       AND token_expires_at IS NOT NULL
+       AND token_expires_at > NOW()
+       AND token_expires_at <= DATE_ADD(NOW(), INTERVAL ? DAY)
+       AND video_watched_at IS NULL
+       AND deleted_at IS NULL
+     ORDER BY id ASC
+     LIMIT ?`,
+    [cursorId, withinDays, batchSize],
+  )
+  return rows
+}
+
+/**
+ * 리마인드 1회 제한 판정 (SPEC-04 5절 "만료 임박 통지는 1회로 제한") - 스키마에
+ * 별도 reminded_at 컬럼을 추가하지 않고, 이미 존재하는 audit_logs를 발송 이력
+ * 대장으로 재사용한다(action='will_watch_reminder_sent').
+ */
+export const hasReminderBeenSent = async (beneficiaryId) => {
+  const [rows] = await pool.execute(
+    `SELECT 1 FROM audit_logs
+     WHERE target_type = 'will_beneficiary' AND target_id = ? AND action = 'will_watch_reminder_sent'
+     LIMIT 1`,
+    [beneficiaryId],
+  )
+  return rows.length > 0
+}
+
+export const recordReminderSent = async (beneficiaryId, willId) => {
+  await createAuditLog({
+    logId: uuidv4(),
+    actorId: beneficiaryId,
+    actorType: 'system',
+    action: 'will_watch_reminder_sent',
+    targetType: 'will_beneficiary',
+    targetId: beneficiaryId,
+    detail: { willId },
+  })
 }
 
 // ─── will_release_requests ────────────────────────────────────────────────────

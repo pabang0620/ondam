@@ -235,6 +235,16 @@
   border-color: var(--color-primary);
 }
 
+.pet-plan-card__note {
+  font-size: var(--font-size-base);
+  color: var(--color-text-muted);
+  text-align: center;
+  min-height: var(--min-touch-target);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* Pet list */
 .pet-list-header {
   display: flex;

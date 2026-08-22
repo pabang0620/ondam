@@ -10,6 +10,7 @@ import { getLipsyncAdapter } from '../../services/lipsync/index.js'
 import { pollUntilComplete, assertAllowedHost } from '../../services/lipsync/pollHelper.js'
 import * as paymentService from '../../domains/payment/paymentService.js'
 import * as willRepository from '../../domains/will/willRepository.js'
+import { refundGiftFallback } from '../../domains/gift/giftShared.js'
 
 const QUEUE_NAME = 'videoGenerate'
 const AI_MOCK = process.env.AI_MOCK === 'true'
@@ -85,8 +86,26 @@ const finalizeWillFailure = async ({ willId, userId, failReason }) => {
       return { refunded: false, reason: 'refund_call_threw' }
     })
 
-  // 환불 성공 또는 애초에 결제가 없었던 경우(no_completed_payment)만 draft로 복원
-  const shouldRevertToDraft = refundResult.refunded || refundResult.reason === 'no_completed_payment'
+  // [마감 공백 처리] will_order 경로에서 결제를 못 찾았다면(no_completed_payment)
+  // 선물로 결제된 콘텐츠일 수 있다 - gift 역조회로 환불을 재시도한다(완료 보고 2절).
+  let effectiveRefund = refundResult
+  if (refundResult.reason === 'no_completed_payment') {
+    const giftFallback = await refundGiftFallback({
+      productType: 'will',
+      contentId: willId,
+      reason: `AI 처리 실패: ${failReason}`,
+    }).catch((err) => {
+      console.error('[videoWorker] gift 환불 역조회 실패:', willId, err.message)
+      return null
+    })
+    if (giftFallback?.refundResult?.refunded) {
+      effectiveRefund = giftFallback.refundResult
+    }
+  }
+
+  // 환불 성공(gift 경로 포함) 또는 애초에 결제가 없었던 경우(no_completed_payment이고
+  // gift 경로에서도 찾지 못한 경우)만 draft로 복원
+  const shouldRevertToDraft = effectiveRefund.refunded || effectiveRefund.reason === 'no_completed_payment'
 
   if (shouldRevertToDraft) {
     await willRepository.updateWill(willId, { status: 'draft' })
@@ -104,19 +123,21 @@ const finalizeWillFailure = async ({ willId, userId, failReason }) => {
   } else {
     console.error(
       '[videoWorker] 환불 실패로 will 상태를 draft로 되돌리지 않음 (수동 확인 필요):',
-      { willId, reason: refundResult.reason },
+      { willId, reason: effectiveRefund.reason },
     )
   }
 
-  const message = refundResult.refunded
+  const message = effectiveRefund.refunded
     ? '죄송합니다. 유언 영상 생성에 실패해 결제하신 금액을 전액 환불해 드렸어요. 카드사에 따라 환불 반영까지 며칠 걸릴 수 있어요. 내용을 다시 확인하고 시도해 보시겠어요?'
-    : refundResult.reason === 'no_completed_payment'
+    : effectiveRefund.reason === 'no_completed_payment'
       ? '유언 영상 생성에 실패했습니다. 결제된 내역이 없어 별도 환불 없이 종료돼요. 다시 시도해 보시겠어요?'
       : '죄송합니다. 유언 영상 생성에 실패했고, 환불 처리 중 문제가 발생했습니다. 저희가 곧 확인해서 환불해 드릴게요. 급하시면 고객센터로 연락해 주세요.'
 
+  // [2026-08-22 컷오버] photoWorker.js와 동일 - AI 실패 자동 환불 통지는 payment_failed
+  // 를 의미상 오용해 왔다. 전용 ENUM 값 'ai_processing_refunded'(마이그레이션 c)로 교체.
   await insertNotification({
     userId,
-    type: 'payment_failed',
+    type: 'ai_processing_refunded',
     referenceId: willId,
     title: '유언 영상 생성 실패 안내',
     message,

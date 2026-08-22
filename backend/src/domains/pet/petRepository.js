@@ -49,7 +49,7 @@ export const createPet = async ({
 export const findPetById = async (petId) => {
   const [rows] = await pool.query(
     `SELECT pet_id, user_id, name, species, breed, birth_date, death_date,
-            pet_status, memorial_slug, memorial_access_code,
+            pet_status, memorial_slug, memorial_access_code, is_public,
             profile_image_url, created_at, updated_at
      FROM pets
      WHERE pet_id = ? AND deleted_at IS NULL
@@ -105,6 +105,7 @@ const PET_UPDATABLE_COLS = {
   profileImageUrl: 'profile_image_url',
   memorialSlug: 'memorial_slug',
   memorialAccessCode: 'memorial_access_code',
+  isPublic: 'is_public',
 }
 
 export const updatePet = async (petId, updates) => {

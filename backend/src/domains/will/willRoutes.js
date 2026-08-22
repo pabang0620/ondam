@@ -226,6 +226,14 @@ router.post(
   willController.verifyWatchAccess,
 )
 
+// [SPEC-05 3절] 만료된 링크 재발급 - watchLimiter 재사용(같은 남용 방지 목적)
+router.post(
+  '/watch/:token/extend',
+  watchLimiter,
+  validate(watchTokenSchema),
+  willController.requestWatchLinkExtension,
+)
+
 // multer 에러(파일 크기 초과·허용되지 않는 형식 등)를 400으로 정규화
 router.use(multerErrorHandler)
 

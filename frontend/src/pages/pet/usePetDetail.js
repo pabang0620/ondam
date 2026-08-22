@@ -93,12 +93,12 @@ export function usePetDetail(petId) {
   // slug 없이는 존재할 수 없어서, 코드만 설정 가능하게 해서는 여전히 페이지에 도달할
   // 방법이 없다(PetDetailPage의 "추모 페이지 보기" 링크도 pet.memorial_slug가 있어야만
   // 렌더된다).
-  const handleUpdateMemorialSettings = async ({ memorialSlug, memorialAccessCode }) => {
+  const handleUpdateMemorialSettings = async ({ memorialSlug, memorialAccessCode, isPublic }) => {
     if (isSavingMemorial) return
     setIsSavingMemorial(true)
     setMemorialSaveError(null)
     try {
-      const res = await petApi.updatePet(petId, { memorialSlug, memorialAccessCode })
+      const res = await petApi.updatePet(petId, { memorialSlug, memorialAccessCode, isPublic })
       if (res.data.success) {
         setPet((prev) => ({ ...prev, ...res.data.data }))
         return true

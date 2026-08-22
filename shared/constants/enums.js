@@ -99,7 +99,7 @@ export const PET_MEDIA_TYPE = ['photo', 'video']
 // 결제/구독
 // --------------------------------------------------------------------------
 
-export const PAYMENT_TARGET_TYPE = ['photo_order', 'will_order', 'subscription']
+export const PAYMENT_TARGET_TYPE = ['photo_order', 'will_order', 'subscription', 'gift_order']
 
 export const PAYMENT_STATUS = ['ready', 'done', 'canceled', 'failed']
 
@@ -129,6 +129,23 @@ export const AI_JOB_TARGET_TYPE = [
 ]
 
 // --------------------------------------------------------------------------
+// 선물하기 (SPEC-01) - 자녀 결제 → 부모(무계정) 수행
+// --------------------------------------------------------------------------
+
+export const GIFT_PRODUCT_TYPE = ['photo', 'will']
+
+export const GIFT_STATUS = [
+  'paid',
+  'link_sent',
+  'opened',
+  'in_progress',
+  'completed',
+  'declined',
+  'refunded',
+  'expired',
+]
+
+// --------------------------------------------------------------------------
 // 알림
 // --------------------------------------------------------------------------
 
@@ -140,10 +157,15 @@ export const NOTIFICATION_TYPE = [
   'will_released',
   'payment_done',
   'payment_failed',
+  'payment_pending',
   'subscription_renewed',
   'subscription_canceled',
   'pet_memorial_shared',
   'admin_notice',
+  'gift_link_sent',
+  'gift_completed',
+  'gift_declined',
+  'ai_processing_refunded',
 ]
 
 export const NOTIFICATION_TARGET_TYPE = [
@@ -154,6 +176,7 @@ export const NOTIFICATION_TARGET_TYPE = [
   'subscription',
   'pet',
   'avatar_session',
+  'gift_order',
 ]
 
 // --------------------------------------------------------------------------
@@ -164,4 +187,5 @@ export const CHANGED_BY_TYPE = ['user', 'admin', 'system']
 
 export const ADMIN_ROLE = ['super', 'manager', 'reviewer']
 
-export const ACTOR_TYPE = ['user', 'admin', 'system']
+// audit_logs 전용 - 'anonymous'는 인증 전 행위(로그인 실패 등), actor_id NULL과 짝을 이룸
+export const ACTOR_TYPE = ['user', 'admin', 'system', 'anonymous']

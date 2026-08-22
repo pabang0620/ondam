@@ -73,10 +73,13 @@ export const updateOrderStatus = async (
 
 // ─── photo_files ─────────────────────────────────────────────────────────────
 
+// [2026-08-22 컷오버] photoWorker.js의 insertPhotoFile과 INSERT 대상 컬럼이 동일한
+// 곳 - variant를 한쪽만 고치면 drift가 생기므로 함께 추가한다.
 export const savePhotoFile = async ({
   fileId,
   orderId,
   kind,
+  variant,
   fileUrl,
   s3Key,
   mimeType,
@@ -84,9 +87,9 @@ export const savePhotoFile = async ({
 }) => {
   const [result] = await pool.query(
     `INSERT INTO photo_files
-       (file_id, order_id, kind, file_url, s3_key, mime_type, file_size, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
-    [fileId, orderId, kind, fileUrl, s3Key, mimeType, fileSize ?? null],
+       (file_id, order_id, kind, variant, file_url, s3_key, mime_type, file_size, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+    [fileId, orderId, kind, variant ?? null, fileUrl, s3Key, mimeType, fileSize ?? null],
   )
   return result
 }

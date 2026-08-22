@@ -2,8 +2,8 @@ import crypto from 'crypto'
 import { v4 as uuidv4 } from 'uuid'
 import * as repo from './willRepository.js'
 import { encryptString, decryptBuffer } from '../../utils/kms.js'
-import { getPresignedUrl, extractS3KeyFromUrl } from '../../utils/s3.js'
-import { voiceCloneQueue, videoGenerateQueue } from '../../jobs/queue.js'
+import { getPresignedUrl, getPresignedDownloadUrl, extractS3KeyFromUrl } from '../../utils/s3.js'
+import { voiceCloneQueue, videoGenerateQueue, notificationQueue } from '../../jobs/queue.js'
 import pool from '../../config/db.js'
 import redis from '../../config/redis.js'
 
@@ -16,6 +16,17 @@ import redis from '../../config/redis.js'
 // 무관하게 항상 유효한 링크로 재생할 수 있다. [보안 수정] 이제 이 함수는 라우트에서
 // 직접 호출되지 않고 verifyWatchAccess(본인 확인 성공)를 거쳐야만 호출된다.
 const WATCH_URL_EXPIRES = 24 * 60 * 60 // 1일(초) - 매 열람마다 재발급되므로 짧게 유지
+
+// SPEC-05 2절 4번: "다운로드: 제공한다. 90일 후 링크가 만료돼도 유족이 영상을 잃지
+// 않도록 원본 다운로드 버튼 제공(워터마크 없음)". 사람이 읽을 수 있는 파일명을
+// 만든다 - users 테이블에 실명 컬럼이 없어(nickname만 존재) 닉네임을 "고인 이름"
+// 대용으로 쓴다. 경로 구분자·따옴표·CR/LF 등 Content-Disposition 헤더에 위험한
+// 문자는 제거한다(헤더 인젝션 방지, encodeURIComponent만으로는 quoted-string
+// fallback 쪽까지 방어되지 않는다).
+const buildDownloadFilename = (ownerNickname) => {
+  const safeName = String(ownerNickname ?? '').replace(/[\\/"'*?:|<>\r\n]/g, '').trim()
+  return `마지막영상편지_${safeName || '온담'}.mp4`
+}
 
 // ─── 열람 본인 확인 (SPEC-05 2절) ────────────────────────────────────────────
 // "토큰만 맞으면 바로 영상 URL을 내준다" 취약점 수정: 링크 진입 시에는 영상 URL을
@@ -34,6 +45,13 @@ const WATCH_VERIFY_MAX_ATTEMPTS = 5
 // 가능 - 완전 영구 잠금보다 유가족에게 덜 가혹한 선택).
 const WATCH_VERIFY_LOCK_TTL_SEC = 24 * 60 * 60
 const WATCH_VERIFY_ATTEMPTS_TTL_SEC = 24 * 60 * 60
+
+// 열람 링크(invite_token) 유효기간(SPEC-05 3절) - 최초 발급 시 wills.released_at
+// 기준 +90일(마이그레이션 c 백필과 동일 정책), 연장 요청 시에도 이 값만큼 재발급.
+const WATCH_TOKEN_TTL_DAYS = 90
+
+const isTokenExpired = (beneficiary) =>
+  Boolean(beneficiary.token_expires_at) && new Date(beneficiary.token_expires_at) < new Date()
 
 const watchAttemptsKey = (token) => `will:watch:attempts:${token}`
 const watchLockKey = (token) => `will:watch:locked:${token}`
@@ -472,12 +490,31 @@ const resolveWatchTarget = async (token) => {
  * 더 이상 영상 URL이 발급되지 않는다.
  */
 const issueWatchVideoUrl = async (beneficiary, will) => {
+  // 열람 기록 (SPEC-05 2절, 마이그레이션 c README 4절 1번) - 최초 1회만 video_watched_at을
+  // 채우고 watch_count는 호출마다(=본인 확인 통과마다) +1. URL 발급 실패 여부와 무관하게
+  // "발급을 시도한 시점"을 열람으로 간주한다(재생 자체의 성공/실패까지는 서버가 알 수 없다).
+  await repo.recordWatch(beneficiary.beneficiary_id)
+
   // KMS 복호화 → S3 키 복원
   const s3Key = await decryptBuffer(Buffer.from(will.result_video_s3_key_encrypted))
   const videoUrl = await getPresignedUrl(s3Key, WATCH_URL_EXPIRES)
 
+  // SPEC-05 2절 4번(원본 다운로드 제공, 워터마크 없음) - 재생용과 동일한 s3Key·동일한
+  // 본인 확인 통과 시점에만 함께 발급한다(별도 미인증 경로 없음, 3절 참고). 닉네임
+  // 조회 실패는 다운로드 자체를 막을 이유가 없으므로 폴백 파일명으로 흡수한다.
+  const ownerNickname = await repo.findUserNicknameById(will.user_id).catch((err) => {
+    console.error('[willService] 다운로드 파일명용 닉네임 조회 실패(폴백 사용):', err.message)
+    return null
+  })
+  const downloadUrl = await getPresignedDownloadUrl(
+    s3Key,
+    WATCH_URL_EXPIRES,
+    buildDownloadFilename(ownerNickname),
+  )
+
   return {
     videoUrl,
+    downloadUrl,
     will: {
       willId: will.will_id,
       title: will.title,
@@ -503,6 +540,9 @@ export const getWatchInfo = async (token) => {
     beneficiaryName: beneficiary.name,
     willTitle: will.title,
     locked,
+    // SPEC-05 3절: 만료된 토큰은 프론트가 별도 "만료" 화면(연장 요청 버튼)을 보여줄
+    // 수 있도록 별개 플래그로 내려준다 - 잠금과 달리 사용자 잘못이 아니므로 구분한다.
+    expired: isTokenExpired(beneficiary),
   }
 }
 
@@ -512,6 +552,16 @@ export const getWatchInfo = async (token) => {
  */
 export const verifyWatchAccess = async (token, phoneLast4, { ipAddress, userAgent } = {}) => {
   const { beneficiary, will } = await resolveWatchTarget(token)
+
+  // 토큰 만료 검사 (SPEC-05 3절) - getWatchInfo 조회 이후 만료됐을 수도 있으므로
+  // 여기서도 다시 확인한다(defense in depth). 잠금 검사보다 먼저 - 만료는 사용자의
+  // 오입력과 무관한 별개 사유라 423(잠금)이 아니라 410(Gone)으로 구분한다.
+  if (isTokenExpired(beneficiary)) {
+    throw Object.assign(
+      new Error('기간이 지났어요. 연장을 요청할 수 있어요.'),
+      { status: 410 },
+    )
+  }
 
   const lockKey = watchLockKey(token)
   const alreadyLocked = await redis.get(lockKey)
@@ -581,8 +631,87 @@ export const verifyWatchAccess = async (token, phoneLast4, { ipAddress, userAgen
     targetId: beneficiary.beneficiary_id,
     ipAddress,
     userAgent,
-    detail: { willId: will.will_id },
+    // downloadUrlIssued: 재생 URL과 다운로드 URL이 이 시점에 함께 발급됐다는 사실만
+    // 남긴다(4번 판단 - 아래 issueWatchVideoUrl 주석 및 완료 보고 참고). 실제 클릭
+    // 여부는 presigned S3 URL을 브라우저가 직접 소비하므로 백엔드가 알 수 없다.
+    detail: { willId: will.will_id, downloadUrlIssued: true },
   })
 
   return issueWatchVideoUrl(beneficiary, will)
+}
+
+// ─── 열람 링크 연장 요청 (SPEC-05 3절) ────────────────────────────────────────
+/**
+ * 만료된(또는 만료 임박한) invite_token을 새 토큰으로 재발급한다. 무제한 허용하되
+ * 재발급마다 구토큰을 즉시 무효화(교체)하고 audit_logs에 기록한다("구토큰 무효화·
+ * 로그 기록" - 마이그레이션 c README 4절 2번, 별도 전용 로그 테이블은 만들지 않고
+ * 기존 audit_logs를 재사용).
+ *
+ * 이미 만료된 토큰이라도 findBeneficiaryByToken은 만료 여부와 무관하게 값으로
+ * 조회하므로(만료는 verifyWatchAccess/getWatchInfo에서만 판정) 만료 화면에 남아있는
+ * 옛 링크로도 연장 요청이 가능하다.
+ */
+export const requestWatchLinkExtension = async (token) => {
+  const beneficiary = await repo.findBeneficiaryByToken(token)
+  if (!beneficiary) {
+    throw Object.assign(
+      new Error('유효하지 않은 링크입니다. 문자나 카카오톡으로 받으신 링크를 다시 확인해 주세요.'),
+      { status: 404 },
+    )
+  }
+
+  const will = await repo.findWillById(beneficiary.will_id)
+  if (!will || will.release_status !== 'released') {
+    throw Object.assign(new Error('연장할 수 없는 링크입니다.'), { status: 403 })
+  }
+
+  const newToken = crypto.randomBytes(32).toString('hex')
+  const newExpiresAt = new Date(Date.now() + WATCH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000)
+
+  await repo.extendBeneficiaryToken(beneficiary.beneficiary_id, {
+    newToken,
+    tokenExpiresAt: newExpiresAt,
+  })
+
+  // 구토큰 무효화 기록 - 원문 토큰은 저장하지 않고 해시만 남긴다(감사 로그가 유출돼도
+  // 이미 교체된 토큰을 그대로 복원할 수 없게 하기 위함).
+  await repo.createAuditLog({
+    logId: uuidv4(),
+    actorId: beneficiary.beneficiary_id,
+    actorType: 'user',
+    action: 'will_watch_token_reissued',
+    targetType: 'will_beneficiary',
+    targetId: beneficiary.beneficiary_id,
+    detail: {
+      willId: will.will_id,
+      oldTokenHash: crypto.createHash('sha256').update(token).digest('hex').slice(0, 16),
+    },
+  })
+
+  // 새 링크 안내 발송 - 비차단(실패해도 재발급 자체는 유효, 화면에서 바로 새 토큰으로
+  // 이동시킬 수 있으므로 지금 이 순간의 발송 성공 여부가 재발급 자체를 막을 이유는 없다)
+  const watchUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/watch/${newToken}`
+  const greeting = beneficiary.name ? `${beneficiary.name}님, ` : ''
+  const message = `${greeting}요청하신 영상 편지 링크를 새로 보내드려요. 아래 링크로 다시 확인하실 수 있어요.`
+  try {
+    if (beneficiary.phone) {
+      await notificationQueue.add('will_watch_token_reissued', {
+        type: 'sms',
+        to: beneficiary.phone,
+        message: `${message} ${watchUrl}`,
+      })
+    }
+    if (beneficiary.email) {
+      await notificationQueue.add('will_watch_token_reissued', {
+        type: 'email',
+        to: beneficiary.email,
+        subject: '온담 - 영상 편지 링크를 다시 보내드려요',
+        message: `${message}\n${watchUrl}`,
+      })
+    }
+  } catch (err) {
+    console.error('[willService] 연장 안내 발송 큐 등록 실패 (재발급 자체는 유지):', err.message)
+  }
+
+  return { token: newToken, expiresAt: newExpiresAt }
 }

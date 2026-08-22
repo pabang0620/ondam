@@ -11,6 +11,7 @@ const NAV_LINKS = [
   { to: ROUTES.PHOTO, label: 'AI 사진관' },
   { to: ROUTES.WILL, label: '유언장' },
   { to: ROUTES.PET, label: '반려동물' },
+  { to: ROUTES.GIFT_NEW, label: '선물하기' },
 ]
 
 export default function Header() {

@@ -226,6 +226,22 @@
   cursor: pointer;
 }
 
+/* 영상 저장(다운로드) - SPEC-05 2절 4번 */
+.will-watch__download {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+  text-align: center;
+}
+
+.will-watch__download-desc {
+  font-size: var(--fs-body);
+  color: rgba(245, 239, 230, 0.78);
+  line-height: var(--lh-relaxed);
+  max-width: 480px;
+}
+
 /* 만료 안내 */
 .will-watch__expire-notice {
   display: flex;

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { NavLink, Outlet, Navigate, Link, useLocation, useNavigate } from 'react-router-dom'
 import { ROUTES } from '../constants/routes.js'
-import { LayoutDashboard, Users, ShoppingBag, Unlock, Menu, X, LogOut } from 'lucide-react'
+import { LayoutDashboard, Users, ShoppingBag, Unlock, TrendingUp, Menu, X, LogOut } from 'lucide-react'
 import {
   useAdminAuthStore,
   getAdminAccessToken,
@@ -9,11 +9,17 @@ import {
   logoutAdminSession,
 } from '../config/adminApiClient.js'
 
+// SPEC-06 1절 권한 매트릭스 - role별 메뉴 노출 (보조 가드. 진짜 차단은 API 레벨
+// requireAdminRole 미들웨어가 담당한다, backend/src/middleware/requireAdminRole.js).
+// roles 생략 시 전원(super/manager/reviewer) 노출.
+// - 사후공개(검수): super, reviewer(content_moderator)만 - payment_specialist(manager) 제외
+// - 광고비/CAC: super, manager(payment_specialist)만 - content_moderator(reviewer) 제외
 const NAV_ITEMS = [
   { to: ROUTES.ADMIN, label: '대시보드', icon: LayoutDashboard, end: true },
-  { to: ROUTES.ADMIN_RELEASE, label: '사후공개', icon: Unlock },
+  { to: ROUTES.ADMIN_RELEASE, label: '사후공개', icon: Unlock, roles: ['super', 'reviewer'] },
   { to: ROUTES.ADMIN_ORDERS, label: '주문관리', icon: ShoppingBag },
   { to: ROUTES.ADMIN_USERS, label: '회원관리', icon: Users },
+  { to: ROUTES.ADMIN_AD_SPEND, label: '광고비/CAC', icon: TrendingUp, roles: ['super', 'manager'] },
 ]
 
 const SIDEBAR_WIDTH = 224 // 14rem = w-56
@@ -211,7 +217,9 @@ export default function AdminLayout() {
         className="flex flex-col gap-1 px-3 py-5 flex-1"
         aria-label="관리자 메뉴"
       >
-        {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
+        {NAV_ITEMS
+          .filter(({ roles }) => !roles || roles.includes(adminUser?.adminRole))
+          .map(({ to, label, icon: Icon, end }) => (
           <NavLink
             key={to}
             to={to}

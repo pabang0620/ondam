@@ -12,7 +12,7 @@ export const findPetBySlug = async (slug) => {
   const [rows] = await pool.query(
     `SELECT pet_id, name, species, breed, birth_date, death_date,
             pet_status, memorial_slug, profile_image_url, created_at,
-            memorial_access_code
+            memorial_access_code, is_public
      FROM pets
      WHERE memorial_slug = ? AND deleted_at IS NULL
      LIMIT 1`,

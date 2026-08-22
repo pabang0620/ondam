@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { photoQueue } from '../../jobs/queue.js'
 import * as photoRepository from './photoRepository.js'
 import { extractS3KeyFromUrl, getPresignedUrl } from '../../utils/s3.js'
-import { getVariantMeta } from './photoResultSet.js'
+import { getVariantMetaByKey } from './photoResultSet.js'
 import pool from '../../config/db.js'
 
 // ─── 주문 생성 ────────────────────────────────────────────────────────────────
@@ -154,11 +154,11 @@ export const getResult = async (orderId, userId) => {
   const filesWithUrls = await Promise.all(
     files.map(async (file) => {
       const s3Key = file.s3_key || extractS3KeyFromUrl(file.file_url)
-      // SPEC-08 결정1: kind ENUM('raw','enhanced')만으로는 세트 4종을 구분할 수
-      // 없어(스키마 변경 없이 해결) s3_key 파일명 접미사에서 라벨을 복원한다.
-      const variant = getVariantMeta(s3Key)
+      // [2026-08-22 컷오버] SPEC-08 결정1: 세트 4종 구분은 이제 photo_files.variant
+      // 컬럼이 SSOT다 - s3_key 파일명 파싱 우회는 제거했다(photoResultSet.js 헤더 참고).
+      const variant = getVariantMetaByKey(file.variant)
       const variantFields = {
-        variantKey: variant?.key ?? null,
+        variantKey: file.variant ?? null,
         variantLabel: variant?.label ?? null,
         variantOrder: variant?.order ?? null,
       }

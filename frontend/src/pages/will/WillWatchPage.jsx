@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Heart, AlertCircle, Clock, Lock, ShieldCheck } from 'lucide-react'
+import { Heart, AlertCircle, Clock, Lock, ShieldCheck, Download } from 'lucide-react'
 import { useWillWatch, PHASE } from './useWillWatch.js'
 import './WillWatchPage.css'
 
@@ -81,6 +81,36 @@ function LockedStep({ verifyError }) {
   )
 }
 
+/* 만료 화면 - SPEC-05 3절. 열람을 강요하지 않는 톤으로, 다음 행동(연장 요청)만
+   명확히 안내한다. */
+function ExpiredStep({ isExtending, extendError, onExtend }) {
+  return (
+    <div className="will-watch__error" role="alert">
+      <Clock size={48} aria-hidden="true" />
+      <p className="will-watch__error-title">기간이 지났어요</p>
+      <p className="will-watch__error-desc">
+        열람 기한이 지나 이 링크는 더 이상 사용할 수 없어요.<br />
+        아래 버튼을 눌러주시면 새 링크를 바로 보내드려요.
+      </p>
+      {extendError && (
+        <p id="extend-error" role="alert" className="will-watch__verify-error">
+          <AlertCircle size={16} aria-hidden="true" />
+          {extendError}
+        </p>
+      )}
+      <button
+        type="button"
+        className="will-watch__prepare-button"
+        onClick={onExtend}
+        disabled={isExtending}
+        aria-busy={isExtending}
+      >
+        {isExtending ? '요청 중...' : '연장 요청하기'}
+      </button>
+    </div>
+  )
+}
+
 /* 준비 화면 - 자동 재생하지 않는다(SPEC-05 2절). 감정적 충격을 배려해 사용자가
    직접 눌렀을 때만 영상이 나타난다. */
 function PrepareStep({ willTitle, onStart }) {
@@ -108,8 +138,11 @@ export default function WillWatchPage() {
     fetchError,
     verifyError,
     isVerifying,
+    isExtending,
+    extendError,
     submitVerification,
     startPlayback,
+    requestExtension,
   } = useWillWatch()
 
   if (phase === PHASE.LOADING) {
@@ -139,6 +172,14 @@ export default function WillWatchPage() {
     return (
       <div className="will-watch-page">
         <LockedStep verifyError={verifyError} />
+      </div>
+    )
+  }
+
+  if (phase === PHASE.EXPIRED) {
+    return (
+      <div className="will-watch-page">
+        <ExpiredStep isExtending={isExtending} extendError={extendError} onExtend={requestExtension} />
       </div>
     )
   }
@@ -190,6 +231,32 @@ export default function WillWatchPage() {
             이 브라우저에서는 영상 재생이 지원되지 않습니다.
           </video>
         </div>
+
+        {/* 영상 저장(다운로드) - SPEC-05 2절 4번. 링크가 만료돼도 유족이 영상을
+            잃지 않도록 원본을 그대로 내려받게 한다(워터마크 없음). */}
+        {willData.downloadUrl && (
+          <div className="will-watch__download">
+            <p className="will-watch__download-desc">
+              이 영상은 소중한 분이 남긴, 우리가 아닌 가족 여러분의 것입니다.<br />
+              링크가 만료되기 전에 휴대폰이나 컴퓨터에 저장해 두실 수 있어요.
+            </p>
+            <a
+              href={willData.downloadUrl}
+              download
+              className="will-watch__prepare-button"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 'var(--spacing-xs)',
+                textDecoration: 'none',
+              }}
+            >
+              <Download size={20} aria-hidden="true" />
+              영상 저장하기
+            </a>
+          </div>
+        )}
 
         {/* 링크 유효기간 안내 */}
         <div className="will-watch__expire-notice">

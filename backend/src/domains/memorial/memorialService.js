@@ -52,10 +52,12 @@ const toMediaResponse = (row) => ({
  * 추모 페이지 조회
  *
  * 접근 정책 (SPEC-03, 2026-08-21 오너 확정 - 사람은 항상 비공개 / 펫은 소유자 공개선택):
- * - pets 테이블에는 아직 is_public 컬럼이 없다(스키마 확장 필요, DEV-16 대상).
- *   따라서 이 구현은 memorial_access_code 존재 여부만으로 판단하는 임시 게이트다:
- *   접근 코드가 설정된 경우에만 그 코드로 열람 가능, 코드가 없으면(아직 공개 전환 전)
- *   비공개로 취급해 404 처리한다. "코드 없음 = 무조건 공개"였던 기존 로직은 보안 결함이었다.
+ * [2026-08-22 DEV-16 완성] pets.is_public 컬럼이 마이그레이션 b로 추가되어 더 이상
+ * memorial_access_code 존재 여부만으로 공개/비공개를 임시 판단하지 않는다. 판정
+ * 우선순위는 다음과 같다:
+ *   1. is_public = 1(공개) → 접근 코드 없이 즉시 공개
+ *   2. is_public = 0(비공개, 기본값) → 기존과 동일하게 memorial_access_code 검증
+ *      경로. 코드 자체가 없으면(아직 공개 전환 전) 404.
  * - pet_status가 deceased 또는 unknown 인 경우에만 애초에 추모 페이지 대상이 된다
  * - alive 상태이면 추모 페이지 없음 (404)
  *
@@ -73,13 +75,17 @@ export const getMemorialPage = async (slug, accessCode) => {
     throw Object.assign(new Error('추모 페이지를 찾을 수 없습니다'), { status: 404 })
   }
 
-  // 접근 코드 미설정 = 아직 공개되지 않은 추모 페이지 (기본값: 비공개)
-  if (!pet.memorial_access_code) {
-    throw Object.assign(new Error('추모 페이지를 찾을 수 없습니다'), { status: 404 })
-  }
+  // is_public=1이면 접근 코드 검증을 건너뛰고 즉시 공개(DEV-16). 기본값 0(비공개)일
+  // 때만 기존처럼 접근 코드 검증 경로를 탄다.
+  if (!pet.is_public) {
+    // 접근 코드 미설정 = 아직 공개되지 않은 추모 페이지 (기본값: 비공개)
+    if (!pet.memorial_access_code) {
+      throw Object.assign(new Error('추모 페이지를 찾을 수 없습니다'), { status: 404 })
+    }
 
-  if (!isAccessCodeMatch(accessCode, pet.memorial_access_code)) {
-    throw Object.assign(new Error('접근 코드가 올바르지 않습니다'), { status: 403 })
+    if (!isAccessCodeMatch(accessCode, pet.memorial_access_code)) {
+      throw Object.assign(new Error('접근 코드가 올바르지 않습니다'), { status: 403 })
+    }
   }
 
   const { media, total } = await memorialRepository.findMediaByPetId(pet.pet_id, {
@@ -97,6 +103,7 @@ export const getMemorialPage = async (slug, accessCode) => {
       petStatus: pet.pet_status,
       memorialSlug: pet.memorial_slug,
       profileImageUrl: pet.profile_image_url,
+      isPublic: Boolean(pet.is_public),
     },
     media: media.map(toMediaResponse),
     mediaMeta: {

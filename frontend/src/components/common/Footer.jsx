@@ -2,6 +2,10 @@ import { Link } from 'react-router-dom'
 import { ROUTES } from '../../constants/routes.js'
 import logoUrl from '../../assets/logo.svg'
 
+// 전화 문의 번호는 하드코딩하지 않는다. 미설정 시 '고객센터' 항목은
+// 임시 링크(href="#")로 남긴다 - DEV-13 HomePage.jsx와 동일한 규약.
+const CONTACT_PHONE = import.meta.env.VITE_CONTACT_PHONE
+
 export default function Footer() {
   return (
     <footer
@@ -53,7 +57,7 @@ export default function Footer() {
               </span>
               {[
                 { to: ROUTES.PHOTO, label: 'AI 사진관' },
-                { to: ROUTES.WILL, label: 'AI 유언장' },
+                { to: ROUTES.WILL, label: '마지막 영상 편지' },
                 { to: ROUTES.PET, label: '반려동물 아카이브' },
               ].map(({ to, label }) => (
                 <Link
@@ -94,9 +98,14 @@ export default function Footer() {
                 고객 지원
               </span>
               {[
+                // FIX: DEV-13 - 법무 문서(이용약관·개인정보처리방침)는 게시 전이라
+                // 라우트 연결이 불가하다. "준비 중"으로 바꾸지 말고 현행(href="#")
+                // 유지, 문서 게시 시 실제 경로로 교체할 것.
                 { label: '이용약관', href: '#' },
                 { label: '개인정보처리방침', href: '#' },
-                { label: '고객센터', href: '#' },
+                CONTACT_PHONE
+                  ? { label: `고객센터 ${CONTACT_PHONE}`, href: `tel:${CONTACT_PHONE}` }
+                  : { label: '고객센터', href: '#' },
               ].map(({ label, href }) => (
                 <a
                   key={label}

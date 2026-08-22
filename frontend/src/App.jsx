@@ -53,6 +53,16 @@ const AdminPage = lazy(() => import('./pages/admin/AdminPage.jsx'))
 const AdminReleasePage = lazy(() => import('./pages/admin/AdminReleasePage.jsx'))
 const AdminOrdersPage = lazy(() => import('./pages/admin/AdminOrdersPage.jsx'))
 const AdminUsersPage = lazy(() => import('./pages/admin/AdminUsersPage.jsx'))
+const AdminAdSpendPage = lazy(() => import('./pages/admin/AdminAdSpendPage.jsx'))
+
+const GiftNewPage = lazy(() => import('./pages/gift/GiftNewPage.jsx'))
+const GiftPaymentPage = lazy(() => import('./pages/gift/GiftPaymentPage.jsx'))
+const GiftPaymentSuccessPage = lazy(() => import('./pages/gift/GiftPaymentSuccessPage.jsx'))
+const GiftPaymentFailPage = lazy(() => import('./pages/gift/GiftPaymentFailPage.jsx'))
+const GiftMinePage = lazy(() => import('./pages/gift/GiftMinePage.jsx'))
+const GiftPerformPage = lazy(() => import('./pages/gift/GiftPerformPage.jsx'))
+const GiftPerformPhotoPage = lazy(() => import('./pages/gift/GiftPerformPhotoPage.jsx'))
+const GiftPerformWillPage = lazy(() => import('./pages/gift/GiftPerformWillPage.jsx'))
 
 // Placeholder - 아직 구현되지 않은 페이지
 const Placeholder = ({ title }) => (
@@ -93,6 +103,8 @@ export default function App() {
             <Route path={ROUTES.MEMORIAL} element={<MemorialPage />} />
             <Route path={ROUTES.WILL_RELEASE} element={<WillReleasePage />} />
             <Route path={ROUTES.WILL_WATCH} element={<WillWatchPage />} />
+            {/* 선물 수행 링크 - 무계정 진입(SPEC-01 3-2), 본인확인/계정연결은 페이지 내부에서 처리 */}
+            <Route path={ROUTES.GIFT_PERFORM} element={<GiftPerformPage />} />
           </Route>
 
           {/* 보호된 메인 레이아웃 - 인증 필요 */}
@@ -130,6 +142,16 @@ export default function App() {
 
             <Route path={ROUTES.MY} element={<MyPage />} />
             <Route path="/my/edit" element={<MyPage />} />
+
+            {/* 선물하기 (SPEC-01 DEV-10) - 구매(자녀)는 인증 필요 */}
+            <Route path={ROUTES.GIFT_NEW} element={<GiftNewPage />} />
+            <Route path={ROUTES.GIFT_PAYMENT} element={<GiftPaymentPage />} />
+            <Route path={ROUTES.GIFT_PAYMENT_SUCCESS} element={<GiftPaymentSuccessPage />} />
+            <Route path={ROUTES.GIFT_PAYMENT_FAIL} element={<GiftPaymentFailPage />} />
+            <Route path={ROUTES.GIFT_MINE} element={<GiftMinePage />} />
+            {/* 수행 콘텐츠 제작 단계 - 계정 연결(linkAccount) 이후에만 도달하므로 인증 필요 */}
+            <Route path={ROUTES.GIFT_PERFORM_PHOTO} element={<GiftPerformPhotoPage />} />
+            <Route path={ROUTES.GIFT_PERFORM_WILL} element={<GiftPerformWillPage />} />
           </Route>
 
           {/* 인증 레이아웃 */}
@@ -153,6 +175,7 @@ export default function App() {
             <Route path={ROUTES.ADMIN_RELEASE} element={<AdminReleasePage />} />
             <Route path={ROUTES.ADMIN_ORDERS} element={<AdminOrdersPage />} />
             <Route path={ROUTES.ADMIN_USERS} element={<AdminUsersPage />} />
+            <Route path={ROUTES.ADMIN_AD_SPEND} element={<AdminAdSpendPage />} />
           </Route>
 
           {/* 404 */}

@@ -1,7 +1,13 @@
 import { useState } from 'react'
 import { CheckCircle, XCircle, ExternalLink, RefreshCw } from 'lucide-react'
 import { useAdminRelease } from './useAdminRelease.js'
+import { useAdminAuthStore } from '../../config/adminApiClient.js'
 import './admin.css'
+
+// SPEC-06 1절 매트릭스: 승인/반려는 super_admin, content_moderator(reviewer)만 O.
+// 진짜 차단은 서버 requireAdminRole('super','reviewer')가 담당하고, 이건 보조 UI 가드
+// (payment_specialist가 직접 URL로 진입해도 액션 버튼 자체를 노출하지 않는다).
+const CAN_REVIEW_RELEASES = ['super', 'reviewer']
 
 const STATUS_LABEL = {
   pending: '대기',
@@ -126,6 +132,8 @@ export default function AdminReleasePage() {
   } = useAdminRelease()
 
   const [rejectTarget, setRejectTarget] = useState(null)
+  const adminRole = useAdminAuthStore((s) => s.adminUser?.adminRole)
+  const canReview = CAN_REVIEW_RELEASES.includes(adminRole)
 
   const onRejectConfirm = async (id, reason) => {
     setRejectTarget(null)
@@ -286,7 +294,12 @@ export default function AdminReleasePage() {
                     </span>
                   </td>
                   <td style={{ padding: 'var(--spacing-md)' }}>
-                    {isPending && (
+                    {isPending && !canReview && (
+                      <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-text-muted)' }}>
+                        승인 권한 없음
+                      </span>
+                    )}
+                    {isPending && canReview && (
                       <div style={{ display: 'flex', gap: 'var(--spacing-sm)' }}>
                         {/* 승인 버튼 — success 색 */}
                         <button

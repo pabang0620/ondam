@@ -303,6 +303,21 @@ export const approveRelease = async (adminId, requestId, { ipAddress, userAgent 
         })
       }
 
+      // 전달(발송) 시각 기록 (SPEC-05, 마이그레이션 c README 3-1절/4절 6번) - 이메일/SMS
+      // 중 하나라도 큐 등록에 성공한 이 시점을 "전달"로 본다("유가족이 최소 한
+      // 채널로는 연락받을 수 있었다"가 리드타임 지표의 취지에 가깝다는 README 권장을
+      // 따름). 비회원 수신인(beneficiary.user_id 없음)도 이메일/SMS 발송 대상이므로,
+      // user_id가 있어야만 도는 아래 in-app 블록이 아니라 여기서 기록해야 놓치지 않는다.
+      // delivered_at IS NULL 가드는 방어적 idempotency(이미 위에서 req_status로도
+      // 이중 승인은 막혀 있지만, 값을 덮어쓰지 않기 위해 추가).
+      if (recipientEmail || recipientPhone) {
+        await pool.execute(
+          `UPDATE will_beneficiaries SET delivered_at = NOW(), updated_at = NOW()
+           WHERE beneficiary_id = ? AND deleted_at IS NULL AND delivered_at IS NULL`,
+          [beneficiary.beneficiary_id],
+        )
+      }
+
       // in-app 알림도 함께 기록한다. 비회원 수혜자는 beneficiary.user_id가 null이므로
       // (users 테이블에 계정이 없음) in-app 알림 대상이 아니다 - 건너뛰고 에러 내지 않는다.
       if (beneficiary.user_id) {

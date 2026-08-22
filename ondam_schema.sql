@@ -3,7 +3,7 @@
 -- AI 기억사진관 플랫폼
 -- Created: 2026-04-19
 -- ==========================================================================
--- ENUM SSOT: shared/constants/enums.ts 와 동기화 필수
+-- ENUM SSOT: shared/constants/enums.js / enums.ts 와 동기화 필수 (두 파일 값 100% 동일)
 -- DB 연결 초기화 시 반드시 실행:
 --   SET time_zone = '+09:00';
 -- ==========================================================================
@@ -18,20 +18,23 @@ CREATE DATABASE IF NOT EXISTS ondam
 USE ondam;
 
 -- ==========================================================================
--- ENUM 목록 (shared/constants/enums.ts 동기화 대상)
+-- ENUM 목록 (shared/constants/enums.js / enums.ts 동기화 대상 - 두 파일 값 100% 동일)
 --
 -- USER_ROLE                          : 'user', 'admin'
--- CONSENT_TYPE                       : 'privacy', 'portrait', 'voice', 'ai_generation', 'posthumous_release'
+-- CONSENT_TYPE                       : 'privacy', 'portrait', 'voice', 'ai_generation', 'posthumous_release',
+--                                      'terms', 'marketing'
 -- PHOTO_ORDER_STATUS                 : 'pending_payment', 'paid', 'processing', 'completed', 'failed', 'refunded'
--- PHOTO_TYPE                         : 'funeral', 'id', 'job', 'enhance', 'colorize', 'restore', 'removebg'
+-- PHOTO_TYPE                         : 'funeral', 'id', 'job', 'enhance', 'colorize', 'restore', 'removebg',
+--                                      'portrait', 'casual'
 -- PHOTO_FILE_KIND                    : 'raw', 'enhanced'
 -- WILL_RELEASE_POLICY                : 'manual_admin', 'inactivity_family_vote', 'immediate'
 -- WILL_RELEASE_STATUS                : 'locked', 'pending_review', 'released'
--- WILL_STATUS                        : 'draft', 'active', 'released', 'revoked'
+-- WILL_STATUS                        : 'draft', 'paid', 'active', 'released', 'revoked'
+-- WILL_EVENT_TYPE                    : 'death', 'incapacity', 'anniversary'
 -- PET_SPECIES                        : 'dog', 'cat', 'rabbit', 'bird', 'hamster', 'fish', 'reptile', 'other'
 -- PET_MEDIA_TYPE                     : 'photo', 'video'
 -- PET_STATUS                         : 'alive', 'deceased', 'unknown'
--- PAYMENT_TARGET_TYPE                : 'photo_order', 'will_order', 'subscription'
+-- PAYMENT_TARGET_TYPE                : 'photo_order', 'will_order', 'subscription', 'gift_order'
 -- PAYMENT_STATUS                     : 'ready', 'done', 'canceled', 'failed'
 -- SUBSCRIPTION_PLAN                  : 'pet_archive', 'will_premium', 'all'
 -- SUBSCRIPTION_STATUS                : 'active', 'past_due', 'suspended', 'canceled'
@@ -39,12 +42,23 @@ USE ondam;
 -- SUBSCRIPTION_PAYMENT_FAIL_CATEGORY : 'card_expired', 'insufficient_funds', 'card_blocked', 'network_error', 'unknown'
 -- AI_JOB_TYPE                        : 'photo_enhance', 'voice_clone', 'video_generate', 'avatar_stream'
 -- AI_JOB_STATUS                      : 'queued', 'running', 'completed', 'failed'
+-- AI_JOB_TARGET_TYPE                 : 'photo_order', 'voice_sample', 'will', 'avatar_session', 'pet'
 -- NOTIFICATION_TYPE                  : 'photo_complete', 'voice_clone_complete', 'will_video_ready',
 --                                      'will_release_request', 'will_released',
---                                      'payment_done', 'payment_failed', 'subscription_renewed',
---                                      'subscription_canceled', 'pet_memorial_shared', 'admin_notice'
+--                                      'payment_done', 'payment_failed', 'payment_pending',
+--                                      'subscription_renewed', 'subscription_canceled',
+--                                      'pet_memorial_shared', 'admin_notice',
+--                                      'gift_link_sent', 'gift_completed', 'gift_declined',
+--                                      'ai_processing_refunded'
+-- NOTIFICATION_TARGET_TYPE           : 'photo_order', 'will', 'will_release_request', 'payment',
+--                                      'subscription', 'pet', 'avatar_session', 'gift_order'
 -- WILL_RELEASE_REQ_STATUS            : 'pending', 'approved', 'rejected'
 -- CHANGED_BY_TYPE                    : 'user', 'admin', 'system'
+-- ACTOR_TYPE                         : 'user', 'admin', 'system', 'anonymous' (audit_logs 전용 - 인증 전 행위 포함)
+-- ADMIN_ROLE                         : 'super', 'manager', 'reviewer'
+-- GIFT_PRODUCT_TYPE                  : 'photo', 'will' (SPEC-01)
+-- GIFT_STATUS                        : 'paid', 'link_sent', 'opened', 'in_progress', 'completed',
+--                                      'declined', 'refunded', 'expired' (SPEC-01)
 -- ==========================================================================
 
 
@@ -93,7 +107,7 @@ CREATE TABLE IF NOT EXISTS user_consents (
   consent_id   CHAR(36) NOT NULL UNIQUE COMMENT 'UUID',
 
   user_id      CHAR(36) NOT NULL COMMENT 'users.user_id 참조',
-  consent_type ENUM('privacy','portrait','voice','ai_generation','posthumous_release') NOT NULL,
+  consent_type ENUM('privacy','portrait','voice','ai_generation','posthumous_release','terms','marketing') NOT NULL,
   is_agreed    TINYINT(1) NOT NULL COMMENT '1=동의, 0=철회',
   agreed_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   ip_address   VARCHAR(45) NULL COMMENT 'IPv4/IPv6',
@@ -164,7 +178,7 @@ CREATE TABLE IF NOT EXISTS photo_orders (
   order_id        CHAR(36) NOT NULL UNIQUE COMMENT 'UUID',
 
   user_id         CHAR(36) NOT NULL COMMENT 'users.user_id 참조',
-  photo_type      ENUM('funeral','id','job','enhance','colorize','restore','removebg') NOT NULL,
+  photo_type      ENUM('funeral','id','job','enhance','colorize','restore','removebg','portrait','casual') NOT NULL,
   status          ENUM('pending_payment','paid','processing','completed','failed','refunded')
                   NOT NULL DEFAULT 'pending_payment',
 
@@ -213,6 +227,11 @@ CREATE TABLE IF NOT EXISTS photo_files (
 
   order_id      CHAR(36) NOT NULL COMMENT 'photo_orders.order_id 참조',
   kind          ENUM('raw','enhanced') NOT NULL,
+  variant       VARCHAR(30) NULL COMMENT '세트 결과물 종류(SPEC-08 결정1). 유효값 SSOT는
+DB ENUM이 아니라 backend/src/domains/photo/photoResultSet.js의 VARIANT_DEFS
+(restore_auto/restore_only/id_crop/suit). NULL = 세트 도입 이전 주문 또는
+kind=raw(원본, variant 개념 없음). ENUM이 아닌 VARCHAR인 이유: 세트 구성은
+상품 기획 재량이라 항목 추가/변경마다 ENUM ALTER가 필요해지는 것을 피함.',
 
   file_url      VARCHAR(500) NOT NULL COMMENT 'S3 서명 URL 또는 퍼블릭 URL',
   s3_key        VARCHAR(500) NOT NULL,
@@ -339,8 +358,22 @@ CREATE TABLE IF NOT EXISTS will_beneficiaries (
   phone           VARCHAR(20) NULL,
   relationship    VARCHAR(50) NOT NULL COMMENT '예: 배우자, 자녀, 형제',
 
-  invite_token    CHAR(64) NOT NULL UNIQUE COMMENT '초대 링크 토큰',
+  invite_token    CHAR(64) NOT NULL UNIQUE COMMENT '초대 링크 토큰. SPEC-05: 초대 수락뿐
+아니라 영상 시청 링크(/api/will/watch/:token)에도 재사용됨 - 별도 video_token 컬럼 없음',
   verified_at     DATETIME NULL COMMENT '유가족 본인 인증 완료 시각',
+
+  delivered_at      DATETIME NULL COMMENT '수신인별 전달(발송) 시각(SPEC-05,
+12-analytics-plan.md 이벤트#49 delivery_sent). 관리자 승인 시각(will_release_requests.
+reviewed_at)도 최초 열람 시각(video_watched_at)도 아니다 - 유가족에게 알림(이메일/SMS)이
+실제로 발송된 시각. North Star 리드타임(released_at → delivered_at → video_watched_at)
+산출에 필요',
+  video_watched_at  DATETIME NULL COMMENT '영상 편지 최초 열람 시각(SPEC-05). NULL이면
+미열람 - SPEC-04 미열람 리마인드 배치의 판정 기준',
+  watch_count       INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '영상 편지 열람 횟수(SPEC-05).
+getWatchUrl 호출 시마다 +1 - 관리자 검수 화면의 열람 현황 표시에도 사용',
+  token_expires_at  DATETIME NULL COMMENT 'invite_token(=시청 링크 토큰) 만료
+시각(SPEC-05, 90일 정책). NULL = 아직 만료 정책이 적용되지 않음(유언장 미공개 상태 등).
+wills.released_at 기준 +90일로 설정, 연장 요청 시 재발급하며 갱신',
 
   created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -348,7 +381,8 @@ CREATE TABLE IF NOT EXISTS will_beneficiaries (
 
   INDEX idx_will_beneficiaries_will  (will_id),
   INDEX idx_will_beneficiaries_user  (user_id),
-  INDEX idx_will_beneficiaries_email (email)
+  INDEX idx_will_beneficiaries_email (email),
+  INDEX idx_will_beneficiaries_expiry_watch (token_expires_at, video_watched_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   COMMENT='유가족 등록 - 유언 공개 대상자';
 
@@ -436,6 +470,12 @@ CREATE TABLE IF NOT EXISTS pets (
 
   -- 추모 페이지
   memorial_slug    VARCHAR(100) NULL UNIQUE COMMENT '추모 페이지 공개 식별자 (예: lele-2015)',
+  memorial_access_code VARCHAR(50) NULL COMMENT '추모관 접근 코드. is_public=0(비공개)일 때
+접근 검증에 사용. NULL이면 접근 코드 미발급 - 서비스단에서 비공개로 취급',
+  is_public        TINYINT(1) NOT NULL DEFAULT 0 COMMENT '추모 페이지 공개 여부(SPEC-03).
+1=공개(코드 없이 접근 가능), 0=비공개(memorial_access_code 검증 필요). 기본값 0(비공개)
+고정 - 소유자의 명시적 PATCH(/api/pet/:petId)로만 1로 변경할 것. 사람(고인) 추모
+공간에는 이 개념 자체가 없음(항상 비공개, 컬럼 없음) - pets(반려동물)에만 존재.',
   profile_image_url VARCHAR(500) NULL,
 
   created_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -513,8 +553,10 @@ CREATE TABLE IF NOT EXISTS payments (
   user_id           CHAR(36) NOT NULL COMMENT 'users.user_id 참조',
 
   -- Polymorphic 참조 (VARCHAR 금지 - ENUM 명시)
-  target_type       ENUM('photo_order','will_order','subscription') NOT NULL,
-  target_id         CHAR(36) NOT NULL COMMENT 'photo_orders.order_id / wills.will_id / subscriptions.subscription_id',
+  target_type       ENUM('photo_order','will_order','subscription','gift_order') NOT NULL,
+  target_id         CHAR(36) NOT NULL COMMENT 'photo_orders.order_id / wills.will_id /
+subscriptions.subscription_id / gift_orders.gift_id (SPEC-01 - 선물 결제는 결제 시점에
+아직 photo_order/will이 생성되지 않았으므로 gift_orders를 대상으로 결제됨)',
 
   -- 토스페이먼츠
   toss_payment_key  VARCHAR(200) NOT NULL UNIQUE COMMENT '토스 결제 키 (멱등성 보장)',
@@ -535,7 +577,8 @@ CREATE TABLE IF NOT EXISTS payments (
   INDEX idx_payments_user              (user_id),
   INDEX idx_payments_target            (target_type, target_id),
   INDEX idx_payments_status_deleted    (status, deleted_at),
-  INDEX idx_payments_created           (created_at DESC)
+  INDEX idx_payments_created           (created_at DESC),
+  INDEX idx_payments_toss_order_id     (toss_order_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   COMMENT='결제 내역 - 토스페이먼츠 연동';
 
@@ -550,9 +593,9 @@ CREATE TABLE IF NOT EXISTS subscriptions (
   plan                        ENUM('pet_archive','will_premium','all') NOT NULL,
   sub_status                  ENUM('active','past_due','suspended','canceled') NOT NULL DEFAULT 'active',
 
-  -- 토스 자동결제 빌링키 (KMS 암호화)
-  toss_billing_key_encrypted  VARBINARY(512) NOT NULL COMMENT 'AES-256/KMS 암호화된 빌링키',
-  billing_kms_key_id          VARCHAR(200) NOT NULL COMMENT 'AWS KMS key ARN',
+  -- 토스 자동결제 빌링키 (KMS 암호화) - 해지 시 NULL 처리
+  toss_billing_key_encrypted  VARBINARY(512) NULL COMMENT 'AES-256/KMS 암호화된 빌링키 - 해지 시 NULL 처리',
+  billing_kms_key_id          VARCHAR(200) NULL COMMENT 'AWS KMS key ARN - 해지 시 NULL 처리',
 
   -- 결제 주기
   price_krw                   INT UNSIGNED NOT NULL DEFAULT 9900,
@@ -574,7 +617,9 @@ CREATE TABLE IF NOT EXISTS subscriptions (
   INDEX idx_subscriptions_user           (user_id),
   INDEX idx_subscriptions_status_deleted (sub_status, deleted_at),
   INDEX idx_subscriptions_next_billing   (next_billing_at),
-  INDEX idx_subscriptions_plan           (plan, sub_status)
+  INDEX idx_subscriptions_plan           (plan, sub_status),
+  INDEX idx_subscriptions_user_plan_status (user_id, plan, sub_status),
+  INDEX idx_subscriptions_grace          (sub_status, grace_period_until)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   COMMENT='구독 관리 - 토스 자동결제 빌링키 KMS 암호화';
 
@@ -658,7 +703,7 @@ CREATE TABLE IF NOT EXISTS ai_jobs (
   queue_name      VARCHAR(100) NULL,
 
   -- 대상 엔티티 (job_type에 따라 다름)
-  target_type     ENUM('photo_order','voice_sample','will','avatar_session') NOT NULL,
+  target_type     ENUM('photo_order','voice_sample','will','avatar_session','pet') NOT NULL,
   target_id       CHAR(36) NOT NULL,
 
   -- 결과/에러
@@ -681,6 +726,86 @@ CREATE TABLE IF NOT EXISTS ai_jobs (
 
 
 -- ==========================================================================
+-- 선물하기 도메인 (SPEC-01) - 자녀 결제 → 부모(무계정) 수행
+-- ==========================================================================
+
+-- gift_orders.product_type ENUM SSOT: GIFT_PRODUCT_TYPE
+-- gift_orders.status       ENUM SSOT: GIFT_STATUS
+CREATE TABLE IF NOT EXISTS gift_orders (
+  id                  BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  gift_id             CHAR(36) NOT NULL UNIQUE COMMENT 'UUID - 외부 노출용',
+
+  giver_user_id       CHAR(36) NOT NULL COMMENT '결제한 구매자(자녀) users.user_id 참조',
+  product_type        ENUM('photo','will') NOT NULL COMMENT '선물 상품 종류 - photo_orders/wills 생성 대상',
+  payment_id          CHAR(36) NULL COMMENT 'payments.payment_id 참조 (결제 준비 단계에서는 NULL 가능)',
+
+  recipient_name      VARCHAR(100) NOT NULL COMMENT '받는 분(수행자) 이름',
+  recipient_phone     VARCHAR(20) NOT NULL COMMENT '받는 분 휴대폰 번호 - 평문 저장
+(users.phone과 동일 컨벤션). 링크 본인확인(뒤 4자리)에 사용. 향후 암호화 검토 여지 있음
+(SPEC-01 4-2 토큰 유출 대응은 토큰 자체 해시 저장으로 이미 처리되나, 저장 데이터
+자체의 암호화 필요성은 별도 판단 대상)',
+
+  perform_token_hash  CHAR(64) NOT NULL UNIQUE COMMENT '수행 링크 서명 토큰의 SHA-256 해시.
+refresh_tokens.token_hash와 동일 패턴 - 원본 토큰은 DB에 저장하지 않음',
+  token_expires_at    DATETIME NOT NULL COMMENT '발급 후 90일 (SPEC-01 4-1). 만료 시
+구매자가 마이페이지에서 재발급(기존 토큰 무효화)',
+
+  status              ENUM('paid','link_sent','opened','in_progress','completed',
+                       'declined','refunded','expired') NOT NULL DEFAULT 'paid',
+
+  recipient_user_id   CHAR(36) NULL COMMENT '수행자가 기존 회원 계정과 연결한 경우
+users.user_id 참조 (SPEC-01 4-3). 연결 시 완료된 콘텐츠(photo_orders/wills)의
+소유자가 이 계정이 됨',
+
+  photo_order_id      CHAR(36) NULL COMMENT '연결된 photo_orders.order_id 참조
+(product_type=photo일 때만 채워짐). will_id와 동시에 채워지지 않는다 - 한 선물은
+photo 또는 will 중 하나로만 이어진다. 수행자가 attach-photo-order 호출 시 기록되며,
+이 컬럼이 채워져야 서버가 선물↔콘텐츠 연결을 스스로 알 수 있다(SPEC-01 미해결 공백)',
+  will_id             CHAR(36) NULL COMMENT '연결된 wills.will_id 참조
+(product_type=will일 때만 채워짐). photo_order_id와 동시에 채워지지 않는다.
+수행자가 attach-will 호출 시 기록됨',
+
+  created_at          DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at          DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at          DATETIME NULL,
+
+  INDEX idx_gift_orders_giver           (giver_user_id, created_at DESC),
+  INDEX idx_gift_orders_status_deleted  (status, deleted_at),
+  INDEX idx_gift_orders_recipient_user  (recipient_user_id),
+  INDEX idx_gift_orders_payment         (payment_id),
+  INDEX idx_gift_orders_token_expiry    (token_expires_at, status),
+  INDEX idx_gift_orders_photo_order     (photo_order_id),
+  INDEX idx_gift_orders_will            (will_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  COMMENT='선물하기 주문 (SPEC-01) - 구매자(자녀)가 결제, 무계정 수행자(부모)가
+링크로 콘텐츠 제작을 수행';
+
+
+-- 선물 주문 상태 변경 이력 (append-only)
+CREATE TABLE IF NOT EXISTS gift_order_logs (
+  id               BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  log_id           CHAR(36) NOT NULL UNIQUE COMMENT 'UUID',
+  gift_id          CHAR(36) NOT NULL COMMENT 'gift_orders.gift_id 참조',
+  prev_status      ENUM('paid','link_sent','opened','in_progress','completed',
+                    'declined','refunded','expired') NULL,
+  next_status      ENUM('paid','link_sent','opened','in_progress','completed',
+                    'declined','refunded','expired') NOT NULL,
+  changed_by       CHAR(36) NULL COMMENT '무계정 수행자 행위는 CHAR(36) NULL 허용 -
+users.user_id/admin_users.admin_id 없는 토큰 기반 행위 포함 (audit_logs.actor_id의
+anonymous 패턴과 동일한 이유)',
+  changed_by_type  ENUM('user','admin','system') NOT NULL COMMENT '무계정 수행자의
+직접 행위(거절 등)는 system으로 기록하고 reason에 "수행자(무계정) 요청"을 남긴다 -
+gift_orders는 수행자 계정이 없을 수 있어 changed_by_type에 anonymous를 추가하지
+않고 기존 3값을 유지한다(원칙 5 SSOT 최소 확장)',
+  reason           VARCHAR(500) NULL,
+  created_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  INDEX idx_gift_order_logs_gift (gift_id, created_at DESC)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  COMMENT='선물 주문 상태 변경 이력 (append-only, SPEC-01)';
+
+
+-- ==========================================================================
 -- 알림 도메인 (동시 설계 - 원칙 10)
 -- ==========================================================================
 
@@ -698,14 +823,20 @@ CREATE TABLE IF NOT EXISTS notifications (
     'will_released',
     'payment_done',
     'payment_failed',
+    'payment_pending',
     'subscription_renewed',
     'subscription_canceled',
     'pet_memorial_shared',
-    'admin_notice'
-  ) NOT NULL,
+    'admin_notice',
+    'gift_link_sent',
+    'gift_completed',
+    'gift_declined',
+    'ai_processing_refunded'
+  ) NOT NULL COMMENT 'payment_pending=결제 불확정 안내, ai_processing_refunded=AI 처리
+실패 자동 환불 통지(기존 payment_failed 오용 대체), gift_*=SPEC-04 선물 이벤트',
 
   -- Polymorphic: VARCHAR 금지 - ENUM 명시
-  target_type         ENUM('photo_order','will','will_release_request','payment','subscription','pet','avatar_session') NULL,
+  target_type         ENUM('photo_order','will','will_release_request','payment','subscription','pet','avatar_session','gift_order') NULL,
   target_id           CHAR(36) NULL,
 
   title               VARCHAR(200) NOT NULL,
@@ -748,6 +879,41 @@ CREATE TABLE IF NOT EXISTS user_notification_settings (
 
 
 -- ==========================================================================
+-- 마케팅/분석 도메인
+-- ==========================================================================
+
+-- ad_spend.channel 은 의도적으로 ENUM이 아닌 VARCHAR(원칙 5 예외 - 광고 채널은
+-- 마케팅팀 재량으로 수시 추가되므로 ENUM ALTER 반복을 피함). 유효값 화이트리스트는
+-- 서비스 레이어(관리자 입력 화면)에서 관리.
+CREATE TABLE IF NOT EXISTS ad_spend (
+  id                BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  ad_spend_id       CHAR(36) NOT NULL UNIQUE COMMENT 'UUID',
+
+  channel           VARCHAR(50) NOT NULL COMMENT '광고 채널 (예: meta, youtube, community,
+partner). 신규 채널 추가 시 ALTER 불필요 - 유효값 화이트리스트는 서비스 레이어에서 관리',
+  period_start      DATE NOT NULL COMMENT '집행 기간 시작일(포함)',
+  period_end        DATE NOT NULL COMMENT '집행 기간 종료일(포함). CAC 계산 시 이 기간을
+일 단위로 안분한다',
+  spend_krw         INT UNSIGNED NOT NULL COMMENT '집행 광고비(원화, 기간 전체 합산액)',
+  note              VARCHAR(500) NULL COMMENT '캠페인명·집행 메모(관리자 자유 입력)',
+
+  recorded_by       CHAR(36) NOT NULL COMMENT '입력한 admin_users.admin_id (FK 없음, 스키마 전역 방침)',
+
+  created_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at        DATETIME NULL,
+
+  CONSTRAINT chk_ad_spend_period CHECK (period_end >= period_start),
+
+  INDEX idx_ad_spend_channel_period (channel, period_start, period_end),
+  INDEX idx_ad_spend_recorded_by    (recorded_by),
+  INDEX idx_ad_spend_deleted        (deleted_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  COMMENT='관리자 입력 광고비 - CAC(고객획득비용) 산출용. 채널·기간별 집행 금액
+(docs/strategy/12-analytics-plan.md 8-1절 P0)';
+
+
+-- ==========================================================================
 -- 관리자 도메인
 -- ==========================================================================
 
@@ -782,8 +948,10 @@ CREATE TABLE IF NOT EXISTS audit_logs (
   id            BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   log_id        CHAR(36) NOT NULL UNIQUE COMMENT 'UUID',
 
-  actor_id      CHAR(36) NOT NULL COMMENT '행위자 users.user_id 또는 admin_users.admin_id',
-  actor_type    ENUM('user','admin','system') NOT NULL,
+  actor_id      CHAR(36) NULL COMMENT '행위자 users.user_id 또는 admin_users.admin_id.
+anonymous 행위(로그인 실패 등 인증 전)는 NULL',
+  actor_type    ENUM('user','admin','system','anonymous') NOT NULL COMMENT
+    'anonymous = 인증 전 행위(로그인 실패 등), actor_id NULL',
 
   -- 감사 대상
   action        VARCHAR(100) NOT NULL COMMENT '예: will.video.view, voice_sample.download, payment.refund',
@@ -833,117 +1001,77 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
 
 
 -- ==========================================================================
--- 마이그레이션: 누락 인덱스 추가 (2026-04-19)
+-- 마이그레이션 이력 로그 (서술만 - 실행 가능한 ALTER 없음)
+--
+-- 이 섹션은 "왜 지금 스키마가 이런 모양이 됐는지"를 설명하는 히스토리 기록이다.
+-- 아래 각 항목이 원래 별도 ALTER TABLE 문이었던 시절도 있었으나, 그 결과는 전부
+-- 위 CREATE TABLE 섹션에 최초 상태로 이미 반영되어 있다. 신규 DB는 이 섹션을
+-- 전혀 실행할 필요가 없다 - 위 CREATE TABLE 정의만으로 최종 상태가 완성된다.
 -- ==========================================================================
 
--- [1] payments.toss_order_id
---     paymentRepository.findPaymentByOrderId: WHERE toss_order_id = ?
---     toss_payment_key 는 UNIQUE(인덱스 겸용)이지만 toss_order_id 는 인덱스 없음
-ALTER TABLE payments
-  ADD INDEX idx_payments_toss_order_id (toss_order_id);
+-- [1] (2026-04-19) payments.toss_order_id / subscriptions(user_id,plan,sub_status)
+--     누락 인덱스 추가. paymentRepository.findPaymentByOrderId,
+--     subscriptionRepository.findActiveSubscription 조회 최적화.
+--     → 위 payments/subscriptions 테이블 정의에 이미 포함됨.
 
--- [2] subscriptions - user_id + plan + sub_status 복합 인덱스
---     subscriptionRepository.findActiveSubscription:
---       WHERE user_id = ? AND plan = ? AND sub_status = 'active' AND deleted_at IS NULL
---     기존 idx_subscriptions_plan(plan, sub_status) 은 user_id 없어 풀스캔 가능
---     선두 컬럼을 user_id 로 두어 사용자별 조회 + 플랜/상태 필터 최적화
-ALTER TABLE subscriptions
-  ADD INDEX idx_subscriptions_user_plan_status (user_id, plan, sub_status);
+-- [2] (2026-04-19) notifications.notification_type ENUM에 'voice_clone_complete',
+--     'will_video_ready' 추가 (voiceWorker.js / videoWorker.js INSERT 대응).
+--     → 위 notifications 테이블 정의에 이미 포함됨.
 
--- ==========================================================================
--- 마이그레이션: notifications.notification_type ENUM 누락값 추가 (2026-04-19)
--- ==========================================================================
+-- [3] (2026-04-19) wills 결제→활성화 흐름 도입: status ENUM에 'paid' 추가,
+--     will_status_logs 동기화, wills.event_type 컬럼 신설,
+--     user_consents (user_id, consent_type) UNIQUE 추가.
+--     → 위 wills/will_status_logs/user_consents 테이블 정의에 이미 포함됨.
 
--- [3] notifications.notification_type - 'voice_clone_complete', 'will_video_ready' 추가
---     voiceWorker.js: notification_type = 'voice_clone_complete' 사용 중
---     videoWorker.js: notification_type = 'will_video_ready' 사용 중
---     두 값이 ENUM에 없어 INSERT 시 런타임 오류 발생
---     MySQL ENUM 수정은 전체 테이블 재정의를 유발하므로 오프피크 적용 권장
-ALTER TABLE notifications
-  MODIFY COLUMN notification_type ENUM(
-    'photo_complete',
-    'voice_clone_complete',
-    'will_video_ready',
-    'will_release_request',
-    'will_released',
-    'payment_done',
-    'payment_failed',
-    'subscription_renewed',
-    'subscription_canceled',
-    'pet_memorial_shared',
-    'admin_notice'
-  ) NOT NULL;
+-- [4] (2026-04-20) photo_orders.photo_type ENUM 확장
+--     (enhance/colorize/restore/removebg 추가, 3개→7개).
+--     → 위 photo_orders 테이블 정의에 이미 포함됨.
 
--- ==========================================================================
--- 마이그레이션: 유언장 결제→활성화 흐름 도입 (2026-04-19)
--- ==========================================================================
+-- [5] (2026-04-20) 구독 정기결제 실패 처리 흐름: subscriptions.sub_status에
+--     'suspended' 추가, fail_count/last_failed_at/grace_period_until/
+--     suspended_at 컬럼 신설, subscription_logs 동기화.
+--     → 위 subscriptions/subscription_logs 테이블 정의에 이미 포함됨.
 
--- [4] wills.status ENUM - 'paid' 추가
---     결제 완료 후 프론트엔드가 activateWill 을 명시적으로 호출하기 전까지
---     유언장은 'paid' 상태를 유지한다 (영상 생성 큐는 activateWill 시점에 등록)
-ALTER TABLE wills
-  MODIFY COLUMN status ENUM('draft','paid','active','released','revoked') NOT NULL DEFAULT 'draft';
+-- [6] (2026-08-21, migration a: schema-drift-fix) ai_jobs.target_type ENUM에
+--     'pet' 추가, photo_orders.photo_type ENUM에 'portrait','casual' 추가
+--     (7개→9개), pets.memorial_access_code 컬럼 신설,
+--     subscriptions 빌링키 2컬럼 NULL 허용 전환.
+--     원본: docs/migrations/2026-08-21-schema-drift-fix.{up,down,README}
+--     → 위 ai_jobs/photo_orders/pets/subscriptions 테이블 정의에 이미 포함됨.
 
--- [5] will_status_logs - prev_status / next_status ENUM 에 'paid' 추가
-ALTER TABLE will_status_logs
-  MODIFY COLUMN prev_status ENUM('draft','paid','active','released','revoked') NULL,
-  MODIFY COLUMN next_status ENUM('draft','paid','active','released','revoked') NOT NULL;
+-- [7] (2026-08-21, migration b: memorial-visibility-and-consent)
+--     pets.is_public 컬럼 신설(DEFAULT 0=비공개 고정, SPEC-03),
+--     user_consents.consent_type ENUM에 'terms','marketing' 추가.
+--     원본: docs/migrations/2026-08-21b-memorial-visibility-and-consent.{up,down,README}
+--     → 위 pets/user_consents 테이블 정의에 이미 포함됨.
 
--- [6] wills.event_type - 결제 트리거 조건 (사망/금치산/기념일)
-ALTER TABLE wills
-  ADD COLUMN event_type ENUM('death','incapacity','anniversary') NULL
-    COMMENT '유언장 공개 트리거 이벤트 유형'
-    AFTER release_status;
+-- [8] (2026-08-22, migration c: watch-tracking-and-ad-spend)
+--     will_beneficiaries에 delivered_at/video_watched_at/watch_count/
+--     token_expires_at 4컬럼 + 만료조회 인덱스 신설(SPEC-05, SPEC-04),
+--     ad_spend 테이블 신규(CAC 산출용, 12-analytics-plan.md P0),
+--     photo_files.variant 컬럼 신설(SPEC-08 세트 결과물 4종 구분).
+--     원본: docs/migrations/2026-08-22-watch-tracking-and-ad-spend.{up,down,README}
+--     → 위 will_beneficiaries/ad_spend/photo_files 테이블 정의에 이미 포함됨.
+--     ⚠️ migration a/b/c는 실제 운영 DB에는 한 번도 적용되지 않았다(DB 자체가
+--     아직 없었음). 이 통합 작업(2026-08-22)으로 세 파일의 UP 내용을 스키마
+--     본문에 직접 반영했다 - 각 파일 README 상단에 "신규 DB는 이 마이그레이션을
+--     실행하지 말 것" 배너를 추가해 두었다.
 
--- [7] user_consents - (user_id, consent_type) UNIQUE KEY
---     upsertConsent 에서 ON DUPLICATE KEY UPDATE 를 사용하기 위한 선결 조건
---     기존 중복 데이터가 있으면 먼저 정리 후 실행
-ALTER TABLE user_consents
-  ADD UNIQUE KEY uq_consents_user_type (user_id, consent_type);
+-- [9] (2026-08-22, 이번 통합 작업) 신규 반영 3건:
+--     1) audit_logs 익명 행위자 지원 - actor_id NULL 허용, actor_type ENUM에
+--        'anonymous' 추가 (관리자 로그인 실패 등 인증 전 행위의 감사 기록 유실 해소).
+--     2) gift_orders / gift_order_logs 신설 (SPEC-01 선물하기 플로우).
+--        payments.target_type / notifications.target_type ENUM에 'gift_order' 추가.
+--     3) notifications.notification_type ENUM에 'gift_link_sent', 'gift_completed',
+--        'gift_declined'(SPEC-04 선물 이벤트), 'ai_processing_refunded'
+--        (AI 실패 자동 환불 통지 - 기존 payment_failed 오용 대체),
+--        'payment_pending'(결제 불확정 안내) 추가.
+--     → 위 각 테이블 정의에 이미 포함됨. shared/constants/enums.js·enums.ts 동시 반영.
 
--- ==========================================================================
--- 마이그레이션: photo_orders.photo_type ENUM 확장 (2026-04-20)
--- ==========================================================================
-
--- [8] photo_orders.photo_type ENUM 확장 (enhance/colorize/restore/removebg 추가)
---     photoWorker.js 및 Zod 검증이 7개 타입을 지원하나 ENUM은 3개만 선언되어
---     enhance/colorize/restore/removebg 주문 INSERT 시 런타임 오류 발생
---     MySQL ENUM 수정은 전체 테이블 재정의를 유발하므로 오프피크 적용 권장
-ALTER TABLE photo_orders
-  MODIFY COLUMN photo_type ENUM('funeral','id','job','enhance','colorize','restore','removebg') NOT NULL;
-
--- ==========================================================================
--- 마이그레이션: 구독 정기결제 실패 처리 흐름 도입 (2026-04-20)
--- ==========================================================================
-
--- [9] KST 타임존 세팅 (DB 연결 풀 초기화 외 마이그레이션 실행 시 보정)
-SET time_zone = '+09:00';
-
--- [10] subscription_payment_logs 신규 테이블 생성 (이력 참고용 - 정의 실체는 601행 참조)
---      구독 정기결제 시도 이력 추적 (append-only)
---      billing_cycle_date + attempt_no 복합 UNIQUE 로 사이클 내 중복 시도 방지
---      ※ 2026-08-21 정리: 이 CREATE TABLE 은 상단 CREATE TABLE 섹션(599~638행)의
---        정의와 byte-identical 한 중복이었다. 스냅샷 파일은 상단 섹션을 스키마
---        정본으로 삼고, 마이그레이션 이력 섹션은 "왜 이렇게 됐는지" 서술만 남긴다.
---        중복 CREATE TABLE 제거 - 실행 시 영향 없음 (IF NOT EXISTS라 항상 no-op였음).
-
--- [11] subscriptions ENUM 확장 + 결제 실패 추적 컬럼 추가
---      sub_status 에 'suspended' 추가: past_due 유예 만료 후 접근 차단 상태
---      fail_count / last_failed_at / grace_period_until / suspended_at 컬럼 신설
---      MySQL 8.4: NOT NULL + DEFAULT 컬럼 추가는 ALGORITHM=INSTANT 가능 (무락)
---      ENUM MODIFY는 ALGORITHM=COPY 유발 가능 → 오프피크 적용 권장
---      shared/constants/enums.ts 의 SUBSCRIPTION_STATUS 동시 수정 필수
-ALTER TABLE subscriptions
-  MODIFY COLUMN sub_status ENUM('active','past_due','suspended','canceled') NOT NULL DEFAULT 'active',
-  ADD COLUMN IF NOT EXISTS fail_count         TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '연속 결제 실패 횟수'     AFTER cancel_reason,
-  ADD COLUMN IF NOT EXISTS last_failed_at     DATETIME NULL                        COMMENT '마지막 결제 실패 시각' AFTER fail_count,
-  ADD COLUMN IF NOT EXISTS grace_period_until DATETIME NULL                        COMMENT 'past_due 유예 만료 시각 (3일)' AFTER last_failed_at,
-  ADD COLUMN IF NOT EXISTS suspended_at       DATETIME NULL                        COMMENT '구독 정지 시각'         AFTER grace_period_until,
-  ADD INDEX idx_subscriptions_grace (sub_status, grace_period_until);
-
--- [12] subscription_logs ENUM 확장 - 'suspended' 추가
---      prev_status / next_status 모두 subscriptions.sub_status 와 동기
---      shared/constants/enums.ts 의 SUBSCRIPTION_STATUS 와 함께 동기화 완료
-ALTER TABLE subscription_logs
-  MODIFY COLUMN prev_status ENUM('active','past_due','suspended','canceled') NULL,
-  MODIFY COLUMN next_status ENUM('active','past_due','suspended','canceled') NOT NULL;
+-- [10] (2026-08-22, 마감 공백 처리) gift_orders에 photo_order_id/will_id 컬럼 신설
+--      + 조회 인덱스 2개 추가. gift ↔ 콘텐츠(photo_orders/wills) 연결을 attach 시점에
+--      영속화하기 위함 - 기존에는 attach-photo-order/attach-will이 소유권만 검증하고
+--      연결 자체를 저장하지 않아, 서버가 어떤 콘텐츠가 어느 선물에 속하는지 알 수
+--      없었다(AI 처리 실패 시 gift_order 결제를 역추적할 방법이 없어 자동환불이
+--      막히는 문제로 이어짐). ENUM 신규 값 없음 - 기존 GIFT_STATUS/notification_type
+--      값으로 충분.

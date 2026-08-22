@@ -34,4 +34,24 @@ export const adminApi = {
   // 회원
   getUsers: (page = 1, search = '', limit = 20) =>
     adminApiClient.get('/admin/users', { params: { page, limit, ...(search && { search }) } }),
+
+  // 광고비 입력 (12-analytics-plan.md 2-10절, super/manager 전용)
+  getAdSpendList: (page = 1, limit = 20, channel = '') =>
+    adminApiClient.get('/admin/ad-spend', { params: { page, limit, ...(channel && { channel }) } }),
+
+  createAdSpend: (payload) =>
+    adminApiClient.post('/admin/ad-spend', payload),
+
+  updateAdSpend: (id, payload) =>
+    adminApiClient.put(`/admin/ad-spend/${id}`, payload),
+
+  deleteAdSpend: (id) =>
+    adminApiClient.delete(`/admin/ad-spend/${id}`),
+
+  getRecentChannels: () =>
+    adminApiClient.get('/admin/ad-spend/recent-channels'),
+
+  // CAC (블렌디드 - 채널별 귀속은 현재 스키마로 산출 불가, 응답의 note 필드 참고)
+  getCac: (startDate, endDate) =>
+    adminApiClient.get('/admin/ad-spend/cac', { params: { startDate, endDate } }),
 }

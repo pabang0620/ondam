@@ -4,6 +4,11 @@ import * as photoRepository from '../photo/photoRepository.js'
 import * as willRepository from '../will/willRepository.js'
 import * as subscriptionRepository from '../subscription/subscriptionRepository.js'
 import { PLANS } from '../subscription/subscriptionService.js'
+// [DEV-10 gift 확장] gift 도메인은 giftRepository만 import한다(giftService가 아님) -
+// giftService → paymentService.preparePayment를 호출하는 단방향 의존이라, 반대 방향
+// (paymentService → giftService)까지 생기면 순환 import가 된다. giftRepository는
+// paymentService에 의존하지 않으므로 순환이 생기지 않는다.
+import * as giftRepository from '../gift/giftRepository.js'
 import pool from '../../config/db.js'
 
 const TOSS_CONFIRM_URL = 'https://api.tosspayments.com/v1/payments/confirm'
@@ -70,7 +75,7 @@ const _lookupTossPayment = async (tossPaymentKey) => {
   }
 }
 
-const VALID_TARGET_TYPES = ['photo_order', 'will_order', 'subscription']
+const VALID_TARGET_TYPES = ['photo_order', 'will_order', 'subscription', 'gift_order']
 
 /**
  * 결제 대상별 서버 정본 가격 조회 + 소유권 검증 (G3-1, G3-2)
@@ -119,6 +124,21 @@ const _resolveServerPrice = async (targetType, targetId, userId) => {
     }
     const planInfo = PLANS[subscription.plan]
     return planInfo ? planInfo.price : Number(subscription.price_krw)
+  }
+  if (targetType === 'gift_order') {
+    // gift_orders는 photo_orders/wills와 달리 "결제 전" 상태를 status ENUM에 따로
+    // 두지 않는다(DEFAULT='paid') - 실제 게이트 신호는 payment_id 컬럼이다. NULL이면
+    // giftService.createGiftOrder가 막 만든 "결제 대기" 행이고, NOT NULL이면 이미
+    // 결제가 연결된 것이다(giftRepository.js 상단 주석 참고).
+    const gift = await giftRepository.findByGiftId(targetId)
+    if (!gift) throw Object.assign(new Error('선물 주문을 찾을 수 없습니다'), { status: 404 })
+    if (gift.giver_user_id !== userId) throw Object.assign(new Error('접근 권한이 없습니다'), { status: 403 })
+    if (gift.payment_id !== null) {
+      throw Object.assign(new Error('이미 결제가 완료된 선물입니다'), { status: 409 })
+    }
+    const price = giftRepository.GIFT_PRICE_KRW[gift.product_type]
+    if (!price) throw Object.assign(new Error('선물 상품 가격을 확인할 수 없습니다'), { status: 500 })
+    return price
   }
   throw Object.assign(new Error('유효하지 않은 결제 대상 유형입니다'), { status: 400 })
 }
@@ -193,7 +213,7 @@ export const confirmPayment = async (userId, { paymentKey, orderId, amount }) =>
     if (existingByKey.user_id !== userId) {
       throw Object.assign(new Error('접근 권한이 없습니다'), { status: 403 })
     }
-    await _updateTargetStatus(existingByKey.target_type, existingByKey.target_id)
+    await _updateTargetStatus(existingByKey.target_type, existingByKey.target_id, existingByKey.payment_id)
     return { success: true, payment: existingByKey, idempotent: true }
   }
 
@@ -255,7 +275,7 @@ export const confirmPayment = async (userId, { paymentKey, orderId, amount }) =>
            WHERE payment_id = ?`,
           [payment.payment_id],
         )
-        await _updateTargetStatus(payment.target_type, payment.target_id, conn1)
+        await _updateTargetStatus(payment.target_type, payment.target_id, payment.payment_id, conn1)
         await conn1.commit()
         const done = await paymentRepository.findPaymentById(payment.payment_id)
         claim = { kind: 'mock', payment: done }
@@ -292,7 +312,7 @@ export const confirmPayment = async (userId, { paymentKey, orderId, amount }) =>
   }
 
   if (claim.kind === 'done') {
-    await _updateTargetStatus(claim.payment.target_type, claim.payment.target_id)
+    await _updateTargetStatus(claim.payment.target_type, claim.payment.target_id, claim.payment.payment_id)
     return { success: true, payment: claim.payment, idempotent: true }
   }
   if (claim.kind === 'mock') {
@@ -382,7 +402,7 @@ export const confirmPayment = async (userId, { paymentKey, orderId, amount }) =>
        WHERE payment_id = ?`,
       [paymentKey, paidAt, payment.payment_id],
     )
-    await _updateTargetStatus(payment.target_type, payment.target_id, conn2)
+    await _updateTargetStatus(payment.target_type, payment.target_id, payment.payment_id, conn2)
     await conn2.commit()
   } catch (dbErr) {
     await conn2.rollback().catch(() => {})
@@ -639,7 +659,7 @@ export const handleWebhook = async (signature, rawBody, payload) => {
         tossPaymentKey: data.paymentKey,
         paidAt: data.approvedAt ? new Date(data.approvedAt) : new Date(),
       })
-      await _updateTargetStatus(payment.target_type, payment.target_id).catch((e) =>
+      await _updateTargetStatus(payment.target_type, payment.target_id, payment.payment_id).catch((e) =>
         console.error(
           '[paymentService] 웹훅 _updateTargetStatus 실패 - 수동 확인 필요:',
           { paymentId: payment.payment_id, targetType: payment.target_type, targetId: payment.target_id, error: e.message },
@@ -661,12 +681,15 @@ export const handleWebhook = async (signature, rawBody, payload) => {
 
 /**
  * target 상태 업데이트 - 결제 완료 시
- * photo_orders.status='paid' 또는 wills.status='active'
+ * photo_orders.status='paid' 또는 wills.status='active', gift_orders는 payment_id를 채우고
+ * status='link_sent'로 전이(giftRepository.attachPayment - gift_orders에는 "결제 전" 상태가
+ * status ENUM에 따로 없어 payment_id NULL 여부가 실제 게이트다. giftRepository.js 상단 주석 참고)
  * @param {string} targetType
  * @param {string} targetId
+ * @param {string} paymentId - gift_order 분기에서 gift_orders.payment_id에 채워 넣을 값
  * @param {object} [conn] - 트랜잭션 커넥션 (없으면 pool 직접 사용)
  */
-const _updateTargetStatus = async (targetType, targetId, conn) => {
+const _updateTargetStatus = async (targetType, targetId, paymentId, conn) => {
   const executor = conn ?? pool
   if (targetType === 'photo_order') {
     await executor.execute(
@@ -678,6 +701,23 @@ const _updateTargetStatus = async (targetType, targetId, conn) => {
       `UPDATE wills SET status = 'paid', updated_at = NOW() WHERE will_id = ? AND deleted_at IS NULL`,
       [targetId],
     )
+  } else if (targetType === 'gift_order') {
+    const attached = await giftRepository.attachPayment(targetId, paymentId, executor)
+    if (attached) {
+      // gift_order_logs는 append-only 감사 로그다 - 결제 트랜잭션과 별개 실패로
+      // 결제 반영 자체를 막으면 안 되므로 로그 실패는 흡수만 한다(콘솔 기록).
+      await giftRepository
+        .addLog({
+          logId: uuidv4(),
+          giftId: targetId,
+          prevStatus: 'paid',
+          nextStatus: 'link_sent',
+          changedBy: null,
+          changedByType: 'system',
+          reason: '결제 완료',
+        })
+        .catch((e) => console.error('[paymentService] gift_order_logs 기록 실패:', targetId, e.message))
+    }
   }
 }
 
@@ -695,6 +735,13 @@ const _revertTargetStatus = async (targetType, targetId) => {
   } else if (targetType === 'will_order') {
     await pool.execute(
       `UPDATE wills SET status = 'draft', updated_at = NOW() WHERE will_id = ? AND deleted_at IS NULL`,
+      [targetId]
+    )
+  } else if (targetType === 'gift_order') {
+    // cancelPayment(4-4 giver 셀프 환불)와 refundForAiFailure(4-5 수행자 거절 자동 환불)
+    // 양쪽 모두 여기로 도달한다 - 최종 상태는 동일하게 'refunded'.
+    await pool.execute(
+      `UPDATE gift_orders SET status = 'refunded', updated_at = NOW() WHERE gift_id = ? AND deleted_at IS NULL`,
       [targetId]
     )
   }

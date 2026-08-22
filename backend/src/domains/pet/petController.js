@@ -58,7 +58,10 @@ export const getPet = async (req, res, next) => {
  */
 export const updatePet = async (req, res, next) => {
   try {
-    const { name, breed, birthDate, deathDate, profileImageUrl, memorialSlug, memorialAccessCode } = req.body
+    const {
+      name, breed, birthDate, deathDate, profileImageUrl,
+      memorialSlug, memorialAccessCode, isPublic,
+    } = req.body
     const pet = await petService.updatePet(req.user.userId, req.params.petId, {
       name,
       breed,
@@ -67,6 +70,7 @@ export const updatePet = async (req, res, next) => {
       profileImageUrl,
       memorialSlug,
       memorialAccessCode,
+      isPublic,
     })
     return success(res, pet, '반려동물 정보가 수정되었습니다')
   } catch (err) {

@@ -3,12 +3,17 @@
 // 결정: 9,900원 주문 1건은 "용도"(장례/증명/취업) 선택 1회로 결과물 4종 세트를
 // 받는다. 사용자가 처리 옵션을 개별 선택하지 않는다 (SPEC-08 1절).
 //
-// photo_files.kind ENUM('raw','enhanced')은 값이 2개뿐이라(ondam_schema.sql 확인
-// 결과) 세트 내 4종을 구분할 컬럼이 없다. 스키마 변경은 금지되어 있으므로, kind는
-// 전부 'enhanced'로 저장하고 s3_key 파일명 접미사(`result_<variant>.jpg`)로 세트
-// 항목을 구분한다. 이 파일이 접미사 <-> 사람이 읽는 라벨의 SSOT다.
-// photoWorker.js(생성)와 photoService.js(조회 응답 라벨링) 양쪽 모두 반드시 이
-// 파일을 거쳐서만 variant key/label을 다룬다 (드리프트 방지, G1 정신 준용).
+// [2026-08-22 컷오버] photo_files.variant 컬럼이 마이그레이션 c로 신설되어, 세트
+// 항목 구분을 더 이상 s3_key 파일명 접미사(`result_<variant>.jpg`) 파싱으로 우회하지
+// 않는다. photoWorker.js가 INSERT 시 variant 컬럼에 직접 값을 기록하고,
+// photoService.js는 그 컬럼값을 그대로 읽는다. 이 파일은 이제 "컬럼값 <-> 사람이
+// 읽는 라벨"의 SSOT다(과거엔 "접미사 <-> 라벨"의 SSOT였다). photoWorker.js(생성)와
+// photoService.js(조회 응답 라벨링) 양쪽 모두 반드시 이 파일을 거쳐서만 variant
+// key/label을 다룬다 (드리프트 방지, G1 정신 준용).
+//
+// parseVariantKey/VARIANT_KEY_PATTERN(파일명 정규식 파싱)은 조회 경로에서는 더 이상
+// 쓰이지 않지만, 컬럼 신설 이전(우회 방식)에 쌓인 데이터를 위한 일회성 백필 스크립트가
+// 필요해질 수 있어 완전히 삭제하지 않고 남겨둔다(마이그레이션 c README 4절 7·8번).
 //
 // [실측 판단 근거] 4종 조합을 "의미 있게" 고른 이유:
 // - restore_auto / restore_only 2개를 함께 주는 이유: 사진이 흑백인지 컬러인지
@@ -80,6 +85,7 @@ export const buildResultSet = (photoType) => {
   }))
 }
 
+// 백필 스크립트 전용(현재 조회 경로에서는 사용하지 않음) - 위 헤더 주석 참고.
 const VARIANT_KEY_PATTERN = /result_([a-z0-9_]+)\.[a-z0-9]+$/i
 
 export const parseVariantKey = (s3Key) => {
@@ -89,12 +95,12 @@ export const parseVariantKey = (s3Key) => {
 }
 
 /**
- * photo_files.s3_key로부터 세트 항목의 라벨/정렬순서를 복원한다.
- * 세트 주문이 아니거나(레거시) 패턴이 없으면 null.
+ * photo_files.variant 컬럼값으로부터 세트 항목의 라벨/정렬순서를 조회한다.
+ * [2026-08-22 컷오버] 더 이상 s3_key 파일명을 파싱하지 않는다 - variantKey를
+ * 곧바로 받는다. 세트 주문이 아니거나(레거시, variant=NULL) SSOT에 없는 값이면 null.
  */
-export const getVariantMeta = (s3Key) => {
-  const key = parseVariantKey(s3Key)
-  if (!key) return null
-  const meta = VARIANT_META_BY_KEY[key]
-  return meta ? { key, ...meta } : null
+export const getVariantMetaByKey = (variantKey) => {
+  if (!variantKey) return null
+  const meta = VARIANT_META_BY_KEY[variantKey]
+  return meta ? { key: variantKey, ...meta } : null
 }

@@ -20,8 +20,8 @@ const paymentLimiter = rateLimit({
 // amountKrw는 클라이언트 입력을 받지 않는다 (G3) - 서버가 targetId로 실제 가격을 조회해 정본으로 사용한다.
 const prepareSchema = z.object({
   body: z.object({
-    targetType: z.enum(['photo_order', 'will_order', 'subscription'], {
-      errorMap: () => ({ message: 'targetType은 photo_order, will_order, subscription 중 하나여야 합니다' }),
+    targetType: z.enum(['photo_order', 'will_order', 'subscription', 'gift_order'], {
+      errorMap: () => ({ message: 'targetType은 photo_order, will_order, subscription, gift_order 중 하나여야 합니다' }),
     }),
     targetId: z.string().uuid('유효한 UUID를 입력하세요'),
   }),
