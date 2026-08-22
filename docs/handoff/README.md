@@ -8,8 +8,57 @@
 > **`docs/review/remediation-plan.md`**, 재발 방지 규약은 **`docs/guidelines/DEVELOPMENT_GUIDELINES.md`**.
 > 각 코딩 태스크에 그 2개 문서를 함께 준다.
 >
-> - DEV-03(스키마 중복 정리)은 **DEV-22에 흡수됨** (아래 DEV-03 블록은 참고용으로만 남김).
-> - DEV-22 마이그레이션 파일은 `docs/migrations/2026-08-21-schema-drift-fix.*`로 이미 생성됨. **실행은 사용자가 백업 후 직접.**
+> - DEV-03(스키마 중복 정리)은 **DEV-22에 흡수·완료됨** (아래 DEV-03 블록은 이력용. 실행하지 말 것).
+> - DEV-22 마이그레이션 파일은 `docs/migrations/2026-08-21-schema-drift-fix.*` + `2026-08-21b-*`로 생성됨. **실행은 사용자가 백업 후 직접, a → b 순서.**
+
+---
+
+## 🔴 지금 가장 급한 인계 2건 (아래 옛 프롬프트보다 먼저)
+
+### 1. DEV-25 토스 결제 왕복 구현 - **이것 없이는 어떤 상품도 팔 수 없다**
+```
+작업 디렉토리: /home/lee/project/ondam
+필독: .claude/CLAUDE.md, docs/guidelines/DEVELOPMENT_GUIDELINES.md(G3 결제는 서버가 진실),
+      docs/guidelines/TEST_STRATEGY.md(4-1 결제 통합 시나리오)
+
+[현황] 사진관·영상편지 결제가 토스 SDK를 호출하지 않고 `paymentKey: mock_${Date.now()}`를
+하드코딩해 confirm을 부른다. 즉 결제가 시뮬레이션이다. 구독(빌링키) 경로만 실제 왕복이 구현돼 있으니
+`frontend/src/pages/pet/usePetSubscription.js`와 `lib/tossPayments.js`를 참조 구현으로 삼아라.
+
+[작업]
+1. 프론트: prepare 응답(tossOrderId, amountKrw)으로 토스 SDK `requestPayment` 호출 →
+   successUrl 콜백 페이지에서 paymentKey/orderId/amount를 받아 confirm 호출.
+   failUrl 처리(사용자 취소/실패)도 함께. 대상: photo/will 결제 훅·API
+2. 서버 금액은 이미 정본이다(DEV-23 완료). 클라이언트가 금액을 만들어 보내지 마라.
+3. `PhotoPaymentPage`의 "테스트 모드 모의결제" 배너 제거
+4. `PAYMENT_MOCK` 환경변수 경로는 유지하되 프로덕션에서 켜지지 않게 확인
+
+[수용 기준] 토스 테스트 키로 결제창 → 승인 → confirm → payments.status='done',
+주문 상태 전이까지 E2E 성공. 취소/실패 경로도 사용자에게 쉬운 한국어로 안내.
+[금지] 서버 결제 로직(paymentService) 재설계. 이미 3차 검증을 거쳤다. 프론트 배선이 과제다.
+```
+
+### 2. 비회원 유가족 사망증명서 업로드 경로 - **사후 전달의 시작점이 막혀 있다**
+```
+작업 디렉토리: /home/lee/project/ondam
+필독: docs/specs/SPEC-05-letter-delivery.md, SPEC-01-gift-flow.md(무인증 토큰 설계 참조),
+      docs/review/phase0-followups.md B-2
+
+[현황] 유가족이 사망증명서를 올리는 화면이 requireAuth가 걸린 업로드 엔드포인트를 호출한다.
+즉 비회원 유가족은 서류를 낼 수 없다. 사후 전달이 이 서비스의 핵심인데 시작점이 막혀 있다.
+
+[작업 - 설계 결정이 포함되므로 먼저 설계를 제안하고 진행하라]
+1. 초대 토큰(will_beneficiaries.invite_token) 기반의 무인증 업로드 경로를 설계하라.
+   S3 키 스코프를 userId가 아니라 토큰/beneficiary 기준으로 잡아야 한다.
+2. 보안 필수: 토큰 검증, 파일 타입·크기 제한, 업로드 횟수 제한, 키 경로 조작 차단,
+   KMS 암호화(사망증명서는 민감 데이터)
+3. 기존 인증 업로드 경로를 약화시키지 마라. 별도 경로로 분리하라.
+
+[수용 기준] 비회원이 링크로 진입해 서류 업로드 → 관리자 검수 큐에 노출까지 E2E.
+[주의] 무인증 경로이므로 구현 후 보안 점검 필수.
+```
+
+---
 
 ---
 
