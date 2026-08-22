@@ -5,6 +5,7 @@
 
 import { v4 as uuidv4 } from 'uuid'
 import pool from '../../config/db.js'
+import { toSafeLimit, toSafeOffset } from '../../utils/pagination.js'
 
 /**
  * 결제 로그 생성 - pending 상태로 선기록 (결제 실행 전)
@@ -125,6 +126,10 @@ export const updateLogResult = async (
  * @returns {Promise<{ logs: object[], total: number }>}
  */
 export const findLogsBySubscriptionId = async (subscriptionId, { limit = 20, offset = 0 } = {}) => {
+  // mysql2 execute()는 LIMIT/OFFSET 플레이스홀더를 지원하지 않는다(utils/pagination.js
+  // 참고) - 검증된 정수로 클램프한 뒤 SQL 문자열에 직접 삽입한다.
+  const safeLimit = toSafeLimit(limit)
+  const safeOffset = toSafeOffset(offset)
   const [rows] = await pool.execute(
     `SELECT log_id, subscription_id, user_id, billing_cycle_date,
             attempt_no, attempt_type, toss_order_id, toss_payment_key,
@@ -133,8 +138,8 @@ export const findLogsBySubscriptionId = async (subscriptionId, { limit = 20, off
      FROM subscription_payment_logs
      WHERE subscription_id = ?
      ORDER BY attempted_at DESC
-     LIMIT ? OFFSET ?`,
-    [subscriptionId, limit, offset]
+     LIMIT ${safeLimit} OFFSET ${safeOffset}`,
+    [subscriptionId]
   )
   const [[{ total }]] = await pool.execute(
     `SELECT COUNT(*) AS total

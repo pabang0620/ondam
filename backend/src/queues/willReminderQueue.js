@@ -37,8 +37,11 @@ export const registerWillReminderScheduler = async () => {
 
   // billingQueue와 동일하게, 등록 호출 성공을 그대로 믿지 않고 실제 스케줄러 목록에
   // 반영됐는지 재조회해 로그로 검증한다.
+  //
+  // [DEV-27 수정] bullmq 5.74.1 getJobSchedulers()는 식별자를 `id`가 아니라 `key`
+  // 필드에 담아 반환한다(billingQueue.js에서 실측 확인). key 우선 + id 폴백으로 비교.
   const schedulers = await willReminderQueue.getJobSchedulers()
-  const registered = schedulers.find((s) => s.id === SCAN_SCHEDULER_ID)
+  const registered = schedulers.find((s) => (s.key ?? s.id) === SCAN_SCHEDULER_ID)
 
   if (registered) {
     const nextRun = registered.next ? new Date(registered.next).toISOString() : '알 수 없음'

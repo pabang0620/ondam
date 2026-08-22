@@ -4,6 +4,19 @@ import * as photoRepository from './photoRepository.js'
 import { extractS3KeyFromUrl, getPresignedUrl } from '../../utils/s3.js'
 import { getVariantMetaByKey } from './photoResultSet.js'
 import pool from '../../config/db.js'
+import { omitId, omitIds, pick } from '../../utils/dto.js'
+
+// ─── 응답 화이트리스트 (내부 S3 키 원본 경로 유출 방지) ───────────────────────────
+// [보안 수정] photo_files 행을 그대로(스프레드로) 응답에 흘려보내면 s3_key(내부
+// 버킷 저장 경로, `photos/{userUuid}/{jobUuid}/...` 형태 - S3 업로드 폴더 컨벤션
+// 문서 참고)까지 그대로 새어나간다. 클라이언트는 file_url(presigned/공개 URL)만
+// 있으면 되고 원본 s3_key는 필요 없다 - 새 컬럼이 추가돼도 자동으로 새지 않도록
+// 블랙리스트(omitId)가 아닌 화이트리스트(pick)로 필드를 명시한다.
+const PHOTO_FILE_PUBLIC_FIELDS = [
+  'file_id', 'order_id', 'kind', 'variant', 'file_url',
+  'mime_type', 'file_size', 'width', 'height', 'created_at',
+]
+const toPhotoFileDto = (file) => pick(file, PHOTO_FILE_PUBLIC_FIELDS)
 
 // ─── 주문 생성 ────────────────────────────────────────────────────────────────
 
@@ -31,7 +44,8 @@ export const getOrder = async (userId, orderId) => {
   if (order.user_id !== userId) {
     throw Object.assign(new Error('접근 권한이 없습니다'), { status: 403 })
   }
-  return order
+  // 내부 AUTO_INCREMENT id는 외부에 노출하지 않는다(order_id UUID만 노출) - DEV-33
+  return omitId(order)
 }
 
 // ─── 주문 목록 조회 (paginated) ───────────────────────────────────────────────
@@ -40,7 +54,8 @@ export const getOrders = async (userId, { page, limit }) => {
   const offset = (page - 1) * limit
   const { orders, total } = await photoRepository.findOrdersByUserId(userId, { limit, offset })
   return {
-    orders,
+    // 내부 AUTO_INCREMENT id는 외부에 노출하지 않는다(order_id UUID만 노출) - DEV-33
+    orders: omitIds(orders),
     meta: {
       total,
       page,
@@ -163,13 +178,17 @@ export const getResult = async (orderId, userId) => {
         variantOrder: variant?.order ?? null,
       }
 
-      if (!s3Key) return { ...file, ...variantFields }
+      // 응답 화이트리스트 적용 - s3_key(내부 원본 경로)는 PHOTO_FILE_PUBLIC_FIELDS에
+      // 없으므로 여기서부터 제외된다. s3Key 자체는 위에서 이미 presigned URL 발급에
+      // 다 쓴 뒤라 응답 구성에는 필요 없다.
+      const base = toPhotoFileDto(file)
+      if (!s3Key) return { ...base, ...variantFields }
       try {
         const presignedUrl = await getPresignedUrl(s3Key, 3600) // 1시간
-        return { ...file, file_url: presignedUrl, ...variantFields }
+        return { ...base, file_url: presignedUrl, ...variantFields }
       } catch (err) {
         console.error('[photoService] presignedUrl 생성 실패:', err.message)
-        return { ...file, file_url: null, ...variantFields }
+        return { ...base, file_url: null, ...variantFields }
       }
     }),
   )
@@ -186,7 +205,9 @@ export const getResult = async (orderId, userId) => {
     return a.variantOrder - b.variantOrder
   })
 
-  return { order, files: sortedFiles }
+  // order: 내부 AUTO_INCREMENT id는 외부에 노출하지 않는다(order_id UUID만 노출, DEV-33).
+  // files: 위에서 이미 PHOTO_FILE_PUBLIC_FIELDS 화이트리스트를 거쳐 id/s3_key 모두 제외됨.
+  return { order: omitId(order), files: sortedFiles }
 }
 
 // ─── 실패 주문 재처리 ─────────────────────────────────────────────────────────

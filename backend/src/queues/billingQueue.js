@@ -43,8 +43,14 @@ export const registerBillingScanDueScheduler = async () => {
 
   // 조용히 실패하는 것이 이 결함의 본질이므로, 등록 호출이 성공했다고 믿지 않고
   // 실제로 스케줄러 목록에 반영됐는지 재조회해 로그로 검증한다.
+  //
+  // [DEV-27 수정] 설치된 bullmq 5.74.1의 getJobSchedulers()는 식별자를 `key`
+  // 필드에 담아 반환한다(`id`는 옵셔널이라 항상 비어 있음) - 실측(getJobSchedulers
+  // 결과를 직접 찍어 확인함): { key: 'billing-scan-due', name: 'scan-due', ... }.
+  // `s.id`로만 비교하면 절대 매칭되지 않아 정상 등록인데도 거짓 실패 로그가 찍혔다.
+  // 버전에 따라 필드명이 바뀔 수 있어 key를 우선하고 id를 폴백으로 방어적 비교한다.
   const schedulers = await billingQueue.getJobSchedulers()
-  const registered = schedulers.find((s) => s.id === SCAN_DUE_SCHEDULER_ID)
+  const registered = schedulers.find((s) => (s.key ?? s.id) === SCAN_DUE_SCHEDULER_ID)
 
   if (registered) {
     const nextRun = registered.next ? new Date(registered.next).toISOString() : '알 수 없음'

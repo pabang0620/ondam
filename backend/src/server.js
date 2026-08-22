@@ -27,8 +27,13 @@ import adminRoutes from './domains/admin/adminRoutes.js'
 import uploadRoutes from './domains/common/uploadRoutes.js'
 import giftRoutes from './domains/gift/giftRoutes.js'
 import './queues/billingWorker.js'
-import './jobs/workers/notificationWorker.js'
+// [결함 수정 - DEV-33] notificationWorker는 워커 전용 프로세스(jobs/index.js)에서만
+// 띄운다. 이전에는 여기서도 직접 import해 같은 Redis 큐를 서버·워커 두 프로세스가
+// 동시에 polling했다 - BullMQ 락 덕에 중복 처리는 안 되지만, 재시도 로그가 두
+// 프로세스에 흩어져 운영 추적이 어려워졌다. 알림이 실제로 나가려면 워커 프로세스
+// (npm run workers / jobs/index.js)가 반드시 떠 있어야 한다는 전제가 생긴다.
 import { registerBillingScanDueScheduler } from './queues/billingQueue.js'
+import { checkDbConnection } from './config/db.js'
 
 const app = express()
 const httpServer = createServer(app)
@@ -202,6 +207,11 @@ app.use((err, req, res, _next) => {
 
 httpServer.listen(PORT, () => {
   console.log(`[ondam] 서버 시작 - 포트 ${PORT} (${process.env.NODE_ENV})`)
+
+  // DB 연결 헬스 프로브 (DEV-28) - lazyConnect 풀이라 부팅 시점엔 연결 성공/실패를
+  // 알 수 없다. SELECT 1로 즉시 확인해 로그에 남긴다. 실패해도 서버는 죽이지
+  // 않는다(개발 편의) - 대신 눈에 띄게 경고한다.
+  checkDbConnection()
 
   // 구독 자동결제 scan-due 반복 job 등록/갱신 (기동 시 반드시 확인 로그 남김 - DEV-26)
   registerBillingScanDueScheduler().catch((err) => {

@@ -1,4 +1,5 @@
 import pool from '../../config/db.js'
+import { toSafeLimit, toSafeOffset } from '../../utils/pagination.js'
 
 /**
  * 결제 레코드 생성 (status='ready')
@@ -14,6 +15,28 @@ export const createPayment = async ({ paymentId, userId, targetType, targetId, t
     [paymentId, userId, targetType, targetId, paymentId, tossOrderId, amountKrw]
   )
   return findPaymentById(paymentId)
+}
+
+/**
+ * [결함 수정 - DEV-33] 동일 사용자·동일 대상에 대해 아직 확정되지 않은(status='ready')
+ * 결제가 있으면 재사용하기 위한 조회. preparePayment를 연속 호출해도 고아 ready 행이
+ * 계속 쌓이지 않도록 paymentService.preparePayment에서 먼저 이 함수로 확인한다.
+ * done/canceled/failed는 대상에서 제외 - done은 _resolveServerPrice가 이미 409로
+ * 막고, failed/canceled는 재시도 시 새 결제를 만드는 기존 동작을 그대로 유지한다.
+ */
+export const findReadyPaymentByTarget = async (userId, targetType, targetId) => {
+  const [rows] = await pool.execute(
+    `SELECT payment_id, user_id, target_type, target_id,
+            toss_payment_key, toss_order_id, amount_krw, status,
+            created_at, updated_at
+     FROM payments
+     WHERE user_id = ? AND target_type = ? AND target_id = ?
+       AND status = 'ready' AND deleted_at IS NULL
+     ORDER BY created_at DESC
+     LIMIT 1`,
+    [userId, targetType, targetId]
+  )
+  return rows[0] ?? null
 }
 
 /**
@@ -36,6 +59,10 @@ export const findPaymentById = async (paymentId) => {
  * 사용자 결제 목록 페이지네이션 조회
  */
 export const findPaymentsByUserId = async (userId, { limit = 20, offset = 0 }) => {
+  // mysql2 execute()는 LIMIT/OFFSET에 플레이스홀더를 지원하지 않는다(utils/pagination.js
+  // 참고) - 검증된 정수로 클램프한 뒤 SQL 문자열에 직접 삽입한다.
+  const safeLimit = toSafeLimit(limit)
+  const safeOffset = toSafeOffset(offset)
   const [rows] = await pool.execute(
     `SELECT payment_id, user_id, target_type, target_id,
             toss_payment_key, toss_order_id, amount_krw, status,
@@ -43,8 +70,8 @@ export const findPaymentsByUserId = async (userId, { limit = 20, offset = 0 }) =
      FROM payments
      WHERE user_id = ? AND deleted_at IS NULL
      ORDER BY created_at DESC
-     LIMIT ? OFFSET ?`,
-    [userId, limit, offset]
+     LIMIT ${safeLimit} OFFSET ${safeOffset}`,
+    [userId]
   )
   const [[{ total }]] = await pool.execute(
     `SELECT COUNT(*) AS total FROM payments WHERE user_id = ? AND deleted_at IS NULL`,

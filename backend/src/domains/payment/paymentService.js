@@ -154,6 +154,23 @@ export const preparePayment = async (userId, { targetType, targetId }) => {
     throw Object.assign(new Error('유효하지 않은 결제 대상 유형입니다'), { status: 400 })
   }
 
+  // [결함 수정 - DEV-33] 같은 주문에 preparePayment를 연속 호출하면(결제창을 다시 열거나
+  // 새로고침 후 재시도 등) 매번 status='ready' payments 행이 새로 생겼다. confirmPayment
+  // 전까지는 제한이 없었기 때문이다. 이미 진행 중인(아직 확정되지 않은) ready 결제가
+  // 있으면 새로 만들지 않고 그대로 재사용한다 - 같은 tossOrderId로 결제창을 다시 열어도
+  // 문제 없고(토스는 orderId 재사용을 허용), confirmPayment의 FOR UPDATE 직렬화·선점
+  // (claim) 로직은 이 함수가 INSERT를 하느냐 마느냐와 무관하게 전혀 손대지 않는다.
+  // done 상태 결제가 이미 있으면 아래 _resolveServerPrice가 여전히 409로 막는다
+  // (target.status가 'pending_payment'/'draft'가 아니게 되어 있으므로).
+  const existingReady = await paymentRepository.findReadyPaymentByTarget(userId, targetType, targetId)
+  if (existingReady) {
+    return {
+      paymentId: existingReady.payment_id,
+      tossOrderId: existingReady.toss_order_id,
+      amountKrw: Number(existingReady.amount_krw),
+    }
+  }
+
   const amountKrw = await _resolveServerPrice(targetType, targetId, userId)
 
   const paymentId = uuidv4()

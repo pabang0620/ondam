@@ -119,7 +119,7 @@ export const getDashboardStats = async () => {
 export const getPendingReleaseRequests = async ({ limit, offset }) => {
   const [rows] = await pool.query(
     `SELECT
-       r.id, r.request_id AS releaseId, r.will_id, r.requested_by, r.beneficiary_id,
+       r.request_id AS releaseId, r.will_id, r.requested_by, r.beneficiary_id,
        r.req_status AS status, r.reviewed_by, r.reviewed_at,
        r.reject_reason, r.created_at, r.updated_at,
        u.email AS requester_email, u.nickname AS requester_nickname

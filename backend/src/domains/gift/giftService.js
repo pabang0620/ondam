@@ -15,6 +15,7 @@ import * as paymentRepository from '../payment/paymentRepository.js'
 import { notificationQueue } from '../../jobs/queue.js'
 import { GIFT_PRODUCT_TYPE } from '../../../../shared/constants/enums.js'
 import { TERMINAL_STATUSES, issuePerformToken, performLink } from './giftShared.js'
+import { omitIds } from '../../utils/dto.js'
 
 /**
  * 선물 주문 생성 + 결제 준비 (SPEC-01 6절 POST /api/gifts)
@@ -62,7 +63,8 @@ export const getMyGifts = async (giverUserId, { page = 1, limit = 20 }) => {
     offset,
   })
   return {
-    gifts,
+    // 내부 AUTO_INCREMENT id는 외부에 노출하지 않는다(gift_id UUID만 노출) - DEV-33
+    gifts: omitIds(gifts),
     meta: { total, page: Number(page), limit: safeLimit, totalPages: Math.ceil(total / safeLimit) },
   }
 }

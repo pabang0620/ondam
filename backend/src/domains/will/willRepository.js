@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid'
 import pool from '../../config/db.js'
+import { toSafeLimit, toSafeOffset } from '../../utils/pagination.js'
 
 // ─── users (음성권 동의 확인 전용) ───────────────────────────────────────────────
 
@@ -164,12 +165,16 @@ export const findWillByIdForUpdate = async (conn, willId) => {
 }
 
 export const findWillsByUserId = async (userId, { limit, offset }) => {
+  // mysql2 execute()는 LIMIT/OFFSET 플레이스홀더를 지원하지 않는다(utils/pagination.js
+  // 참고) - 검증된 정수로 클램프한 뒤 SQL 문자열에 직접 삽입한다.
+  const safeLimit = toSafeLimit(limit)
+  const safeOffset = toSafeOffset(offset)
   const [rows] = await pool.execute(
     `SELECT * FROM wills
      WHERE user_id = ? AND deleted_at IS NULL
      ORDER BY created_at DESC
-     LIMIT ? OFFSET ?`,
-    [userId, limit, offset],
+     LIMIT ${safeLimit} OFFSET ${safeOffset}`,
+    [userId],
   )
   const [[{ total }]] = await pool.execute(
     `SELECT COUNT(*) AS total FROM wills
@@ -327,6 +332,9 @@ export const extendBeneficiaryToken = async (beneficiaryId, { newToken, tokenExp
  * idx_will_beneficiaries_expiry_watch(token_expires_at, video_watched_at) 활용 대상.
  */
 export const findReminderCandidatesBatch = async ({ cursorId, withinDays, batchSize }) => {
+  // mysql2 execute()는 LIMIT 플레이스홀더를 지원하지 않는다(utils/pagination.js 참고) -
+  // 검증된 정수로 클램프한 뒤 SQL 문자열에 직접 삽입한다.
+  const safeBatchSize = toSafeLimit(batchSize, { max: 1000, fallback: 500 })
   const [rows] = await pool.execute(
     `SELECT id, beneficiary_id, will_id, name, phone, invite_token, token_expires_at
      FROM will_beneficiaries
@@ -337,8 +345,8 @@ export const findReminderCandidatesBatch = async ({ cursorId, withinDays, batchS
        AND video_watched_at IS NULL
        AND deleted_at IS NULL
      ORDER BY id ASC
-     LIMIT ?`,
-    [cursorId, withinDays, batchSize],
+     LIMIT ${safeBatchSize}`,
+    [cursorId, withinDays],
   )
   return rows
 }

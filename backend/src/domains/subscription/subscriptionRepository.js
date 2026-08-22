@@ -1,5 +1,6 @@
 import pool from '../../config/db.js'
 import { v4 as uuidv4 } from 'uuid'
+import { toSafeLimit } from '../../utils/pagination.js'
 
 /**
  * 구독 생성
@@ -264,6 +265,10 @@ export const findSubscriptionForBilling = async (subscriptionId, conn = null) =>
  * @returns {Promise<object[]>}
  */
 export const findDueSubscriptions = async (limit = 500) => {
+  // mysql2 execute()는 LIMIT 플레이스홀더를 지원하지 않는다(utils/pagination.js
+  // 참고) - 검증된 정수로 클램프한 뒤 SQL 문자열에 직접 삽입한다. 이 함수는 워커
+  // 내부에서만 호출되는 배치 스캔이라 사용자 페이지네이션(max 100)보다 큰 상한을 둔다.
+  const safeLimit = toSafeLimit(limit, { max: 1000, fallback: 500 })
   const [rows] = await pool.execute(
     `SELECT subscription_id, user_id, plan, sub_status,
             toss_billing_key_encrypted, billing_kms_key_id,
@@ -272,8 +277,7 @@ export const findDueSubscriptions = async (limit = 500) => {
      WHERE sub_status IN ('active', 'past_due')
        AND next_billing_at <= NOW()
        AND deleted_at IS NULL
-     LIMIT ?`,
-    [limit]
+     LIMIT ${safeLimit}`,
   )
   return rows
 }

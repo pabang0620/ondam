@@ -35,6 +35,7 @@
 import { v4 as uuidv4 } from 'uuid'
 import pool from '../../config/db.js'
 import redis from '../../config/redis.js'
+import { toSafeLimit, toSafeOffset } from '../../utils/pagination.js'
 
 // ─── 가격 정본 (photo=photoService.js:12, will=willService.js:50 과 동일 정책값) ──────
 // 선물 결제 시점에는 실제 photo_orders/wills 레코드가 아직 없어(수행자가 나중에 만든다)
@@ -135,12 +136,16 @@ export const findByPerformTokenHash = async (hash) => {
 }
 
 export const findGiftsByGiverUserId = async (giverUserId, { limit, offset }) => {
+  // mysql2 execute()는 LIMIT/OFFSET 플레이스홀더를 지원하지 않는다(utils/pagination.js
+  // 참고) - 검증된 정수로 클램프한 뒤 SQL 문자열에 직접 삽입한다.
+  const safeLimit = toSafeLimit(limit)
+  const safeOffset = toSafeOffset(offset)
   const [rows] = await pool.execute(
     `SELECT id, ${GIFT_ORDER_COLS} FROM gift_orders
      WHERE giver_user_id = ? AND deleted_at IS NULL
      ORDER BY created_at DESC
-     LIMIT ? OFFSET ?`,
-    [giverUserId, limit, offset],
+     LIMIT ${safeLimit} OFFSET ${safeOffset}`,
+    [giverUserId],
   )
   const [[{ total }]] = await pool.execute(
     `SELECT COUNT(*) AS total FROM gift_orders WHERE giver_user_id = ? AND deleted_at IS NULL`,
@@ -258,6 +263,10 @@ export const findByWillId = async (willId) => {
  * PK 커서로 스캔한다. willRepository.findReminderCandidatesBatch와 동일 패턴.
  */
 export const findActiveReminderCandidatesBatch = async ({ cursorId, batchSize }) => {
+  // mysql2 execute()는 LIMIT 플레이스홀더를 지원하지 않는다(utils/pagination.js 참고) -
+  // 검증된 정수로 클램프한 뒤 SQL 문자열에 직접 삽입한다. 워커 내부 배치 스캔이라
+  // 사용자 페이지네이션(max 100)보다 큰 상한을 둔다.
+  const safeBatchSize = toSafeLimit(batchSize, { max: 1000, fallback: 500 })
   const [rows] = await pool.execute(
     `SELECT id, ${GIFT_ORDER_COLS} FROM gift_orders
      WHERE id > ?
@@ -265,8 +274,8 @@ export const findActiveReminderCandidatesBatch = async ({ cursorId, batchSize })
        AND token_expires_at > NOW()
        AND deleted_at IS NULL
      ORDER BY id ASC
-     LIMIT ?`,
-    [cursorId, batchSize],
+     LIMIT ${safeBatchSize}`,
+    [cursorId],
   )
   return rows
 }
@@ -277,6 +286,9 @@ export const findActiveReminderCandidatesBatch = async ({ cursorId, batchSize })
  * 아무도 링크를 열지 않아도 리마인드 워커가 능동적으로 스캔해 전이시킨다.
  */
 export const findExpiredCandidatesBatch = async ({ cursorId, batchSize }) => {
+  // mysql2 execute()는 LIMIT 플레이스홀더를 지원하지 않는다(utils/pagination.js 참고) -
+  // 검증된 정수로 클램프한 뒤 SQL 문자열에 직접 삽입한다.
+  const safeBatchSize = toSafeLimit(batchSize, { max: 1000, fallback: 500 })
   const [rows] = await pool.execute(
     `SELECT id, ${GIFT_ORDER_COLS} FROM gift_orders
      WHERE id > ?
@@ -284,8 +296,8 @@ export const findExpiredCandidatesBatch = async ({ cursorId, batchSize }) => {
        AND token_expires_at <= NOW()
        AND deleted_at IS NULL
      ORDER BY id ASC
-     LIMIT ?`,
-    [cursorId, batchSize],
+     LIMIT ${safeBatchSize}`,
+    [cursorId],
   )
   return rows
 }

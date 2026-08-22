@@ -15,9 +15,16 @@ import willReminderWorker from '../queues/willReminderWorker.js'
 import { registerWillReminderScheduler } from '../queues/willReminderQueue.js'
 import giftReminderWorker from '../queues/giftReminderWorker.js'
 import { registerGiftReminderScheduler } from '../queues/giftReminderQueue.js'
+import { checkDbConnection } from '../config/db.js'
 
 console.error('[ondam-workers] BullMQ 워커 시작됨')
 console.error('[ondam-workers] 활성 큐: photo, voiceClone, videoGenerate, notification, will-reminder, gift-reminder')
+
+// DB 연결 헬스 프로브 (DEV-28) - 워커도 매 잡마다 DB에 상태를 기록하므로
+// (jobs/payments/notifications 테이블 업데이트) 서버와 동일하게 부팅 시 확인한다.
+// 실패해도 프로세스를 죽이지 않는다 - 워커가 죽으면 큐에 쌓인 잡이 전부 멈추므로,
+// DB가 잠깐 불안정해도 재연결 가능성을 열어두는 편이 낫다(개발 편의 + 가용성).
+checkDbConnection()
 
 // SPEC-04 미열람 리마인드 반복 스캔 등록 - billingQueue의 scan-due와 동일 패턴.
 // server.js는 다른 에이전트 소유라 여기(워커 전용 프로세스, 상시 구동)에서 등록한다.

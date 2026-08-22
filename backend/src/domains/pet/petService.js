@@ -11,6 +11,20 @@ import { AI_JOB_TARGET_TYPE } from '../../../../shared/constants/enums.js'
 // repository를 서비스 레이어에서 읽기 전용으로 참조하는 기존 패턴을 따른다.
 // subscriptionRepository.js 자체는 수정하지 않는다(다른 에이전트 작업 범위).
 import * as subscriptionRepository from '../subscription/subscriptionRepository.js'
+import { pick, pickAll } from '../../utils/dto.js'
+
+// ─── 응답 화이트리스트 (내부 S3 키 원본 경로 유출 방지) ───────────────────────────
+// [보안 수정] pet_media 행을 그대로 응답에 흘려보내면 s3_key(내부 버킷 저장 경로,
+// `pets/{userUuid}/{petUuid}/...` 형태)까지 그대로 새어나간다. 클라이언트는
+// file_url/thumbnail_url만 있으면 되고 원본 s3_key는 필요 없다 - photoService의
+// PHOTO_FILE_PUBLIC_FIELDS와 동일한 원칙(화이트리스트라 새 컬럼이 추가돼도 안전).
+const PET_MEDIA_PUBLIC_FIELDS = [
+  'media_id', 'pet_id', 'media_type', 'file_url', 'thumbnail_url',
+  'mime_type', 'file_size', 'width', 'height', 'duration_sec',
+  'taken_at', 'sort_order', 'caption', 'created_at',
+]
+const toPetMediaDto = (media) => pick(media, PET_MEDIA_PUBLIC_FIELDS)
+const toPetMediaDtos = (rows) => pickAll(rows, PET_MEDIA_PUBLIC_FIELDS)
 
 // AI_JOB_TARGET_TYPE 배열에서 조회 - 오타 시 undefined가 되어 INSERT가 즉시
 // 실패하므로(NOT NULL) 리터럴 오타가 조용히 DB에 들어가는 것을 방지한다
@@ -150,7 +164,7 @@ export const addMedia = async (userId, petId, {
   await getPet(userId, petId)
 
   const mediaId = uuidv4()
-  return petRepository.createMedia({
+  const media = await petRepository.createMedia({
     mediaId,
     petId,
     mediaType,
@@ -167,6 +181,8 @@ export const addMedia = async (userId, petId, {
     sortOrder,
     caption,
   })
+  // 응답 화이트리스트 - s3_key(내부 원본 경로)는 PET_MEDIA_PUBLIC_FIELDS에 없으므로 제외된다.
+  return toPetMediaDto(media)
 }
 
 /**
@@ -178,7 +194,8 @@ export const getMedia = async (userId, petId, { page, limit }) => {
   const offset = (page - 1) * limit
   const { media, total } = await petRepository.findMediaByPetId(petId, { limit, offset })
   return {
-    media,
+    // 응답 화이트리스트 - s3_key(내부 원본 경로)는 PET_MEDIA_PUBLIC_FIELDS에 없으므로 제외된다.
+    media: toPetMediaDtos(media),
     meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
   }
 }

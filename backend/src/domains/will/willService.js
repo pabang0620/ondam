@@ -6,6 +6,33 @@ import { getPresignedUrl, getPresignedDownloadUrl, extractS3KeyFromUrl } from '.
 import { voiceCloneQueue, videoGenerateQueue, notificationQueue } from '../../jobs/queue.js'
 import pool from '../../config/db.js'
 import redis from '../../config/redis.js'
+import { pick, pickAll } from '../../utils/dto.js'
+
+// ─── 응답 화이트리스트 (KMS 참조값 유출 방지) ────────────────────────────────────
+// [보안 수정] wills 행을 그대로(스프레드로) 응답에 흘려보내면 result_video_s3_key_
+// encrypted/result_video_kms_key_id(KMS 암호화 s3 키 참조값)까지 그대로 새어나간다 -
+// 실제로 getWill이 이렇게 새고 있었다. 새 컬럼이 추가돼도 자동으로 새지 않도록
+// 블랙리스트(omitId)가 아닌 화이트리스트(pick)로 응답 필드를 명시한다. 영상 재생/
+// 다운로드 URL은 이 필드들이 아니라 verifyWatchAccess가 KMS 복호화 후 발급하는
+// presigned URL로만 나간다.
+const WILL_PUBLIC_FIELDS = [
+  'will_id', 'user_id', 'voice_sample_id', 'title', 'content_text',
+  'status', 'release_policy', 'release_status', 'released_at', 'event_type',
+  'price_krw', 'result_video_duration_sec', 'created_at', 'updated_at',
+]
+const toWillDto = (will) => pick(will, WILL_PUBLIC_FIELDS)
+const toWillDtos = (wills) => pickAll(wills, WILL_PUBLIC_FIELDS)
+
+// invite_token(시청 링크 토큰 원문)은 수혜자 본인에게 SMS/이메일로만 전달되고,
+// 유언장 소유자(본인)에게도 절대 다시 노출하지 않는다 - 재노출되면 소유자 화면이나
+// 로그를 통해 토큰이 다시 새 나갈 표면이 하나 더 생긴다. 화이트리스트라 향후 추가되는
+// 컬럼도 여기 명시하지 않는 한 자동으로는 새지 않는다.
+const BENEFICIARY_PUBLIC_FIELDS = [
+  'beneficiary_id', 'will_id', 'user_id', 'name', 'email', 'phone', 'relationship',
+  'verified_at', 'delivered_at', 'video_watched_at', 'watch_count', 'token_expires_at',
+  'created_at', 'updated_at',
+]
+const toBeneficiaryDtos = (rows) => pickAll(rows, BENEFICIARY_PUBLIC_FIELDS)
 
 // AWS SigV4 presigned URL은 최대 604,800초(7일)까지만 발급 가능하다(G7-1).
 // 90일은 SPEC-05가 정의한 "열람 링크(초대 토큰) 자체"의 유효기간이지, S3
@@ -225,9 +252,13 @@ export const getWill = async (userId, willId) => {
   }
 
   const rawBeneficiaries = await repo.findBeneficiariesByWillId(willId)
-  // invite_token은 수혜자 본인 전달용 - 유언장 조회 응답에서 제거
-  const beneficiaries = rawBeneficiaries.map(({ invite_token: _omit, ...b }) => b)
-  return { ...will, beneficiaries }
+  // 화이트리스트 응답 - invite_token(시청 링크 토큰 원문)과 내부 AUTO_INCREMENT id는
+  // BENEFICIARY_PUBLIC_FIELDS에 없으므로 자동으로 제외된다 - DEV-33 + KMS 참조값
+  // 유출 수정과 동일한 원칙(화이트리스트가 새 민감 컬럼에도 안전).
+  const beneficiaries = toBeneficiaryDtos(rawBeneficiaries)
+  // 화이트리스트 응답 - result_video_s3_key_encrypted/result_video_kms_key_id(KMS 참조값)와
+  // 내부 AUTO_INCREMENT id는 WILL_PUBLIC_FIELDS에 없으므로 자동으로 제외된다.
+  return { ...toWillDto(will), beneficiaries }
 }
 
 /**
@@ -237,7 +268,9 @@ export const getWills = async (userId, { page = 1, limit = 20 }) => {
   const offset = (page - 1) * limit
   const { wills, total } = await repo.findWillsByUserId(userId, { limit, offset })
   return {
-    wills,
+    // 화이트리스트 응답 - result_video_s3_key_encrypted/result_video_kms_key_id(KMS
+    // 참조값)와 내부 AUTO_INCREMENT id는 WILL_PUBLIC_FIELDS에 없으므로 자동 제외된다.
+    wills: toWillDtos(wills),
     meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
   }
 }

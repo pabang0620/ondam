@@ -36,8 +36,10 @@ export const registerGiftReminderScheduler = async () => {
     { name: 'scan-reminders', data: {} },
   )
 
+  // [DEV-27 수정] bullmq 5.74.1 getJobSchedulers()는 식별자를 `id`가 아니라 `key`
+  // 필드에 담아 반환한다(billingQueue.js에서 실측 확인). key 우선 + id 폴백으로 비교.
   const schedulers = await giftReminderQueue.getJobSchedulers()
-  const registered = schedulers.find((s) => s.id === SCAN_SCHEDULER_ID)
+  const registered = schedulers.find((s) => (s.key ?? s.id) === SCAN_SCHEDULER_ID)
 
   if (registered) {
     const nextRun = registered.next ? new Date(registered.next).toISOString() : '알 수 없음'
