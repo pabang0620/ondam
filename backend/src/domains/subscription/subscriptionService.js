@@ -6,18 +6,29 @@ import * as subscriptionTossClient from './subscriptionTossClient.js'
 import {
   runBilling,
   reserveBillingAttempt,
+  reserveInitialBillingAttempt,
+  resolveBillingOutcome,
+  categorizeFailCode,
   addOneMonth,
   todayKST,
+  isPaymentAlreadyRecorded,
 } from './subscriptionBillingService.js'
 import { registerBillingScanDueScheduler } from '../../queues/billingQueue.js'
 import pool from '../../config/db.js'
 
 /**
  * 구독 플랜 상수
+ *
+ * [DEV-17, 2026-08-21 오너 확정] 유언장 보관 구독(will_premium, 월 1,900원)은
+ * 폐지 - 보관비를 단건 가격에 내재화하기로 했다. 여기서 제거하면 getPlans()
+ * 목록·subscribe()의 `if (!PLANS[plan])` 체크·subscriptionRoutes.js의 zod
+ * enum 모두에서 신규 가입이 막힌다. 이미 will_premium으로 구독 중인 기존 행은
+ * 삭제·강제취소하지 않았으므로, 아래처럼 PLANS에 없는 plan 값을 조회할 수 있는
+ * 모든 지점(cancelSubscription/retryPayment/billingWorker)은 이미
+ * `PLANS[plan] ?? 대체값` 폴백을 갖고 있어 죽지 않는다.
  */
 export const PLANS = {
   pet_archive: { price: 4900, name: '반려동물 스탠다드' },
-  will_premium: { price: 1900, name: '유언장 보관' },
   all: { price: 9900, name: '전체' },
 }
 
@@ -46,12 +57,14 @@ export const getSubscriptions = async (userId) => {
 /**
  * 구독 시작
  * 1. 중복 활성 구독 체크
- * 2. authKey → billingKey 교환 (토스)
- * 3. 빌링키 KMS 암호화
- * 4. 즉시 첫 결제 실행 (attempt_type='initial')
- * 5. 결제 성공 시에만 subscriptions INSERT
- * 6. 결제 실패 시 402 throw
- * 7. scan-due repeat job 등록 (최초 1회)
+ * 2. [B-1] 최초 결제 시도 예약 (pending 선기록) - 정기결제 reserveBillingAttempt와
+ *    동일 구조. 재시도 시 같은 orderId를 재사용해 이중청구를 막는다.
+ * 3. authKey → billingKey 교환 (토스)
+ * 4. 빌링키 KMS 암호화
+ * 5. 즉시 첫 결제 실행 (attempt_type='initial')
+ * 6. 결제 성공 시에만 subscriptions INSERT
+ * 7. 결제 실패 시 402 throw / 불확정 시 indeterminate 반환 (컨트롤러가 202로 응답)
+ * 8. scan-due repeat job 등록 (최초 1회)
  */
 export const subscribe = async (userId, { plan, authKey, customerKey }) => {
   if (!PLANS[plan]) {
@@ -73,7 +86,59 @@ export const subscribe = async (userId, { plan, authKey, customerKey }) => {
     )
   }
 
-  // authKey → billingKey 교환
+  const planInfo = PLANS[plan]
+  const amount = planInfo.price
+  const orderName = `온담 ${planInfo.name} 정기구독`
+  const billingCycleDate = todayKST()
+
+  // [B-1 수정] 정기결제(reserveBillingAttempt)와 동일하게 pending 로그를 먼저
+  // 예약한다. 구독 레코드가 아직 없으므로 reserveInitialBillingAttempt가
+  // user_id+billing_cycle_date+amount_krw 기준으로 오늘자 시도를 식별/재사용한다
+  // (근거는 subscriptionBillingService.js의 reserveInitialBillingAttempt 주석,
+  // 완료 보고 참조). 이후 확보한 subscriptionId/orderId를 끝까지 그대로 써야
+  // 재시도 시 동일 orderId 재사용(reclaim)이 성립해 이중청구를 막는다.
+  const reservation = await reserveInitialBillingAttempt({ userId, plan, amount, billingCycleDate })
+
+  // [#3 수정] null이면 신선한(fresh) pending이 다른 요청으로 지금 진행 중이라는
+  // 뜻이다(reserveInitialBillingAttempt 참조) - 여기서 그대로 재선점을 시도하면
+  // 두 탭이 같은 orderId로 동시에 결제를 진행하다 정상 결제가 잘못 환불되는
+  // 사고로 이어진다(완료 보고 3번 참조). 재시도(reserveBillingAttempt가 null일
+  // 때의 retryPayment/billingWorker 처리와 동일하게) 409로 안내한다.
+  if (!reservation) {
+    throw Object.assign(
+      new Error('이미 진행 중인 결제가 있습니다. 잠시 후 다시 시도해 주세요'),
+      { status: 409 }
+    )
+  }
+
+  if (reservation.alreadySucceeded) {
+    // 동시 요청 경합(TOCTOU) - 위 findBlockingSubscription 통과 직후 다른 요청이
+    // 이미 전체 흐름(결제+구독 생성)을 끝낸 경우. 카드 재청구 없이 그 결과를
+    // 그대로 반환한다 (이중청구 방지 최우선).
+    const finishedSub = await subscriptionRepository.findSubscriptionById(reservation.subscriptionId)
+    if (finishedSub) {
+      return {
+        subscriptionId: finishedSub.subscription_id,
+        plan: finishedSub.plan,
+        subStatus: finishedSub.sub_status,
+        priceKrw: finishedSub.price_krw,
+        nextBillingAt: finishedSub.next_billing_at,
+        lastBilledAt: finishedSub.last_billed_at,
+      }
+    }
+    // 로그는 success인데 구독 행이 아직 안 보이는 극히 드문 커밋 지연 - 재청구는
+    // 위험하므로 사용자에게 재확인을 요청한다.
+    throw Object.assign(
+      new Error('이전 결제 처리 결과를 확인하는 중입니다. 잠시 후 다시 확인해 주세요'),
+      { status: 409 }
+    )
+  }
+
+  const subscriptionId = reservation.subscriptionId
+  const orderId = reservation.orderId
+
+  // authKey → billingKey 교환 (authKey는 1회용이라 매 시도마다 새로 발급받는다 -
+  // 이 교환 자체는 과금이 아니므로 재시도해도 안전하다)
   const issueResult = await subscriptionTossClient.issueBillingKey({ authKey, customerKey })
   if (!issueResult.ok) {
     throw Object.assign(
@@ -96,38 +161,73 @@ export const subscribe = async (userId, { plan, authKey, customerKey }) => {
   )
   const customerEmail = userRow?.email ?? ''
 
-  const planInfo = PLANS[plan]
-  const amount = planInfo.price
-  const orderName = `온담 ${planInfo.name} 정기구독`
-  const orderId = `ondam_sub_init_${userId.slice(0, 8)}_${Date.now()}`
-  const billingCycleDate = todayKST()
+  let tossPaymentKey = null
+  let shouldCharge = true
 
-  // 즉시 첫 결제 실행 (subscriptions 미존재 상태이므로 임시 ID 사용)
-  // 첫 결제는 subscriptions INSERT 전이므로 직접 토스 API 호출
-  const tossResult = await subscriptionTossClient.executeBilling({
-    billingKey,
-    customerKey: userId,
-    amount,
-    orderId,
-    orderName,
-    customerEmail,
-  })
-
-  if (!tossResult.ok) {
-    throw Object.assign(
-      new Error(tossResult.errorMessage ?? '첫 결제에 실패했습니다'),
-      { status: 402 }
-    )
+  if (reservation.isReclaim) {
+    // 방치된(stale) 이전 시도 재선점 - 같은 orderId로 실제 결제가 이미 이뤄졌는지
+    // 먼저 조회한다 (runBilling의 isReclaim 분기와 동일 원칙 - CRITICAL #1).
+    const lookup = await subscriptionTossClient.getPaymentByOrderId({ orderId })
+    if (lookup.ok && lookup.data?.status === 'DONE') {
+      tossPaymentKey = lookup.data.paymentKey
+      shouldCharge = false
+    }
+    // 미결제로 확인됐거나 조회 자체가 실패한 경우 - 그대로 재청구한다. 실제로
+    // 결제가 있었다면 토스가 동일 orderId를 거부하므로, 이 재청구 자체가 이중청구를
+    // 막는 최후 방어선이 된다.
   }
 
-  const tossPaymentKey = tossResult.data?.paymentKey ?? null
-  const subscriptionId = uuidv4()
+  if (shouldCharge) {
+    const tossResult = await subscriptionTossClient.executeBilling({
+      billingKey,
+      customerKey: userId,
+      amount,
+      orderId,
+      orderName,
+      customerEmail,
+    })
+
+    // [B-1] 정기결제와 동일한 판정 기준(resolveBillingOutcome)을 공유해 "이미
+    // 처리됨"·"불확정" 코드 목록이 두 경로에서 각자 관리되며 drift하는 것을 막는다.
+    const decision = await resolveBillingOutcome({ tossResult, orderId, subscriptionId })
+
+    if (decision.outcome === 'indeterminate') {
+      // [C-4] 실패로 확정하지 않고 로그를 pending인 채로 둔다 - 다음 재시도(재호출)가
+      // reserveInitialBillingAttempt를 통해 같은 orderId를 재선점한다. 컨트롤러가
+      // 이 결과를 402가 아닌 202로 응답해야 한다 (완료 보고 4번 참조).
+      return {
+        subscriptionId,
+        plan,
+        indeterminate: true,
+        message: decision.failReason ?? '결제 결과를 확인하는 중입니다. 잠시 후 다시 확인해 주세요',
+      }
+    }
+
+    if (decision.outcome === 'failed') {
+      const failCode = decision.tossResult.errorCode
+      const failReason = decision.tossResult.errorMessage ?? '첫 결제에 실패했습니다'
+      // 확정 실패이므로 로그를 failed로 닫는다 - 다음 시도는
+      // reserveInitialBillingAttempt가 새 attempt_no + 새 orderId를 발급한다.
+      await subscriptionPaymentLogRepository.updateLogResult(reservation.log.log_id, {
+        logStatus: 'failed',
+        failCode,
+        failCategory: categorizeFailCode(failCode),
+        failReason,
+        failedAt: new Date(),
+      })
+      throw Object.assign(new Error(failReason), { status: 402 })
+    }
+
+    tossPaymentKey = decision.tossData?.paymentKey ?? null
+  }
+
   const nextBillingAt = addOneMonth(new Date())
 
-  // 결제 성공 후 DB 작업(구독 생성 + 결제 로그 + payments) 은 하나의 트랜잭션으로
-  // 묶는다 (G4) - 이전에는 4개의 독립 pool.execute라 중간 INSERT가 실패하면
-  // "결제 없이 구독 active" 같은 정합성 파손이 가능했다. 트랜잭션 자체가 실패하면
-  // 이미 승인된 토스 결제를 보상 환불한다.
+  // 결제 성공 후 DB 작업(구독 생성 + 결제 로그 업데이트 + payments)은 하나의
+  // 트랜잭션으로 묶는다 (G4) - 이전에는 4개의 독립 pool.execute라 중간 INSERT가
+  // 실패하면 "결제 없이 구독 active" 같은 정합성 파손이 가능했다. 트랜잭션 자체가
+  // 실패하면 이미 승인된 토스 결제를 보상 환불한다 - 단, payments.toss_payment_key
+  // UNIQUE 충돌은 예외다 (C-3, 완료 보고 참조).
   let subscription
   const conn = await pool.getConnection()
   try {
@@ -145,17 +245,9 @@ export const subscribe = async (userId, { plan, authKey, customerKey }) => {
       lastBilledAt: new Date(),
     }, conn)
 
-    // 결제 로그 INSERT (success)
-    const log = await subscriptionPaymentLogRepository.createLog({
-      subscriptionId,
-      userId,
-      billingCycleDate,
-      attemptNo: 1,
-      attemptType: 'initial',
-      tossOrderId: orderId,
-      amountKrw: amount,
-    }, conn)
-    await subscriptionPaymentLogRepository.updateLogResult(log.log_id, {
+    // 결제 로그 업데이트 (pending → success) - reserveInitialBillingAttempt가
+    // 이미 pending으로 선기록해뒀으므로 여기서는 INSERT가 아니라 UPDATE한다.
+    await subscriptionPaymentLogRepository.updateLogResult(reservation.log.log_id, {
       logStatus: 'success',
       tossPaymentKey,
       succeededAt: new Date(),
@@ -174,6 +266,37 @@ export const subscribe = async (userId, { plan, authKey, customerKey }) => {
     await conn.commit()
   } catch (dbErr) {
     await conn.rollback()
+
+    // [C-3/#6 수정] payments.toss_payment_key UNIQUE 충돌은 "이 결제가 이미 다른
+    // 시도(동시 실행·재시도 경합)로 정상 기록됐다"는 신호일 가능성이 높다 - 환불
+    // 대신 이미 만들어진 구독을 재조회해 그대로 반환한다. 어느 테이블 충돌인지는
+    // payments를 직접 조회해 판별한다(isPaymentAlreadyRecorded) - 에러 메시지의
+    // 인덱스명 문자열 매칭은 payments.toss_payment_key와
+    // subscription_payment_logs.toss_payment_key가 같은 이름의 UNIQUE 인덱스를
+    // 가져 신뢰할 수 없다(#6, subscriptionBillingService.js 참조).
+    const isPaymentKeyDuplicate =
+      dbErr.code === 'ER_DUP_ENTRY' && await isPaymentAlreadyRecorded(tossPaymentKey)
+    if (isPaymentKeyDuplicate) {
+      console.warn(
+        '[subscribe] payments.toss_payment_key 이미 존재 - 다른 시도가 정상 기록한 결제로 판단, 보상 환불 생략:',
+        subscriptionId, tossPaymentKey, dbErr.message,
+      )
+      const finishedSub = await subscriptionRepository.findSubscriptionById(subscriptionId)
+      if (finishedSub) {
+        return {
+          subscriptionId: finishedSub.subscription_id,
+          plan: finishedSub.plan,
+          subStatus: finishedSub.sub_status,
+          priceKrw: finishedSub.price_krw,
+          nextBillingAt: finishedSub.next_billing_at,
+          lastBilledAt: finishedSub.last_billed_at,
+        }
+      }
+      throw Object.assign(
+        new Error('이전 결제 처리 결과를 확인하는 중입니다. 잠시 후 다시 확인해 주세요'),
+        { status: 409 }
+      )
+    }
 
     // 보상 환불 - 성공 여부(ok)까지 확인해 사용자 메시지에 실제로 반영한다.
     // subscriptionTossClient의 함수들은 throw 없이 {ok,...}를 반환하므로(네트워크
@@ -430,9 +553,28 @@ export const retryPayment = async (userId, subscriptionId) => {
     customerEmail,
     log: reservation.log,
     isReclaim: reservation.isReclaim,
+    // [C-2/#5 수정] 다음 청구일 드리프트 방지 - subscription.next_billing_at은
+    // 실패 재시도 중 _finalizeFailure가 재시도 스케줄(nextRetryAt)로 덮어써
+    // "원래 예정일"을 더 이상 신뢰할 수 없다. last_billed_at은 성공 시에만
+    // 갱신되므로 재시도 동안 불변이다 - 여기서 +1개월 해 이번 사이클이 원래
+    // 청구됐어야 할 날짜를 재구성한다(완료 보고 5번 참조).
+    currentNextBillingAt: addOneMonth(
+      subscription.last_billed_at ?? subscription.next_billing_at ?? new Date()
+    ),
   })
 
   if (!result.success) {
+    if (result.indeterminate) {
+      // [C-4 수정] 이중청구는 서버가 막지만(runBilling의 pending 유지), 사용자에게
+      // "실패"로 보이면 불필요한 재시도를 유발한다. 402(실패)가 아니라 "확인 중"
+      // 취지로 반환하고, 컨트롤러가 202로 응답한다.
+      return {
+        subscriptionId,
+        subStatus: subscription.sub_status,
+        indeterminate: true,
+        message: result.failReason ?? '결제 결과를 확인하는 중입니다. 잠시 후 다시 확인해 주세요',
+      }
+    }
     throw Object.assign(
       new Error(result.failReason ?? '결제 재시도에 실패했습니다'),
       { status: 402 }

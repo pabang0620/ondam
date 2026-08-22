@@ -36,12 +36,19 @@ export const preparePayment = (targetId) =>
 // orderId는 preparePayment 응답의 tossOrderId여야 한다(photo_orders.order_id가 아니다).
 // amount도 반드시 preparePayment 응답의 amountKrw를 그대로 넘겨야 한다 - 서버가 결제
 // 레코드에 저장된 amount_krw와 대조하므로 다른 값을 보내면 항상 400으로 거부된다.
-export const confirmPayment = ({ orderId, amount }) =>
-  apiClient.post('/payments/confirm', {
-    paymentKey: `mock_${Date.now()}`,
-    orderId,
-    amount,
-  })
+// paymentKey는 더 이상 프론트가 만들지 않는다 - 토스 결제창이 successUrl 콜백 쿼리로
+// 돌려준 실제 값을 그대로 전달해야 한다 (DEV-25, G3-4).
+//
+// DEV-25: 백엔드 confirm은 토스 승인 API 응답을 기다린다(TOSS_CONFIRM_TIMEOUT_MS 기본
+// 30초). axios 기본 timeout(10초)보다 짧게 두면 백엔드가 아직 처리 중인데 클라이언트가
+// 먼저 타임아웃 나 버려서 "결제가 실제로 됐는지 알 수 없는" 상태를 만든다. 백엔드
+// 타임아웃보다 여유 있게 35초로 늘린다.
+export const confirmPayment = ({ paymentKey, orderId, amount }) =>
+  apiClient.post(
+    '/payments/confirm',
+    { paymentKey, orderId, amount },
+    { timeout: 35000 },
+  )
 
 export const startProcessing = (orderId) =>
   apiClient.post(`/photo/orders/${orderId}/start`)

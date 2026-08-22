@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { willApi } from './willApi.js'
+import { getTossPayments } from '../../lib/tossPayments.js'
 
 // FIX: DEV-29 - 가격은 서버 정본(wills.price_krw)이 유일한 출처다. 이전에는 이 값이
 // 29900으로 하드코딩돼 있었는데, 백엔드가 결제 대상의 실제 가격(현재 49,000원 - 마지막
@@ -12,7 +13,6 @@ import { willApi } from './willApi.js'
 // 쓴다(아래 handlePay) - 화면 표시가 어떤 이유로든 실패/지연되어도 결제 자체는 항상
 // 서버가 그 순간 조회한 정본 금액으로 진행되므로 금액 불일치로 깨지지 않는다.
 export function useWillPayment() {
-  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const willId = searchParams.get('willId') || localStorage.getItem('will_current_id') || ''
 
@@ -57,34 +57,35 @@ export function useWillPayment() {
       if (!prepareRes.data?.success) {
         throw new Error(prepareRes.data?.message || '결제 준비에 실패했습니다')
       }
-      // FIX: DEV-29 - 이전에는 존재하지 않는 필드인 `orderId`를 읽어 항상 undefined가
-      // confirmPayment로 넘어갔다(백엔드가 실제로 반환하는 필드는 tossOrderId).
-      // undefined orderId로는 결제 레코드를 못 찾아 confirm이 404로 항상 실패했다 -
-      // 가격 불일치와 별개로 이 자체가 "결제 100% 실패"의 또 다른 직접 원인이었다.
+      // FIX: DEV-29 - preparePayment 응답의 필드는 tossOrderId/amountKrw다(orderId 아님).
       const { tossOrderId, amountKrw } = prepareRes.data.data ?? {}
       setAmount(Number(amountKrw))
 
-      // 2단계: 결제 확인 (개발 환경 mock) - amount는 반드시 prepare가 돌려준
-      // amountKrw를 그대로 사용한다. 서버가 이 값과 저장된 amount_krw를 대조하므로,
-      // 여기서 다른 값을 보내면(하드코딩 등) 항상 400(금액 불일치)으로 거부된다.
-      const paymentKey = `mock_${Date.now()}`
-      await willApi.confirmPayment({
-        paymentKey,
-        orderId: tossOrderId,
+      // FIX: DEV-25 - 이전에는 여기서 confirmPayment(paymentKey: mock_...)를 직접
+      // 호출해 토스 결제창을 아예 띄우지 않는 모의 결제였다. 이제 실제 왕복으로 바꾼다:
+      // 토스 SDK requestPayment(서버가 준 금액) → 토스 결제창 → successUrl 콜백
+      // (WillPaymentSuccessPage)에서 confirm + activateWill을 마저 처리한다.
+      const toss = await getTossPayments()
+      // 결제창은 successUrl로 전체 페이지 리다이렉트한다 - 콜백 페이지에서 어떤
+      // 유언장을 이어서 activate할지 알아야 하므로 sessionStorage에 남겨둔다
+      // (pet/usePetSubscription.js의 pendingSubscriptionPlan과 동일 패턴).
+      sessionStorage.setItem('pendingWillId', willId)
+      await toss.requestPayment('카드', {
         amount: amountKrw,
+        orderId: tossOrderId,
+        orderName: 'AI 유언장 제작',
+        successUrl: window.location.origin + '/will/payment/success',
+        failUrl: window.location.origin + '/will/payment/fail',
       })
-
-      // 3단계: 영상 생성 큐 등록
-      await willApi.activateWill(willId)
-
-      // 4단계: 처리 페이지 이동
-      navigate(`/will/processing/${willId}`)
+      // 정상 흐름이면 여기서 브라우저가 리다이렉트되어 이후 코드는 실행되지 않는다.
     } catch (err) {
-      setPayError(err?.response?.data?.message || err?.message || '결제 처리 중 오류가 발생했습니다.')
-    } finally {
+      // 토스 SDK 호출 자체가 실패한 경우만 여기로 온다. 결제 성공은 여기서 만들지
+      // 않는다 - 성공 판정은 반드시 서버 confirm 응답이다 (G2/G3).
+      sessionStorage.removeItem('pendingWillId')
+      setPayError(err?.response?.data?.message || err?.message || '결제 요청에 실패했습니다. 잠시 후 다시 시도해 주세요.')
       setIsPaying(false)
     }
-  }, [willId, isPaying, navigate])
+  }, [willId, isPaying])
 
   return {
     willId,

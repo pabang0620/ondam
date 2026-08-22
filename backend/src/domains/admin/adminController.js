@@ -7,6 +7,21 @@ import * as adminService from './adminService.js'
 import * as adminRepository from './adminRepository.js'
 import { success, paginated } from '../../utils/response.js'
 
+// ─── 관리자 refresh token 쿠키 (phase0-followups B-3) ─────────────────────────
+// 이름·path를 일반 사용자 쿠키('rt', path=/api/auth)와 겹치지 않게 구분한다.
+// path를 관리자 auth 하위 경로로 좁혀 로그인/갱신/로그아웃 요청에만 실린다
+// (다른 모든 /api/admin/* 요청에는 이 쿠키가 자동으로 붙지 않음 - G9-2 "관리자
+// refresh는 일반 사용자보다 민감" 요구에 따른 최소 노출).
+const ADMIN_RT_COOKIE = 'art'
+
+const ADMIN_RT_COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'strict',
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7일 - 일반 사용자(30일)보다 짧게
+  path: '/api/admin/auth',
+}
+
 // ─── POST /api/admin/auth/login ───────────────────────────────────────────────
 
 export const login = async (req, res, next) => {
@@ -15,8 +30,11 @@ export const login = async (req, res, next) => {
   const userAgent = req.headers['user-agent'] ?? null
 
   try {
-    const result = await adminService.login(email, password)
-    return success(res, result, '관리자 로그인 성공')
+    const { accessToken, refreshToken, user } = await adminService.login(email, password)
+
+    res.cookie(ADMIN_RT_COOKIE, refreshToken, ADMIN_RT_COOKIE_OPTIONS)
+
+    return success(res, { accessToken, user }, '관리자 로그인 성공')
   } catch (err) {
     // 인증 실패(401)는 audit_logs에 기록 - 브루트포스 탐지용
     if (err.status === 401) {
@@ -35,6 +53,54 @@ export const login = async (req, res, next) => {
         console.error('[audit] admin_login_failed 기록 실패:', auditErr)
       })
     }
+    next(err)
+  }
+}
+
+// ─── POST /api/admin/auth/refresh ─────────────────────────────────────────────
+// Refresh token은 HttpOnly 쿠키 'art'에서 읽음 (Authorization 헤더 불필요)
+
+export const refresh = async (req, res, next) => {
+  try {
+    const token = req.cookies?.[ADMIN_RT_COOKIE]
+    if (!token) {
+      return next(Object.assign(new Error('리프레시 토큰이 없습니다'), { status: 401 }))
+    }
+
+    const { accessToken, refreshToken: newRefreshToken, user } = await adminService.refresh(token)
+
+    // FIX: HIGH-3 - 다중 탭 그레이스 경로(adminService.refresh 참고)에서는
+    // newRefreshToken이 null로 온다. 이 경우 쿠키를 다시 심지 않는다 - 먼저 도착한
+    // 탭이 이미 심어둔 최신 art 쿠키를 그대로 둬야 한다.
+    if (newRefreshToken) {
+      res.cookie(ADMIN_RT_COOKIE, newRefreshToken, ADMIN_RT_COOKIE_OPTIONS)
+    }
+
+    return success(res, { accessToken, user }, '토큰 갱신 성공')
+  } catch (err) {
+    // FIX: MEDIUM-5 - 예전에는 어떤 에러(DB 순단 같은 일시적 5xx 포함)에서도 무조건
+    // clearCookie를 실행해 일시적 장애만으로 관리자가 로그아웃됐다. 세션이 실제로
+    // 무효하다고 확정된 경우(401: 서명불일치·만료·재사용탐지 / 404: 관리자 계정 없음)
+    // 에만 쿠키를 지운다.
+    if (err.status === 401 || err.status === 404) {
+      res.clearCookie(ADMIN_RT_COOKIE, { path: '/api/admin/auth' })
+    }
+    next(err)
+  }
+}
+
+// ─── POST /api/admin/auth/logout ──────────────────────────────────────────────
+// HttpOnly 쿠키 'art' 클리어
+
+export const logout = async (req, res, next) => {
+  try {
+    const token = req.cookies?.[ADMIN_RT_COOKIE]
+    await adminService.logout(token)
+
+    res.clearCookie(ADMIN_RT_COOKIE, { path: '/api/admin/auth' })
+
+    return success(res, null, '로그아웃 성공')
+  } catch (err) {
     next(err)
   }
 }

@@ -18,6 +18,8 @@ import JoinPage from './pages/auth/JoinPage.jsx'
 const PhotoPage = lazy(() => import('./pages/photo/PhotoPage.jsx'))
 const PhotoOrderPage = lazy(() => import('./pages/photo/PhotoOrderPage.jsx'))
 const PhotoPaymentPage = lazy(() => import('./pages/photo/PhotoPaymentPage.jsx'))
+const PhotoPaymentSuccessPage = lazy(() => import('./pages/photo/PhotoPaymentSuccessPage.jsx'))
+const PhotoPaymentFailPage = lazy(() => import('./pages/photo/PhotoPaymentFailPage.jsx'))
 const PhotoProcessingPage = lazy(() => import('./pages/photo/PhotoProcessingPage.jsx'))
 const PhotoResultPage = lazy(() => import('./pages/photo/PhotoResultPage.jsx'))
 const WillPage = lazy(() => import('./pages/will/WillPage.jsx'))
@@ -27,6 +29,8 @@ const WillRecordPage = lazy(() => import('./pages/will/WillRecordPage.jsx'))
 const WillPhotoPage = lazy(() => import('./pages/will/WillPhotoPage.jsx'))
 const WillPreviewPage = lazy(() => import('./pages/will/WillPreviewPage.jsx'))
 const WillPaymentPage = lazy(() => import('./pages/will/WillPaymentPage.jsx'))
+const WillPaymentSuccessPage = lazy(() => import('./pages/will/WillPaymentSuccessPage.jsx'))
+const WillPaymentFailPage = lazy(() => import('./pages/will/WillPaymentFailPage.jsx'))
 const WillProcessingPage = lazy(() => import('./pages/will/WillProcessingPage.jsx'))
 const WillVaultPage = lazy(() => import('./pages/will/WillVaultPage.jsx'))
 const WillEventPage = lazy(() => import('./pages/will/WillEventPage.jsx'))
@@ -94,6 +98,8 @@ export default function App() {
             <Route path={ROUTES.PHOTO} element={<PhotoPage />} />
             <Route path={ROUTES.PHOTO_ORDER} element={<PhotoOrderPage />} />
             <Route path={ROUTES.PHOTO_PAYMENT} element={<PhotoPaymentPage />} />
+            <Route path={ROUTES.PHOTO_PAYMENT_SUCCESS} element={<PhotoPaymentSuccessPage />} />
+            <Route path={ROUTES.PHOTO_PAYMENT_FAIL} element={<PhotoPaymentFailPage />} />
             <Route path={ROUTES.PHOTO_PROCESSING} element={<PhotoProcessingPage />} />
             <Route path={ROUTES.PHOTO_RESULT} element={<PhotoResultPage />} />
 
@@ -104,6 +110,8 @@ export default function App() {
             <Route path={ROUTES.WILL_PHOTO} element={<WillPhotoPage />} />
             <Route path={ROUTES.WILL_PREVIEW} element={<WillPreviewPage />} />
             <Route path={ROUTES.WILL_PAYMENT} element={<WillPaymentPage />} />
+            <Route path={ROUTES.WILL_PAYMENT_SUCCESS} element={<WillPaymentSuccessPage />} />
+            <Route path={ROUTES.WILL_PAYMENT_FAIL} element={<WillPaymentFailPage />} />
             <Route path={ROUTES.WILL_PROCESSING} element={<WillProcessingPage />} />
             <Route path={ROUTES.WILL_VAULT} element={<WillVaultPage />} />
             <Route path={ROUTES.WILL_EVENT} element={<WillEventPage />} />

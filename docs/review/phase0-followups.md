@@ -30,8 +30,9 @@ Phase 0은 DB·Redis·토스 연동 없이 정적 분석만으로 진행했다. 
 - 관리자 인증은 별도 identity 체계(`admin_users`)인데 **refresh 엔드포인트가 없다.** `adminToken`(accessToken 원본)을 localStorage에 저장하는 구조라 XSS 노출 위험도 남는다.
 - 백엔드에 관리자 refresh + HttpOnly 쿠키를 만들고 프론트를 일반 사용자와 동일 패턴으로 통일해야 완결된다. Phase 0에서는 무한 루프만 차단했다.
 
-### B-4. `will`/`photo`의 `aiLimiter`가 ip 기준일 가능성
-- 인증 라우트인데 `keyGenerator`가 없으면 같은 NAT 뒤 사용자들이 AI 한도를 공유한다. 확인 후 `userId` 우선으로 교정.
+### ~~B-4. `will`/`photo`의 `aiLimiter`가 ip 기준일 가능성~~ → **오탐 (2026-08-22 확인, 조치 불필요)**
+- 실제 파일 확인 결과 `willRoutes.js:15`·`photoRoutes.js:15` 둘 다 이미 `keyGenerator: (req) => req.user?.userId ?? req.ip`로 올바르게 구현돼 있었다.
+- 앞선 보고가 grep만으로 "없을 가능성"을 지적한 것이었다. **교훈**: 파일을 열지 않은 추정을 후속 태스크로 승격시키지 말 것.
 
 ## B-추가. 문서 진단·법무 초안 작성에서 새로 드러난 HIGH (2026-08-22)
 
@@ -74,6 +75,12 @@ Phase 0은 DB·Redis·토스 연동 없이 정적 분석만으로 진행했다. 
 
 ### C-8. 접근 코드 평문 저장
 - `pets.memorial_access_code`가 평문이다. 소유자에게 원문을 되돌려주는 현재 요구사항과는 맞지만, 정책 재검토 여지가 있다.
+
+### C-9. `refresh_tokens.user_id`가 일반 사용자·관리자 토큰을 혼용 저장한다
+- 근거: 2026-08-22 관리자 세션 교차검증(항목 6). `adminRepository.js`의 `saveAdminRefreshToken`/`findAdminRefreshToken`/`findActiveAdminRefreshToken`/`revokeAllAdminRefreshTokens`가 전용 테이블 없이 `refresh_tokens.user_id`에 `admin_users.admin_id`를 그대로 저장·조회한다.
+- FK가 없고(스키마 전체에 FK 미사용) UUID라 값 충돌이 없어 **오늘은 문제가 없다.** 다만 향후 "사용자 전체 토큰 일괄 폐기", 탈퇴 정리 배치, `refresh_tokens JOIN users` 같은 쿼리를 추가하면 이 테이블에 섞인 admin 행을 사용자 행으로 오인해 조용히 잘못 처리할 수 있다.
+- 조치: 그런 쿼리를 새로 작성할 때는 대상 UUID가 `users` 소속인지 `admin_users` 소속인지 먼저 구분할 것. 스키마 주석에도 동일 내용을 남겼다(`ondam_schema.sql`의 `refresh_tokens` 테이블).
+- 근본 해결(전용 `admin_refresh_tokens` 테이블 분리)은 스키마 변경이 필요해 이번 작업 범위 밖으로 남긴다.
 
 ## D. 미완 기능 (Phase 0 범위 밖으로 명시적으로 남김)
 

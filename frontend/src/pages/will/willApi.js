@@ -60,6 +60,14 @@ export const willApi = {
     }),
 
   // 결제 확인
+  // DEV-25: 백엔드 confirm은 토스 승인 API 응답을 기다린다(TOSS_CONFIRM_TIMEOUT_MS 기본
+  // 30초). axios 기본 timeout(10초)보다 짧게 두면 백엔드가 아직 처리 중인데 클라이언트가
+  // 먼저 타임아웃 나 버려서 "결제가 실제로 됐는지 알 수 없는" 상태를 만든다. 백엔드
+  // 타임아웃보다 여유 있게 35초로 늘린다.
   confirmPayment: ({ paymentKey, orderId, amount }) =>
-    apiClient.post('/payments/confirm', { paymentKey, orderId, amount }),
+    apiClient.post(
+      '/payments/confirm',
+      { paymentKey, orderId, amount },
+      { timeout: 35000 },
+    ),
 }

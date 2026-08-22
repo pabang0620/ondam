@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { adminApi } from './adminApi.js'
-import { useAuthStore } from '../../store/authStore.js'
+import { setAdminAccessToken, useAdminAuthStore } from '../../config/adminApiClient.js'
 import { ROUTES } from '../../constants/routes.js'
 
 export function useAdminLogin() {
   const navigate = useNavigate()
-  const setAuth = useAuthStore((s) => s.setAuth)
+  // FIX: HIGH-1 - useAuthStore.setAuth() 대신 관리자 전용 store에만 반영한다.
+  const setAdminUser = useAdminAuthStore((s) => s.setAdminUser)
   const [form, setForm] = useState({ email: '', password: '' })
   const [error, setError] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -31,8 +32,12 @@ export function useAdminLogin() {
       const { data } = await adminApi.login(form.email, form.password)
       if (data.success) {
         const { accessToken, user } = data.data
-        localStorage.setItem('adminToken', accessToken)
-        setAuth(user, accessToken)
+        // phase0-followups B-3: accessToken은 메모리(adminApiClient)에만 보관한다.
+        // refreshToken은 백엔드가 HttpOnly 쿠키('art')로 이미 심어준 상태.
+        setAdminAccessToken(accessToken)
+        // FIX: HIGH-1 - useAuthStore를 더 이상 건드리지 않는다 (일반 사용자 store와
+        // 완전 분리).
+        setAdminUser(user)
         navigate(ROUTES.ADMIN, { replace: true })
       }
     } catch (err) {

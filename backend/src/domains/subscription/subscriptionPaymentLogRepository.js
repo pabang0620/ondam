@@ -207,6 +207,130 @@ export const getLastAttemptNo = async (subscriptionId, billingCycleDate, conn = 
 }
 
 /**
+ * [B-1] toss_order_id(UNIQUE)로 단건 조회. 최초 결제(subscribe) 예약 시 동시
+ * 요청이 같은 orderId로 먼저 INSERT에 성공했을 때(ER_DUP_ENTRY) 그 로그를
+ * 재조회하는 용도.
+ * @param {string} orderId
+ * @param {import('mysql2/promise').PoolConnection|null} conn
+ * @returns {Promise<object|null>}
+ */
+export const findLogByOrderId = async (orderId, conn = null) => {
+  const executor = conn ?? pool
+  const [rows] = await executor.execute(
+    `SELECT log_id, subscription_id, user_id, billing_cycle_date,
+            attempt_no, attempt_type, toss_order_id, toss_payment_key,
+            amount_krw, log_status, attempted_at, succeeded_at, failed_at,
+            fail_code, fail_category, fail_reason, next_retry_at, created_at
+     FROM subscription_payment_logs
+     WHERE toss_order_id = ?
+     LIMIT 1`,
+    [orderId]
+  )
+  return rows[0] ?? null
+}
+
+/**
+ * [B-1] 최초 결제(initial) 오늘자 "블로킹" 로그 조회. subscription_id가 아직 없는
+ * 상태이므로 user_id + billing_cycle_date + amount_krw(플랜 가격)로 식별한다.
+ *
+ * [#2 수정] success 로그는 그 로그가 만든 subscription이 이후 취소(canceled)됐다면
+ * 더 이상 블로킹 대상이 아니다 - LEFT JOIN으로 subscriptions.sub_status를 함께
+ * 확인해, 같은 날 해지 후 재구독 시 옛 success 로그가 새 결제를 가로막지
+ * 않게 한다(구독 행이 아직 없는 pending 상태에서는 애초에 취소될 대상이 없으므로
+ * 이 조건은 success에만 적용한다).
+ *
+ * [#3 수정] pending 로그는 findTodayLog(정기결제)와 동일하게
+ * BILLING_PENDING_STALE_MINUTES(기본 15분) 이내인 "신선한" 것만 블로킹 대상으로
+ * 본다. 방치된(stale) pending까지 무조건 블로킹하면 재선점 판단을 여기서 끝내버려
+ * reserveInitialBillingAttempt가 신선/방치를 구분하지 못한다 - 그 구분은
+ * findInitialPendingLogRaw가 별도로 담당한다.
+ * @param {string} userId
+ * @param {string} billingCycleDate - 'YYYY-MM-DD'
+ * @param {number} amountKrw
+ * @param {import('mysql2/promise').PoolConnection|null} conn
+ * @returns {Promise<object|null>}
+ */
+export const findInitialTodayLog = async (userId, billingCycleDate, amountKrw, conn = null) => {
+  const executor = conn ?? pool
+  const rawStaleMinutes = Number(process.env.BILLING_PENDING_STALE_MINUTES)
+  const staleMinutes = Number.isFinite(rawStaleMinutes) && rawStaleMinutes > 0 ? rawStaleMinutes : 15
+  const [rows] = await executor.execute(
+    `SELECT l.log_id, l.subscription_id, l.user_id, l.billing_cycle_date,
+            l.attempt_no, l.attempt_type, l.toss_order_id, l.toss_payment_key,
+            l.amount_krw, l.log_status, l.attempted_at, l.succeeded_at, l.failed_at,
+            l.fail_code, l.fail_category, l.fail_reason, l.next_retry_at, l.created_at
+     FROM subscription_payment_logs l
+     LEFT JOIN subscriptions s ON s.subscription_id = l.subscription_id
+     WHERE l.user_id = ?
+       AND l.billing_cycle_date = ?
+       AND l.amount_krw = ?
+       AND l.attempt_type = 'initial'
+       AND (
+         (l.log_status = 'success' AND (s.subscription_id IS NULL OR s.sub_status != 'canceled'))
+         OR (l.log_status = 'pending' AND l.attempted_at > DATE_SUB(NOW(), INTERVAL ? MINUTE))
+       )
+     ORDER BY l.attempt_no DESC
+     LIMIT 1`,
+    [userId, billingCycleDate, amountKrw, staleMinutes]
+  )
+  return rows[0] ?? null
+}
+
+/**
+ * [#3] 최초 결제(initial) 오늘자 pending 로그를 신선/방치 여부와 무관하게 원본
+ * 그대로 조회한다 (재선점 판단용). findInitialTodayLog가 신선한 pending만 블로킹
+ * 대상으로 보고 null을 반환했을 때, 그 방치된(stale) pending을 재사용할 수 있게
+ * 한다 - findPendingLogRaw(정기결제)의 initial 버전.
+ * @param {string} userId
+ * @param {string} billingCycleDate - 'YYYY-MM-DD'
+ * @param {number} amountKrw
+ * @param {import('mysql2/promise').PoolConnection|null} conn
+ * @returns {Promise<object|null>}
+ */
+export const findInitialPendingLogRaw = async (userId, billingCycleDate, amountKrw, conn = null) => {
+  const executor = conn ?? pool
+  const [rows] = await executor.execute(
+    `SELECT log_id, subscription_id, user_id, billing_cycle_date,
+            attempt_no, attempt_type, toss_order_id, toss_payment_key,
+            amount_krw, log_status, attempted_at, succeeded_at, failed_at,
+            fail_code, fail_category, fail_reason, next_retry_at, created_at
+     FROM subscription_payment_logs
+     WHERE user_id = ?
+       AND billing_cycle_date = ?
+       AND amount_krw = ?
+       AND attempt_type = 'initial'
+       AND log_status = 'pending'
+     ORDER BY attempt_no DESC
+     LIMIT 1`,
+    [userId, billingCycleDate, amountKrw]
+  )
+  return rows[0] ?? null
+}
+
+/**
+ * [B-1] 최초 결제(initial) 오늘자 마지막 attempt_no 조회 (subscription_id 없이
+ * user_id + amount_krw 기준 채번).
+ * @param {string} userId
+ * @param {string} billingCycleDate
+ * @param {number} amountKrw
+ * @param {import('mysql2/promise').PoolConnection|null} conn
+ * @returns {Promise<number>}
+ */
+export const getInitialLastAttemptNo = async (userId, billingCycleDate, amountKrw, conn = null) => {
+  const executor = conn ?? pool
+  const [rows] = await executor.execute(
+    `SELECT COALESCE(MAX(attempt_no), 0) AS last_no
+     FROM subscription_payment_logs
+     WHERE user_id = ?
+       AND billing_cycle_date = ?
+       AND amount_krw = ?
+       AND attempt_type = 'initial'`,
+    [userId, billingCycleDate, amountKrw]
+  )
+  return Number(rows[0]?.last_no ?? 0)
+}
+
+/**
  * 오늘 pending 로그를 신선/방치 여부와 무관하게 원본 그대로 조회한다 (재선점 판단용).
  *
  * findTodayLog는 신선한(BILLING_PENDING_STALE_MINUTES 이내) pending만 "처리 중"으로

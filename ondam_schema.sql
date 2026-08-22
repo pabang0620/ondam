@@ -807,10 +807,21 @@ CREATE TABLE IF NOT EXISTS audit_logs (
 -- 인증 - Refresh Token
 -- ==========================================================================
 
+-- 주의(2026-08-22, 관리자 세션 교차검증 항목 6): 이 테이블은 일반 사용자뿐 아니라
+-- 관리자(admin_users) refresh token도 함께 저장한다. adminRepository.js의
+-- saveAdminRefreshToken/findAdminRefreshToken/findActiveAdminRefreshToken/
+-- revokeAllAdminRefreshTokens가 user_id 컬럼에 admin_users.admin_id(UUID)를 그대로
+-- 넣고 뺀다 - 이 테이블에 FOREIGN KEY가 없어(스키마 전체에 FK 미사용) 오늘은 무결성
+-- 위반이 나지 않고, UUID 값 공간이 겹치지 않아 조회도 뒤섞이지 않는다.
+-- 다만 이후 "사용자 전체 토큰 일괄 폐기", 탈퇴 정리 배치, `refresh_tokens JOIN users`
+-- 같은 쿼리를 추가하면 이 테이블에 섞여 있는 admin 행을 사용자 행으로 오인해 조용히
+-- 잘못 처리할 수 있다. 그런 쿼리를 새로 추가할 때는 반드시 대상 UUID가 users 소속인지
+-- admin_users 소속인지 먼저 구분할 것 (예: JOIN 대신 존재 여부 서브쿼리로 확인).
+-- 상세: docs/review/phase0-followups.md 참고.
 CREATE TABLE IF NOT EXISTS refresh_tokens (
   id           BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   token_hash   VARCHAR(64) NOT NULL UNIQUE  COMMENT 'SHA-256 해시 - 원본 JWT 저장 금지',
-  user_id      CHAR(36) NOT NULL            COMMENT 'users.user_id 참조',
+  user_id      CHAR(36) NOT NULL            COMMENT 'users.user_id 참조. 단 admin_users.admin_id도 이 컬럼에 함께 저장됨(위 주석 참고) - FK 없음, UUID라 값 충돌 없음',
   expires_at   DATETIME NOT NULL,
   revoked_at   DATETIME NULL,
   created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -818,7 +829,7 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
   INDEX idx_rt_user    (user_id),
   INDEX idx_rt_expires (expires_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  COMMENT='JWT Refresh Token 해시 저장 - Rotation 방식 (재사용 시 revoke)';
+  COMMENT='JWT Refresh Token 해시 저장 - Rotation 방식 (재사용 시 revoke). user_id 컬럼은 일반 사용자와 관리자(admin_users.admin_id) 토큰을 함께 저장하는 혼용 테이블 - 위 주석 참고';
 
 
 -- ==========================================================================

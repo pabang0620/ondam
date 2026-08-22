@@ -1,8 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { NavLink, Outlet, Navigate, Link, useLocation } from 'react-router-dom'
-import { useAuthStore } from '../store/authStore.js'
+import { NavLink, Outlet, Navigate, Link, useLocation, useNavigate } from 'react-router-dom'
 import { ROUTES } from '../constants/routes.js'
-import { LayoutDashboard, Users, ShoppingBag, Unlock, Menu, X } from 'lucide-react'
+import { LayoutDashboard, Users, ShoppingBag, Unlock, Menu, X, LogOut } from 'lucide-react'
+import {
+  useAdminAuthStore,
+  getAdminAccessToken,
+  refreshAdminAuth,
+  logoutAdminSession,
+} from '../config/adminApiClient.js'
 
 const NAV_ITEMS = [
   { to: ROUTES.ADMIN, label: '대시보드', icon: LayoutDashboard, end: true },
@@ -14,14 +19,53 @@ const NAV_ITEMS = [
 const SIDEBAR_WIDTH = 224 // 14rem = w-56
 
 export default function AdminLayout() {
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
-  const isAuthInitialized = useAuthStore((s) => s.isAuthInitialized)
-  const user = useAuthStore((s) => s.user)
+  // FIX: HIGH-1 - 관리자 identity는 이제 useAuthStore(일반 사용자)가 아니라
+  // useAdminAuthStore(관리자 전용, adminApiClient.js)에서만 읽는다. 두 store가
+  // 완전히 분리돼 있어 App.jsx의 전역 initAuth()가 언제 끝나든 이 값을 덮어쓸 수 없다.
+  const adminUser = useAdminAuthStore((s) => s.adminUser)
   const location = useLocation()
+  const navigate = useNavigate()
 
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const sidebarRef = useRef(null)
   const hamburgerRef = useRef(null)
+
+  // FIX: phase0-followups B-3 - adminToken(localStorage) 저장을 없애고 메모리 토큰 +
+  // 'art' HttpOnly 쿠키 기반 refresh로 전환했다. 새로고침 직후에는 메모리 토큰이
+  // 항상 비어 있으므로(의도된 동작 - XSS 방어), 이 컴포넌트가 마운트될 때 한 번
+  // /admin/auth/refresh를 시도해 세션 복원을 완결한다.
+  //
+  // FIX: HIGH-1 - 이 컴포넌트만의 독립된 판정 상태(adminSessionState)로 결과를 즉시
+  // 반영하는 것은 그대로 유지한다(마운트 시점 판정에 유용). 다만 예전 주석대로
+  // "완전한 경쟁 상태 제거는 admin 전용 store 분리가 필요"했던 부분을 이번에 실제로
+  // 분리했다 - adminUser는 이제 useAdminAuthStore에서 오므로, App.jsx의 전역
+  // initAuth()(일반 사용자 rt 쿠키 기반)가 언제 끝나든 이 값을 건드릴 수 없다.
+  const [adminSessionState, setAdminSessionState] = useState('checking') // 'checking' | 'ready' | 'failed'
+  const attemptedRef = useRef(false)
+
+  useEffect(() => {
+    if (attemptedRef.current) return
+    attemptedRef.current = true
+
+    if (getAdminAccessToken()) {
+      // 로그인 직후 첫 진입 등 - 이미 메모리 토큰이 있으면 재갱신 불필요
+      setAdminSessionState('ready')
+      return
+    }
+
+    refreshAdminAuth()
+      .then(({ user: refreshedUser }) => {
+        setAdminSessionState(refreshedUser?.role === 'admin' ? 'ready' : 'failed')
+      })
+      .catch(() => setAdminSessionState('failed'))
+  }, [])
+
+  const handleLogout = useCallback(async () => {
+    // logoutAdminSession()이 서버 호출(art 쿠키 무효화) + 클라이언트 상태 정리를
+    // 함께 수행한다. 서버 실패도 내부에서 흡수하므로 여기서는 그냥 기다리기만 한다.
+    await logoutAdminSession()
+    navigate(ROUTES.ADMIN_LOGIN, { replace: true })
+  }, [navigate])
 
   // 페이지 이동 시 사이드바 닫기
   useEffect(() => {
@@ -75,16 +119,8 @@ export default function AdminLayout() {
 
   const toggleSidebar = useCallback(() => setSidebarOpen((prev) => !prev), [])
 
-  // FIX: DEV-28 - PrivateRoute와 동일한 초기화 경쟁 상태 방어. initAuth()가 끝나기 전에는
-  // isAuthenticated 판정을 보류하고 로딩을 렌더한다.
-  // 주의: /auth/refresh는 role:'admin'을 포함한 user를 복원하므로, 일반 로그인(rt 쿠키)만
-  // 가진 admin 계정도 새로고침 후 role='admin'으로 복원된다 - "관리자 세션은 새로고침 시
-  // 복원되지 않는다"는 이전 가정은 사실이 아니었다. 문제는 role 복원과 별개로 adminToken
-  // (localStorage, 관리자 API 전용 Authorization 헤더)은 복원되지 않는다는 점이다.
-  // role만 보고 통과시키면 adminApiClient 요청에 토큰이 실리지 않아 401 → 로그인으로
-  // 튕김 → 로그인 페이지가 role만 보고 다시 여기로 되돌려보내는 무한루프가 발생했다.
-  // 그래서 adminToken 보유 여부를 접근 가드에 함께 포함한다.
-  if (!isAuthInitialized) {
+  // 관리자 세션 복원(refreshAdminAuth)이 끝나기 전에는 판정을 보류하고 로딩을 렌더한다.
+  if (adminSessionState === 'checking') {
     return (
       <div className="flex items-center justify-center min-h-screen" role="status" aria-label="인증 확인 중">
         <div
@@ -98,8 +134,12 @@ export default function AdminLayout() {
     )
   }
 
-  const hasAdminToken = !!localStorage.getItem('adminToken')
-  if (!isAuthenticated || user?.role !== 'admin' || !hasAdminToken) {
+  if (
+    adminSessionState === 'failed' ||
+    !adminUser ||
+    adminUser.role !== 'admin' ||
+    !getAdminAccessToken()
+  ) {
     return <Navigate to={ROUTES.ADMIN_LOGIN} replace />
   }
 
@@ -209,17 +249,45 @@ export default function AdminLayout() {
         ))}
       </nav>
 
-      {/* 하단 사용자 정보 */}
+      {/* 하단 사용자 정보 + 로그아웃 */}
       <div
-        className="px-5 py-4 text-xs"
+        className="px-5 py-4 text-xs flex items-center justify-between"
         style={{
           borderTop: '1px solid rgba(245, 239, 230, 0.15)',
           color: 'rgba(245, 239, 230, 0.5)',
           paddingBottom: 'max(16px, env(safe-area-inset-bottom, 0px))',
           flexShrink: 0,
+          gap: 'var(--spacing-sm)',
         }}
       >
-        {user?.nickname || user?.email}
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {/* FIX: HIGH-1 겸사 - adminService.toSessionUser는 nickname이 아니라 name을
+              반환한다. 기존 코드는 user.nickname을 참조해 항상 undefined -> email로만
+              폴백됐다(사소한 기존 버그, 이번 리팩터링 범위 안이라 함께 정정). */}
+          {adminUser?.name || adminUser?.email}
+        </span>
+        <button
+          type="button"
+          onClick={handleLogout}
+          aria-label="관리자 로그아웃"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 4,
+            minHeight: 'var(--min-touch-target)',
+            padding: '0 var(--spacing-sm)',
+            border: 'none',
+            background: 'transparent',
+            color: 'rgba(245, 239, 230, 0.75)',
+            fontSize: 'var(--fs-caption)',
+            fontWeight: 600,
+            cursor: 'pointer',
+            flexShrink: 0,
+          }}
+        >
+          <LogOut size={16} aria-hidden="true" />
+          로그아웃
+        </button>
       </div>
     </>
   )

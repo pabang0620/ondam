@@ -7,9 +7,11 @@ import CancelSubscriptionModal from './CancelSubscriptionModal.jsx'
 import { ROUTES } from '../../constants/routes.js'
 import './PetSubscriptionPage.css'
 
+// FIX: HIGH-2 - will_premium(유언장 보관 구독)은 오너 확정에 따라 폐지되었고,
+// 백엔드 subscriptionRoutes.js의 zod enum(['pet_archive', 'all'])에서도 이미 제거됐다.
+// 이 카드가 남아 있으면 사용자가 토스 빌링 인증까지 마친 뒤 400을 받는다.
 const PLANS = [
   { key: 'pet_archive', name: '반려동물 아카이브', price: 4900, desc: '반려동물 추억 무제한 보관 + AI 초상화', highlight: true },
-  { key: 'will_premium', name: 'AI 유언장 프리미엄', price: 1900, desc: 'AI 유언 영상 생성 + 추모관', highlight: false },
   { key: 'all', name: '전체 이용권', price: 9900, desc: '모든 기능 무제한 이용', highlight: false },
 ]
 
@@ -127,6 +129,7 @@ export default function PetSubscriptionPage() {
     isProcessing,
     isRedirecting,
     actionError,
+    actionNotice,
     isCancelModalOpen,
     successMessage,
     handleSubscribe,
@@ -220,6 +223,26 @@ export default function PetSubscriptionPage() {
       {/* 액션 에러 */}
       {actionError && (
         <p role="alert" style={{ color: 'var(--color-error)', fontSize: 'var(--fs-body)' }}>{actionError}</p>
+      )}
+
+      {/* FIX: HIGH-1 - 202(불확정) 결과 안내. 성공(초록)도 실패(빨강)도 아닌 별도 색으로
+          표시해 "재결제 완료"로 오인하지 않게 한다. 재시도를 유도하는 문구는 넣지 않는다. */}
+      {actionNotice && (
+        <p
+          role="status"
+          aria-live="polite"
+          style={{
+            background: 'var(--color-surface-warm)',
+            color: 'var(--color-warm-accent)',
+            border: '1px solid var(--color-warm-accent)',
+            borderRadius: 'var(--radius-sm)',
+            padding: 'var(--spacing-md)',
+            fontSize: 'var(--fs-body)',
+            fontWeight: 600,
+          }}
+        >
+          {actionNotice}
+        </p>
       )}
 
       {/* 현재 구독 상태 카드 */}

@@ -6,6 +6,8 @@ export const ROUTES = {
   PHOTO: '/photo',
   PHOTO_ORDER: '/photo/order',
   PHOTO_PAYMENT: '/photo/payment',
+  PHOTO_PAYMENT_SUCCESS: '/photo/payment/success',
+  PHOTO_PAYMENT_FAIL: '/photo/payment/fail',
   PHOTO_PROCESSING: '/photo/processing/:orderId',
   PHOTO_RESULT: '/photo/result/:orderId',
 
@@ -16,6 +18,8 @@ export const ROUTES = {
   WILL_PHOTO: '/will/photo',
   WILL_PREVIEW: '/will/preview',
   WILL_PAYMENT: '/will/payment',
+  WILL_PAYMENT_SUCCESS: '/will/payment/success',
+  WILL_PAYMENT_FAIL: '/will/payment/fail',
   WILL_PROCESSING: '/will/processing/:willId',
   WILL_VAULT: '/will/vault',
   WILL_EVENT: '/will/event',

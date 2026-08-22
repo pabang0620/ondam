@@ -30,6 +30,15 @@ const adminApiLimiter = rateLimit({
   legacyHeaders: false,
 })
 
+// 관리자 토큰 갱신 - 인증 전 단계(쿠키만으로 호출)라 IP 기준으로 제한
+const adminRefreshLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000, // 5분
+  max: 30,                  // 5분 내 최대 30회 (탭 여러 개·재시도 여유분 포함)
+  message: { success: false, message: '요청이 너무 많습니다. 잠시 후 다시 시도해주세요' },
+  standardHeaders: true,
+  legacyHeaders: false,
+})
+
 // ─── 스키마 ───────────────────────────────────────────────────────────────────
 
 const loginSchema = z.object({
@@ -82,6 +91,12 @@ const usersQuerySchema = z.object({
 
 // 인증 없음 - 관리자 로그인 (브루트포스 방지 limiter 적용)
 router.post('/auth/login', adminLoginLimiter, validate(loginSchema), adminController.login)
+
+// 인증 없음 - refresh token은 HttpOnly 쿠키('art')로만 전달되므로 Authorization 헤더가 없다
+router.post('/auth/refresh', adminRefreshLimiter, adminController.refresh)
+
+// 로그아웃은 유효한 관리자 accessToken을 요구한다 (일반 사용자 /api/auth/logout과 동일한 원칙)
+router.post('/auth/logout', requireAuth, requireAdmin, adminController.logout)
 
 // 이하 모두 requireAuth + requireAdmin 2층 필수
 // adminApiLimiter는 인증 확인 후 keyGenerator에서 adminId를 사용하므로 requireAuth 뒤에 위치

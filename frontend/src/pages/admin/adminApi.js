@@ -5,6 +5,9 @@ export const adminApi = {
   login: (email, password) =>
     adminApiClient.post('/admin/auth/login', { email, password }),
 
+  // 로그아웃 - HttpOnly 쿠키('art') 및 서버측 refresh token 정리
+  logout: () => adminApiClient.post('/admin/auth/logout'),
+
   // 대시보드
   getDashboard: () =>
     adminApiClient.get('/admin/dashboard'),

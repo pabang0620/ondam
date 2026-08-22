@@ -1,9 +1,57 @@
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
+import crypto from 'crypto'
 import { v4 as uuidv4 } from 'uuid'
 import * as adminRepository from './adminRepository.js'
 import { notificationQueue } from '../../jobs/queue.js'
 import pool from '../../config/db.js'
+
+// ─── 관리자 세션 토큰 (phase0-followups B-3) ─────────────────────────────────
+//
+// 일반 사용자(authService.js)와 동일한 패턴: accessToken은 짧게, refreshToken은
+// rotation 방식으로 발급하고 HttpOnly 쿠키로만 전달한다. 관리자는 일반 사용자보다
+// 민감하므로 refresh 수명을 더 짧게 둔다(7일 vs 사용자 30일).
+const ADMIN_ACCESS_TOKEN_EXPIRES = '15m'
+const ADMIN_REFRESH_TOKEN_EXPIRES = '7d'
+const ADMIN_REFRESH_TOKEN_EXPIRES_MS = 7 * 24 * 60 * 60 * 1000
+
+// FIX: HIGH-3 - 다중 탭 동시 refresh 경쟁 유예 시간. 관리자 패널은 탭 여러 개 사용이
+// 흔하므로, 같은 art 쿠키로 거의 동시에 도착한 요청들 중 늦은 쪽이 "이미 회전된" 토큰을
+// 드는 상황을 허용한다. 10초는 왕복 네트워크 지연을 넉넉히 덮으면서도, 실제 탈취 후
+// 재사용 시나리오(공격자가 나중에 훔친 토큰을 쓰는 경우)에는 사실상 항상 지나 있을
+// 만큼 짧다.
+const ADMIN_REFRESH_REUSE_GRACE_MS = 10 * 1000
+
+// 관리자 refresh token 서명 secret. 일반 사용자와 동일한 JWT_REFRESH_SECRET을
+// 재사용한다(스키마 변경 없이 진행하기 위해 새 필수 환경변수를 요구하지 않음 -
+// backend/src/config/validateEnv.js는 이 작업 범위 밖). payload 구조(adminId vs
+// userId)가 다르므로 뒤섞여도 상대 로직에서 조회 대상이 없어 실패할 뿐 권한 상승은
+// 없다. 더 강한 격리가 필요하면 JWT_ADMIN_REFRESH_SECRET을 신설하고 여기서
+// `process.env.JWT_ADMIN_REFRESH_SECRET || process.env.JWT_REFRESH_SECRET`로
+// 폴백하도록 바꾸는 후속 작업을 권장한다(그 자체는 스키마 변경이 아님).
+const hashToken = (token) => crypto.createHash('sha256').update(token).digest('hex')
+
+const signAdminAccessToken = (admin) =>
+  jwt.sign(
+    { adminId: admin.admin_id, role: 'admin', adminRole: admin.admin_role },
+    process.env.JWT_SECRET,
+    { expiresIn: ADMIN_ACCESS_TOKEN_EXPIRES },
+  )
+
+const signAdminRefreshToken = (admin) =>
+  jwt.sign(
+    { adminId: admin.admin_id },
+    process.env.JWT_REFRESH_SECRET,
+    { expiresIn: ADMIN_REFRESH_TOKEN_EXPIRES },
+  )
+
+const toSessionUser = (admin) => ({
+  adminId: admin.admin_id,
+  email: admin.email,
+  name: admin.name,
+  role: 'admin', // 프론트 AdminLayout/AdminLoginPage 가드가 user.role === 'admin'을 확인한다
+  adminRole: admin.admin_role,
+})
 
 // 사후 공개 알림 문구 (SPEC-04 5절 - 민감 발송 문구 원칙)
 // 죽음을 직접 언급하는 단어를 최소화하고, 열람을 강요하지 않는 톤을 쓴다.
@@ -28,22 +76,117 @@ export const login = async (email, password) => {
     throw Object.assign(new Error('비활성화된 관리자 계정입니다'), { status: 401 })
   }
 
-  const accessToken = jwt.sign(
-    { adminId: admin.admin_id, role: 'admin', adminRole: admin.admin_role },
-    process.env.JWT_SECRET,
-    { expiresIn: '8h' },
-  )
+  const accessToken = signAdminAccessToken(admin)
+  const refreshToken = signAdminRefreshToken(admin)
+
+  await adminRepository.saveAdminRefreshToken({
+    tokenHash: hashToken(refreshToken),
+    adminId: admin.admin_id,
+    expiresAt: new Date(Date.now() + ADMIN_REFRESH_TOKEN_EXPIRES_MS),
+  })
 
   await adminRepository.updateLastLogin(admin.admin_id)
 
   return {
     accessToken,
-    admin: {
-      adminId: admin.admin_id,
-      name: admin.name,
-      adminRole: admin.admin_role,
-    },
+    refreshToken,
+    user: toSessionUser(admin),
   }
+}
+
+// ─── 관리자 토큰 갱신 (Refresh token rotation) ─────────────────────────────────
+// authService.refresh()와 동일한 회전·재사용 탐지 패턴: 매 갱신마다 기존 토큰을
+// revoke하고 새 토큰을 발급한다. 이미 revoke된(=한 번 사용된) 토큰이 다시 들어오면
+// 탈취·재사용 시도로 간주해 401로 거부한다.
+export const refresh = async (refreshToken) => {
+  let payload
+  try {
+    payload = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET, { algorithms: ['HS256'] })
+  } catch {
+    throw Object.assign(new Error('유효하지 않은 리프레시 토큰입니다'), { status: 401 })
+  }
+
+  // FIX: MEDIUM-4 - 이전에는 payload.adminId가 undefined여도(예: 일반 사용자 refresh
+  // 토큰 {userId: ...}가 여기 잘못 제출된 경우) mysql2가 undefined -> NULL로 바꿔
+  // 0행이 되는 "드라이버 동작"에만 안전성이 의존했다. 드라이버 동작이 바뀌면 이 안전성이
+  // 무너지므로, 관리자 토큰 형태(adminId 보유)임을 명시적으로 검증한다. 대칭인 일반
+  // 사용자 쪽 authService.refresh()의 payload.userId 가드 유무는 별도 보고 대상
+  // (이 파일 범위에서는 수정하지 않음).
+  if (!payload.adminId) {
+    throw Object.assign(new Error('유효하지 않은 리프레시 토큰입니다'), { status: 401 })
+  }
+
+  const tokenHash = hashToken(refreshToken)
+  const stored = await adminRepository.findAdminRefreshToken(tokenHash)
+
+  if (!stored) {
+    throw Object.assign(new Error('유효하지 않은 리프레시 토큰입니다'), { status: 401 })
+  }
+  if (stored.revoked_at) {
+    // FIX: HIGH-3 - 다중 탭 동시 마운트 시 같은 art 쿠키로 refresh가 2회 나가면, 먼저
+    // 도착한 요청이 토큰을 회전(revoke)시킨 직후 늦게 도착한 요청은 "이미 사용된" 토큰을
+    // 들게 된다. 토큰 값만 보면 실제 탈취 재사용과 구분이 안 되므로, 아주 짧은 유예
+    // 시간(GRACE_MS) 안의 재사용이면서 이 admin의 활성(active) refresh token이 실제로
+    // 존재할 때만 "경쟁으로 인한 재사용"으로 관용 처리한다. 유예를 벗어났거나 활성
+    // 토큰이 없으면 진짜 탈취 재사용 가능성으로 간주해 하드 401을 던지고, 이 admin의
+    // 모든 활성 세션을 revoke한다(재사용 탐지 방어를 무력화하지 않기 위한 피해 확산
+    // 차단 - 회전만으로는 "이미 도난된 다른 활성 토큰"을 막지 못하기 때문).
+    const revokedAgoMs = Date.now() - new Date(stored.revoked_at).getTime()
+    if (revokedAgoMs >= 0 && revokedAgoMs <= ADMIN_REFRESH_REUSE_GRACE_MS) {
+      const activeToken = await adminRepository.findActiveAdminRefreshToken(payload.adminId)
+      if (activeToken) {
+        const admin = await adminRepository.findAdminById(payload.adminId)
+        if (admin && admin.is_active) {
+          // 새 accessToken만 발급하고 refreshToken은 null로 돌려준다 - 컨트롤러가
+          // 이를 보고 art 쿠키를 다시 심지 않는다(먼저 도착한 탭이 이미 심어둔 최신
+          // 쿠키를 그대로 유지해야 한다).
+          return {
+            accessToken: signAdminAccessToken(admin),
+            refreshToken: null,
+            user: toSessionUser(admin),
+          }
+        }
+      }
+    }
+
+    await adminRepository.revokeAllAdminRefreshTokens(payload.adminId)
+    throw Object.assign(new Error('이미 사용된 리프레시 토큰입니다'), { status: 401 })
+  }
+  if (new Date(stored.expires_at) < new Date()) {
+    throw Object.assign(new Error('만료된 리프레시 토큰입니다'), { status: 401 })
+  }
+
+  const admin = await adminRepository.findAdminById(payload.adminId)
+  if (!admin) {
+    throw Object.assign(new Error('존재하지 않는 관리자입니다'), { status: 404 })
+  }
+  if (!admin.is_active) {
+    throw Object.assign(new Error('비활성화된 관리자 계정입니다'), { status: 401 })
+  }
+
+  // 기존 토큰 취소 (rotation)
+  await adminRepository.revokeAdminRefreshToken(tokenHash)
+
+  const newAccessToken = signAdminAccessToken(admin)
+  const newRefreshToken = signAdminRefreshToken(admin)
+
+  await adminRepository.saveAdminRefreshToken({
+    tokenHash: hashToken(newRefreshToken),
+    adminId: admin.admin_id,
+    expiresAt: new Date(Date.now() + ADMIN_REFRESH_TOKEN_EXPIRES_MS),
+  })
+
+  return {
+    accessToken: newAccessToken,
+    refreshToken: newRefreshToken,
+    user: toSessionUser(admin),
+  }
+}
+
+// ─── 관리자 로그아웃 - refresh token 취소 ──────────────────────────────────────
+export const logout = async (refreshToken) => {
+  if (!refreshToken) return
+  await adminRepository.revokeAdminRefreshToken(hashToken(refreshToken))
 }
 
 // ─── 대시보드 ─────────────────────────────────────────────────────────────────

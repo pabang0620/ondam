@@ -3,6 +3,7 @@ import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore.js'
 import { ROUTES } from '../../constants/routes.js'
 import apiClient from '../../config/apiClient.js'
+import { logoutAdminSession } from '../../config/adminApiClient.js'
 import logoUrl from '../../assets/logo.svg'
 import logoMarkUrl from '../../assets/logo-mark.svg'
 
@@ -81,10 +82,14 @@ export default function Header() {
     } catch {
       // 서버 오류가 발생해도 클라이언트 상태는 반드시 초기화
     }
-    // FIX: DEV-31 - clearUser()만 호출하면 localStorage의 adminToken이 남는다.
-    // 가드가 isAuthenticated도 함께 보므로 권한 우회는 없지만, 로그아웃 후에도
-    // 만료된 관리자 토큰이 남아 다음 요청에 실려 나가는 상태는 정리한다.
-    localStorage.removeItem('adminToken')
+    // FIX: admin-002 - 예전에는 clearAdminAccessToken()만 호출해 메모리 토큰만
+    // 지우고 'art' HttpOnly 쿠키(7일)는 브라우저·서버 양쪽에 그대로 남았다. 공유 PC
+    // 에서 관리자가 이 헤더로 로그아웃한 뒤 다음 사람이 /admin에 들어가면
+    // refreshAdminAuth()가 art 쿠키로 관리자 세션을 조용히 복원할 수 있었다.
+    // logoutAdminSession()은 서버에 /admin/auth/logout을 호출해 art 쿠키 자체를
+    // 무효화하고, 실패(관리자로 로그인한 적 없어 401 등)해도 내부에서 흡수하므로
+    // 이 일반 로그아웃 흐름을 막지 않는다.
+    await logoutAdminSession()
     clearUser()
     navigate(ROUTES.LOGIN)
   }

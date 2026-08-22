@@ -15,6 +15,9 @@ export function usePetSubscription() {
   const [actionError, setActionError] = useState(null)
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false)
   const [successMessage, setSuccessMessage] = useState(null)
+  // FIX: HIGH-1 - 202(불확정) 응답 전용 알림. actionError(빨간 실패 표시)와 구분해
+  // "확인 중" 상태를 실패처럼 보여주지 않는다.
+  const [actionNotice, setActionNotice] = useState(null)
 
   const fetchData = useCallback(async () => {
     setIsLoading(true)
@@ -66,8 +69,20 @@ export function usePetSubscription() {
     const pendingRef = { current: true }
     setIsProcessing(true)
     setActionError(null)
+    setActionNotice(null)
     try {
       const res = await petApi.retryPayment(subscriptionId)
+      // FIX: HIGH-1 - 백엔드가 결제 불확정 상태를 202로 응답하도록 바뀌었는데
+      // res.data.success는 202에서도 true다. status(202) 또는 data.indeterminate로
+      // 별도 분기하지 않으면 불확정을 "재결제 완료"로 표시하고, 실제 구독 행이 없는
+      // 스텁 객체로 currentSubscription을 덮어써 상태 카드가 깨진다.
+      const isIndeterminate = res.status === 202 || res.data?.data?.indeterminate === true
+      if (isIndeterminate) {
+        setActionNotice(
+          res.data?.data?.message ?? '결제 결과를 확인하고 있어요. 잠시 후 다시 확인해 주세요.',
+        )
+        return
+      }
       if (res.data.success) {
         setCurrentSubscription(res.data.data)
         setSuccessMessage('재결제가 완료되었습니다.')
@@ -110,6 +125,7 @@ export function usePetSubscription() {
   }
 
   const clearSuccessMessage = () => setSuccessMessage(null)
+  const clearActionNotice = () => setActionNotice(null)
 
   return {
     plans,
@@ -119,6 +135,7 @@ export function usePetSubscription() {
     isProcessing,
     isRedirecting,
     actionError,
+    actionNotice,
     isCancelModalOpen,
     successMessage,
     handleSubscribe,
@@ -127,6 +144,7 @@ export function usePetSubscription() {
     closeCancelModal,
     confirmCancel,
     clearSuccessMessage,
+    clearActionNotice,
     refetch: fetchData,
   }
 }

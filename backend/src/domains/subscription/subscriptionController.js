@@ -37,6 +37,11 @@ export const billingAuth = async (req, res, next) => {
     const { userId } = req.user
     const { authKey, customerKey, plan } = req.body
     const result = await subscriptionService.subscribe(userId, { plan, authKey, customerKey })
+    // [C-4] 결제 결과가 불확정(indeterminate)이면 "실패"가 아니다 - 202로 응답해
+    // 사용자가 불필요하게 재시도하지 않도록 한다 (완료 보고 4번 참조).
+    if (result.indeterminate) {
+      return res.status(202).json({ success: true, message: result.message, data: result })
+    }
     res.status(201).json({ success: true, message: '구독이 시작되었습니다', data: result })
   } catch (err) {
     next(err)
@@ -52,6 +57,10 @@ export const subscribe = async (req, res, next) => {
   try {
     const { plan, authKey, customerKey } = req.body
     const result = await subscriptionService.subscribe(req.user.userId, { plan, authKey, customerKey })
+    // [C-4] billingAuth와 동일 - 불확정 결과는 202로 응답한다.
+    if (result.indeterminate) {
+      return success(res, result, result.message, 202)
+    }
     return created(res, result, '구독이 시작되었습니다')
   } catch (err) {
     next(err)
@@ -80,6 +89,11 @@ export const retryPayment = async (req, res, next) => {
   try {
     const { subscriptionId } = req.params
     const result = await subscriptionService.retryPayment(req.user.userId, subscriptionId)
+    // [C-4] 불확정 결과는 "실패"가 아니므로 402 대신 202로 응답한다 (완료 보고
+    // 4번 참조) - 사용자가 헛되이 재시도 버튼을 다시 누르게 하지 않기 위함.
+    if (result.indeterminate) {
+      return success(res, result, result.message, 202)
+    }
     return success(res, result, '결제가 완료되었습니다')
   } catch (err) {
     next(err)

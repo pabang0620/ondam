@@ -29,6 +29,71 @@ export const updateLastLogin = async (adminId) => {
   )
 }
 
+// ─── 관리자 Refresh Token (refresh_tokens 테이블 재사용) ───────────────────────
+//
+// phase0-followups B-3: 관리자 refresh token을 위한 전용 테이블은 만들지 않는다.
+// ondam_schema.sql 전체를 확인한 결과 이 프로젝트의 스키마에는 FOREIGN KEY 선언이
+// 단 하나도 없다(2026-08-22 확인, `grep -c "FOREIGN KEY" ondam_schema.sql` == 0).
+// refresh_tokens.user_id 컬럼은 주석상 "users.user_id 참조"라고만 적혀 있을 뿐 DB
+// 레벨에서 강제되는 제약이 아니므로, admin_users.admin_id(UUID)를 그대로 저장해도
+// 무결성 제약 위반이 나지 않는다. 조회는 token_hash(전역 UNIQUE)로만 하므로 일반
+// 사용자 토큰과 관리자 토큰이 뒤섞여 조회될 일도 없다. 새 admin_refresh_tokens
+// 테이블을 만들면 마이그레이션이 2건 더 밀려있는 현재 상황에 3번째 미적용 마이그레이션이
+// 쌓이므로, 스키마 변경 없이 이 테이블을 재사용하는 쪽을 택했다.
+export const saveAdminRefreshToken = async ({ tokenHash, adminId, expiresAt }) => {
+  await pool.query(
+    `INSERT INTO refresh_tokens (token_hash, user_id, expires_at)
+     VALUES (?, ?, ?)`,
+    [tokenHash, adminId, expiresAt],
+  )
+}
+
+export const revokeAdminRefreshToken = async (tokenHash) => {
+  await pool.query(
+    `UPDATE refresh_tokens
+     SET revoked_at = NOW()
+     WHERE token_hash = ? AND revoked_at IS NULL`,
+    [tokenHash],
+  )
+}
+
+export const findAdminRefreshToken = async (tokenHash) => {
+  const [rows] = await pool.query(
+    `SELECT token_hash, user_id AS admin_id, expires_at, revoked_at
+     FROM refresh_tokens
+     WHERE token_hash = ?
+     LIMIT 1`,
+    [tokenHash],
+  )
+  return rows[0] ?? null
+}
+
+// FIX: HIGH-3 - 다중 탭 동시 refresh 경쟁에서, 늦게 도착한 요청이 "이미 회전된(revoked)"
+// 토큰을 들고 있을 때 이게 진짜 재사용 공격인지 판별하려면 "지금 이 admin에게 유효한
+// refresh token이 실제로 존재하는가"를 확인해야 한다. 존재하면 유예(grace) 처리 후보.
+export const findActiveAdminRefreshToken = async (adminId) => {
+  const [rows] = await pool.query(
+    `SELECT token_hash, user_id AS admin_id, expires_at, revoked_at, created_at
+     FROM refresh_tokens
+     WHERE user_id = ? AND revoked_at IS NULL AND expires_at > NOW()
+     ORDER BY created_at DESC
+     LIMIT 1`,
+    [adminId],
+  )
+  return rows[0] ?? null
+}
+
+// FIX: HIGH-3 - 유예 시간 밖의 재사용(진짜 탈취 가능성)이 확인되면, 회전으로 살아있는
+// 다른 활성 세션까지 포함해 이 admin의 refresh token을 전부 무효화한다(피해 확산 차단).
+export const revokeAllAdminRefreshTokens = async (adminId) => {
+  await pool.query(
+    `UPDATE refresh_tokens
+     SET revoked_at = NOW()
+     WHERE user_id = ? AND revoked_at IS NULL`,
+    [adminId],
+  )
+}
+
 // ─── 대시보드 통계 ────────────────────────────────────────────────────────────
 
 export const getDashboardStats = async () => {

@@ -1,4 +1,4 @@
-import { CreditCard, Info, Loader2 } from 'lucide-react'
+import { CreditCard, Loader2 } from 'lucide-react'
 import usePhotoPayment from './usePhotoPayment.js'
 
 function PhotoPaymentPage() {
@@ -94,26 +94,6 @@ function PhotoPaymentPage() {
           </span>
         </div>
       </section>
-
-      {/* Mock 안내 배너 */}
-      <div
-        role="status"
-        style={{
-          background: 'var(--color-surface-warm)',
-          border: '1px solid var(--color-warm-accent-soft)',
-          borderRadius: 'var(--radius-sm)',
-          padding: 'var(--spacing-md)',
-          display: 'flex',
-          gap: 'var(--spacing-sm)',
-          alignItems: 'flex-start',
-        }}
-      >
-        <Info size={18} color="var(--color-warm-accent)" style={{ flexShrink: 0, marginTop: 2 }} />
-        <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>
-          현재 결제는 테스트 모드로 동작합니다. 실제 금액이 청구되지 않습니다.
-          토스페이먼츠 정식 연동 전까지 모의 결제로 진행됩니다.
-        </p>
-      </div>
 
       {/* 에러 */}
       {error && (

@@ -286,12 +286,44 @@ export const refresh = async (refreshToken) => {
 
 /**
  * 동의 항목 저장 (목록을 순차 upsert)
+ *
+ * register()와 동일한 이유로 관대 처리를 적용한다 - CONSENT_TYPE(SSOT)에는 이미
+ * 'terms'/'marketing'이 포함돼 있지만 마이그레이션 2026-08-21b 적용 전 DB에서는
+ * ENUM에 없어 upsertConsent가 MySQL 1265(ER_TRUNCATED_WRONG_VALUE_FOR_FIELD)로
+ * 거부한다. 이 오류는 로그만 남기고 해당 항목만 건너뛴다 - 마이그레이션 b가
+ * 적용되면 ENUM에 모든 값이 존재하므로 이 분기는 더 이상 발동하지 않고
+ * 자연 소멸한다.
+ *
+ * register()와 달리 "필수 동의(privacy)가 실패하면 트랜잭션 전체를 롤백"하는
+ * 게이트가 없다 - 이 엔드포인트는 이미 가입을 마친 사용자가 추가/변경 동의를
+ * 저장하는 경로이고, privacy는 회원가입 시점에 이미 필수로 검증된 값이라
+ * 여기서 다시 전송돼도 ENUM 거부를 유발하지 않는다(마이그레이션 b가 새로
+ * 추가하는 값은 terms/marketing뿐). 따라서 이 엔드포인트에서는 항목별 필수
+ * 여부를 구분하지 않고 전부 동일하게 관대 처리한다 - 한 항목의 저장 실패가
+ * 나머지 항목이나 요청 전체를 막지 않는다.
  * @param {string} userId
  * @param {Array<{ consentType: string, isAgreed: boolean }>} consents
  */
 export const saveConsents = async (userId, consents) => {
+  // 사용자 정의: DB가 아직 모르는 ENUM 값으로 UPSERT할 때 MySQL이 던지는 에러 코드
+  const isEnumRejection = (err) =>
+    err.code === 'ER_TRUNCATED_WRONG_VALUE_FOR_FIELD' || err.errno === 1265
+
   for (const { consentType, isAgreed } of consents) {
-    await authRepository.upsertConsent(userId, consentType, isAgreed)
+    try {
+      await authRepository.upsertConsent(userId, consentType, isAgreed)
+    } catch (err) {
+      if (isEnumRejection(err)) {
+        // eslint-disable-next-line no-console
+        console.warn(
+          `[authService.saveConsents] consent_type '${consentType}' 저장 실패` +
+          `(DB ENUM 미반영 추정 - 마이그레이션 2026-08-21b 적용 여부 확인 필요).` +
+          ` 건너뛰고 나머지 동의 저장은 계속 진행. userId=${userId}`
+        )
+        continue
+      }
+      throw err
+    }
   }
 }
 
