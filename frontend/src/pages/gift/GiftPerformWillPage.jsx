@@ -1,6 +1,7 @@
 import { useRef } from 'react'
 import { AlertCircle, CheckCircle2, Loader2, Mic, Camera, ShieldCheck } from 'lucide-react'
 import { Button } from '../../components/common/Button.jsx'
+import LegalNotice from '../../components/common/LegalNotice.jsx'
 import useGiftPerformWill from './useGiftPerformWill.js'
 
 const inputStyle = {
@@ -45,6 +46,11 @@ function GiftPerformWillPage() {
             녹음하신 목소리는 AI가 영상 편지를 만드는 데만 사용돼요. 이 동의는 반드시
             본인이 직접 눌러주셔야 해요.
           </p>
+          {/* 법적 유언 효력 없음 고지 - DEV-05. 선물 주문(수행자)은 WillConsentPage를
+              거치지 않고 이 화면이 유일한 동의 접점이라 여기에도 넣는다 */}
+          <div style={{ width: '100%' }}>
+            <LegalNotice theme="light" />
+          </div>
           <ErrorBox />
           <Button onClick={submitConsent} isLoading={busy} fullWidth>동의하고 시작하기</Button>
         </div>

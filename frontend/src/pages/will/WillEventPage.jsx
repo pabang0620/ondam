@@ -61,7 +61,7 @@ export default function WillEventPage() {
         {wills.length > 0 && (
           <div className="will-event__field">
             <label className="will-event__label" htmlFor="event-will-select">
-              사용할 음성 (기존 유언장)
+              사용할 음성 (기존 영상 편지)
             </label>
             <select
               id="event-will-select"
@@ -71,7 +71,7 @@ export default function WillEventPage() {
             >
               {wills.map((w) => (
                 <option key={w.id || w.willId} value={w.id || w.willId}>
-                  {w.title || '유언장'}
+                  {w.title || '영상 편지'}
                 </option>
               ))}
             </select>

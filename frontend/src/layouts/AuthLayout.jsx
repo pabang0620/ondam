@@ -40,7 +40,7 @@ export default function AuthLayout() {
         </span>
       </Link>
 
-      {/* 카드 — 모바일: 좌우 여백 최소화, 데스크톱: 중앙 박스 */}
+      {/* 카드 - 모바일: 좌우 여백 최소화, 데스크톱: 중앙 박스 */}
       <div
         className="w-full rounded-2xl p-8 sm:p-10"
         style={{

@@ -1,6 +1,7 @@
 import { useRef } from 'react'
 import { useWillRelease } from './useWillRelease.js'
 import { Upload, FileText, CheckCircle, AlertCircle, Clock } from 'lucide-react'
+import LegalNotice from '../../components/common/LegalNotice.jsx'
 import './WillReleasePage.css'
 
 export default function WillReleasePage() {
@@ -40,13 +41,17 @@ export default function WillReleasePage() {
       <div className="will-release__content">
         <div className="will-release__header">
           <FileText size={40} aria-hidden="true" />
-          <h1 className="will-release__title">유언 영상 수령 신청</h1>
+          <h1 className="will-release__title">영상 편지 수령 신청</h1>
           <p className="will-release__desc">
-            고인의 유언을 전달받으려면 사망 확인 서류가 필요합니다.
+            고인이 남긴 영상 편지를 전달받으려면 사망 확인 서류가 필요합니다.
             <br />
             서류 검토 후 1~3 영업일 이내에 영상 링크를 전달드립니다.
           </p>
         </div>
+
+        {/* 법적 유언 효력 없음 고지 - DEV-05. 사망증명서를 들고 온 유족이
+            서류를 업로드하기 전에, 이 영상이 법적 유언 문서가 아님을 먼저 안내한다 */}
+        <LegalNotice theme="light" className="will-release__legal-notice" />
 
         {/* 업로드 영역 */}
         <div className="will-release__upload-area">

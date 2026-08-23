@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Camera, Heart, PawPrint } from 'lucide-react'
 import { ROUTES } from '../../constants/routes.js'
+import LegalNotice from '../../components/common/LegalNotice.jsx'
 
 // DEV-13: 상품 3종만 노출한다. 추모관은 03 문서 1절 "④ 추모관(부속 기능, 비상품) -
 // 독립 판매하지 않는다"에 따라 랜딩의 판매 카드에서 제외한다(구매자 보관 공간일 뿐).
@@ -170,6 +171,19 @@ export default function HomeServices() {
               </div>
             </div>
           ))}
+        </div>
+
+        {/* 법적 유언 효력 없음 고지 - DEV-05. "마지막 영상 편지" 소개 직후,
+            결제 유입 동선(카드 CTA)을 누르기 전에 안내한다. 3개 상품 중
+            영상 편지 한정 고지임을 먼저 밝혀 오인을 막는다 */}
+        <div className="max-w-xl mx-auto mt-8 sm:mt-10">
+          <p
+            className="text-center mb-2"
+            style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-text-muted)' }}
+          >
+            마지막 영상 편지 안내
+          </p>
+          <LegalNotice theme="light" />
         </div>
       </div>
     </section>

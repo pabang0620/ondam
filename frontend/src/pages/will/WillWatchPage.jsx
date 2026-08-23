@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Heart, AlertCircle, Clock, Lock, ShieldCheck, Download, Mail } from 'lucide-react'
 import { useWillWatch, PHASE } from './useWillWatch.js'
+import LegalNotice from '../../components/common/LegalNotice.jsx'
 import './WillWatchPage.css'
 
 /* 본인 확인 입력 화면 - 어르신 UX 규칙(48px 터치, 16px 이상 폰트) 준수.
@@ -141,6 +142,9 @@ function PrepareStep({ willTitle, onStart }) {
       <p className="will-watch__prepare-desc">
         마음의 준비가 되시면 아래 버튼을 눌러주세요.
       </p>
+      {/* 법적 유언 효력 없음 고지 - DEV-05. 오인 가능성이 가장 큰 접점(유족 열람)이므로
+          영상을 열기 전에 먼저 안내한다 */}
+      <LegalNotice theme="dark" className="will-watch__legal-notice" />
       <button type="button" className="will-watch__prepare-button" onClick={onStart}>
         영상 열어보기
       </button>
@@ -252,7 +256,7 @@ export default function WillWatchPage() {
             className="will-watch__video"
             controls
             src={willData.videoUrl}
-            aria-label="유언 영상"
+            aria-label="영상 편지"
             preload="metadata"
           >
             이 브라우저에서는 영상 재생이 지원되지 않습니다.
@@ -293,6 +297,10 @@ export default function WillWatchPage() {
             영상을 소중히 간직하시기 바랍니다.
           </span>
         </div>
+
+        {/* 법적 유언 효력 없음 고지 - DEV-05. 영상을 실제로 손에 넣은 뒤에도
+            다시 한 번 눈에 띄게 안내한다 */}
+        <LegalNotice theme="dark" className="will-watch__legal-notice" />
       </div>
     </div>
   )

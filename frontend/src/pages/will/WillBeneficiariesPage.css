@@ -226,14 +226,14 @@
     word-break: break-all;
   }
 
-  /* 폼: 데스크톱에서 2열 가능하도록 준비 — 모바일은 1열 유지 */
+  /* 폼: 데스크톱에서 2열 가능하도록 준비 - 모바일은 1열 유지 */
   .will-ben__form {
     padding: 16px;
     gap: 16px;
   }
 }
 
-/* ── 반응형: 데스크톱 (≥ 1024px) — 유가족 폼 2열 ── */
+/* ── 반응형: 데스크톱 (≥ 1024px) - 유가족 폼 2열 ── */
 @media (min-width: 1024px) {
   .will-ben__form {
     display: grid;

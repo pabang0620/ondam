@@ -62,12 +62,12 @@
   transition: background-color var(--transition-base), width var(--transition-base);
 }
 
-/* 완료 단계 — warm-accent */
+/* 완료 단계 - warm-accent */
 .will-step-header__dot.is-done {
   background-color: var(--color-warm-accent);
 }
 
-/* 현재 단계 — 차콜 (진행 중 강조) */
+/* 현재 단계 - 차콜 (진행 중 강조) */
 .will-step-header__dot.is-active {
   background-color: var(--color-primary);
   width: 20px;
@@ -95,7 +95,7 @@
     font-size: 11px;
   }
 
-  /* 도트 컨테이너 — 최소 너비 보장, 가로 스크롤 없음 */
+  /* 도트 컨테이너 - 최소 너비 보장, 가로 스크롤 없음 */
   .will-step-header__progress {
     flex-shrink: 0;
     gap: 6px;

@@ -41,7 +41,7 @@ export function useWillPayment() {
 
   const handlePay = useCallback(async () => {
     if (!willId) {
-      setPayError('유언장 정보를 찾을 수 없습니다.')
+      setPayError('영상 편지 정보를 찾을 수 없습니다.')
       return
     }
 
@@ -73,7 +73,7 @@ export function useWillPayment() {
       await toss.requestPayment('카드', {
         amount: amountKrw,
         orderId: tossOrderId,
-        orderName: 'AI 유언장 제작',
+        orderName: 'AI 영상 편지 제작',
         successUrl: window.location.origin + '/will/payment/success',
         failUrl: window.location.origin + '/will/payment/fail',
       })

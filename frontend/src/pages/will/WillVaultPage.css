@@ -1,4 +1,4 @@
-/* 보관함 — 종이 질감(surface-warm), hairline border */
+/* 보관함 - 종이 질감(surface-warm), hairline border */
 .will-vault-page {
   min-height: 100vh;
   background-color: var(--color-bg);
@@ -99,7 +99,7 @@
   cursor: pointer;
 }
 
-/* 빈 상태 — 충분한 상하 여백 */
+/* 빈 상태 - 충분한 상하 여백 */
 .will-vault__empty {
   display: flex;
   flex-direction: column;
@@ -157,7 +157,7 @@
   margin-bottom: var(--spacing-xl);
 }
 
-/* 카드 — 종이 질감(surface-warm) + hairline border */
+/* 카드 - 종이 질감(surface-warm) + hairline border */
 .will-vault__card {
   display: flex;
   align-items: center;
@@ -271,7 +271,7 @@
   }
 }
 
-/* ── 반응형: 데스크톱 (≥ 1024px) — 카드 그리드 2열 ── */
+/* ── 반응형: 데스크톱 (≥ 1024px) - 카드 그리드 2열 ── */
 @media (min-width: 1024px) {
   .will-vault__list {
     display: grid;

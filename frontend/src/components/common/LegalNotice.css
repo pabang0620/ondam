@@ -1,0 +1,49 @@
+/* LegalNotice - 법적 유언 효력 없음 고지 (DEV-05).
+   경고 박스가 아니라 차분한 안내 톤. 16px 이상 + 충분한 대비를 강제한다
+   (어르신 UX 규칙 - 각주처럼 작게 숨기지 않는다). */
+.legal-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-md);
+}
+
+.legal-notice__icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.legal-notice__text {
+  font-size: var(--fs-body);
+  line-height: var(--lh-relaxed);
+  word-break: keep-all;
+}
+
+/* light: 크림/화이트 배경 화면 (결제·동의·수령신청·랜딩) */
+.legal-notice--light {
+  background-color: var(--color-surface-warm);
+  border: 1px solid var(--color-border);
+}
+
+.legal-notice--light .legal-notice__icon {
+  color: var(--color-will);
+}
+
+.legal-notice--light .legal-notice__text {
+  color: var(--color-text-primary);
+}
+
+/* dark: 차콜 배경 화면 (유족 열람 화면 WillWatchPage) */
+.legal-notice--dark {
+  background-color: rgba(245, 239, 230, 0.08);
+  border: 1px solid rgba(245, 239, 230, 0.16);
+}
+
+.legal-notice--dark .legal-notice__icon {
+  color: var(--color-warm-accent);
+}
+
+.legal-notice--dark .legal-notice__text {
+  color: var(--color-text-on-dark);
+}

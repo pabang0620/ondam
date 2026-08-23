@@ -39,6 +39,10 @@
   line-height: var(--lh-relaxed);
 }
 
+.will-release__legal-notice {
+  margin-bottom: var(--spacing-lg);
+}
+
 /* 업로드 */
 .will-release__upload-area {
   display: flex;

@@ -23,7 +23,7 @@ export default function WillBeneficiariesPage() {
 
       <div className="will-ben__content">
         <p className="will-ben__guide">
-          유언 영상을 받을 유가족을 등록해 주세요.
+          영상 편지를 받을 유가족을 등록해 주세요.
           <br />
           사망 확인 후 등록된 연락처로 영상이 전달됩니다.
         </p>

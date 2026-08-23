@@ -39,7 +39,7 @@
   line-height: var(--lh-relaxed);
 }
 
-/* 업로드 드롭 영역 — 충분한 padding으로 클릭 영역 확보 */
+/* 업로드 드롭 영역 - 충분한 padding으로 클릭 영역 확보 */
 .will-photo__drop-area {
   width: 100%;
   min-height: 220px;
@@ -73,7 +73,7 @@
   color: var(--color-text-muted);
 }
 
-/* 미리보기 — 가이드 ↔ 이미지 ↔ 상태 사이 24px 자동 보장됨(gap) */
+/* 미리보기 - 가이드 ↔ 이미지 ↔ 상태 사이 24px 자동 보장됨(gap) */
 .will-photo__preview-wrap {
   position: relative;
   width: 100%;

@@ -9,7 +9,7 @@ import logoMarkUrl from '../../assets/logo-mark.svg'
 
 const NAV_LINKS = [
   { to: ROUTES.PHOTO, label: 'AI 사진관' },
-  { to: ROUTES.WILL, label: '유언장' },
+  { to: ROUTES.WILL, label: '영상 편지' },
   { to: ROUTES.PET, label: '반려동물' },
   { to: ROUTES.GIFT_NEW, label: '선물하기' },
 ]
@@ -164,7 +164,7 @@ export default function Header() {
 
           {/* 우측 영역: 데스크톱 인증 버튼 + 모바일 햄버거 */}
           <div className="flex items-center gap-3">
-            {/* 데스크톱 인증 버튼 — 인증 페이지(로그인/회원가입)에서는 숨김 */}
+            {/* 데스크톱 인증 버튼 - 인증 페이지(로그인/회원가입)에서는 숨김 */}
             <div className="hidden md:flex items-center gap-3">
               {/* 인증 페이지(로그인·회원가입)에서는 버튼 전체 숨김 */}
               {!isAuthPage && (
@@ -316,7 +316,7 @@ export default function Header() {
         </div>
       </header>
 
-      {/* 모바일 Drawer — drawerOpen=false 시 DOM에서 완전 제거 (스크린리더 노출 방지) */}
+      {/* 모바일 Drawer - drawerOpen=false 시 DOM에서 완전 제거 (스크린리더 노출 방지) */}
       {drawerOpen && (
         <>
           {/* Backdrop */}
@@ -428,7 +428,7 @@ export default function Header() {
               ))}
             </div>
 
-            {/* 인증 영역 — 인증 페이지에서는 숨김 */}
+            {/* 인증 영역 - 인증 페이지에서는 숨김 */}
             {!isAuthPage && (
               <div
                 style={{

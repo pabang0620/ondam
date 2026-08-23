@@ -15,6 +15,20 @@ export function usePetDetail(petId) {
   const [statusChangeError, setStatusChangeError] = useState(null)
   const [isSavingMemorial, setIsSavingMemorial] = useState(false)
   const [memorialSaveError, setMemorialSaveError] = useState(null)
+  // [FIX D17] 백엔드가 memorial_access_code를 일반 펫 응답에서 뺐다 - 전용 엔드포인트로
+  // 별도 조회해서 보관한다. 조회 실패(예: 아직 코드 미설정)는 페이지 전체를 깨뜨리지
+  // 않도록 조용히 null로 둔다(MemorialSettingsSection이 null이면 새 코드를 제안한다).
+  const [memorialAccessCode, setMemorialAccessCode] = useState(null)
+
+  const fetchMemorialAccessCode = useCallback(async () => {
+    if (!petId) return
+    try {
+      const res = await petApi.getMemorialAccessCode(petId)
+      if (res.data.success) setMemorialAccessCode(res.data.data?.memorialAccessCode ?? null)
+    } catch {
+      setMemorialAccessCode(null)
+    }
+  }, [petId])
 
   const fetchDetail = useCallback(async () => {
     // petId가 없으면 조회 자체가 불가능하다 - 초기값이 true이므로 여기서 내려주지
@@ -32,13 +46,18 @@ export function usePetDetail(petId) {
       ])
       if (petRes.data.success) setPet(petRes.data.data)
       if (mediaRes.data.success) setMedia(mediaRes.data.data ?? [])
+      // 추모 페이지 접근 코드는 deceased 상태일 때만 의미가 있다(그 전엔 설정 UI 자체가
+      // 렌더되지 않는다) - alive 펫마다 불필요한 API 호출을 추가하지 않는다.
+      if (petRes.data.success && petRes.data.data?.pet_status === 'deceased') {
+        await fetchMemorialAccessCode()
+      }
     } catch (err) {
       // FIX: DEV-24 - 반려동물 상세 조회 실패를 가짜 데이터로 위장하지 않는다
       setError(err?.response?.data?.message ?? '반려동물 정보를 불러오지 못했습니다.')
     } finally {
       setIsLoading(false)
     }
-  }, [petId])
+  }, [petId, fetchMemorialAccessCode])
 
   useEffect(() => {
     const ac = new AbortController()
@@ -82,6 +101,9 @@ export function usePetDetail(petId) {
       const res = await petApi.updatePetStatus(petId, 'deceased')
       if (res.data.success) {
         setPet((prev) => ({ ...prev, pet_status: 'deceased', ...res.data.data }))
+        // 방금 deceased로 바뀌었으니 접근 코드 설정 UI가 새로 나타난다 - 혹시 이전에
+        // 이미 코드가 설정돼 있었다면(재전환 케이스) 그 값을 가져와 보여준다.
+        await fetchMemorialAccessCode()
       }
     } catch (err) {
       // FIX: DEV-24 - 상태 변경 API 실패를 로컬에서만 성공 처리하지 않는다
@@ -98,14 +120,17 @@ export function usePetDetail(petId) {
   // slug 없이는 존재할 수 없어서, 코드만 설정 가능하게 해서는 여전히 페이지에 도달할
   // 방법이 없다(PetDetailPage의 "추모 페이지 보기" 링크도 pet.memorial_slug가 있어야만
   // 렌더된다).
-  const handleUpdateMemorialSettings = async ({ memorialSlug, memorialAccessCode, isPublic }) => {
+  const handleUpdateMemorialSettings = async ({ memorialSlug, memorialAccessCode: newAccessCode, isPublic }) => {
     if (isSavingMemorial) return
     setIsSavingMemorial(true)
     setMemorialSaveError(null)
     try {
-      const res = await petApi.updatePet(petId, { memorialSlug, memorialAccessCode, isPublic })
+      const res = await petApi.updatePet(petId, { memorialSlug, memorialAccessCode: newAccessCode, isPublic })
       if (res.data.success) {
         setPet((prev) => ({ ...prev, ...res.data.data }))
+        // [FIX D17] 응답에 더 이상 memorial_access_code가 실려 있지 않으므로, 방금
+        // 저장한 값을 그대로 로컬 상태에 반영한다(재조회 없이도 화면이 최신값을 보여줌).
+        setMemorialAccessCode(newAccessCode)
         return true
       }
       return false
@@ -129,6 +154,7 @@ export function usePetDetail(petId) {
     statusChangeError,
     isSavingMemorial,
     memorialSaveError,
+    memorialAccessCode,
     handleMediaUpload,
     handleStatusChange,
     handleUpdateMemorialSettings,

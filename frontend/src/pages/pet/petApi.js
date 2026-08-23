@@ -13,6 +13,12 @@ export const petApi = {
   getPet: (petId) =>
     apiClient.get(`/pet/${petId}`),
 
+  // 추모 페이지 접근 코드 조회 (소유자 전용)
+  // [FIX D17] 백엔드가 memorial_access_code를 일반 펫 CRUD 응답에서 뺐다(응답 노출
+  // 최소화) - 이제 코드가 필요한 순간에만 이 전용 경로로 따로 조회한다.
+  getMemorialAccessCode: (petId) =>
+    apiClient.get(`/pet/${petId}/memorial-code`),
+
   // 반려동물 수정
   updatePet: (petId, data) =>
     apiClient.put(`/pet/${petId}`, data),

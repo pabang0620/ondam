@@ -148,7 +148,7 @@ export default function WillPaymentSuccessPage() {
           결제는 완료됐어요
         </p>
         <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>
-          다만 처리할 유언장을 자동으로 찾지 못했습니다. 마이페이지에서 결제 상태를
+          다만 처리할 영상 편지를 자동으로 찾지 못했습니다. 마이페이지에서 결제 상태를
           확인해 주세요.
         </p>
         <Button onClick={() => navigate('/my')} fullWidth>마이페이지로 이동</Button>

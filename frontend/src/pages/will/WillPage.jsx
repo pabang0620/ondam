@@ -8,6 +8,7 @@ import {
   CheckCircle,
   Heart,
 } from 'lucide-react'
+import LegalNotice from '../../components/common/LegalNotice.jsx'
 import './WillPage.css'
 
 const FEATURES = [
@@ -66,7 +67,7 @@ export default function WillPage() {
             className="will-hero__cta"
             onClick={() => navigate('/will/consent')}
           >
-            AI 유언장 만들기
+            AI 영상 편지 만들기
             <ChevronRight size={20} aria-hidden="true" />
           </button>
         </div>
@@ -75,7 +76,7 @@ export default function WillPage() {
       {/* 핵심 특징 */}
       <section className="will-features">
         <div className="will-section-inner">
-          <h2 className="will-section-title">온담 AI 유언장이 특별한 이유</h2>
+          <h2 className="will-section-title">온담 AI 영상 편지가 특별한 이유</h2>
           <div className="will-features__grid">
             {FEATURES.map(({ icon: Icon, title, desc }) => (
               <div key={title} className="will-feature-card">
@@ -93,7 +94,7 @@ export default function WillPage() {
       {/* 제작 단계 */}
       <section className="will-steps">
         <div className="will-section-inner">
-          <h2 className="will-section-title">5단계로 완성되는 AI 유언장</h2>
+          <h2 className="will-section-title">5단계로 완성되는 AI 영상 편지</h2>
           <div className="will-steps__track">
             {STEPS.map((step, idx) => (
               <div key={step.num} className="will-step">
@@ -114,7 +115,7 @@ export default function WillPage() {
           <h2 className="will-section-title">가격 안내</h2>
           <div className="will-pricing__card">
             <div className="will-pricing__main">
-              <span className="will-pricing__label">AI 유언장 제작</span>
+              <span className="will-pricing__label">AI 영상 편지 제작</span>
               <span className="will-pricing__price">49,000원</span>
               <span className="will-pricing__unit">/ 건</span>
             </div>
@@ -130,6 +131,12 @@ export default function WillPage() {
               <strong>1,900원/월</strong>
               <span>영상이 안전하게 보관됩니다</span>
             </div>
+
+            {/* 법적 유언 효력 없음 고지 - DEV-05. 랜딩의 구매 CTA 직전 */}
+            <div className="will-pricing__legal-notice">
+              <LegalNotice theme="light" />
+            </div>
+
             <button
               className="will-pricing__cta"
               onClick={() => navigate('/will/consent')}

@@ -33,7 +33,7 @@ const STAT_CONFIG = [
   },
 ]
 
-/* 통계 카드 — bg surface, border 1px, 큰 숫자 serif, 라벨 caption muted */
+/* 통계 카드 - bg surface, border 1px, 큰 숫자 serif, 라벨 caption muted */
 function StatCard({ config, value }) {
   const { label, icon: Icon, color, bg } = config
   return (

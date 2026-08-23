@@ -158,7 +158,7 @@ export default function LoginPage() {
         <hr style={{ flex: 1, border: 'none', borderTop: '1px solid var(--color-border)' }} />
       </div>
 
-      {/* 카카오 로그인 — 카카오 노란색 유지(접근성) */}
+      {/* 카카오 로그인 - 카카오 노란색 유지(접근성) */}
       <a
         href="/api/auth/kakao"
         style={{

@@ -47,7 +47,7 @@ export default function AdminOrdersPage() {
 
   const totalPages = Math.ceil(total / LIMIT) || 1
 
-  /* 표 — header bg=surface-warm, row 구분 1px var(--color-border) */
+  /* 표 - header bg=surface-warm, row 구분 1px var(--color-border) */
   const thStyle = {
     padding: '12px 16px',
     textAlign: 'left',
@@ -76,7 +76,7 @@ export default function AdminOrdersPage() {
         </p>
       </div>
 
-      {/* 상태 필터 — primary 차콜 선택 */}
+      {/* 상태 필터 - primary 차콜 선택 */}
       <div
         className="admin-filter-group"
         role="group"

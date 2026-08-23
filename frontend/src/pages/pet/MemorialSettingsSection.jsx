@@ -23,17 +23,20 @@ const inputStyle = {
 // PUT /api/pet/:petId 의 memorialSlug·memorialAccessCode를 호출하는 곳이 프론트에 0건
 // 이었고, 백엔드가 "접근 코드 없으면 비공개(404)"로 확정하면서 모든 추모 페이지가
 // 영구 404가 됐다.
-// FIX: DEV-31 - 백엔드 GET /pet/:petId(소유자 전용)가 이제 memorial_access_code를
-// 함께 내려준다. 따라서 새로고침 이후에도 소유자 본인은 현재 코드를 이 화면에서 다시
-// 확인할 수 있다. 기존의 "저장 후에는 다시 확인할 수 없다" 안내는 사실과 달라졌으므로
-// 문구를 실제 동작에 맞춰 수정했고, 입력란에도 현재 코드를 채워 보여준다.
+// FIX: DEV-31 - 백엔드 GET /pet/:petId(소유자 전용)가 memorial_access_code를 함께
+// 내려주던 시절의 기록. 따라서 새로고침 이후에도 소유자 본인은 현재 코드를 이 화면에서
+// 다시 확인할 수 있다. 기존의 "저장 후에는 다시 확인할 수 없다" 안내는 사실과
+// 달라졌으므로 문구를 실제 동작에 맞춰 수정했고, 입력란에도 현재 코드를 채워 보여준다.
+// [FIX D17] 이제 memorial_access_code는 일반 펫 응답에 없다(응답 노출 최소화) - 대신
+// 부모(PetDetailPage)가 전용 엔드포인트(GET /pet/:petId/memorial-code)로 따로 조회해
+// currentAccessCode prop으로 내려준다. 동작(재확인 가능)은 그대로 유지된다.
 // FIX: DEV-16 - 추모 페이지 공개/비공개 토글. 기본값은 항상 비공개(pet.is_public이
 // 없거나 0이면 false)이며, 사용자가 명시적으로 체크해야만 공개로 전환된다(안전 기본값
 // - SPEC-03, 마이그레이션 b README 3절과 동일한 원칙). 공개로 켜면 접근 코드 없이도
 // 누구나 볼 수 있다는 점을 쉬운 말로 안내한다(어르신 UX).
-export default function MemorialSettingsSection({ pet, isSaving, saveError, onSave }) {
+export default function MemorialSettingsSection({ pet, currentAccessCode, isSaving, saveError, onSave }) {
   const [slug, setSlug] = useState(pet.memorial_slug || pet.pet_id)
-  const [code, setCode] = useState(pet.memorial_access_code || generateAccessCode())
+  const [code, setCode] = useState(currentAccessCode || generateAccessCode())
   const [isPublic, setIsPublic] = useState(Boolean(pet.is_public))
   const [savedCode, setSavedCode] = useState(null)
   const [copied, setCopied] = useState(false)

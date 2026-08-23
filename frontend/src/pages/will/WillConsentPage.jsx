@@ -1,6 +1,7 @@
 import { useWillConsent } from './useWillConsent.js'
 import { CheckSquare, Square } from 'lucide-react'
 import WillStepHeader from './WillStepHeader.jsx'
+import LegalNotice from '../../components/common/LegalNotice.jsx'
 import './WillConsentPage.css'
 
 export default function WillConsentPage() {
@@ -13,8 +14,11 @@ export default function WillConsentPage() {
 
       <div className="will-consent__content">
         <p className="will-consent__guide">
-          AI 유언장 제작을 위해 아래 항목에 모두 동의해 주세요.
+          AI 영상 편지 제작을 위해 아래 항목에 모두 동의해 주세요.
         </p>
+
+        {/* 법적 유언 효력 없음 고지 - DEV-05. 동의 항목을 읽기 전에 먼저 안내 */}
+        <LegalNotice theme="light" className="will-consent__legal-notice" />
 
         <div className="will-consent__items">
           {consentItems.map(({ key, label, desc }) => (

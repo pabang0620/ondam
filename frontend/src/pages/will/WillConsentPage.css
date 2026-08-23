@@ -16,6 +16,10 @@
   line-height: var(--lh-relaxed);
 }
 
+.will-consent__legal-notice {
+  margin-bottom: var(--spacing-xl);
+}
+
 .will-consent__items {
   display: flex;
   flex-direction: column;

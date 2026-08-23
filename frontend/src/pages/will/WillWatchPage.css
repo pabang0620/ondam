@@ -1,4 +1,4 @@
-/* WillWatchPage — 결과 영상 카드: bg=primary 차콜, golden border */
+/* WillWatchPage - 결과 영상 카드: bg=primary 차콜, golden border */
 .will-watch-page {
   min-height: 100vh;
   background: linear-gradient(180deg, #1A1715 0%, #2d2416 100%);
@@ -56,7 +56,7 @@
   line-height: var(--lh-relaxed);
 }
 
-/* 본문 — 비디오 ↔ 메시지 ↔ 액션 사이 32px */
+/* 본문 - 비디오 ↔ 메시지 ↔ 액션 사이 32px */
 .will-watch__content {
   max-width: 720px;
   width: 100%;
@@ -90,7 +90,7 @@
   letter-spacing: var(--ls-heading-ko);
 }
 
-/* 결과 영상 카드 — bg=primary 차콜, golden border 1px */
+/* 결과 영상 카드 - bg=primary 차콜, golden border 1px */
 .will-watch__video-wrap {
   width: 100%;
   border-radius: var(--radius-card);
@@ -276,5 +276,5 @@
     font-size: var(--fs-body);
   }
 
-  /* 비디오는 항상 풀너비 16:9 — 이미 width:100% + aspect-ratio 적용됨 */
+  /* 비디오는 항상 풀너비 16:9 - 이미 width:100% + aspect-ratio 적용됨 */
 }

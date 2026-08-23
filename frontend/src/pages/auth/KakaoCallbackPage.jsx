@@ -68,7 +68,7 @@ export default function KakaoCallbackPage() {
         카카오 로그인 처리 중...
       </p>
 
-      {/* 스피너 keyframes — 인라인 style 태그 */}
+      {/* 스피너 keyframes - 인라인 style 태그 */}
       <style>{`
         @keyframes ondam-spin {
           to { transform: rotate(360deg); }

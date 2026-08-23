@@ -39,7 +39,7 @@
   line-height: var(--lh-relaxed);
 }
 
-/* 녹음 버튼 영역 — 위/아래 40px+ 여백 확보 */
+/* 녹음 버튼 영역 - 위/아래 40px+ 여백 확보 */
 .will-record__btn-area {
   display: flex;
   flex-direction: column;
@@ -48,7 +48,7 @@
   padding: 40px 0;
 }
 
-/* 120px 원형 녹음 버튼 — box-shadow 금지, transform pulse만 사용 */
+/* 120px 원형 녹음 버튼 - box-shadow 금지, transform pulse만 사용 */
 .will-record__btn {
   width: 120px;
   height: 120px;
@@ -69,7 +69,7 @@
   transform: scale(1.04);
 }
 
-/* 녹음 중 — transform pulse (box-shadow 금지) */
+/* 녹음 중 - transform pulse (box-shadow 금지) */
 .will-record__btn.is-recording {
   background-color: var(--color-error-dark);
   animation: record-pulse 1.2s ease-in-out infinite;

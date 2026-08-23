@@ -123,6 +123,11 @@
   margin-top: 2px;
 }
 
+.will-payment__legal-notice {
+  margin-top: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
 /* 에러 */
 .will-payment__error {
   display: flex;

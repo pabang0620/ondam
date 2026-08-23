@@ -16,7 +16,7 @@ export default function AdminUsersPage() {
     handlePageChange,
   } = useAdminUsers()
 
-  /* 표 — header bg=surface-warm, row 구분 1px var(--color-border) */
+  /* 표 - header bg=surface-warm, row 구분 1px var(--color-border) */
   const thStyle = {
     padding: '12px 16px',
     textAlign: 'left',
@@ -45,7 +45,7 @@ export default function AdminUsersPage() {
         </p>
       </div>
 
-      {/* 검색 인풋 — 56px height, border 1px border-strong, focus 차콜 */}
+      {/* 검색 인풋 - 56px height, border 1px border-strong, focus 차콜 */}
       <form
         onSubmit={handleSearch}
         className="admin-search-form"

@@ -2,7 +2,7 @@ import { formatKst } from '../../utils/dateKst.js'
 
 const PLAN_NAMES = {
   pet_archive: '반려동물 아카이브',
-  will_premium: 'AI 유언장 프리미엄',
+  will_premium: 'AI 영상 편지 프리미엄',
   all: '전체 이용권',
 }
 

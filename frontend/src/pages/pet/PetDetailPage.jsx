@@ -41,6 +41,7 @@ export default function PetDetailPage() {
     statusChangeError,
     isSavingMemorial,
     memorialSaveError,
+    memorialAccessCode,
     handleMediaUpload,
     handleStatusChange,
     handleUpdateMemorialSettings,
@@ -185,14 +186,15 @@ export default function PetDetailPage() {
 
       {/* 추모 페이지 링크 (deceased) - memorial 네이비 톤 */}
       {/* FIX: DEV-31 - 접근 코드 없이 /memorial/:slug 로만 이동하면 소유자 본인도 항상
-          403이었다. 소유자 응답에는 memorial_access_code가 실리므로 쿼리로 붙여
-          바로 열리게 한다. 코드 미설정 상태면 기존처럼 코드 없이 이동한다
-          (아래 설정 섹션에서 코드를 만들도록 유도). */}
+          403이었다. 쿼리로 코드를 붙여 바로 열리게 한다. 코드 미설정 상태면 기존처럼
+          코드 없이 이동한다(아래 설정 섹션에서 코드를 만들도록 유도).
+          [FIX D17] pet.memorial_access_code가 더 이상 응답에 없으므로, usePetDetail이
+          전용 엔드포인트로 따로 조회해 온 memorialAccessCode를 대신 쓴다. */}
       {pet.pet_status === 'deceased' && pet.memorial_slug && (
         <Link
           to={
-            pet.memorial_access_code
-              ? `/memorial/${pet.memorial_slug}?accessCode=${encodeURIComponent(pet.memorial_access_code)}`
+            memorialAccessCode
+              ? `/memorial/${pet.memorial_slug}?accessCode=${encodeURIComponent(memorialAccessCode)}`
               : `/memorial/${pet.memorial_slug}`
           }
           style={{
@@ -219,6 +221,7 @@ export default function PetDetailPage() {
       {pet.pet_status === 'deceased' && (
         <MemorialSettingsSection
           pet={pet}
+          currentAccessCode={memorialAccessCode}
           isSaving={isSavingMemorial}
           saveError={memorialSaveError}
           onSave={handleUpdateMemorialSettings}

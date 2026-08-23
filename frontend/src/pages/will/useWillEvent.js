@@ -38,7 +38,7 @@ export function useWillEvent() {
         // "유언장이 없음"으로 보여 조회 실패를 사용자가 오인하게 되고, 그 상태로 제출하면
         // voiceSampleId가 빈 값으로 전송돼 서버 400을 유발한다(G2-2).
         setWills([])
-        setWillsError(err?.response?.data?.message ?? '유언장 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.')
+        setWillsError(err?.response?.data?.message ?? '영상 편지 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.')
       }
     }
 
@@ -57,7 +57,7 @@ export function useWillEvent() {
     // 유발하므로, 여기서 먼저 막고 사용자에게 원인을 알려준다.
     if (!selectedWillId) {
       setSubmitError(
-        willsError ?? '사용할 유언장이 없습니다. 먼저 유언장을 등록해 주세요.',
+        willsError ?? '사용할 영상 편지가 없습니다. 먼저 영상 편지를 등록해 주세요.',
       )
       return
     }

@@ -21,7 +21,7 @@ const STATUS_COLOR = {
   rejected: 'var(--color-error)',
 }
 
-/* 거절 모달 — backdrop rgba(42,40,38,0.45), 콘텐츠 bg=surface */
+/* 거절 모달 - backdrop rgba(42,40,38,0.45), 콘텐츠 bg=surface */
 function RejectModal({ releaseId, onConfirm, onClose }) {
   const [reason, setReason] = useState('')
 
@@ -140,7 +140,7 @@ export default function AdminReleasePage() {
     await handleReject(id, reason)
   }
 
-  /* 표 스타일 — header bg=surface-warm, row 구분 1px var(--color-border) */
+  /* 표 스타일 - header bg=surface-warm, row 구분 1px var(--color-border) */
   const thStyle = {
     padding: '12px 16px',
     textAlign: 'left',
@@ -160,7 +160,7 @@ export default function AdminReleasePage() {
             사후공개 검토
           </h1>
           <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-text-muted)', marginTop: 4 }}>
-            유언장 사후공개 요청을 검토하고 승인 또는 거절합니다.
+            영상 편지 사후공개 요청을 검토하고 승인 또는 거절합니다.
           </p>
         </div>
         <button
@@ -211,7 +211,7 @@ export default function AdminReleasePage() {
         >
           <thead>
             <tr style={{ background: 'var(--color-surface-warm)' }}>
-              {['유언장 ID', '요청자', '요청일', '사망증명서', '상태', '액션'].map((th) => (
+              {['영상 편지 ID', '요청자', '요청일', '사망증명서', '상태', '액션'].map((th) => (
                 <th key={th} scope="col" style={thStyle}>{th}</th>
               ))}
             </tr>
@@ -315,7 +315,7 @@ export default function AdminReleasePage() {
                     )}
                     {isPending && canReview && (
                       <div style={{ display: 'flex', gap: 'var(--spacing-sm)' }}>
-                        {/* 승인 버튼 — success 색 */}
+                        {/* 승인 버튼 - success 색 */}
                         <button
                           onClick={() => handleApprove(release.releaseId)}
                           disabled={!!processingId}
@@ -339,7 +339,7 @@ export default function AdminReleasePage() {
                           <CheckCircle size={14} aria-hidden="true" />
                           승인
                         </button>
-                        {/* 거절 버튼 — danger #B85C50 */}
+                        {/* 거절 버튼 - danger #B85C50 */}
                         <button
                           onClick={() => setRejectTarget(release.releaseId)}
                           disabled={!!processingId}

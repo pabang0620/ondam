@@ -47,7 +47,7 @@
   color: var(--color-error);
 }
 
-/* 이벤트 타입 그룹 — gap 12px */
+/* 이벤트 타입 그룹 - gap 12px */
 .will-event__type-group {
   display: flex;
   gap: 12px;
@@ -171,7 +171,7 @@
   }
 }
 
-/* 제출 버튼 — warm-accent 골드 */
+/* 제출 버튼 - warm-accent 골드 */
 .will-event__submit {
   width: 100%;
   background-color: var(--color-warm-accent);

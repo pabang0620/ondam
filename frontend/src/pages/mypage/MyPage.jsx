@@ -13,30 +13,59 @@ import { useMy } from './useMy.js'
 import { ROUTES } from '../../constants/routes.js'
 import './MyPage.css'
 
+// FIX: photo_orders.status 실제 enum(PHOTO_ORDER_STATUS, shared/constants/enums.js)은
+// pending_payment/paid/processing/completed/failed/refunded다. 'pending'은 존재하지
+// 않는 값이라 신규 주문(항상 pending_payment로 생성됨)이 라벨 없이 원문 그대로 노출되고
+// 있었다.
 const ORDER_STATUS_LABEL = {
-  pending: '대기',
+  pending_payment: '결제 대기',
+  paid: '결제 완료',
   processing: '처리 중',
   completed: '완료',
   failed: '실패',
+  refunded: '환불됨',
 }
 
 const ORDER_STATUS_COLOR = {
-  pending: 'var(--color-text-muted)',
+  pending_payment: 'var(--color-text-muted)',
+  paid: 'var(--color-text-muted)',
   processing: 'var(--color-gold)',
   completed: 'var(--color-success)',
   failed: 'var(--color-error)',
+  refunded: 'var(--color-text-muted)',
 }
 
+// FIX: wills.status 실제 enum(WILL_STATUS, shared/constants/enums.js)은
+// draft/paid/active/released/revoked다. processing/completed/failed는 실제로 나오지
+// 않는 값이라 대부분의 유언장이 라벨 없이 원문 그대로 노출되고 있었다.
 const WILL_STATUS_LABEL = {
   draft: '초안',
-  processing: '생성 중',
-  completed: '완료',
-  failed: '실패',
+  paid: '결제 완료',
+  active: '영상 생성 중',
+  released: '공개됨',
+  revoked: '취소됨',
+}
+
+const WILL_STATUS_COLOR = {
+  draft: 'var(--color-text-muted)',
+  paid: 'var(--color-text-muted)',
+  active: 'var(--color-gold)',
+  released: 'var(--color-success)',
+  revoked: 'var(--color-error)',
+}
+
+// FIX: created_at/updated_at 등 필드가 비어있거나 파싱 불가능한 값이어도 "Invalid Date"를
+// 노출하지 않는다.
+function formatDate(value) {
+  if (!value) return '날짜 없음'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return '날짜 없음'
+  return date.toLocaleDateString('ko-KR')
 }
 
 const TABS = [
   { key: 'orders', label: '주문내역', icon: ShoppingBag },
-  { key: 'wills', label: '유언장', icon: FileText },
+  { key: 'wills', label: '영상 편지', icon: FileText },
   { key: 'subscription', label: '구독', icon: CreditCard },
   { key: 'notifications', label: '알림설정', icon: Bell },
 ]
@@ -101,14 +130,17 @@ function OrdersTab({ orders }) {
   }
   return (
     <ul className="my-list" aria-label="주문 목록">
-      {orders.map((order) => (
-        <li key={order.orderId} className="my-list-item">
+      {orders.map((order, index) => (
+        // FIX: 백엔드(GET /api/photo/orders)는 snake_case(order_id/photo_type/created_at)로
+        // 응답한다 - camelCase로 읽으면 항상 undefined였다(key=undefined, "취업 사진"
+        // 고정 노출, "Invalid Date").
+        <li key={order.order_id ?? index} className="my-list-item">
           <div className="my-list-item__info">
             <span className="my-list-item__title">
-              {order.photoType === 'funeral' ? '장례 사진' : order.photoType === 'id' ? '증명 사진' : '취업 사진'}
+              {order.photo_type === 'funeral' ? '장례 사진' : order.photo_type === 'id' ? '증명 사진' : '취업 사진'}
             </span>
             <span className="my-list-item__date">
-              {new Date(order.createdAt).toLocaleDateString('ko-KR')}
+              {formatDate(order.created_at)}
             </span>
           </div>
           <span
@@ -125,23 +157,27 @@ function OrdersTab({ orders }) {
 
 function WillsTab({ wills }) {
   if (wills.length === 0) {
-    return <p className="my-tab-empty">유언장이 없습니다.</p>
+    return <p className="my-tab-empty">영상 편지가 없습니다.</p>
   }
   return (
-    <ul className="my-list" aria-label="유언장 목록">
-      {wills.map((will) => (
-        <li key={will.willId} className="my-list-item">
+    <ul className="my-list" aria-label="영상 편지 목록">
+      {wills.map((will, index) => (
+        // FIX: 백엔드(GET /api/will/wills)는 snake_case(will_id/created_at)로 응답한다 -
+        // camelCase로 읽으면 항상 undefined였고, title이 빈 경우
+        // `will.willId.slice(0,8)`이 undefined.slice(...)로 TypeError를 던져 마이페이지
+        // 전체가 크래시했다. will_id가 없는 이상 상태여도 페이지가 죽지 않도록 방어한다.
+        <li key={will.will_id ?? index} className="my-list-item">
           <div className="my-list-item__info">
             <span className="my-list-item__title">
-              {will.title || `유언장 ${will.willId.slice(0, 8)}`}
+              {will.title || (will.will_id ? `영상 편지 ${will.will_id.slice(0, 8)}` : '영상 편지')}
             </span>
             <span className="my-list-item__date">
-              {new Date(will.createdAt).toLocaleDateString('ko-KR')}
+              {formatDate(will.created_at)}
             </span>
           </div>
           <span
             className="my-list-item__badge"
-            style={{ color: ORDER_STATUS_COLOR[will.status] || 'var(--color-text-muted)' }}
+            style={{ color: WILL_STATUS_COLOR[will.status] || 'var(--color-text-muted)' }}
           >
             {WILL_STATUS_LABEL[will.status] || will.status}
           </span>
@@ -191,11 +227,22 @@ function NotificationsTab({ settings, settingsError, onToggle, isUpdating }) {
     return <p className="my-tab-empty" role="status">알림 설정을 불러오는 중...</p>
   }
 
+  // FIX: 백엔드(GET/PUT /api/notifications/settings, notificationService.toSettingsDto)의
+  // 실제 필드는 pushEnabled/emailEnabled/smsEnabled/notify*이다. 여기 있던
+  // emailMarketing/pushOrder/pushWill/pushPromotion은 응답 어디에도 없는 필드명이라
+  // 토글은 항상 꺼진 상태로 보였고, PUT은 zod 스키마(updateSettingsSchema)가 알 수 없는
+  // 키를 걷어낸 뒤 "변경할 설정 항목이 없습니다" 400으로 매번 실패해 저장이 조용히
+  // 되돌아갔다(handleToggleNotification의 catch가 이전 값으로 복원).
   const NOTIFICATION_KEYS = [
-    { key: 'emailMarketing', label: '이메일 마케팅 수신' },
-    { key: 'pushOrder', label: '주문 처리 완료 알림' },
-    { key: 'pushWill', label: '유언장 생성 완료 알림' },
-    { key: 'pushPromotion', label: '프로모션 알림' },
+    { key: 'pushEnabled', label: '푸시 알림 받기' },
+    { key: 'emailEnabled', label: '이메일 알림 받기' },
+    { key: 'smsEnabled', label: 'SMS 알림 받기' },
+    { key: 'notifyPhotoComplete', label: '사진 처리 완료 알림' },
+    { key: 'notifyWillEvents', label: '영상 편지 알림' },
+    { key: 'notifyPayment', label: '결제 알림' },
+    { key: 'notifySubscription', label: '구독 알림' },
+    { key: 'notifyPetMemorial', label: '반려동물 추모 알림' },
+    { key: 'notifyAdminNotice', label: '공지사항 알림' },
   ]
 
   return (

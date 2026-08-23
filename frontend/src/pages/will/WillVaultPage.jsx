@@ -3,10 +3,15 @@ import { useWillVault } from './useWillVault.js'
 import { Plus, Video, Clock, CheckCircle, Eye, AlertCircle } from 'lucide-react'
 import './WillVaultPage.css'
 
+// FIX: wills.status 실제 enum(WILL_STATUS, shared/constants/enums.js)은
+// draft/paid/active/released/revoked다. paid/revoked가 없어 결제 완료·취소 상태가
+// 전부 "초안"으로 잘못 표시되고 있었다.
 const STATUS_MAP = {
   draft: { label: '초안', icon: Clock, className: 'status-draft' },
+  paid: { label: '결제 완료', icon: Clock, className: 'status-draft' },
   active: { label: '보관중', icon: CheckCircle, className: 'status-active' },
   released: { label: '공개됨', icon: Eye, className: 'status-released' },
+  revoked: { label: '취소됨', icon: AlertCircle, className: 'status-draft' },
 }
 
 function StatusBadge({ status }) {
@@ -27,15 +32,15 @@ export default function WillVaultPage() {
   return (
     <div className="will-vault-page">
       <div className="will-vault__header">
-        <h1 className="will-vault__title">내 유언장 보관함</h1>
+        <h1 className="will-vault__title">내 영상 편지 보관함</h1>
         <button
           type="button"
           className="will-vault__new-btn"
           onClick={() => navigate('/will/consent')}
-          aria-label="새 유언장 만들기"
+          aria-label="새 영상 편지 만들기"
         >
           <Plus size={20} aria-hidden="true" />
-          새 유언장
+          새 영상 편지
         </button>
       </div>
 
@@ -60,23 +65,26 @@ export default function WillVaultPage() {
         {!isLoading && !fetchError && wills.length === 0 && (
           <div className="will-vault__empty">
             <Video size={48} aria-hidden="true" />
-            <p className="will-vault__empty-title">아직 유언장이 없습니다</p>
-            <p className="will-vault__empty-sub">지금 바로 AI 유언장을 만들어 소중한 마음을 전하세요.</p>
+            <p className="will-vault__empty-title">아직 영상 편지가 없습니다</p>
+            <p className="will-vault__empty-sub">지금 바로 AI 영상 편지를 만들어 소중한 마음을 전하세요.</p>
             <button
               type="button"
               className="will-vault__empty-btn"
               onClick={() => navigate('/will/consent')}
             >
               <Plus size={20} aria-hidden="true" />
-              첫 유언장 만들기
+              첫 영상 편지 만들기
             </button>
           </div>
         )}
 
         {wills.length > 0 && (
-          <ul className="will-vault__list" aria-label="유언장 목록">
-            {wills.map((w) => (
-              <li key={w.id || w.willId} className="will-vault__card">
+          <ul className="will-vault__list" aria-label="영상 편지 목록">
+            {/* FIX: 백엔드(GET /api/will/wills)는 snake_case(will_id/created_at)로
+                응답한다 - w.id/w.willId/w.createdAt은 응답에 없는 필드라 항상
+                undefined였다(key=undefined, 항상 "날짜 없음"). */}
+            {wills.map((w, index) => (
+              <li key={w.will_id ?? index} className="will-vault__card">
                 <div className="will-vault__card-icon" aria-hidden="true">
                   <Video size={24} />
                 </div>
@@ -86,8 +94,8 @@ export default function WillVaultPage() {
                     <StatusBadge status={w.status} />
                   </div>
                   <span className="will-vault__card-date">
-                    {w.createdAt
-                      ? new Date(w.createdAt).toLocaleDateString('ko-KR')
+                    {w.created_at && !Number.isNaN(new Date(w.created_at).getTime())
+                      ? new Date(w.created_at).toLocaleDateString('ko-KR')
                       : '날짜 없음'}
                   </span>
                 </div>

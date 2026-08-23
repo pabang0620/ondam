@@ -51,14 +51,14 @@ export default function WillPreviewPage() {
 
         {/* 유언장 제목 */}
         <div className="will-preview__field">
-          <label className="will-preview__label" htmlFor="will-title">유언장 제목</label>
+          <label className="will-preview__label" htmlFor="will-title">영상 편지 제목</label>
           <input
             id="will-title"
             type="text"
             className="will-preview__input"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="나의 유언장"
+            placeholder="나의 영상 편지"
             maxLength={50}
           />
         </div>
@@ -66,7 +66,7 @@ export default function WillPreviewPage() {
         {/* 유언 텍스트 */}
         <div className="will-preview__field">
           <label className="will-preview__label" htmlFor="will-content">
-            유언 메시지
+            편지 내용
             <span className="will-preview__required" aria-label="필수">*</span>
           </label>
           <p className="will-preview__field-hint">

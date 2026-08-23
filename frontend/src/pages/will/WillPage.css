@@ -249,6 +249,11 @@
   line-height: 1.6;
 }
 
+.will-pricing__legal-notice {
+  margin-bottom: var(--spacing-lg);
+  text-align: left;
+}
+
 .will-pricing__cta {
   display: inline-flex;
   align-items: center;

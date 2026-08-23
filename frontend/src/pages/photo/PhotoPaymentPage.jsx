@@ -47,7 +47,7 @@ function PhotoPaymentPage() {
         </p>
       </header>
 
-      {/* 주문 요약 카드 — 24px padding */}
+      {/* 주문 요약 카드 - 24px padding */}
       <section
         style={{
           background: 'var(--color-surface)',

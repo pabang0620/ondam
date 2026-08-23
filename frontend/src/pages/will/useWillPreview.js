@@ -33,7 +33,7 @@ export function useWillPreview() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const [title, setTitle] = useState('나의 유언장')
+  const [title, setTitle] = useState('나의 영상 편지')
   const [contentText, setContentText] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState(null)
@@ -44,7 +44,7 @@ export function useWillPreview() {
       return
     }
     if (!contentText.trim()) {
-      setSubmitError('유언 메시지를 입력해 주세요.')
+      setSubmitError('편지 내용을 입력해 주세요.')
       return
     }
     setIsSubmitting(true)
@@ -70,7 +70,7 @@ export function useWillPreview() {
       navigate(`/will/payment?willId=${willId}`)
     } catch (err) {
       // FIX: DEV-24 - 생성 실패를 가짜 will_id로 위장해 결제 단계로 진행시키지 않는다
-      setSubmitError(err?.response?.data?.message ?? '유언장 생성에 실패했습니다. 잠시 후 다시 시도해 주세요.')
+      setSubmitError(err?.response?.data?.message ?? '영상 편지 생성에 실패했습니다. 잠시 후 다시 시도해 주세요.')
     } finally {
       setIsSubmitting(false)
     }
