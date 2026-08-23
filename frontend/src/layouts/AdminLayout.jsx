@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { NavLink, Outlet, Navigate, Link, useLocation, useNavigate } from 'react-router-dom'
 import { ROUTES } from '../constants/routes.js'
-import { LayoutDashboard, Users, ShoppingBag, Unlock, TrendingUp, Menu, X, LogOut } from 'lucide-react'
+import { LayoutDashboard, Users, ShoppingBag, Unlock, TrendingUp, Menu, X, LogOut, ShieldAlert } from 'lucide-react'
 import {
   useAdminAuthStore,
   getAdminAccessToken,
@@ -14,6 +14,12 @@ import {
 // roles 생략 시 전원(super/manager/reviewer) 노출.
 // - 사후공개(검수): super, reviewer(content_moderator)만 - payment_specialist(manager) 제외
 // - 광고비/CAC: super, manager(payment_specialist)만 - content_moderator(reviewer) 제외
+//
+// FIX: 결함2 - 지금까지는 이 roles 값이 사이드바 메뉴를 숨기는 데만 쓰였다. reviewer가
+// 메뉴에 없는 /admin/ad-spend를 주소창으로 직접 열면 서버(requireAdminRole)는 403으로
+// 막지만 화면은 입력폼·등록 버튼까지 그대로 렌더링됐다. 아래 AdminAccessGuard가 같은
+// roles 값을 재사용해 <Outlet/> 자체를 막는다 - 매핑을 두 곳에 따로 두지 않기 위해
+// NAV_ITEMS 하나만 SSOT로 쓴다.
 const NAV_ITEMS = [
   { to: ROUTES.ADMIN, label: '대시보드', icon: LayoutDashboard, end: true },
   { to: ROUTES.ADMIN_RELEASE, label: '사후공개', icon: Unlock, roles: ['super', 'reviewer'] },
@@ -21,6 +27,15 @@ const NAV_ITEMS = [
   { to: ROUTES.ADMIN_USERS, label: '회원관리', icon: Users },
   { to: ROUTES.ADMIN_AD_SPEND, label: '광고비/CAC', icon: TrendingUp, roles: ['super', 'manager'] },
 ]
+
+// backend/src/middleware/requireAdminRole.js ADMIN_ROLE_LABEL은 PRD 표기(영문)만
+// 매핑한다. 화면에 보여줄 한글 라벨이 없어 여기 별도로 둔다 - DB 값(super/manager/
+// reviewer) 자체는 바뀌지 않으므로 두 매핑이 값 기준으로는 어긋나지 않는다.
+const ADMIN_ROLE_LABEL_KO = {
+  super: '최고 관리자',
+  manager: '결제 담당',
+  reviewer: '검수 담당',
+}
 
 const SIDEBAR_WIDTH = 224 // 14rem = w-56
 
@@ -124,6 +139,12 @@ export default function AdminLayout() {
   }, [sidebarOpen])
 
   const toggleSidebar = useCallback(() => setSidebarOpen((prev) => !prev), [])
+
+  // FIX: 결함2 - 현재 경로에 해당하는 NAV_ITEMS 항목의 roles와 adminUser.adminRole을
+  // 대조한다. 모든 admin 경로가 하위 경로 없이 평평하므로(constants/routes.js) 정확
+  // 일치로 충분하다. roles가 없는 항목(대시보드·주문관리·회원관리)은 전원 허용.
+  const activeNavItem = NAV_ITEMS.find((item) => item.to === location.pathname)
+  const isRoleAllowed = !activeNavItem?.roles || activeNavItem.roles.includes(adminUser?.adminRole)
 
   // 관리자 세션 복원(refreshAdminAuth)이 끝나기 전에는 판정을 보류하고 로딩을 렌더한다.
   if (adminSessionState === 'checking') {
@@ -440,7 +461,52 @@ export default function AdminLayout() {
             overflowX: 'hidden',
           }}
         >
-          <Outlet />
+          {isRoleAllowed
+            ? <Outlet />
+            : (
+              // FIX: 결함2 - 화면 수준 가드. 서버 requireAdminRole은 그대로 두고(진짜
+              // 차단은 여전히 서버가 담당), 권한 없는 role이 주소창으로 직접 들어와도
+              // 폼·등록 버튼이 렌더링되지 않도록 여기서 막는다.
+              <div
+                role="alert"
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 'var(--spacing-md)',
+                  textAlign: 'center',
+                  padding: 'var(--spacing-2xl) var(--spacing-md)',
+                  maxWidth: 480,
+                  margin: '0 auto',
+                }}
+              >
+                <ShieldAlert size={40} color="var(--color-error)" aria-hidden="true" />
+                <h1 style={{ fontSize: 'var(--fs-h2)', fontWeight: 800, color: 'var(--color-primary)' }}>
+                  접근 권한이 없습니다
+                </h1>
+                <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)' }}>
+                  {ADMIN_ROLE_LABEL_KO[adminUser?.adminRole] ?? '현재 계정'}은 이 화면을 사용할 수 없습니다.
+                </p>
+                <Link
+                  to={ROUTES.ADMIN}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    minHeight: 'var(--min-touch-target)',
+                    padding: '0 var(--spacing-lg)',
+                    background: 'var(--color-primary)',
+                    color: 'var(--color-surface)',
+                    borderRadius: 'var(--radius-sm)',
+                    fontSize: 'var(--fs-button)',
+                    fontWeight: 700,
+                    textDecoration: 'none',
+                  }}
+                >
+                  대시보드로 돌아가기
+                </Link>
+              </div>
+            )}
         </main>
       </div>
     </div>

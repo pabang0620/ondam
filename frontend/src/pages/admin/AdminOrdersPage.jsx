@@ -5,32 +5,54 @@ import './admin.css'
 const LIMIT = 20
 const ALL = 'ALL'
 
+// FIX: 결함1 - photo_orders.status 실제 ENUM(PHOTO_ORDER_STATUS, shared/constants/enums.js)은
+// pending_payment/paid/processing/completed/failed/refunded 6종이다. 기존 필터·라벨은
+// 'pending'(존재하지 않는 값)·4종만 있어 paid·refunded 주문을 걸러낼 수도, 라벨을
+// 표시할 수도 없었다. 라벨 텍스트는 mypage/MyPage.jsx의 ORDER_STATUS_LABEL과 동일하게
+// 맞춰 사이트 전체에서 같은 상태값이 같은 문구로 보이게 한다.
 const STATUS_OPTIONS = [
   { value: ALL, label: '전체' },
-  { value: 'pending', label: '대기' },
+  { value: 'pending_payment', label: '결제 대기' },
+  { value: 'paid', label: '결제 완료' },
   { value: 'processing', label: '처리 중' },
   { value: 'completed', label: '완료' },
   { value: 'failed', label: '실패' },
+  { value: 'refunded', label: '환불됨' },
 ]
 
 const STATUS_COLOR = {
-  pending: 'var(--color-text-muted)',
+  pending_payment: 'var(--color-text-muted)',
+  paid: 'var(--color-text-muted)',
   processing: 'var(--color-warm-accent)',
   completed: 'var(--color-success)',
   failed: 'var(--color-error)',
+  refunded: 'var(--color-text-muted)',
 }
 
 const STATUS_LABEL = {
-  pending: '대기',
+  pending_payment: '결제 대기',
+  paid: '결제 완료',
   processing: '처리 중',
   completed: '완료',
   failed: '실패',
+  refunded: '환불됨',
 }
 
+// FIX: 결함1 - photo_orders.photo_type 실제 ENUM(PHOTO_TYPE, shared/constants/enums.js)은
+// 9종이다(2026-08-21 DEV-22 drift 해소로 enhance/colorize/restore/removebg/portrait/casual
+// 6종이 DB에 추가됨, docs/migrations/2026-08-21-schema-drift-fix.README.md 3절). 기존에는
+// funeral/id/job 3개만 있어 나머지 6개 주문의 사진 유형이 영문 원문으로 노출됐다.
+// 아래 3개(장례/증명/취업)는 PhotoOrderPage.jsx 상품명과 동일하게 맞췄다.
 const PHOTO_TYPE_LABEL = {
   funeral: '장례',
   id: '증명',
   job: '취업',
+  enhance: '화질 개선',
+  colorize: '컬러 복원',
+  restore: '사진 복원',
+  removebg: '배경 제거',
+  portrait: '인물 사진',
+  casual: '캐주얼 사진',
 }
 
 export default function AdminOrdersPage() {

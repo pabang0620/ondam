@@ -2,6 +2,17 @@ import { useAdminUsers } from './useAdminUsers.js'
 import { Search, ChevronLeft, ChevronRight } from 'lucide-react'
 import './admin.css'
 
+// FIX: 결함1 - subscriptions.plan 실제 ENUM(SUBSCRIPTION_PLAN, shared/constants/enums.js)이
+// 영문 원문(pet_archive 등)으로 그대로 노출되고 있었다. will_premium·all은 오너 확정으로
+// 폐지된 플랜이지만(DEV-17/DEV-32) 이미 구독 중이던 기존 회원 행은 강제취소하지 않아
+// 여전히 나타날 수 있으므로 라벨에 남겨둔다 - pet/SubscriptionStatusCard.jsx의
+// PLAN_NAMES와 동일한 문구로 맞춰 사이트 전체에서 같은 값이 같은 문구로 보이게 한다.
+const SUBSCRIPTION_PLAN_LABEL = {
+  pet_archive: '반려동물 아카이브',
+  will_premium: 'AI 영상 편지 프리미엄',
+  all: '전체 이용권',
+}
+
 export default function AdminUsersPage() {
   const {
     users,
@@ -177,7 +188,7 @@ export default function AdminUsersPage() {
                           fontSize: 'var(--fs-caption)',
                         }}
                       >
-                        {user.subscriptionPlan}
+                        {SUBSCRIPTION_PLAN_LABEL[user.subscriptionPlan] || user.subscriptionPlan}
                       </span>
                     )
                     : <span style={{ color: 'var(--color-text-muted)', fontSize: 'var(--fs-caption)' }}>없음</span>}
