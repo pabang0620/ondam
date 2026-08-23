@@ -20,88 +20,18 @@
   margin-bottom: var(--spacing-xl);
 }
 
-.will-consent__items {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-  margin-bottom: var(--spacing-xl);
-}
-
-.will-consent__card {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--spacing-md);
-  background-color: var(--color-surface);
-  border: 2px solid var(--color-border);
-  border-radius: var(--radius-card);
-  padding: 20px 24px;
-  text-align: left;
-  cursor: pointer;
-  transition: border-color var(--transition-base), background-color var(--transition-base);
-  min-height: var(--min-touch-target);
-  width: 100%;
-}
-
-.will-consent__card.is-checked {
-  border-color: var(--color-will);
-  background-color: var(--color-surface-warm);
-}
-
-.will-consent__card-check {
-  color: var(--color-border-strong);
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.will-consent__card.is-checked .will-consent__card-check {
-  color: var(--color-will);
-}
-
-.will-consent__card-text {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
-}
-
-.will-consent__card-label {
-  font-size: var(--fs-body);
-  font-weight: 600;
-  color: var(--color-text-primary);
-}
-
-.will-consent__card-desc {
-  font-size: var(--fs-caption);
-  color: var(--color-text-secondary);
-  line-height: 1.5;
-}
-
-/* 전체 동의 */
-.will-consent__all {
+/* 동의 저장 실패 안내 - FIX: D */
+.will-consent__error {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
-  width: 100%;
-  background-color: var(--color-surface-warm);
-  border: 2px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  padding: 16px 24px;
+  gap: 6px;
+  color: var(--color-error);
   font-size: var(--fs-body);
-  font-weight: 700;
-  color: var(--color-text-primary);
-  cursor: pointer;
-  min-height: var(--min-touch-target);
-  margin-bottom: 24px;
-  transition: border-color var(--transition-base);
-}
-
-.will-consent__all.is-checked {
-  border-color: var(--color-will);
-  color: var(--color-will);
-}
-
-.will-consent__all svg {
-  color: var(--color-will);
-  flex-shrink: 0;
+  background-color: var(--color-error-light);
+  border: 1px solid var(--color-error);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
 }
 
 /* 다음 버튼 */
@@ -132,19 +62,5 @@
 @media (max-width: 639px) {
   .will-consent__content {
     padding: var(--spacing-lg) var(--spacing-md) 32px;
-  }
-
-  /* 동의 카드 텍스트 크기 유지(최소 16px = var(--fs-body)) */
-  .will-consent__card-desc {
-    font-size: var(--fs-body);
-  }
-
-  /* 체크 아이콘 충분한 터치 영역 */
-  .will-consent__card-check {
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
   }
 }

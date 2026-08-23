@@ -5,6 +5,8 @@ import apiClient from '../../config/apiClient.js'
 import { willApi } from '../will/willApi.js'
 import { uploadPhoto } from '../photo/photoApi.js'
 import { attachWillOrder, completeGift } from './giftApi.js'
+import { WILL_CONSENT_ITEMS } from '../../components/consent/consentItems.js'
+import { useConsentChecklist } from '../../components/consent/useConsentChecklist.js'
 
 export const STEP = {
   CONSENT: 'consent',
@@ -30,21 +32,40 @@ function useGiftPerformWill() {
   const [contentText, setContentText] = useState('')
   const [beneficiary, setBeneficiary] = useState({ name: '', email: '', phone: '', relationship: '' })
 
+  // FIX: 결함A - 선물 수행 경로는 이 화면이 유일한 동의 접점인데 voice 하나만
+  // 저장했다. 일반 경로(useWillConsent.js)와 동일하게 4개 전부(초상권/음성권/
+  // AI 생성물/사후 공개) 받는다 - 문구는 WILL_CONSENT_ITEMS(단일 소스)를 그대로 쓴다.
+  const { consents, allChecked, toggleItem, toggleAll } = useConsentChecklist(WILL_CONSENT_ITEMS)
+
   const pollRef = useRef(null)
   useEffect(() => () => clearInterval(pollRef.current), [])
 
+  // ep-006: 비동기 클릭 핸들러는 setState보다 먼저 반영되는 ref로 즉시 잠근다
+  // (busy state 갱신 전에 도착하는 연타로 인한 중복 POST 방지).
+  const consentPendingRef = useRef(false)
+
   const submitConsent = useCallback(async () => {
+    if (!allChecked || consentPendingRef.current) return
+    consentPendingRef.current = true
     setBusy(true)
     setError(null)
     try {
-      await apiClient.post('/auth/consents', { consents: [{ consentType: 'voice', isAgreed: true }] })
+      const consentPayload = WILL_CONSENT_ITEMS.map((item) => ({
+        consentType: item.key,
+        isAgreed: consents[item.key] ?? false,
+      }))
+      // FIX: D - useWillConsent.js와 동일한 저장 엔드포인트(willApi.saveConsents ->
+      // POST /auth/consents)를 그대로 쓴다. 실패 시(빈 catch{} 금지) 사용자에게 알리고
+      // 다음 단계(사진 업로드)로 넘어가지 못하게 막는다 - 서버 기록이 법적 증빙이다.
+      await willApi.saveConsents(consentPayload)
       setStep(STEP.PHOTO)
     } catch (err) {
-      setError(err?.response?.data?.message ?? '동의 저장에 실패했습니다.')
+      setError(err?.response?.data?.message ?? '동의 저장에 실패했습니다. 잠시 후 다시 시도해 주세요.')
     } finally {
       setBusy(false)
+      consentPendingRef.current = false
     }
-  }, [])
+  }, [allChecked, consents])
 
   const uploadProfilePhoto = useCallback(async (file) => {
     setBusy(true)
@@ -154,6 +175,11 @@ function useGiftPerformWill() {
     step,
     error,
     busy,
+    consentItems: WILL_CONSENT_ITEMS,
+    consents,
+    allChecked,
+    toggleConsentItem: toggleItem,
+    toggleAllConsents: toggleAll,
     profileImageUrl,
     title,
     setTitle,

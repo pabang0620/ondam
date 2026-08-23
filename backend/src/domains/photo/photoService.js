@@ -32,7 +32,41 @@ const toPhotoFileDto = (file) => pick(file, PHOTO_FILE_PUBLIC_FIELDS)
 
 // ─── 주문 생성 ────────────────────────────────────────────────────────────────
 
+/**
+ * [보안 수정 - 초상권/AI 생성물 동의 게이트] photo_orders의 모든 photoType(funeral/id/
+ * job/enhance/colorize/restore/removebg/portrait/casual)은 예외 없이 사람의 얼굴
+ * 사진을 AI로 처리하고 그 결과물을 계정에 보관한다(CLAUDE.md §3 "초상권·음성권
+ * 동의 없이 처리 금지"). 이전에는 willService.uploadVoiceSample의 voice 게이트만
+ * 존재하고 portrait/ai_generation은 어디에서도 검사되지 않아 미동의 사용자도
+ * 주문을 만들고 결제·AI 처리까지 통과했다(실측 결함). willService의 기존 voice
+ * 게이트와 동일한 패턴(user_consents 최신 행 조회 → is_agreed !== 1이면 400)을
+ * 따른다. 두 유형을 검사하는 이유: frontend/src/components/consent/consentItems.js의
+ * PHOTO_CONSENT_ITEMS(다른 에이전트가 병행 작업 중인 사진관 동의 화면)가 portrait·
+ * ai_generation 둘 다 "(필수)"로 수집한다 - 프론트가 수집하는 동의와 서버가
+ * 검증하는 동의 범위를 일치시킨다.
+ */
+const assertPhotoConsents = async (userId) => {
+  const [portraitConsent, aiGenConsent] = await Promise.all([
+    photoRepository.findPortraitConsent(userId),
+    photoRepository.findAiGenerationConsent(userId),
+  ])
+  if (!portraitConsent || portraitConsent.is_agreed !== 1) {
+    throw Object.assign(
+      new Error('사진 처리를 위한 초상권 동의가 필요합니다. 설정 > 동의 관리에서 동의해 주세요.'),
+      { status: 400 },
+    )
+  }
+  if (!aiGenConsent || aiGenConsent.is_agreed !== 1) {
+    throw Object.assign(
+      new Error('AI 생성물 이용 동의가 필요합니다. 설정 > 동의 관리에서 동의해 주세요.'),
+      { status: 400 },
+    )
+  }
+}
+
 export const createOrder = async (userId, { photoType, sourceImageUrl }) => {
+  await assertPhotoConsents(userId)
+
   const orderId = uuidv4()
   const priceKrw = 9900
 
@@ -103,6 +137,11 @@ export const startProcessing = async (orderId, userId) => {
         { status: 400 },
       )
     }
+
+    // 초상권/AI 생성물 동의 재확인 - 주문 생성(createOrder) 이후, 결제를 거쳐
+    // 처리를 시작하기까지 사이에 동의가 철회됐을 수 있다(willService.activateWill과
+    // 동일한 재확인 패턴 - defense in depth).
+    await assertPhotoConsents(userId)
 
     const jobId = uuidv4()
     const bullmqJob = await photoQueue.add('enhance', {

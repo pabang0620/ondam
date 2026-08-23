@@ -66,10 +66,25 @@ export const register = async ({
   ipAddress,
   userAgent,
 }) => {
-  // privacy 동의 필수 체크
-  const privacyConsent = consents.find((c) => c.type === 'privacy')
-  if (!privacyConsent || !privacyConsent.isAgreed) {
-    throw Object.assign(new Error('개인정보 처리 방침 동의가 필요합니다'), { status: 400 })
+  // 필수 동의 체크 - privacy(개인정보) + terms(이용약관)
+  // [2026-08-23] frontend/src/components/consent/consentItems.js의 SIGNUP_CONSENT_ITEMS
+  // 주석(결정3, 2026-08-22)을 확인한 결과 "약관을 게시해도 동의가 선택이면 계약 편입이
+  // 다투어질 수 있다"는 법무 검토로 terms도 필수 동의로 전환됐다(이전에는 privacy만
+  // 필수). 같은 주석은 "GiftPerformPage.jsx가 이 배열을 [{type:'privacy'}]로 임의
+  // 축소해 terms 필수 동의를 우회하던 문제"(결함B)를 프론트 SSOT 통합으로 고쳤다고
+  // 명시한다 - 그러나 그 수정은 프론트 UI 레이어일 뿐, 서버가 여전히 privacy만
+  // 검사하면 프론트를 거치지 않고 API를 직접 호출하는 경로(공식 우회 경로 - curl,
+  // 다른 클라이언트 등)에서는 terms 없이도 가입이 그대로 통과한다. 이 결함 계열
+  // (동의 검증을 프론트에만 의존)이 이번 작업 전체의 핵심 주제이므로 서버에도
+  // 동일하게 적용한다.
+  const REQUIRED_SIGNUP_CONSENT_TYPES = ['privacy', 'terms']
+  const missingRequired = REQUIRED_SIGNUP_CONSENT_TYPES.find((type) => {
+    const found = consents.find((c) => c.type === type)
+    return !found || !found.isAgreed
+  })
+  if (missingRequired) {
+    const label = missingRequired === 'privacy' ? '개인정보 처리 방침' : '이용약관'
+    throw Object.assign(new Error(`${label} 동의가 필요합니다`), { status: 400 })
   }
 
   // 이메일 중복 확인
@@ -102,10 +117,10 @@ export const register = async ({
   const isEnumRejection = (err) =>
     err.code === 'ER_TRUNCATED_WRONG_VALUE_FOR_FIELD' || err.errno === 1265
 
-  // 필수 동의(useJoin.js 기준 privacy만 required:true) 저장 실패는 진짜 실패로 취급해
-  // 트랜잭션 전체를 롤백한다. 선택 동의(terms/marketing 등)만 ENUM 미반영 오류에
-  // 한해 관대하게 건너뛴다.
-  const REQUIRED_CONSENT_TYPES = new Set(['privacy'])
+  // 필수 동의(consentItems.js SIGNUP_CONSENT_ITEMS 기준 privacy+terms required:true)
+  // 저장 실패는 진짜 실패로 취급해 트랜잭션 전체를 롤백한다. 선택 동의(marketing 등)만
+  // ENUM 미반영 오류에 한해 관대하게 건너뛴다.
+  const REQUIRED_CONSENT_TYPES = new Set(REQUIRED_SIGNUP_CONSENT_TYPES)
 
   // 사용자 생성 + 동의 이력 저장을 단일 트랜잭션으로 묶는다 (G4).
   // Repository(authRepository.createUser/createConsent)가 옵셔널 conn을 받으므로
@@ -156,6 +171,12 @@ export const register = async ({
     await conn.rollback()
     if (err.status) throw err // 위에서 이미 사용자 메시지로 태깅된 에러
     if (err.code === 'ER_DUP_ENTRY') {
+      // [2026-08-23] isConsentDup 분기는 user_consents가 append-only로 전환되며
+      // (UNIQUE(user_id, consent_type) 제거) 사실상 도달 불가능해졌다 - dedupedConsents가
+      // 이미 요청 내 중복 type을 걸러내고, DB에도 더 이상 그 조합에 UNIQUE 제약이
+      // 없어 ER_DUP_ENTRY 자체가 나지 않는다. users.email UNIQUE 위반 케이스는 여전히
+      // 유효하므로 분기 자체는 안전하게 남겨둔다(제거해도 이득이 없고, 미래에 다른
+      // UNIQUE 제약이 추가될 가능성에 대한 방어적 코드로 유지).
       const isConsentDup = /consents|uq_consents_user_type/i.test(err.sqlMessage ?? '')
       throw isConsentDup
         ? Object.assign(new Error('동의 항목에 중복된 유형이 있습니다'), { status: 400 })
@@ -333,44 +354,64 @@ export const refresh = async (refreshToken) => {
   }
 }
 
+// [보안 수정 - 2026-08-23] 초상권·음성권·AI 생성물·사후공개 동의는 photo/will
+// 도메인의 AI 처리 게이트(photoService.createOrder/startProcessing,
+// willService.activateWill, adminService.approveRelease)가 실제로 검사하는 값이다.
+// 이 값의 저장이 조용히 실패하면(과거: ENUM 미반영 등) "동의했다고 응답은 받았지만
+// 실제로는 저장되지 않은" 상태가 되어 사용자에게 혼란을 주고, 재시도 없이는
+// 이후 AI 처리 단계에서 영문 모른 채 계속 차단당한다. privacy와 동일하게
+// 이 목록의 유형은 저장 실패 시 요청 자체를 실패시킨다(register()의
+// REQUIRED_CONSENT_TYPES와 같은 원칙, useJoin.js가 법무 검토 근거로 필수
+// 표시한 항목 + WillConsentPage가 4종 전부를 "(필수)"로 요구하는 것과 일치).
+// terms/marketing만 과거 ENUM drift 대비 관대 처리를 유지한다(선택 항목이라
+// 저장 실패가 사용자의 서비스 이용을 막지 않음).
+const REQUIRED_CONSENT_TYPES = new Set([
+  'privacy', 'portrait', 'voice', 'ai_generation', 'posthumous_release',
+])
+
 /**
- * 동의 항목 저장 (목록을 순차 upsert)
+ * 동의 항목 저장 (목록을 순차 append-only INSERT)
  *
- * register()와 동일한 이유로 관대 처리를 적용한다 - CONSENT_TYPE(SSOT)에는 이미
- * 'terms'/'marketing'이 포함돼 있지만 마이그레이션 2026-08-21b 적용 전 DB에서는
- * ENUM에 없어 upsertConsent가 MySQL 1265(ER_TRUNCATED_WRONG_VALUE_FOR_FIELD)로
- * 거부한다. 이 오류는 로그만 남기고 해당 항목만 건너뛴다 - 마이그레이션 b가
- * 적용되면 ENUM에 모든 값이 존재하므로 이 분기는 더 이상 발동하지 않고
- * 자연 소멸한다.
+ * [2026-08-23] upsertConsent(ON DUPLICATE KEY UPDATE)를 더 이상 쓰지 않는다 -
+ * user_consents가 append-only로 전환되면서(마이그레이션
+ * 2026-08-23-consent-history-and-evidence) register()와 동일하게 createConsent를
+ * 사용한다. 동의 행위마다 새 UUID(consent_id)로 새 행이 생기므로 이력이 보존되고,
+ * voice_samples.consent_id 같은 참조가 재동의로 인해 끊어지지 않는다.
+ * ip_address/user_agent도 register()와 동일하게 함께 기록한다(D5).
  *
- * register()와 달리 "필수 동의(privacy)가 실패하면 트랜잭션 전체를 롤백"하는
- * 게이트가 없다 - 이 엔드포인트는 이미 가입을 마친 사용자가 추가/변경 동의를
- * 저장하는 경로이고, privacy는 회원가입 시점에 이미 필수로 검증된 값이라
- * 여기서 다시 전송돼도 ENUM 거부를 유발하지 않는다(마이그레이션 b가 새로
- * 추가하는 값은 terms/marketing뿐). 따라서 이 엔드포인트에서는 항목별 필수
- * 여부를 구분하지 않고 전부 동일하게 관대 처리한다 - 한 항목의 저장 실패가
- * 나머지 항목이나 요청 전체를 막지 않는다.
+ * REQUIRED_CONSENT_TYPES(위)에 해당하는 유형은 저장 실패 시 요청 전체를 실패시킨다
+ * (D8 - 저장 실패를 조용히 삼키지 않는다). 그 외 유형(terms/marketing)만 과거
+ * ENUM drift 대비 관대 처리(로그만 남기고 계속 진행)를 유지한다.
  * @param {string} userId
  * @param {Array<{ consentType: string, isAgreed: boolean }>} consents
+ * @param {{ ipAddress: string|null, userAgent: string|null }} param2
  */
-export const saveConsents = async (userId, consents) => {
-  // 사용자 정의: DB가 아직 모르는 ENUM 값으로 UPSERT할 때 MySQL이 던지는 에러 코드
+export const saveConsents = async (userId, consents, { ipAddress = null, userAgent = null } = {}) => {
+  // 사용자 정의: DB가 아직 모르는 ENUM 값으로 INSERT할 때 MySQL이 던지는 에러 코드
   const isEnumRejection = (err) =>
     err.code === 'ER_TRUNCATED_WRONG_VALUE_FOR_FIELD' || err.errno === 1265
 
   for (const { consentType, isAgreed } of consents) {
     try {
-      await authRepository.upsertConsent(userId, consentType, isAgreed)
+      await authRepository.createConsent({
+        consentId: uuidv4(),
+        userId,
+        consentType,
+        isAgreed,
+        ipAddress,
+        userAgent,
+      })
     } catch (err) {
-      if (isEnumRejection(err)) {
+      if (isEnumRejection(err) && !REQUIRED_CONSENT_TYPES.has(consentType)) {
         // eslint-disable-next-line no-console
         console.warn(
           `[authService.saveConsents] consent_type '${consentType}' 저장 실패` +
-          `(DB ENUM 미반영 추정 - 마이그레이션 2026-08-21b 적용 여부 확인 필요).` +
-          ` 건너뛰고 나머지 동의 저장은 계속 진행. userId=${userId}`
+          `(DB ENUM 미반영 추정). 선택 항목이라 건너뛰고 나머지 동의 저장은 계속 진행. userId=${userId}`
         )
         continue
       }
+      // 필수 동의 저장 실패(ENUM 거부 포함) 또는 그 외 모든 에러는 요청 자체를
+      // 실패시킨다 - "저장됐다"는 성공 응답과 실제 DB 상태가 어긋나면 안 된다.
       throw err
     }
   }

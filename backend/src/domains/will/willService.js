@@ -491,6 +491,23 @@ export const activateWill = async (userId, willId) => {
       throw Object.assign(new Error('음성 처리 동의가 필요합니다'), { status: 400 })
     }
 
+    // [보안 수정 - 초상권/AI 생성물 동의 게이트] activateWill은 프로필 사진(얼굴)과
+    // 클론 음성을 합성해 새 영상을 생성하고 그 결과를 서비스에 보관한다 - voice
+    // 동의만으로는 부족하다. WillConsentPage는 portrait/voice/ai_generation/
+    // posthumous_release 4종을 전부 "(필수)"로 동시에 요구하는데, 서버에는 voice
+    // 게이트만 있어 나머지 3종은 미동의로도 통과했다(실측 결함). posthumous_release는
+    // 여기서 검사하지 않는다 - "사망 확인 후 유가족에게 공개"라는 그 동의의 실제
+    // 대상 행위는 activateWill(영상 생성) 시점이 아니라 adminService.approveRelease
+    // (실제로 공개되는 시점)에서 검사한다(아래 해당 함수 참고).
+    const portraitConsent = await repo.findPortraitConsent(userId)
+    if (!portraitConsent || portraitConsent.is_agreed !== 1) {
+      throw Object.assign(new Error('초상권 처리 동의가 필요합니다'), { status: 400 })
+    }
+    const aiGenConsent = await repo.findAiGenerationConsent(userId)
+    if (!aiGenConsent || aiGenConsent.is_agreed !== 1) {
+      throw Object.assign(new Error('AI 생성물 이용 동의가 필요합니다'), { status: 400 })
+    }
+
     // KMS 복호화·큐 등록에 필요한 값만 락 안에서 꺼내두고(추가 네트워크 호출 없음),
     // 실제 복호화(decryptWillContent)는 락 밖(2단계)에서 수행한다.
     prevStatus = will.status
@@ -859,9 +876,15 @@ export const verifyWatchAccess = async (token, phoneLast4, { ipAddress, userAgen
       detail: { willId: will.will_id, attempts },
     })
 
+    // [버그 수정] 이전에는 401을 던졌다. 401은 인증 토큰 문제를 뜻하는데 이건 무인증
+    // 공개 링크(유가족 열람 링크)에서 입력한 휴대폰 뒤 4자리가 서버 값과 다른 것뿐이다
+    // - 인증 토큰과 무관하다. 프론트 apiClient.js의 401 인터셉터가 "토큰 만료"로
+    // 오인해 리프레시 후 원 요청(시도 횟수를 차감하는 verify)을 자동 재시도하는 바람에
+    // 버튼 1클릭에 시도 횟수가 2회씩 깎이던 결함의 근본 원인이었다(giftPerformService.js
+    // verifyPerform과 동일 결함, 동일 수정). 400으로 바꿔 오인 재시도를 원천 차단한다.
     throw Object.assign(
       new Error(`휴대폰 번호 뒤 4자리가 일치하지 않습니다. (${WATCH_VERIFY_MAX_ATTEMPTS - attempts}회 남음)`),
-      { status: 401 },
+      { status: 400 },
     )
   }
 

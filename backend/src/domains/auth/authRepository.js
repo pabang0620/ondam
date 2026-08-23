@@ -14,7 +14,6 @@
  * ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
  */
 
-import { v4 as uuidv4 } from 'uuid'
 import pool from '../../config/db.js'
 
 /**
@@ -129,25 +128,12 @@ export const findRefreshToken = async (tokenHash) => {
   return rows[0] ?? null
 }
 
-/**
- * 동의 항목 upsert - (user_id, consent_type) UNIQUE KEY 기반 ON DUPLICATE KEY UPDATE
- * 동일 사용자·동의 유형의 기존 row가 있으면 is_agreed/agreed_at 만 갱신하고
- * consent_id(UUID)는 신규 생성 값으로 교체한다 (추적 목적)
- * @param {string} userId
- * @param {string} consentType
- * @param {boolean} isAgreed
- */
-export const upsertConsent = async (userId, consentType, isAgreed) => {
-  await pool.query(
-    `INSERT INTO user_consents (consent_id, user_id, consent_type, is_agreed, agreed_at)
-     VALUES (?, ?, ?, ?, NOW())
-     ON DUPLICATE KEY UPDATE
-       consent_id = VALUES(consent_id),
-       is_agreed  = VALUES(is_agreed),
-       agreed_at  = NOW()`,
-    [uuidv4(), userId, consentType, isAgreed ? 1 : 0],
-  )
-}
+// [2026-08-23 제거] upsertConsent(ON DUPLICATE KEY UPDATE)는 user_consents가
+// append-only로 전환되며(UNIQUE(user_id, consent_type) 제거, 마이그레이션
+// 2026-08-23-consent-history-and-evidence) 더 이상 유효하지 않다 - UNIQUE 제약이
+// 없으면 ON DUPLICATE KEY UPDATE는 기존 행과 매칭되지 않고 매번 새 행을 만드는
+// 것과 동일해지므로 함수를 남겨둘 이유가 없다. authService.saveConsents는 이제
+// createConsent(위, append-only + ip_address/user_agent 기록)를 사용한다.
 
 // [결함3 수정] adminRepository.findActiveAdminRefreshToken과 동일 패턴 - 다중 탭 동시
 // refresh 경쟁에서, 늦게 도착한 요청이 "이미 회전된(revoked)" 토큰을 들고 있을 때

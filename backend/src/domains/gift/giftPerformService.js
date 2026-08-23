@@ -96,9 +96,16 @@ export const verifyPerform = async (token, phoneLast4) => {
         { status: 423 },
       )
     }
+    // [버그 수정] 이전에는 401을 던졌다. 401은 인증 토큰 문제(로그인 필요/토큰 만료)를
+    // 뜻하는 코드인데, 이건 무인증 공개 링크에서 입력값(휴대폰 뒤 4자리)이 서버 값과
+    // 다른 것뿐이다 - 인증 토큰과 무관하다. 프론트 apiClient.js의 401 인터셉터가
+    // "토큰 만료"로 오인해 리프레시 후 원 요청(시도 횟수를 차감하는 verify)을 자동
+    // 재시도하는 바람에 버튼 1클릭에 시도 횟수가 2회씩 깎이던 결함의 근본 원인이었다.
+    // 400으로 바꿔 (a) 위 오인 재시도를 원천 차단하고 (b) 코드베이스 관례(예:
+    // userService.js의 "현재 비밀번호가 올바르지 않습니다" 400)와 일관되게 맞춘다.
     throw Object.assign(
       new Error(`휴대폰 번호 뒤 4자리가 일치하지 않습니다. (${giftRepository.VERIFY_MAX_ATTEMPTS - attempts}회 남음)`),
-      { status: 401 },
+      { status: 400 },
     )
   }
 
@@ -126,7 +133,10 @@ export const verifyPerform = async (token, phoneLast4) => {
  */
 export const linkAccount = async (token, { mode, email, password, nickname, consents, ipAddress, userAgent }) => {
   const verified = await giftRepository.isVerified(token)
-  if (!verified) throw Object.assign(new Error('본인 확인이 먼저 필요합니다'), { status: 401 })
+  // [버그 수정] 이것도 토큰 인증 문제가 아니라 "본인확인 단계를 건너뛰고 계정 연결을
+  // 시도" 하는 절차 순서 위반이다 - 401(토큰 문제)이 아니라 400으로 바로잡는다(위
+  // verifyPerform과 동일 사유).
+  if (!verified) throw Object.assign(new Error('본인 확인이 먼저 필요합니다'), { status: 400 })
 
   const gift = await giftRepository.findByPerformTokenHash(hashToken(token))
   if (!gift || !gift.payment_id) {

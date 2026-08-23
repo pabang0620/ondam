@@ -73,11 +73,24 @@ const findUserEmail = async (userId) => {
 // ─── SPEC-02 2절(DEV-08): 유언 영상 AI 생성 최종 실패 시 후처리 ──────────────────
 // wills.status ENUM에는 'failed' 값이 없다(draft/paid/active/released/revoked) -
 // 스키마 변경 없이는 "실패" 자체를 상태값으로 표현할 수 없다. 대신 will_status_logs에
-// 사유를 남기고, 실제 환불이 확정된 경우(또는 애초에 결제가 없었던 경우)에만 기존과
-// 동일하게 status를 'draft'로 되돌린다. 환불 자체가 실패하면 결제가 실제로 살아있는
-// 상태(payments.status='done')이므로 will도 'active'로 그대로 둬서 관리자가 "결제는
-// 됐는데 영상은 실패"인 불일치를 놓치지 않게 한다(섣불리 draft로 되돌리면 문제가
-// 조용히 묻힌다).
+// 사유를 남기고, payments.status(환불 이후 실제 청구 상태)를 그대로 반영해 복원한다.
+//
+// [2026-08-23 수정] 기존에는 "환불 성공/미결제만 draft, 그 외(환불 API 실패 등)는
+// active 그대로 유지"였다. 그런데 activateWill은 status='paid'에서만 활성화를
+// 허용하도록 별도로 수정돼 있어(미결제 활성화 차단 목적), active로 멈춘 건은 재활성화
+// 경로 자체가 없다 - 사용자는 이미 결제했는데(payments.status='done') 다시 시도할
+// 방법이 없이 영구히 막히는 결함이었다. 환불 API 실패는 벤더 일시 장애로도 흔히
+// 발생하므로 방치하면 정상적으로 재시도 가능했을 사용자까지 묶인다.
+// → 실제 결제 상태(payment.status)를 단일 기준으로 삼는다:
+//   - 'canceled'(환불 완료, gift 대납 환불 포함)면 결제가 취소된 것이므로 draft
+//     (재결제 필요)
+//   - 'done'(환불이 안 됐거나 실패)이면 결제가 여전히 유효하므로 paid로 되돌려
+//     재결제 없이 activateWill을 다시 호출할 수 있게 한다(환불 실패는
+//     payments.fail_reason/cancel_reason에 이미 기록되어 있어 조용히 묻히지 않는다)
+//   - 완료된 결제 자체가 없었으면(no_completed_payment) draft
+// refundForAiFailure 호출 자체가 throw한 경우(refund_call_threw)만 예외 - 결제 상태를
+// 전혀 조회하지 못했으므로 함부로 상태를 바꾸지 않고 active 그대로 두어 관리자가
+// 수동 확인하게 한다(원래 의도였던 "조용히 묻히지 않게" 방어는 이 경로에만 유지).
 const finalizeWillFailure = async ({ willId, userId, failReason }) => {
   const refundResult = await paymentService
     .refundForAiFailure('will_order', willId, { reason: `AI 처리 실패: ${failReason}` })
@@ -88,6 +101,10 @@ const finalizeWillFailure = async ({ willId, userId, failReason }) => {
 
   // [마감 공백 처리] will_order 경로에서 결제를 못 찾았다면(no_completed_payment)
   // 선물로 결제된 콘텐츠일 수 있다 - gift 역조회로 환불을 재시도한다(완료 보고 2절).
+  // gift가 실재하면(환불 성공/실패 무관) will_order 쪽의 무관한 조회 결과 대신 gift
+  // 쪽 payment를 기준으로 삼는다 - 예전에는 refunded===true일 때만 교체해서, gift
+  // 환불이 실패한 경우 gift의 payments.status='done'(환불 안 됨) 정보가 버려지고
+  // will_order 쪽 no_completed_payment로 오판해 draft로 되돌리는 오류가 있었다.
   let effectiveRefund = refundResult
   if (refundResult.reason === 'no_completed_payment') {
     const giftFallback = await refundGiftFallback({
@@ -98,40 +115,42 @@ const finalizeWillFailure = async ({ willId, userId, failReason }) => {
       console.error('[videoWorker] gift 환불 역조회 실패:', willId, err.message)
       return null
     })
-    if (giftFallback?.refundResult?.refunded) {
+    if (giftFallback?.refundResult) {
       effectiveRefund = giftFallback.refundResult
     }
   }
 
-  // 환불 성공(gift 경로 포함) 또는 애초에 결제가 없었던 경우(no_completed_payment이고
-  // gift 경로에서도 찾지 못한 경우)만 draft로 복원
-  const shouldRevertToDraft = effectiveRefund.refunded || effectiveRefund.reason === 'no_completed_payment'
+  const paymentStatus = effectiveRefund.payment?.status ?? null
+  const isUnknownRefundState = effectiveRefund.reason === 'refund_call_threw'
+  const nextStatus = paymentStatus === 'done' ? 'paid' : 'draft'
 
-  if (shouldRevertToDraft) {
-    await willRepository.updateWill(willId, { status: 'draft' })
-      .catch((dbErr) => console.error('[videoWorker] wills draft 복원 오류:', dbErr.message))
+  if (isUnknownRefundState) {
+    console.error(
+      '[videoWorker] 환불 처리 자체가 실패해 결제 상태를 확인하지 못함 - will 상태를 되돌리지 않음 (수동 확인 필요):',
+      { willId, reason: effectiveRefund.reason },
+    )
+  } else {
+    await willRepository.updateWill(willId, { status: nextStatus })
+      .catch((dbErr) => console.error(`[videoWorker] wills ${nextStatus} 복원 오류:`, dbErr.message))
 
     await willRepository.addWillStatusLog({
       logId: uuidv4(),
       willId,
       prevStatus: 'active',
-      nextStatus: 'draft',
+      nextStatus,
       changedBy: userId,
       changedByType: 'system',
       reason: `AI 영상 생성 실패: ${String(failReason).slice(0, 450)}`,
     }).catch((err) => console.error('[videoWorker] will_status_logs 기록 실패:', err.message))
-  } else {
-    console.error(
-      '[videoWorker] 환불 실패로 will 상태를 draft로 되돌리지 않음 (수동 확인 필요):',
-      { willId, reason: effectiveRefund.reason },
-    )
   }
 
-  const message = effectiveRefund.refunded
-    ? '죄송합니다. 영상 편지 생성에 실패해 결제하신 금액을 전액 환불해 드렸어요. 카드사에 따라 환불 반영까지 며칠 걸릴 수 있어요. 내용을 다시 확인하고 시도해 보시겠어요?'
-    : effectiveRefund.reason === 'no_completed_payment'
-      ? '영상 편지 생성에 실패했습니다. 결제된 내역이 없어 별도 환불 없이 종료돼요. 다시 시도해 보시겠어요?'
-      : '죄송합니다. 영상 편지 생성에 실패했고, 환불 처리 중 문제가 발생했습니다. 저희가 곧 확인해서 환불해 드릴게요. 급하시면 고객센터로 연락해 주세요.'
+  const message = isUnknownRefundState
+    ? '죄송합니다. 영상 편지 생성에 실패했고, 환불 상태 확인 중 오류가 발생했습니다. 저희가 곧 확인해서 안내해 드릴게요. 급하시면 고객센터로 연락해 주세요.'
+    : paymentStatus === 'done'
+      ? '죄송합니다. 영상 편지 생성에 실패했습니다. 환불 처리 중 문제가 있어 담당자가 확인 중이지만, 결제하신 금액은 그대로 유지되니 추가 결제 없이 바로 다시 시도하실 수 있어요.'
+      : effectiveRefund.refunded
+        ? '죄송합니다. 영상 편지 생성에 실패해 결제하신 금액을 전액 환불해 드렸어요. 카드사에 따라 환불 반영까지 며칠 걸릴 수 있어요. 내용을 다시 확인하고 시도해 보시겠어요?'
+        : '영상 편지 생성에 실패했습니다. 결제된 내역이 없어 별도 환불 없이 종료돼요. 다시 시도해 보시겠어요?'
 
   // [2026-08-22 컷오버] photoWorker.js와 동일 - AI 실패 자동 환불 통지는 payment_failed
   // 를 의미상 오용해 왔다. 전용 ENUM 값 'ai_processing_refunded'(마이그레이션 c)로 교체.
@@ -170,6 +189,23 @@ const processVideoGenerate = async (jobData, bullmqJobId) => {
 
   // 2. wills: active (처리 중)
   await updateWill(willId, { status: 'active' })
+
+  // [보안 수정 - defense in depth] 음성권/초상권/AI 생성물 동의 재확인. activateWill이
+  // 큐 등록 직전에 이미 셋 다 검사하지만, BullMQ 대기열에 머무는 동안(립싱크
+  // 벤더 폴링까지 포함하면 수 분 소요) 사용자가 설정 화면에서 동의를 철회할 수
+  // 있다(user_consents는 append-only라 철회도 즉시 새 행으로 반영됨). ElevenLabs/
+  // 립싱크 벤더에 실제 비용이 발생하는 호출 직전, 서비스 계층과 동일한 조건으로
+  // 다시 확인한다. 실패 시 throw해 BullMQ 재시도(backoff)에 맡기고, 최종 실패
+  // 시 worker.on('failed')의 finalizeWillFailure가 자동 환불을 수행한다.
+  const [voiceConsent, portraitConsent, aiGenConsent] = await Promise.all([
+    willRepository.findVoiceConsent(userId),
+    willRepository.findPortraitConsent(userId),
+    willRepository.findAiGenerationConsent(userId),
+  ])
+  const isAgreed = (c) => Boolean(c && c.is_agreed === 1)
+  if (!isAgreed(voiceConsent) || !isAgreed(portraitConsent) || !isAgreed(aiGenConsent)) {
+    throw Object.assign(new Error('동의가 확인되지 않아 영상 생성을 중단합니다'), { status: 400 })
+  }
 
   getIo()?.to(`user:${userId}`).emit('job:progress', {
     jobId: bullmqJobId,

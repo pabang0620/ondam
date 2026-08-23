@@ -2,25 +2,59 @@ import { v4 as uuidv4 } from 'uuid'
 import pool from '../../config/db.js'
 import { toSafeLimit, toSafeOffset } from '../../utils/pagination.js'
 
-// ─── users (음성권 동의 확인 전용) ───────────────────────────────────────────────
+// ─── user_consents (동의 확인 전용) ────────────────────────────────────────────
+// users 테이블에 voice_consent_at 같은 개별 컬럼은 없다 - user_consents 테이블을
+// (user_id, consent_type)로 조회한다. [2026-08-23] user_consents는 append-only로
+// 전환됐다(마이그레이션 2026-08-23-consent-history-and-evidence, UNIQUE(user_id,
+// consent_type) 제거 - 동의/철회/재동의마다 새 행이 쌓인다). 최신 상태는
+// `ORDER BY agreed_at DESC, id DESC LIMIT 1`로 조회한다 - id DESC는 동일 초(1초
+// 해상도) 내에 여러 이력이 쌓였을 때도 AUTO_INCREMENT 순서로 결정적으로 최신
+// 행을 고르기 위한 타이브레이커다.
 
 /**
- * 음성권 동의 여부 확인 - user_consents 테이블에서 최신 동의 이력 조회
- * users 테이블에 voice_consent_at 컬럼 없음 - user_consents(consent_type='voice') 참조
+ * (user_id, consent_type) 최신 동의 이력 1건 조회 - 아래 findXConsent 함수들의
+ * 내부 공용 구현(이 파일 안에서만 쓰는 지역 헬퍼, 다른 도메인에 노출하지 않는다).
  * @param {string} userId
- * @returns {Promise<{ is_agreed: number, agreed_at: Date }|null>} 최신 동의 row, 없으면 null
+ * @param {string} consentType
+ * @returns {Promise<{ consent_id: string, is_agreed: number, agreed_at: Date }|null>}
  */
-export const findVoiceConsent = async (userId) => {
+const findConsentByType = async (userId, consentType) => {
   const [rows] = await pool.execute(
     `SELECT consent_id, is_agreed, agreed_at
      FROM user_consents
-     WHERE user_id = ? AND consent_type = 'voice'
-     ORDER BY agreed_at DESC
+     WHERE user_id = ? AND consent_type = ?
+     ORDER BY agreed_at DESC, id DESC
      LIMIT 1`,
-    [userId],
+    [userId, consentType],
   )
   return rows[0] ?? null
 }
+
+/**
+ * 음성권 동의 여부 확인 - uploadVoiceSample/activateWill이 사용
+ * @param {string} userId
+ * @returns {Promise<{ is_agreed: number, agreed_at: Date }|null>} 최신 동의 row, 없으면 null
+ */
+export const findVoiceConsent = (userId) => findConsentByType(userId, 'voice')
+
+/**
+ * 초상권 동의 여부 확인 - activateWill이 사용(프로필 사진이 AI 영상 생성에 쓰임)
+ * @param {string} userId
+ */
+export const findPortraitConsent = (userId) => findConsentByType(userId, 'portrait')
+
+/**
+ * AI 생성물 이용 동의 여부 확인 - activateWill이 사용(생성된 영상이 서비스 내 보관됨)
+ * @param {string} userId
+ */
+export const findAiGenerationConsent = (userId) => findConsentByType(userId, 'ai_generation')
+
+/**
+ * 사후 공개 동의 여부 확인 - adminService.approveRelease가 사용(유언장 소유자
+ * 본인의 동의 - request.will_id로 will을 먼저 조회해 will.user_id로 확인해야 한다)
+ * @param {string} userId - 유언장 소유자(고인)의 userId, 요청자(유가족)가 아님
+ */
+export const findPosthumousReleaseConsent = (userId) => findConsentByType(userId, 'posthumous_release')
 
 // ─── voice_samples ────────────────────────────────────────────────────────────
 

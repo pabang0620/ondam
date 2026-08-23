@@ -115,11 +115,16 @@ CREATE TABLE IF NOT EXISTS user_consents (
 
   created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-  UNIQUE KEY uq_consents_user_type (user_id, consent_type),
   INDEX idx_consents_user        (user_id, consent_type, agreed_at DESC),
   INDEX idx_consents_type        (consent_type, is_agreed)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  COMMENT='사용자 동의 현황 (user_id + consent_type 당 최신 1건 유지 - ON DUPLICATE KEY UPDATE)';
+  COMMENT='사용자 동의 이력 (append-only - 동의/철회/재동의마다 새 행 INSERT, UPDATE 금지.
+최신 상태는 user_id+consent_type 기준 agreed_at DESC, id DESC LIMIT 1로 조회.
+2026-08-23 이전에는 (user_id,consent_type) UNIQUE + ON DUPLICATE KEY UPDATE로
+최신 1건만 유지했으나, 동의 이력 보존(법적 증빙)·voice_samples.consent_id 참조
+안정성을 위해 UNIQUE 제약을 제거하고 append-only로 전환했다(마이그레이션
+2026-08-23-consent-history-and-evidence 참고, 위 테이블 상단 주석의 원래
+설계 의도와도 일치)';
 
 
 -- 이메일 인증 토큰 (만료·소멸 후 삭제 대상)
@@ -1077,3 +1082,11 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
 --      없었다(AI 처리 실패 시 gift_order 결제를 역추적할 방법이 없어 자동환불이
 --      막히는 문제로 이어짐). ENUM 신규 값 없음 - 기존 GIFT_STATUS/notification_type
 --      값으로 충분.
+
+-- [11] (2026-08-23, 동의 검증 게이트 결함 수정) user_consents에서
+--      UNIQUE(user_id, consent_type) 제거 → append-only 전환. 동의/철회/재동의
+--      이력이 소실되던 문제(ON DUPLICATE KEY UPDATE로 기존 행을 덮어씀)와
+--      voice_samples.consent_id가 재동의 시 끊어지던 문제를 해소.
+--      원본: docs/migrations/2026-08-23-consent-history-and-evidence.{up,down,README}
+--      → 위 user_consents 테이블 정의에 이미 포함됨. 로컬 개발 DB(ondam)에
+--      직접 적용 완료(무손실 - 적용 전후 63행 동일).

@@ -101,8 +101,16 @@ app.post('/api/photo/enhance', async (req, res) => {
 ```
 
 ### 3. 초상권·음성권 동의 없이 처리 금지
-음성 클론 생성, AI 영상 생성 요청 처리 전 반드시 `users.voice_consent_at` 확인.
-동의 없는 경우 400 응답으로 거부.
+`users.voice_consent_at` 컬럼은 실제 스키마에 존재하지 않는다 (2026-08-23 정정). 동의는
+`user_consents` 테이블(append-only, `consent_type` ENUM: privacy/portrait/voice/
+ai_generation/posthumous_release/terms/marketing)에 사용자·유형별 이력으로 저장된다.
+최신 동의 상태는 `WHERE user_id=? AND consent_type=? ORDER BY agreed_at DESC, id DESC
+LIMIT 1`로 조회한다(예: `willRepository.findVoiceConsent`/`findPortraitConsent`/
+`findAiGenerationConsent`/`findPosthumousReleaseConsent`, `photoRepository.findPortraitConsent`).
+음성 샘플 등록·유언 영상 활성화(`voice`+`portrait`+`ai_generation`), 사진 주문·AI 처리 시작
+(`portrait`), 유언 영상 공개 승인(`posthumous_release`) 전 반드시 해당 동의의
+`is_agreed=1` 최신 행을 확인하고, 없으면 400으로 거부한다. 서비스 계층에서 검증하고
+BullMQ 워커에서도 실제 벤더 호출 직전 재검증한다(큐 대기 중 동의 철회 대응).
 
 ### 4. 추모관 접근 제한
 `/api/memorial/:code` - 접근 코드(`memorial_access_code`) 검증 필수.

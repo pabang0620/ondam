@@ -1,6 +1,7 @@
 import { useRef, useCallback } from 'react'
 import { UploadCloud, ImageIcon, Loader2 } from 'lucide-react'
 import usePhotoOrder from './usePhotoOrder.js'
+import ConsentChecklist from '../../components/consent/ConsentChecklist.jsx'
 import './PhotoOrderPage.css'
 
 // FIX: 결정1(2026-08-22) - 사용자는 "용도" 1개만 고른다(SPEC-08 1절 "선택지를
@@ -23,6 +24,11 @@ function PhotoOrderPage() {
     error,
     canSubmit,
     photoTypeLabels,
+    consentItems,
+    consents,
+    allChecked,
+    toggleConsentItem,
+    toggleAllConsents,
     handleTypeSelect,
     handleFileUpload,
     handleSubmit,
@@ -230,6 +236,22 @@ function PhotoOrderPage() {
           </span>
         </section>
       )}
+
+      {/* 동의 확인 - 결함C: 영정/증명/취업 사진 모두 업로드된 얼굴을 AI로 합성·보정하므로
+          초상권·AI 생성물 동의 없이 처리하지 않는다 */}
+      <section>
+        <p style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 700, marginBottom: 'var(--spacing-md)', color: 'var(--color-text-primary)' }}>
+          3. 동의 확인
+        </p>
+        <ConsentChecklist
+          items={consentItems}
+          consents={consents}
+          onToggleItem={toggleConsentItem}
+          onToggleAll={toggleAllConsents}
+          allChecked={allChecked}
+          accentColor="--color-photo"
+        />
+      </section>
 
       {/* 에러 */}
       {error && (

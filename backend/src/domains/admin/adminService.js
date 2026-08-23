@@ -11,6 +11,7 @@ import pool from '../../config/db.js'
 // notification 서비스를 서비스-대-서비스로 직접 import하는 기존 관례(giftService.js,
 // giftPerformService.js)와 동일한 패턴이다.
 import { watchLockKey, watchAttemptsKey } from '../will/willService.js'
+import * as willRepository from '../will/willRepository.js'
 import redis from '../../config/redis.js'
 
 // 사망증명서 열람용 presigned URL 만료(초). "몇 분~1시간" 요구 중 짧은 쪽을 택함 -
@@ -274,6 +275,24 @@ export const approveRelease = async (adminId, requestId, { ipAddress, userAgent 
     throw Object.assign(
       new Error(`이미 처리된 요청입니다 (현재 상태: ${request.req_status})`),
       { status: 409 },
+    )
+  }
+
+  // [보안 수정 - 사후 공개 동의 게이트] 이 승인이 실제로 "사망 확인 후 유가족에게
+  // 영상을 공개"하는 행위 자체다(CLAUDE.md §3). WillConsentPage가 유언장 소유자
+  // (고인)에게 사전에 받은 posthumous_release 동의가 없으면, 유가족이 사망증명서를
+  // 제출했더라도 관리자가 공개를 승인할 수 없다 - 이 동의는 요청자(유가족)가 아니라
+  // 영상 소유자 본인의 동의이므로 request.will_id로 will을 조회해 will.user_id
+  // 기준으로 확인한다.
+  const will = await willRepository.findWillById(request.will_id)
+  if (!will) {
+    throw Object.assign(new Error('영상 편지를 찾을 수 없습니다'), { status: 404 })
+  }
+  const releaseConsent = await willRepository.findPosthumousReleaseConsent(will.user_id)
+  if (!releaseConsent || releaseConsent.is_agreed !== 1) {
+    throw Object.assign(
+      new Error('사후 공개 동의가 확인되지 않아 공개를 승인할 수 없습니다'),
+      { status: 400 },
     )
   }
 

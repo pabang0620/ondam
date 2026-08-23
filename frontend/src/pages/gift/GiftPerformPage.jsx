@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Heart, AlertCircle, Lock, ShieldCheck, Gift, LogIn, UserPlus } from 'lucide-react'
 import { Button } from '../../components/common/Button.jsx'
+import { SIGNUP_CONSENT_ITEMS } from '../../components/consent/consentItems.js'
 import useGiftPerform, { PHASE } from './useGiftPerform.js'
 
 const inputStyle = {
@@ -96,18 +97,34 @@ function IntroStep({ info, onNext, onDecline }) {
   )
 }
 
+// FIX: 결함B - [{type:'privacy'}]만 보내 회원가입 필수 약관(terms) 동의를 우회하던
+// 부분을 일반 회원가입(useJoin.js)과 동등한 SIGNUP_CONSENT_ITEMS(terms 필수/privacy
+// 필수/marketing 선택)로 맞춘다. 문구는 useJoin.js 원문을 그대로 옮긴 것으로 새로
+// 만들지 않았다.
+const initialSignupConsents = SIGNUP_CONSENT_ITEMS.reduce(
+  (acc, item) => ({ ...acc, [item.type]: false }),
+  {},
+)
+
 function AccountStep({ accountError, isLinking, onSubmit, onDecline }) {
   const [mode, setMode] = useState('signup')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [nickname, setNickname] = useState('')
-  const [agreed, setAgreed] = useState(false)
+  const [consents, setConsents] = useState(initialSignupConsents)
+
+  const requiredItems = SIGNUP_CONSENT_ITEMS.filter((item) => item.required)
+  const allRequiredAgreed = requiredItems.every((item) => consents[item.type])
 
   const canSubmit =
     email.trim() &&
     password.length >= (mode === 'signup' ? 8 : 1) &&
-    (mode === 'login' || (nickname.trim() && agreed)) &&
+    (mode === 'login' || (nickname.trim() && allRequiredAgreed)) &&
     !isLinking
+
+  const handleConsentChange = (type) => {
+    setConsents((prev) => ({ ...prev, [type]: !prev[type] }))
+  }
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -117,7 +134,9 @@ function AccountStep({ accountError, isLinking, onSubmit, onDecline }) {
       email: email.trim(),
       password,
       nickname: nickname.trim() || undefined,
-      consents: mode === 'signup' ? [{ type: 'privacy', isAgreed: true }] : undefined,
+      consents: mode === 'signup'
+        ? SIGNUP_CONSENT_ITEMS.map((item) => ({ type: item.type, isAgreed: consents[item.type] }))
+        : undefined,
     })
   }
 
@@ -182,15 +201,23 @@ function AccountStep({ accountError, isLinking, onSubmit, onDecline }) {
               <label htmlFor="nickname" style={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>이름(닉네임)</label>
               <input id="nickname" type="text" value={nickname} onChange={(e) => setNickname(e.target.value)} style={inputStyle} />
             </div>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 'var(--fs-body)', color: 'var(--color-text-primary)' }}>
-              <input
-                type="checkbox"
-                checked={agreed}
-                onChange={(e) => setAgreed(e.target.checked)}
-                style={{ width: 22, height: 22 }}
-              />
-              (필수) 개인정보 처리 방침에 동의합니다
-            </label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {SIGNUP_CONSENT_ITEMS.map((item) => (
+                <label
+                  key={item.type}
+                  style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 'var(--fs-body)', color: 'var(--color-text-primary)', minHeight: 'var(--min-touch-target)' }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={consents[item.type]}
+                    onChange={() => handleConsentChange(item.type)}
+                    aria-required={item.required}
+                    style={{ width: 22, height: 22, flexShrink: 0 }}
+                  />
+                  {item.label}
+                </label>
+              ))}
+            </div>
           </>
         )}
         {accountError && (

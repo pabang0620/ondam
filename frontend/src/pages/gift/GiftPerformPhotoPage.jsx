@@ -1,11 +1,14 @@
 import { useRef, useCallback } from 'react'
-import { UploadCloud, Loader2, CheckCircle2, AlertCircle } from 'lucide-react'
+import { UploadCloud, Loader2, CheckCircle2, AlertCircle, ShieldCheck } from 'lucide-react'
 import { Button } from '../../components/common/Button.jsx'
+import ConsentChecklist from '../../components/consent/ConsentChecklist.jsx'
 import useGiftPerformPhoto from './useGiftPerformPhoto.js'
 
 function GiftPerformPhotoPage() {
   const {
     STEP, step, photoType, previewUrl, isUploading, error, photoTypes, canSubmit,
+    consentItems, consents, allChecked, isSavingConsent,
+    toggleConsentItem, toggleAllConsents, submitConsent,
     handleTypeSelect, handleFileUpload, handleSubmit,
   } = useGiftPerformPhoto()
 
@@ -14,6 +17,40 @@ function GiftPerformPhotoPage() {
     const file = e.target.files?.[0]
     if (file) handleFileUpload(file)
   }, [handleFileUpload])
+
+  // 결함C: 사진관 선물 수행 경로에 유일한 동의 접점 - 초상권·AI 생성물 동의
+  if (step === STEP.CONSENT) {
+    return (
+      <main style={{ maxWidth: 480, margin: '0 auto', padding: '32px var(--spacing-md) 48px', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-lg)' }}>
+        <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--spacing-lg)' }}>
+          <ShieldCheck size={40} color="var(--color-photo)" />
+          <p style={{ fontSize: 'var(--fs-h3)', fontWeight: 700 }}>동의 확인</p>
+          <p style={{ color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>
+            AI 사진 제작을 위해 아래 항목에 모두 동의해 주세요. 이 동의는 반드시
+            본인이 직접 눌러주셔야 해요.
+          </p>
+          <div style={{ width: '100%', textAlign: 'left' }}>
+            <ConsentChecklist
+              items={consentItems}
+              consents={consents}
+              onToggleItem={toggleConsentItem}
+              onToggleAll={toggleAllConsents}
+              allChecked={allChecked}
+              accentColor="--color-photo"
+            />
+          </div>
+          {error && (
+            <p role="alert" style={{ color: 'var(--color-error)', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <AlertCircle size={16} /> {error}
+            </p>
+          )}
+          <Button onClick={submitConsent} isLoading={isSavingConsent} disabled={!allChecked} fullWidth>
+            동의하고 시작하기
+          </Button>
+        </div>
+      </main>
+    )
+  }
 
   if (step === STEP.PROCESSING) {
     return (

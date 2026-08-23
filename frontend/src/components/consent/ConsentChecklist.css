@@ -1,0 +1,101 @@
+/* WillConsentPage.css의 카드형 동의 UI를 공용 컴포넌트로 추출한 스타일.
+   클래스명만 will-consent__ -> consent-checklist__ 로 바꿨고 값은 동일하다. */
+
+.consent-checklist__items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-xl);
+}
+
+.consent-checklist__card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+  background-color: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: 20px 24px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--transition-base), background-color var(--transition-base);
+  min-height: var(--min-touch-target);
+  width: 100%;
+}
+
+.consent-checklist__card.is-checked {
+  border-color: var(--consent-accent, var(--color-primary));
+  background-color: var(--color-surface-warm);
+}
+
+.consent-checklist__card-check {
+  color: var(--color-border-strong);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.consent-checklist__card.is-checked .consent-checklist__card-check {
+  color: var(--consent-accent, var(--color-primary));
+}
+
+.consent-checklist__card-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.consent-checklist__card-label {
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+/* FIX: 결함3 - 동의 항목 설명문이 --fs-caption(14px)이었다. 법적 동의 문구는 이
+   화면에서 가장 중요한 텍스트인데 가장 작은 폰트였고, 어르신 UX 최소 기준(16px)에도
+   못 미쳤다. --fs-body(16px)로 고정한다. */
+.consent-checklist__card-desc {
+  font-size: var(--fs-body);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+/* 전체 동의 */
+.consent-checklist__all {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  width: 100%;
+  background-color: var(--color-surface-warm);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 16px 24px;
+  font-size: var(--fs-body);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  min-height: var(--min-touch-target);
+  margin-bottom: 24px;
+  transition: border-color var(--transition-base);
+}
+
+.consent-checklist__all.is-checked {
+  border-color: var(--consent-accent, var(--color-primary));
+  color: var(--consent-accent, var(--color-primary));
+}
+
+.consent-checklist__all svg {
+  color: var(--consent-accent, var(--color-primary));
+  flex-shrink: 0;
+}
+
+/* ── 반응형: 모바일 (< 640px) ── */
+@media (max-width: 639px) {
+  /* 체크 아이콘 충분한 터치 영역 */
+  .consent-checklist__card-check {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}

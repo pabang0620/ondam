@@ -1,6 +1,8 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { uploadPhoto, createPhotoOrder } from './photoApi.js'
+import { uploadPhoto, createPhotoOrder, savePhotoConsents } from './photoApi.js'
+import { PHOTO_CONSENT_ITEMS } from '../../components/consent/consentItems.js'
+import { useConsentChecklist } from '../../components/consent/useConsentChecklist.js'
 
 const PHOTO_TYPE_LABELS = {
   funeral: '장례 사진',
@@ -21,6 +23,11 @@ function usePhotoOrder() {
   const [isUploading, setIsUploading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState(null)
+
+  // 결함C: 영정/증명/취업 사진 모두 업로드된 얼굴을 AI로 합성·보정한다 -
+  // 초상권·AI 생성물 동의 없이 처리하지 않는다 (WillConsentPage와 동일한 원칙)
+  const { consents, allChecked, toggleItem, toggleAll } = useConsentChecklist(PHOTO_CONSENT_ITEMS)
+  const consentPendingRef = useRef(false) // ep-006: 연타로 인한 중복 동의 저장 방지
 
   const handleTypeSelect = useCallback((type) => {
     setSelectedType(type)
@@ -64,12 +71,23 @@ function usePhotoOrder() {
   }, [previewUrl])
 
   const handleSubmit = useCallback(async () => {
-    if (!selectedType || !uploadedS3Key || isSubmitting) return
+    // 결함C/ep-006: allChecked 미충족이거나 이미 처리 중이면(연타 포함) 진행하지 않는다
+    if (!selectedType || !uploadedS3Key || isSubmitting || !allChecked || consentPendingRef.current) return
+    consentPendingRef.current = true
 
     setIsSubmitting(true)
     setError(null)
 
     try {
+      // 결함C: 초상권·AI 생성물 동의를 먼저 저장한다. 저장이 실패하면(빈 catch{}
+      // 금지) 주문을 만들지 않고 사용자에게 알린다 - 백엔드도 portrait 동의가
+      // 없으면 사진 주문·처리 시작을 400으로 거부한다.
+      const consentPayload = PHOTO_CONSENT_ITEMS.map((item) => ({
+        consentType: item.key,
+        isAgreed: consents[item.key] ?? false,
+      }))
+      await savePhotoConsents(consentPayload)
+
       const { data } = await createPhotoOrder(selectedType, uploadedUrl)
       const orderId = data.data.orderId ?? data.data.id
       navigate(`/photo/payment?orderId=${orderId}`)
@@ -78,10 +96,11 @@ function usePhotoOrder() {
       setError(err?.response?.data?.message ?? '주문 생성에 실패했습니다. 잠시 후 다시 시도해 주세요.')
     } finally {
       setIsSubmitting(false)
+      consentPendingRef.current = false
     }
-  }, [selectedType, uploadedS3Key, uploadedUrl, isSubmitting, navigate])
+  }, [selectedType, uploadedS3Key, uploadedUrl, isSubmitting, allChecked, consents, navigate])
 
-  const canSubmit = Boolean(selectedType && uploadedS3Key && !isUploading && !isSubmitting)
+  const canSubmit = Boolean(selectedType && uploadedS3Key && !isUploading && !isSubmitting && allChecked)
 
   return {
     selectedType,
@@ -91,6 +110,11 @@ function usePhotoOrder() {
     error,
     canSubmit,
     photoTypeLabels: PHOTO_TYPE_LABELS,
+    consentItems: PHOTO_CONSENT_ITEMS,
+    consents,
+    allChecked,
+    toggleConsentItem: toggleItem,
+    toggleAllConsents: toggleAll,
     handleTypeSelect,
     handleFileUpload,
     handleSubmit,

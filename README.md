@@ -120,7 +120,7 @@ ondam/
 
 - 음성·유언 영상 파일: AWS KMS 암호화 필수 (`KMS_KEY_ID`)
 - AI 처리 작업: BullMQ 큐 경유 (직접 HTTP 핸들러 안 처리 금지)
-- 음성 클론 생성 전: `voice_consent_at` 동의 확인 필수
+- 음성/초상 처리 전: `user_consents` 테이블의 해당 `consent_type` 최신 동의(`is_agreed=1`) 확인 필수 (`users.voice_consent_at` 컬럼은 존재하지 않음, 2026-08-23 정정)
 - 추모관 접근: 접근 코드 검증 필수
 - refreshToken: HttpOnly 쿠키 저장 (localStorage 금지)
 

@@ -120,7 +120,9 @@ export const saveConsents = async (req, res, next) => {
   try {
     const { userId } = req.user
     const { consents } = req.body
-    await authService.saveConsents(userId, consents)
+    const ipAddress = req.ip ?? req.headers['x-forwarded-for'] ?? null
+    const userAgent = req.headers['user-agent'] ?? null
+    await authService.saveConsents(userId, consents, { ipAddress, userAgent })
     return success(res, null, '동의 정보가 저장되었습니다')
   } catch (err) {
     next(err)

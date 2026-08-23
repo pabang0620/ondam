@@ -1,12 +1,14 @@
+import { AlertCircle } from 'lucide-react'
 import { useWillConsent } from './useWillConsent.js'
-import { CheckSquare, Square } from 'lucide-react'
 import WillStepHeader from './WillStepHeader.jsx'
 import LegalNotice from '../../components/common/LegalNotice.jsx'
+import ConsentChecklist from '../../components/consent/ConsentChecklist.jsx'
 import './WillConsentPage.css'
 
 export default function WillConsentPage() {
-  const { consents, allChecked, consentItems, toggleItem, toggleAll, handleNext } =
-    useWillConsent()
+  const {
+    consents, allChecked, consentItems, toggleItem, toggleAll, handleNext, isSaving, saveError,
+  } = useWillConsent()
 
   return (
     <div className="will-consent-page">
@@ -20,49 +22,31 @@ export default function WillConsentPage() {
         {/* 법적 유언 효력 없음 고지 - DEV-05. 동의 항목을 읽기 전에 먼저 안내 */}
         <LegalNotice theme="light" className="will-consent__legal-notice" />
 
-        <div className="will-consent__items">
-          {consentItems.map(({ key, label, desc }) => (
-            <button
-              key={key}
-              type="button"
-              className={`will-consent__card ${consents[key] ? 'is-checked' : ''}`}
-              onClick={() => toggleItem(key)}
-              aria-pressed={consents[key]}
-            >
-              <span className="will-consent__card-check" aria-hidden="true">
-                {consents[key]
-                  ? <CheckSquare size={24} />
-                  : <Square size={24} />}
-              </span>
-              <div className="will-consent__card-text">
-                <span className="will-consent__card-label">{label}</span>
-                <span className="will-consent__card-desc">{desc}</span>
-              </div>
-            </button>
-          ))}
-        </div>
+        <ConsentChecklist
+          items={consentItems}
+          consents={consents}
+          onToggleItem={toggleItem}
+          onToggleAll={toggleAll}
+          allChecked={allChecked}
+          accentColor="--color-will"
+        />
 
-        {/* 전체 동의 */}
-        <button
-          type="button"
-          className={`will-consent__all ${allChecked ? 'is-checked' : ''}`}
-          onClick={toggleAll}
-          aria-pressed={allChecked}
-        >
-          <span aria-hidden="true">
-            {allChecked ? <CheckSquare size={22} /> : <Square size={22} />}
-          </span>
-          위 항목 전체에 동의합니다
-        </button>
+        {/* FIX: D - 동의 저장 실패를 조용히 넘기지 않고 화면에 알린다 */}
+        {saveError && (
+          <p role="alert" className="will-consent__error">
+            <AlertCircle size={16} /> {saveError}
+          </p>
+        )}
 
         <button
           type="button"
           className="will-consent__next"
           onClick={handleNext}
-          disabled={!allChecked}
-          aria-disabled={!allChecked}
+          disabled={!allChecked || isSaving}
+          aria-disabled={!allChecked || isSaving}
+          aria-busy={isSaving}
         >
-          다음 - 유가족 등록
+          {isSaving ? '저장하는 중...' : '다음 - 유가족 등록'}
         </button>
       </div>
     </div>

@@ -177,9 +177,13 @@ deleted_at DATETIME NULL DEFAULT NULL
 - `created_at` 만 - `updated_at` 없음 (append-only)
 
 ### 동의 추적
-- 음성/영상 처리 동의: `voice_consent_at DATETIME NULL`
-- 추모관 공개 동의: `memorial_consent_at DATETIME NULL`
-- 서비스 이용 동의: `terms_agreed_at DATETIME NOT NULL`
+- 개별 컬럼(`voice_consent_at` 등)이 아니라 `user_consents` 테이블(append-only)로 관리한다:
+  `consent_id`(PK, UUID) / `user_id` / `consent_type` ENUM(privacy/portrait/voice/
+  ai_generation/posthumous_release/terms/marketing) / `is_agreed` / `agreed_at` /
+  `ip_address` / `user_agent`. 동의·철회·재동의마다 새 행을 INSERT하고(UPDATE 금지),
+  최신 상태는 `ORDER BY agreed_at DESC, id DESC LIMIT 1`로 조회한다 (2026-08-23 정정
+  - 예전에는 `users.voice_consent_at` 같은 단일 컬럼 설계를 가정했으나 실제로는
+  이력 보존이 필요해 별도 테이블로 구현됨).
 
 ### 테이블 네이밍
 - 관리자 설정: `admin_` 접두사 (`admin_notices`, `admin_banners`)

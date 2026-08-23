@@ -8,6 +8,7 @@ import { getIo } from '../../config/socket.js'
 import { buildResultSet } from '../../domains/photo/photoResultSet.js'
 import * as paymentService from '../../domains/payment/paymentService.js'
 import { refundGiftFallback } from '../../domains/gift/giftShared.js'
+import * as photoRepository from '../../domains/photo/photoRepository.js'
 
 const QUEUE_NAME = 'photo'
 const AI_MOCK = process.env.AI_MOCK === 'true'
@@ -303,6 +304,23 @@ const processPhoto = async (jobData, bullmqJobId) => {
 
   // 2. photo_orders: processing
   await updatePhotoOrder(orderId, { status: 'processing' })
+
+  // [보안 수정 - defense in depth] 초상권/AI 생성물 동의 재확인. 큐 등록
+  // (startProcessing) 시점에는 동의가 있었더라도, BullMQ 대기열에서 실제 워커가
+  // 이 잡을 집는 시점 사이에 사용자가 동의를 철회했을 수 있다(설정 화면에서
+  // 언제든 재동의/철회 가능 - user_consents는 append-only라 철회도 새 행으로
+  // 즉시 반영된다). 벤더 API(Gemini) 호출 직전, 서비스 계층 게이트(assertPhotoConsents)
+  // 와 동일한 조건으로 다시 확인한다. 실패 시 throw해 BullMQ 잡 레벨 재시도
+  // (backoff)에 맡긴다 - 재시도를 거쳐도 동의가 복원되지 않으면 최종적으로
+  // worker.on('failed')가 자동 환불을 수행한다.
+  const [portraitConsent, aiGenConsent] = await Promise.all([
+    photoRepository.findPortraitConsent(userId),
+    photoRepository.findAiGenerationConsent(userId),
+  ])
+  const photoConsentOk = (c) => Boolean(c && c.is_agreed === 1)
+  if (!photoConsentOk(portraitConsent) || !photoConsentOk(aiGenConsent)) {
+    throw Object.assign(new Error('동의가 확인되지 않아 처리를 중단합니다'), { status: 400 })
+  }
 
   getIo()?.to(`user:${userId}`).emit('job:progress', {
     jobId: bullmqJobId,

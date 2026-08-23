@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore.js'
 import { postRegister } from './joinApi.js'
 import { ROUTES } from '../../constants/routes.js'
+import { SIGNUP_CONSENT_ITEMS as CONSENT_ITEMS } from '../../components/consent/consentItems.js'
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -10,11 +11,9 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 // 있다는 법무 검토 결과로 terms를 필수 동의로 변경. validateStep2가
 // CONSENT_ITEMS의 required만 보고 검증하므로 이 값만 바꾸면 UI(별표 표시)와
 // 검증 로직에 자동 반영된다.
-const CONSENT_ITEMS = [
-  { type: 'terms', label: '이용약관 동의 (필수)', required: true },
-  { type: 'privacy', label: '개인정보 수집 및 이용 동의 (필수)', required: true },
-  { type: 'marketing', label: '마케팅 정보 수신 동의 (선택)', required: false },
-]
+// [결함B 후속] 선물 수행 경로(GiftPerformPage.jsx)가 이 배열을 [{type:'privacy'}]로
+// 임의 축소해 terms 필수 동의를 우회하던 문제가 있었다. 같은 배열을
+// components/consent/consentItems.js로 옮겨 두 화면이 동일한 SSOT를 쓰게 한다.
 
 const initialConsents = CONSENT_ITEMS.reduce(
   (acc, item) => ({ ...acc, [item.type]: false }),

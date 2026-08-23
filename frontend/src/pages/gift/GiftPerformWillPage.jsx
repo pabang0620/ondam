@@ -2,6 +2,7 @@ import { useRef } from 'react'
 import { AlertCircle, CheckCircle2, Loader2, Mic, Camera, ShieldCheck } from 'lucide-react'
 import { Button } from '../../components/common/Button.jsx'
 import LegalNotice from '../../components/common/LegalNotice.jsx'
+import ConsentChecklist from '../../components/consent/ConsentChecklist.jsx'
 import useGiftPerformWill from './useGiftPerformWill.js'
 
 const inputStyle = {
@@ -24,6 +25,7 @@ const Screen = ({ children }) => (
 function GiftPerformWillPage() {
   const {
     STEP, step, error, busy, title, setTitle, contentText, setContentText, beneficiary, setBeneficiary,
+    consentItems, consents, allChecked, toggleConsentItem, toggleAllConsents,
     submitConsent, uploadProfilePhoto, uploadVoice, submitMessage, submitBeneficiary,
   } = useGiftPerformWill()
 
@@ -41,9 +43,9 @@ function GiftPerformWillPage() {
       <Screen>
         <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--spacing-lg)' }}>
           <ShieldCheck size={40} color="var(--color-primary)" />
-          <p style={{ fontSize: 'var(--fs-h3)', fontWeight: 700 }}>목소리 사용 동의</p>
-          <p style={{ color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)', textAlign: 'left' }}>
-            녹음하신 목소리는 AI가 영상 편지를 만드는 데만 사용돼요. 이 동의는 반드시
+          <p style={{ fontSize: 'var(--fs-h3)', fontWeight: 700 }}>동의 확인</p>
+          <p style={{ color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>
+            AI 영상 편지 제작을 위해 아래 항목에 모두 동의해 주세요. 이 동의는 반드시
             본인이 직접 눌러주셔야 해요.
           </p>
           {/* 법적 유언 효력 없음 고지 - DEV-05. 선물 주문(수행자)은 WillConsentPage를
@@ -51,8 +53,24 @@ function GiftPerformWillPage() {
           <div style={{ width: '100%' }}>
             <LegalNotice theme="light" />
           </div>
+
+          {/* FIX: 결함A - voice 단독이 아니라 일반 경로(WillConsentPage)와 동일한
+              4개 항목(초상권/음성권/AI 생성물/사후 공개)을 전부 받는다 */}
+          <div style={{ width: '100%', textAlign: 'left' }}>
+            <ConsentChecklist
+              items={consentItems}
+              consents={consents}
+              onToggleItem={toggleConsentItem}
+              onToggleAll={toggleAllConsents}
+              allChecked={allChecked}
+              accentColor="--color-will"
+            />
+          </div>
+
           <ErrorBox />
-          <Button onClick={submitConsent} isLoading={busy} fullWidth>동의하고 시작하기</Button>
+          <Button onClick={submitConsent} isLoading={busy} disabled={!allChecked} fullWidth>
+            동의하고 시작하기
+          </Button>
         </div>
       </Screen>
     )
