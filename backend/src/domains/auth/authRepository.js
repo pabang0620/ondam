@@ -88,6 +88,28 @@ export const createConsent = async (
 }
 
 /**
+ * (user_id, consent_type) 최신 동의 이력 1건 조회 - photoRepository.findConsentByType/
+ * willRepository.findConsentByType와 동일한 패턴(user_consents는 append-only이므로
+ * `ORDER BY agreed_at DESC, id DESC LIMIT 1`로 최신 상태를 구한다). auth 도메인에는
+ * 계정 단위 필수 동의(privacy/terms) 확인용으로 둔다 - 사진/영상 도메인의 지역
+ * 헬퍼와 목적이 달라 공용 유틸로 추출하지 않는다(지역성 우선 컨벤션).
+ * @param {string} userId
+ * @param {string} consentType
+ * @returns {Promise<{ consent_id: string, is_agreed: number, agreed_at: Date }|null>}
+ */
+export const findConsentByType = async (userId, consentType) => {
+  const [rows] = await pool.query(
+    `SELECT consent_id, is_agreed, agreed_at
+     FROM user_consents
+     WHERE user_id = ? AND consent_type = ?
+     ORDER BY agreed_at DESC, id DESC
+     LIMIT 1`,
+    [userId, consentType]
+  )
+  return rows[0] ?? null
+}
+
+/**
  * Refresh token 저장
  * @param {{ tokenHash: string, userId: string, expiresAt: Date }} param
  */

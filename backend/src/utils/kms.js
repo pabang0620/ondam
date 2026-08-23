@@ -23,12 +23,30 @@ const assertKmsRegionConfigured = () => {
   }
 }
 
+// [FIX 회귀 수정] 이전에는 willService.js가 이 함수가 던지는 에러를 err.message
+// 문자열 정확 비교("KMS_KEY_ID 환경변수가 설정되지 않았습니다")로 감지해 로컬
+// 개발 폴백(평문 저장)을 분기했다. 그런데 바로 위 toSafeFailureMessage 도입으로
+// 사용자 노출 메시지가 안전한 한국어 문구로 치환되면서 그 문자열 비교가 더 이상
+// 매칭되지 않게 됐고, 결과적으로 KMS_KEY_ID가 비어 있는 로컬 개발 환경에서
+// 유언장 생성이 폴백 없이 항상 503으로 실패하는 회귀가 발생했다.
+// 메시지는 사람이 읽는 텍스트라 국지화·안전화 목적으로 언제든 바뀔 수 있으므로,
+// "환경변수가 아예 설정되지 않았다"는 사실은 메시지가 아니라 구조적으로 식별
+// 가능한 별도 프로퍼티(code)로 전달한다 - 이 프로젝트가 이미 쓰는
+// `Object.assign(new Error(...), { status })` 관례를 status와 동일한 방식으로
+// 확장한 것뿐이며, 사용자 노출 메시지(toSafeFailureMessage 결과)는 그대로 유지한다.
+// wrapKmsError는 `if (err.status) return err`로 이미 분류된 에러를 그대로
+// 전파하므로, 이 code 프로퍼티는 encryptStringEnvelope 등을 거쳐도 유실되지 않는다.
+export const KMS_KEY_ID_MISSING_CODE = 'KMS_KEY_ID_MISSING'
+
 const getKmsKeyId = () => {
   assertKmsRegionConfigured()
   const keyId = process.env.KMS_KEY_ID
   if (!keyId) {
     console.error('[kms] KMS_KEY_ID 환경변수가 설정되지 않았습니다')
-    throw Object.assign(new Error(toSafeFailureMessage('KMS_KEY_ID 환경변수가 설정되지 않았습니다')), { status: 503 })
+    throw Object.assign(
+      new Error(toSafeFailureMessage('KMS_KEY_ID 환경변수가 설정되지 않았습니다')),
+      { status: 503, code: KMS_KEY_ID_MISSING_CODE },
+    )
   }
   return keyId
 }

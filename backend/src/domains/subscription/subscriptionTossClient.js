@@ -3,6 +3,8 @@
  * 모든 함수는 throw 없이 { ok, data, errorCode, errorMessage } 형태로 반환
  */
 
+import { toSafeFailureMessage } from '../../utils/failureMessages.js'
+
 const TOSS_API_BASE = 'https://api.tosspayments.com/v1'
 
 // [CRITICAL #1] 토스 API 호출에 반드시 부여하는 타임아웃(ms). 이전에는 executeBilling을
@@ -27,7 +29,16 @@ const TOSS_BILLING_TIMEOUT_MS = (() => {
 const getAuthHeader = () => {
   const secretKey = process.env.TOSS_SECRET_KEY
   if (!secretKey) {
-    throw Object.assign(new Error('TOSS_SECRET_KEY 환경변수가 설정되지 않았습니다'), { status: 500 })
+    // [결함4 수정] kms.js/s3.js/uploadMiddleware.js와 동일한 패턴 - 환경변수명은
+    // Error 객체 자체(message)에 담기지 않아야 err.stack(개발 모드 응답)에도 남지
+    // 않는다. 원본은 로그로만 남기고, Error는 처음부터 안전한 문구로 생성한다.
+    // 벤더(토스) 자격 증명 미설정은 코드 버그가 아니라 외부 의존성 준비 안 됨이므로
+    // 500이 아니라 503으로 분류한다(uploadMiddleware.js/kms.js/s3.js와 동일 기준).
+    console.error('[subscriptionTossClient] TOSS_SECRET_KEY 환경변수가 설정되지 않았습니다')
+    throw Object.assign(
+      new Error(toSafeFailureMessage('TOSS_SECRET_KEY 환경변수가 설정되지 않았습니다')),
+      { status: 503 },
+    )
   }
   return `Basic ${Buffer.from(`${secretKey}:`).toString('base64')}`
 }
@@ -79,11 +90,20 @@ const fetchToss = async (url, options) => {
       timeout: isTimeout,
       error: err.message,
     })
+    // [결함4 관련 조치] payments.fail_reason은 항상 토스가 고객 노출용으로 설계한
+    // API 응답의 message 필드(normalizeResponse의 body?.message, 위)만 저장한다 -
+    // 네트워크/타임아웃 예외 분기(catch, 여기)에서는 fail_reason을 아예 기록하지
+    // 않는다. 이 파일의 errorMessage는 이 값 그대로 subscriptionBillingService.js가
+    // subscription_payment_logs.fail_reason에 저장하고 응답 화이트리스트
+    // (SUBSCRIPTION_PAYMENT_LOG_PUBLIC_FIELDS)에 sanitize 없이 그대로 흘려보내므로,
+    // 여기서 err.message(Node/fetch 내부 예외 원문 - 이전에는 TOSS_SECRET_KEY
+    // 환경변수 미설정 시의 원문도 이 경로로 흘렀다)를 직접 노출하면 안 된다. 원본은
+    // 위 console.error로 이미 로그에 남았으니, 반환값은 항상 안전한 고정 문구로 둔다.
     return {
       ok: false,
       data: null,
       errorCode: isTimeout ? 'TIMEOUT' : 'NETWORK_ERROR',
-      errorMessage: isTimeout ? '토스 API 응답 시간 초과' : (err.message ?? '네트워크 오류'),
+      errorMessage: isTimeout ? '토스 API 응답 시간 초과' : '네트워크 오류로 요청에 실패했습니다',
     }
   }
 }

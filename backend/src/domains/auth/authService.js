@@ -21,6 +21,15 @@ const REFRESH_TOKEN_EXPIRES_MS = 30 * 24 * 60 * 60 * 1000 // 30일 (ms)
 // (공격자가 나중에 훔친 토큰을 쓰는 경우)에는 사실상 항상 지나 있을 만큼 짧다.
 const REFRESH_REUSE_GRACE_MS = 10 * 1000
 
+// 계정을 개설/이용하기 위한 최소 필수 동의(privacy=개인정보 처리방침, terms=이용약관).
+// register()가 강제하는 기준이자, gift 도메인(giftPerformService.linkAccount)의
+// 로그인 모드가 이 검사를 우회하지 못하도록 같은 기준을 재사용할 때도 쓴다
+// (결함1: 로그인 모드는 이전에 이 검사를 전혀 거치지 않았다). 사진/영상 제작
+// 시점에 필요한 콘텐츠별 동의(portrait/voice/ai_generation/posthumous_release)는
+// 여기 포함하지 않는다 - 그건 photoService.assertPhotoConsents/willService의
+// 기존 게이트가 이미 담당한다(중복 검사 방지).
+export const REQUIRED_ACCOUNT_CONSENT_TYPES = ['privacy', 'terms']
+
 /**
  * Refresh token 문자열을 SHA-256으로 해시
  * @param {string} token
@@ -77,8 +86,7 @@ export const register = async ({
   // 다른 클라이언트 등)에서는 terms 없이도 가입이 그대로 통과한다. 이 결함 계열
   // (동의 검증을 프론트에만 의존)이 이번 작업 전체의 핵심 주제이므로 서버에도
   // 동일하게 적용한다.
-  const REQUIRED_SIGNUP_CONSENT_TYPES = ['privacy', 'terms']
-  const missingRequired = REQUIRED_SIGNUP_CONSENT_TYPES.find((type) => {
+  const missingRequired = REQUIRED_ACCOUNT_CONSENT_TYPES.find((type) => {
     const found = consents.find((c) => c.type === type)
     return !found || !found.isAgreed
   })
@@ -120,7 +128,11 @@ export const register = async ({
   // 필수 동의(consentItems.js SIGNUP_CONSENT_ITEMS 기준 privacy+terms required:true)
   // 저장 실패는 진짜 실패로 취급해 트랜잭션 전체를 롤백한다. 선택 동의(marketing 등)만
   // ENUM 미반영 오류에 한해 관대하게 건너뛴다.
-  const REQUIRED_CONSENT_TYPES = new Set(REQUIRED_SIGNUP_CONSENT_TYPES)
+  // [결함2 정리 - 2026-08-23] 이전에는 아래 saveConsents()의 동명 상수와 이름이
+  // 같아(REQUIRED_CONSENT_TYPES) 값이 다른데도 혼동 위험이 있었다(함수 스코프라
+  // 런타임 충돌은 없었지만 유지보수 시 오참조 위험). REGISTER_HARD_FAIL_CONSENT_TYPES로
+  // 구분 - "가입 시 저장 실패를 하드 에러(트랜잭션 롤백)로 처리할 유형" 전용이다.
+  const REGISTER_HARD_FAIL_CONSENT_TYPES = new Set(REQUIRED_ACCOUNT_CONSENT_TYPES)
 
   // 사용자 생성 + 동의 이력 저장을 단일 트랜잭션으로 묶는다 (G4).
   // Repository(authRepository.createUser/createConsent)가 옵셔널 conn을 받으므로
@@ -153,7 +165,7 @@ export const register = async ({
           conn
         )
       } catch (err) {
-        if (isEnumRejection(err) && !REQUIRED_CONSENT_TYPES.has(consent.type)) {
+        if (isEnumRejection(err) && !REGISTER_HARD_FAIL_CONSENT_TYPES.has(consent.type)) {
           // eslint-disable-next-line no-console
           console.warn(
             `[authService.register] consent_type '${consent.type}' 저장 실패` +
@@ -361,11 +373,15 @@ export const refresh = async (refreshToken) => {
 // 실제로는 저장되지 않은" 상태가 되어 사용자에게 혼란을 주고, 재시도 없이는
 // 이후 AI 처리 단계에서 영문 모른 채 계속 차단당한다. privacy와 동일하게
 // 이 목록의 유형은 저장 실패 시 요청 자체를 실패시킨다(register()의
-// REQUIRED_CONSENT_TYPES와 같은 원칙, useJoin.js가 법무 검토 근거로 필수
+// REGISTER_HARD_FAIL_CONSENT_TYPES와 같은 원칙, useJoin.js가 법무 검토 근거로 필수
 // 표시한 항목 + WillConsentPage가 4종 전부를 "(필수)"로 요구하는 것과 일치).
 // terms/marketing만 과거 ENUM drift 대비 관대 처리를 유지한다(선택 항목이라
 // 저장 실패가 사용자의 서비스 이용을 막지 않음).
-const REQUIRED_CONSENT_TYPES = new Set([
+// [결함2 정리 - 2026-08-23] register()의 REGISTER_HARD_FAIL_CONSENT_TYPES(privacy+terms,
+// 가입 전용)와 이름이 같았던(REQUIRED_CONSENT_TYPES) 상수를 분리했다. 이쪽은
+// saveConsents() 전용 - "동의 저장(설정 화면 재동의 포함) 시 저장 실패를 하드
+// 에러로 처리할 유형"이며 값도 다르다(privacy + 콘텐츠 동의 4종).
+const CONTENT_CONSENT_HARD_FAIL_TYPES = new Set([
   'privacy', 'portrait', 'voice', 'ai_generation', 'posthumous_release',
 ])
 
@@ -379,7 +395,7 @@ const REQUIRED_CONSENT_TYPES = new Set([
  * voice_samples.consent_id 같은 참조가 재동의로 인해 끊어지지 않는다.
  * ip_address/user_agent도 register()와 동일하게 함께 기록한다(D5).
  *
- * REQUIRED_CONSENT_TYPES(위)에 해당하는 유형은 저장 실패 시 요청 전체를 실패시킨다
+ * CONTENT_CONSENT_HARD_FAIL_TYPES(위)에 해당하는 유형은 저장 실패 시 요청 전체를 실패시킨다
  * (D8 - 저장 실패를 조용히 삼키지 않는다). 그 외 유형(terms/marketing)만 과거
  * ENUM drift 대비 관대 처리(로그만 남기고 계속 진행)를 유지한다.
  * @param {string} userId
@@ -402,7 +418,7 @@ export const saveConsents = async (userId, consents, { ipAddress = null, userAge
         userAgent,
       })
     } catch (err) {
-      if (isEnumRejection(err) && !REQUIRED_CONSENT_TYPES.has(consentType)) {
+      if (isEnumRejection(err) && !CONTENT_CONSENT_HARD_FAIL_TYPES.has(consentType)) {
         // eslint-disable-next-line no-console
         console.warn(
           `[authService.saveConsents] consent_type '${consentType}' 저장 실패` +

@@ -10,7 +10,7 @@ export default function WillPhotoPage() {
 
   return (
     <div className="will-photo-page">
-      <WillStepHeader currentStep={3} title="사진 업로드" />
+      <WillStepHeader currentStep={4} title="사진 업로드" />
 
       <div className="will-photo__content">
         <div className="will-photo__guide-box">

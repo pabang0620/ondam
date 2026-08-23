@@ -40,12 +40,13 @@ export function usePetPortrait(petId) {
     fetchQuota()
   }, [fetchQuota])
 
-  const fetchMedia = useCallback(async () => {
+  // FIX: 결함4 - signal 미전달로 abort()가 무효했던 문제 수정
+  const fetchMedia = useCallback(async (signal) => {
     if (!petId) return
     setIsLoading(true)
     setMediaError(null)
     try {
-      const res = await petApi.getPetMedia(petId)
+      const res = await petApi.getPetMedia(petId, signal)
       if (res.data.success) {
         const list = res.data.data ?? []
         setMedia(list)
@@ -58,19 +59,20 @@ export function usePetPortrait(petId) {
         })
       }
     } catch (err) {
+      if (err.name === 'CanceledError') return
       // FIX: DEV-27 - 조회 실패를 빈 목록으로 조용히 흘려보내지 않는다. 빈 목록은
       // "등록된 사진이 없습니다"로 표시돼 조회 실패를 사용자가 오인하게 된다.
       // 실패는 별도 에러 상태로 화면에 노출한다(G2-2).
       setMedia([])
       setMediaError(err?.response?.data?.message ?? '사진 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.')
     } finally {
-      setIsLoading(false)
+      if (!signal?.aborted) setIsLoading(false)
     }
   }, [petId])
 
   useEffect(() => {
     const ac = new AbortController()
-    fetchMedia()
+    fetchMedia(ac.signal)
     return () => ac.abort()
   }, [fetchMedia])
 

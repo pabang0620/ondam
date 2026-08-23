@@ -88,7 +88,10 @@ export default function AdminPage() {
           </p>
         </div>
         <button
-          onClick={refetch}
+          // FIX: 결함4 - refetch(=fetchDashboard)가 이제 signal 파라미터를 받는다.
+          // onClick={refetch}로 직접 연결하면 React가 클릭 이벤트 객체를 그 자리에
+          // 전달해버려 axios에 유효하지 않은 signal이 실려 요청 자체가 실패했다.
+          onClick={() => refetch()}
           disabled={isLoading}
           style={{
             display: 'inline-flex',

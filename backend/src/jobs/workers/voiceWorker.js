@@ -6,6 +6,7 @@ import pool from '../../config/db.js'
 import { decryptBuffer } from '../../utils/kms.js'
 import { downloadFromS3 } from '../../utils/s3.js'
 import { getIo } from '../../config/socket.js'
+import * as willRepository from '../../domains/will/willRepository.js'
 
 const QUEUE_NAME = 'voiceClone'
 const AI_MOCK = process.env.AI_MOCK === 'true'
@@ -54,6 +55,24 @@ const processVoiceClone = async (jobData, bullmqJobId) => {
   // 2. voice_samples: processing
   await updateVoiceSample(voiceSampleId, { clone_status: 'processing' })
 
+  // [보안 수정 - defense in depth] 음성권 동의 재확인. photoWorker/videoWorker와
+  // 동일한 패턴 - willService.uploadVoiceSample이 큐 등록 직전에 이미 'voice' 동의를
+  // 확인하지만, BullMQ 대기열에서 이 워커가 잡을 집을 때까지 사용자가 설정 화면에서
+  // 동의를 철회했을 수 있다(user_consents는 append-only라 철회도 즉시 새 행으로
+  // 반영됨). ElevenLabs에 실제 사람 목소리를 전송해 클론하는 벤더 호출 직전, 서비스
+  // 계층 게이트(uploadVoiceSample)와 동일한 조건('voice' 동의만 - portrait/ai_generation은
+  // 프로필 사진·영상 결과물 보관에 대한 동의라 목소리 클론과는 무관하고, activateWill/
+  // videoWorker 쪽에서 별도로 확인한다)으로 다시 확인한다. 실패 시 throw해 BullMQ
+  // 잡 레벨 재시도(backoff)에 맡기고, 재시도를 거쳐도 동의가 복원되지 않으면
+  // worker.on('failed')의 기존 실패 처리(ai_jobs/voice_samples를 failed로 갱신 +
+  // 소켓 통지)가 그대로 사용자에게 상황을 전달한다. voice_samples는 결제 대상
+  // target_type이 아니라(payments.target_type ENUM에 'voice_sample' 없음) 환불
+  // 로직은 필요 없다.
+  const voiceConsent = await willRepository.findVoiceConsent(userId)
+  if (!voiceConsent || voiceConsent.is_agreed !== 1) {
+    throw Object.assign(new Error('동의가 확인되지 않아 음성 클론을 중단합니다'), { status: 400 })
+  }
+
   getIo()?.to(`user:${userId}`).emit('job:progress', {
     jobId: bullmqJobId,
     jobType: 'voice',
@@ -74,7 +93,14 @@ const processVoiceClone = async (jobData, bullmqJobId) => {
 
     // KMS 복호화 → 평문 S3 키 획득
     const encryptedBuf = Buffer.from(s3KeyEncrypted, 'base64')
-    const s3Key = await decryptBuffer(encryptedBuf)
+    // [로컬 개발 폴백 대응] willService.encryptVoiceSampleS3Key가 KMS_KEY_ID 미설정 시
+    // s3Key를 암호화하지 않고 저장할 수 있다(kmsKeyId=''). 그 경우 encryptedBuf는 실제
+    // KMS 암호문이 아니라 평문 UTF-8 바이트라 그대로 KMS Decrypt에 넘기면 잘못된
+    // ciphertext 오류가 난다 - willService.decryptWillContent와 동일하게 kmsKeyId가
+    // falsy(빈 문자열 포함)면 복호화를 건너뛰고 바로 문자열로 복원한다.
+    const s3Key = kmsKeyId
+      ? await decryptBuffer(encryptedBuf)
+      : encryptedBuf.toString('utf8')
 
     // S3에서 음성 파일 다운로드
     const audioBuffer = await downloadFromS3(s3Key)

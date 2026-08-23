@@ -12,25 +12,27 @@ export function useMy() {
   const [settingsError, setSettingsError] = useState(null)
   const [isSettingsUpdating, setIsSettingsUpdating] = useState(false)
 
-  const fetchAll = useCallback(async () => {
+  // FIX: 결함4 - signal 미전달로 abort()가 무효했던 문제 수정
+  const fetchAll = useCallback(async (signal) => {
     setIsLoading(true)
     setError(null)
     try {
       const [meRes, ordersRes, willsRes, unreadRes] = await Promise.all([
-        mypageApi.getMe(),
-        mypageApi.getPhotoOrders(),
-        mypageApi.getWills(),
-        mypageApi.getUnreadCount(),
+        mypageApi.getMe(signal),
+        mypageApi.getPhotoOrders(signal),
+        mypageApi.getWills(signal),
+        mypageApi.getUnreadCount(signal),
       ])
       if (meRes.data.success) setUser(meRes.data.data)
       if (ordersRes.data.success) setPhotoOrders(ordersRes.data.data ?? [])
       if (willsRes.data.success) setWills(willsRes.data.data ?? [])
       if (unreadRes.data.success) setUnreadCount(unreadRes.data.data?.count ?? 0)
     } catch (err) {
+      if (err.name === 'CanceledError') return
       // FIX: DEV-24 - 마이페이지 조회 실패를 가짜 데이터로 위장하지 않는다
       setError(err?.response?.data?.message ?? '마이페이지 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.')
     } finally {
-      setIsLoading(false)
+      if (!signal?.aborted) setIsLoading(false)
     }
   }, [])
 
@@ -47,7 +49,7 @@ export function useMy() {
 
   useEffect(() => {
     const ac = new AbortController()
-    fetchAll()
+    fetchAll(ac.signal)
     return () => ac.abort()
   }, [fetchAll])
 

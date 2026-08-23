@@ -105,7 +105,10 @@
   padding: 0 var(--spacing-sm);
   min-height: var(--size-button-h);
   min-width: 64px;
-  font-size: var(--fs-caption);
+  /* FIX: 결함5 - "수정" 버튼은 누르면 실제로 화면을 이동시키는 행동형 텍스트라
+     보조 정보(캡션)가 아니다. --fs-body(16px)로 올린다. 높이는 이미
+     --size-button-h(56px)로 48px 기준을 충족한다. */
+  font-size: var(--fs-body);
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;

@@ -15,7 +15,8 @@ export function useMemorial(slug, initialAccessCode) {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  const fetchMemorial = useCallback(async (accessCode) => {
+  // FIX: 결함4 - signal 미전달로 abort()가 무효했던 문제 수정
+  const fetchMemorial = useCallback(async (accessCode, signal) => {
     // slug가 없으면 조회 자체가 불가능하다 - 초기값이 true이므로 여기서 내려주지
     // 않으면 "불러오는 중..."에서 영원히 멈춘다.
     if (!slug) {
@@ -25,22 +26,23 @@ export function useMemorial(slug, initialAccessCode) {
     setIsLoading(true)
     setError(null)
     try {
-      const { data } = await memorialApi.getMemorial(slug, accessCode)
+      const { data } = await memorialApi.getMemorial(slug, accessCode, signal)
       if (data.success) {
         setPet(data.data.pet)
         setMedia(data.data.media ?? [])
       }
     } catch (err) {
+      if (err.name === 'CanceledError') return
       // FIX: DEV-24 - 추모 페이지 조회 실패를 가짜 고인 데이터로 위장하지 않는다
       setError(err?.response?.data?.message ?? '추모 페이지를 찾을 수 없습니다.')
     } finally {
-      setIsLoading(false)
+      if (!signal?.aborted) setIsLoading(false)
     }
   }, [slug])
 
   useEffect(() => {
     const ac = new AbortController()
-    fetchMemorial(initialAccessCode)
+    fetchMemorial(initialAccessCode, ac.signal)
     return () => ac.abort()
     // initialAccessCode는 URL 쿼리에서 오는 마운트 시점 값이라 매 렌더 재실행할 필요가
     // 없다 - 재시도는 retryWithAccessCode를 통해 사용자 액션으로만 트리거한다.

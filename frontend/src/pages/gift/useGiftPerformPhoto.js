@@ -21,7 +21,17 @@ const STEP = {
   PROCESSING: 'processing',
   DONE: 'done',
   ERROR: 'error',
+  // FIX: 무한 폴링 결함 (photo/usePhotoProcessing.js와 동일한 유형) - 환불은 "오류"가
+  // 아니라 "결제가 정상적으로 취소됐다"는 정보라 ERROR와 분리된 화면·톤이 필요하다.
+  REFUNDED: 'refunded',
 }
+
+// GET /photo/orders/:id/status가 돌려주는 status는 photo_orders.status
+// (PHOTO_ORDER_STATUS, shared/constants/enums.js: pending_payment/paid/processing/
+// completed/failed/refunded)다. pending_payment/paid/processing은 계속 폴링해야
+// 하는 대기·진행 상태이고, completed/failed/refunded 3종은 아래에서 개별 분기로
+// 처리하는 종료 상태다.
+const KNOWN_NON_TERMINAL_STATUSES = new Set(['pending_payment', 'paid', 'processing'])
 
 function useGiftPerformPhoto() {
   const giftId = sessionStorage.getItem('giftContentGiftId')
@@ -33,6 +43,8 @@ function useGiftPerformPhoto() {
   const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState(null)
   const [isSavingConsent, setIsSavingConsent] = useState(false)
+  // FIX: 무한 폴링 결함 - usePhotoProcessing.js와 동일하게 환불은 error와 별개 상태로 둔다.
+  const [isRefunded, setIsRefunded] = useState(false)
   const pollRef = useRef(null)
   const consentPendingRef = useRef(false) // ep-006: 연타로 인한 중복 동의 저장 방지
 
@@ -100,11 +112,30 @@ function useGiftPerformPhoto() {
             // gift 완료 표시 실패해도 사진 자체는 이미 완성됐다 - 조용히 넘어간다
           }
           setStep(STEP.DONE)
+        } else if (status === 'refunded') {
+          // FIX: 무한 폴링 결함 - photoWorker.js의 finalizeOrderFailure/
+          // refundGiftFallback이 AI 처리 최종 실패 시 자동 환불하고 photo_orders.status를
+          // 'refunded'로 확정한다. 이 분기가 없어 완료·실패 어느 쪽도 아닌 상태가 되어
+          // 3초(정확히는 4초)마다 영원히 폴링했다 - 결제도 취소됐는데 화면은
+          // "사진을 만들고 있어요"만 계속 보여줬다.
+          // 선물 경로는 결제자(자녀)와 화면을 보는 수행자(부모)가 다르므로,
+          // "실패했다"가 아니라 "환불은 보내주신 분께 처리됐고 수행자는 할 일이
+          // 없다"는 점을 명확히 안내한다 (완료 보고 3절 근거).
+          clearInterval(pollRef.current)
+          setIsRefunded(true)
+          setStep(STEP.REFUNDED)
         } else if (status === 'failed') {
           clearInterval(pollRef.current)
-          setError('사진 제작 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.')
+          setError('사진 제작에 실패했어요. 환불 절차가 진행 중이니 잠시 후 다시 확인해 주세요.')
+          setStep(STEP.ERROR)
+        } else if (!KNOWN_NON_TERMINAL_STATUSES.has(status)) {
+          // FIX: 방어적 폴백 - PHOTO_ORDER_STATUS에 없는 값이 오면(스키마 변경/오탈자 등)
+          // 무한 폴링에 빠지지 않도록 멈추고 새로고침을 안내한다 (usePhotoProcessing.js와 동일).
+          clearInterval(pollRef.current)
+          setError('처리 상태를 확인할 수 없습니다. 잠시 후 페이지를 새로고침해 다시 시도해 주세요.')
           setStep(STEP.ERROR)
         }
+        // pending_payment/paid/processing이면 다음 주기에 계속 폴링한다.
       } catch {
         // 일시적 폴링 실패는 무시하고 다음 주기에 재시도
       }
@@ -135,6 +166,7 @@ function useGiftPerformPhoto() {
     previewUrl,
     isUploading,
     error,
+    isRefunded,
     photoTypes: PHOTO_TYPES,
     canSubmit: Boolean(photoType && uploadedUrl && !isUploading && giftId),
     consentItems: PHOTO_CONSENT_ITEMS,

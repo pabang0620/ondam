@@ -2,22 +2,24 @@ import apiClient from '../../config/apiClient.js'
 
 export const petApi = {
   // 반려동물 목록
-  getPets: () =>
-    apiClient.get('/pet'),
+  // FIX: 결함4 - signal 미전달로 usePet.js/usePetDetail.js/usePetPortrait.js/
+  // usePetSubscription.js의 AbortController.abort()가 무효했던 문제 수정
+  getPets: (signal) =>
+    apiClient.get('/pet', { signal }),
 
   // 반려동물 등록
   createPet: (data) =>
     apiClient.post('/pet', data),
 
   // 반려동물 상세
-  getPet: (petId) =>
-    apiClient.get(`/pet/${petId}`),
+  getPet: (petId, signal) =>
+    apiClient.get(`/pet/${petId}`, { signal }),
 
   // 추모 페이지 접근 코드 조회 (소유자 전용)
   // [FIX D17] 백엔드가 memorial_access_code를 일반 펫 CRUD 응답에서 뺐다(응답 노출
   // 최소화) - 이제 코드가 필요한 순간에만 이 전용 경로로 따로 조회한다.
-  getMemorialAccessCode: (petId) =>
-    apiClient.get(`/pet/${petId}/memorial-code`),
+  getMemorialAccessCode: (petId, signal) =>
+    apiClient.get(`/pet/${petId}/memorial-code`, { signal }),
 
   // 반려동물 수정
   updatePet: (petId, data) =>
@@ -28,8 +30,8 @@ export const petApi = {
     apiClient.patch(`/pet/${petId}/status`, { nextStatus }),
 
   // 미디어 목록
-  getPetMedia: (petId) =>
-    apiClient.get(`/pet/${petId}/media`),
+  getPetMedia: (petId, signal) =>
+    apiClient.get(`/pet/${petId}/media`, { signal }),
 
   // 미디어 추가
   addPetMedia: (petId, data) =>
@@ -43,12 +45,12 @@ export const petApi = {
   },
 
   // 구독 플랜 목록
-  getSubscriptionPlans: () =>
-    apiClient.get('/subscriptions/plans'),
+  getSubscriptionPlans: (signal) =>
+    apiClient.get('/subscriptions/plans', { signal }),
 
   // 내 구독 조회
-  getMySubscription: () =>
-    apiClient.get('/subscriptions'),
+  getMySubscription: (signal) =>
+    apiClient.get('/subscriptions', { signal }),
 
   // 구독 신청
   subscribe: ({ plan, authKey, customerKey }) =>

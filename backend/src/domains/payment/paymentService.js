@@ -11,6 +11,7 @@ import { PLANS } from '../subscription/subscriptionService.js'
 import * as giftRepository from '../gift/giftRepository.js'
 import pool from '../../config/db.js'
 import { pick, pickAll } from '../../utils/dto.js'
+import { toSafeFailureMessage } from '../../utils/failureMessages.js'
 
 // ─── 응답 화이트리스트 (결함2 수정 - 민감 필드 노출 방지) ───────────────────────
 // [보안 수정] payments 행을 그대로(스프레드 없이도 findPaymentById 등이 이미
@@ -67,7 +68,21 @@ const CLAIM_STALE_MS = 60_000
  */
 const getTossAuthHeader = () => {
   const secretKey = process.env.TOSS_SECRET_KEY
-  if (!secretKey) throw Object.assign(new Error('TOSS_SECRET_KEY 환경변수가 설정되지 않았습니다'), { status: 500 })
+  if (!secretKey) {
+    // [결함4 수정] kms.js/s3.js/uploadMiddleware.js/subscriptionTossClient.js와 동일한
+    // 패턴 - confirmPayment/cancelPayment 등 이 함수를 요청 경로에서 직접 호출하는
+    // 지점이 있어, 여기서 던지는 Error가 그대로 글로벌 에러 핸들러까지 올라간다.
+    // message 필드는 이미 toSafeFailureMessage로 정제되지만(server.js), err.stack
+    // (개발 모드)에는 Error 생성 시점의 원본 문자열이 남는다 - Error 자체를 처음부터
+    // 안전한 문구로 생성해 원천 차단한다. 원본은 로그로만 남긴다. 벤더(토스) 자격
+    // 증명 미설정은 코드 버그가 아니라 외부 의존성 준비 안 됨이므로 500이 아니라
+    // 503으로 분류한다.
+    console.error('[paymentService] TOSS_SECRET_KEY 환경변수가 설정되지 않았습니다')
+    throw Object.assign(
+      new Error(toSafeFailureMessage('TOSS_SECRET_KEY 환경변수가 설정되지 않았습니다')),
+      { status: 503 },
+    )
+  }
   return `Basic ${Buffer.from(`${secretKey}:`).toString('base64')}`
 }
 

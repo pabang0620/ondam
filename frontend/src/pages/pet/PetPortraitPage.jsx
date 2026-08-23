@@ -237,7 +237,9 @@ export default function PetPortraitPage() {
                 <p>{mediaError}</p>
                 <button
                   type="button"
-                  onClick={refetchMedia}
+                  // FIX: 결함4 - fetchMedia가 signal 파라미터를 받게 되면서 onClick={refetchMedia}
+                  // 직결 시 클릭 이벤트 객체가 signal 자리로 전달돼 요청이 깨진다.
+                  onClick={() => refetchMedia()}
                   style={{
                     alignSelf: 'center',
                     background: 'none',

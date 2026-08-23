@@ -14,8 +14,9 @@ export const willApi = {
     apiClient.post('/will/wills', data),
 
   // 유언장 목록
-  getWills: () =>
-    apiClient.get('/will/wills'),
+  // FIX: 결함4 - signal 미전달로 마운트-fetch AbortController.abort()가 무효했던 문제 수정
+  getWills: (signal) =>
+    apiClient.get('/will/wills', { signal }),
 
   // 유언장 상세
   getWill: (willId) =>
@@ -38,8 +39,8 @@ export const willApi = {
     apiClient.post(`/will/release/${token}`, data),
 
   // 유언 영상 열람 - 진입 시 최소 정보만 (수신인 이름, 잠금 여부) - 영상 URL 없음
-  getWatchInfo: (token) =>
-    apiClient.get(`/will/watch/${token}`),
+  getWatchInfo: (token, signal) =>
+    apiClient.get(`/will/watch/${token}`, { signal }),
 
   // 본인 확인 (휴대폰 뒤 4자리) - 성공 시에만 영상 URL 발급
   verifyWatchAccess: (token, phoneLast4) =>

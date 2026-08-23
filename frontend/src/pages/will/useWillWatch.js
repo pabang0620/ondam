@@ -40,7 +40,8 @@ export function useWillWatch() {
       setPhase(PHASE.LOADING)
       setFetchError(null)
       try {
-        const { data } = await willApi.getWatchInfo(token)
+        // FIX: 결함4 - signal 미전달로 abort()가 무효했던 문제 수정
+        const { data } = await willApi.getWatchInfo(token, ac.signal)
         const info = data.data
         setBeneficiaryName(info?.beneficiaryName ?? '')
         setWillTitle(info?.willTitle ?? '')
@@ -52,6 +53,7 @@ export function useWillWatch() {
           setPhase(PHASE.VERIFY)
         }
       } catch (err) {
+        if (err.name === 'CanceledError') return
         // FIX: DEV-24 - 조회 실패를 가짜 유언 영상으로 위장하지 않는다
         setFetchError(err?.response?.data?.message ?? '영상을 찾을 수 없습니다. 링크가 만료되었거나 올바르지 않습니다.')
         setPhase(PHASE.ERROR)

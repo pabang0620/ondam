@@ -4,6 +4,12 @@ import { useWillWatch, PHASE } from './useWillWatch.js'
 import LegalNotice from '../../components/common/LegalNotice.jsx'
 import './WillWatchPage.css'
 
+// FIX: 결함2 - 잠금/만료 화면이 "아래 고객센터로 연락 주시면"이라고 안내하지만
+// 실제로 연락처를 렌더링하지 않아 유가족이 안내를 따를 수 없었다. Footer.jsx와
+// 동일한 패턴(VITE_CONTACT_PHONE이 있으면 실제 번호를, 없으면 그 문구 자체를
+// 노출하지 않는다)을 재사용한다. 번호를 창작하지 않는다.
+const CONTACT_PHONE = import.meta.env.VITE_CONTACT_PHONE
+
 /* 본인 확인 입력 화면 - 어르신 UX 규칙(48px 터치, 16px 이상 폰트) 준수.
    실패해도 무엇을 하면 되는지 바로 알 수 있게 안내한다. */
 function VerifyStep({ beneficiaryName, verifyError, isVerifying, onSubmit }) {
@@ -75,9 +81,18 @@ function LockedStep({ verifyError }) {
       <Lock size={48} aria-hidden="true" />
       <p className="will-watch__error-title">잠시 확인이 필요합니다</p>
       <p className="will-watch__error-desc">
-        {verifyError ?? '본인 확인 시도 횟수를 초과했습니다.'}<br />
-        아래 고객센터로 연락 주시면 바로 도와드리겠습니다.
+        {verifyError ?? '본인 확인 시도 횟수를 초과했습니다.'}
       </p>
+      {CONTACT_PHONE ? (
+        <p className="will-watch__error-desc">
+          고객센터(<a href={`tel:${CONTACT_PHONE}`} className="will-watch__contact-link">{CONTACT_PHONE}</a>)로
+          연락 주시면 바로 도와드리겠습니다.
+        </p>
+      ) : (
+        <p className="will-watch__error-desc">
+          고객센터 연락처는 준비 중입니다. 잠시 후 다시 시도해 주세요.
+        </p>
+      )}
     </div>
   )
 }
@@ -124,9 +139,11 @@ function ExtensionSentStep() {
         등록하신 연락처로 새로운 열람 링크를 보내드렸어요.<br />
         문자나 이메일을 확인해서 다시 접속해 주세요.
       </p>
-      <p className="will-watch__error-desc">
-        잠시 후에도 도착하지 않으면 고객센터로 문의해 주세요.
-      </p>
+      {CONTACT_PHONE && (
+        <p className="will-watch__error-desc">
+          잠시 후에도 도착하지 않으면 고객센터({CONTACT_PHONE})로 문의해 주세요.
+        </p>
+      )}
     </div>
   )
 }

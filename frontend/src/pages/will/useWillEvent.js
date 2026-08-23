@@ -32,7 +32,8 @@ export function useWillEvent() {
     const load = async () => {
       setWillsError(null)
       try {
-        const { data } = await willApi.getWills()
+        // FIX: 결함4 - signal 미전달로 abort()가 무효했던 문제 수정
+        const { data } = await willApi.getWills(ac.signal)
         const list = (data.data || []).filter((w) => w.status === 'active')
         setWills(list)
         // FIX: 결함1 전수 점검 - willService.toWillDtos는 snake_case(will_id)로
@@ -40,6 +41,7 @@ export function useWillEvent() {
         // 현재 라우트 비활성 상태라 실사용 영향은 없지만, 되살릴 경우를 위해 함께 수정).
         if (list.length > 0) setSelectedWillId(list[0].will_id)
       } catch (err) {
+        if (err.name === 'CanceledError') return
         // FIX: DEV-27 - 조회 실패를 빈 목록으로 조용히 흘려보내지 않는다. 빈 목록은
         // "유언장이 없음"으로 보여 조회 실패를 사용자가 오인하게 되고, 그 상태로 제출하면
         // voiceSampleId가 빈 값으로 전송돼 서버 400을 유발한다(G2-2).

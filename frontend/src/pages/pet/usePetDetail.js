@@ -20,17 +20,19 @@ export function usePetDetail(petId) {
   // 않도록 조용히 null로 둔다(MemorialSettingsSection이 null이면 새 코드를 제안한다).
   const [memorialAccessCode, setMemorialAccessCode] = useState(null)
 
-  const fetchMemorialAccessCode = useCallback(async () => {
+  const fetchMemorialAccessCode = useCallback(async (signal) => {
     if (!petId) return
     try {
-      const res = await petApi.getMemorialAccessCode(petId)
+      const res = await petApi.getMemorialAccessCode(petId, signal)
       if (res.data.success) setMemorialAccessCode(res.data.data?.memorialAccessCode ?? null)
-    } catch {
+    } catch (err) {
+      if (err.name === 'CanceledError') return
       setMemorialAccessCode(null)
     }
   }, [petId])
 
-  const fetchDetail = useCallback(async () => {
+  // FIX: 결함4 - signal 미전달로 abort()가 무효했던 문제 수정
+  const fetchDetail = useCallback(async (signal) => {
     // petId가 없으면 조회 자체가 불가능하다 - 초기값이 true이므로 여기서 내려주지
     // 않으면 "불러오는 중..."에서 영원히 멈춘다.
     if (!petId) {
@@ -41,27 +43,28 @@ export function usePetDetail(petId) {
     setError(null)
     try {
       const [petRes, mediaRes] = await Promise.all([
-        petApi.getPet(petId),
-        petApi.getPetMedia(petId),
+        petApi.getPet(petId, signal),
+        petApi.getPetMedia(petId, signal),
       ])
       if (petRes.data.success) setPet(petRes.data.data)
       if (mediaRes.data.success) setMedia(mediaRes.data.data ?? [])
       // 추모 페이지 접근 코드는 deceased 상태일 때만 의미가 있다(그 전엔 설정 UI 자체가
       // 렌더되지 않는다) - alive 펫마다 불필요한 API 호출을 추가하지 않는다.
       if (petRes.data.success && petRes.data.data?.pet_status === 'deceased') {
-        await fetchMemorialAccessCode()
+        await fetchMemorialAccessCode(signal)
       }
     } catch (err) {
+      if (err.name === 'CanceledError') return
       // FIX: DEV-24 - 반려동물 상세 조회 실패를 가짜 데이터로 위장하지 않는다
       setError(err?.response?.data?.message ?? '반려동물 정보를 불러오지 못했습니다.')
     } finally {
-      setIsLoading(false)
+      if (!signal?.aborted) setIsLoading(false)
     }
   }, [petId, fetchMemorialAccessCode])
 
   useEffect(() => {
     const ac = new AbortController()
-    fetchDetail()
+    fetchDetail(ac.signal)
     return () => ac.abort()
   }, [fetchDetail])
 

@@ -30,6 +30,57 @@ import * as authService from '../auth/authService.js'
 import * as authRepository from '../auth/authRepository.js'
 import { TERMINAL_STATUSES, hashToken, extractPhoneLast4, transitionGift, notifyGiver } from './giftShared.js'
 
+const CONSENT_LABELS = { privacy: '개인정보 처리 방침', terms: '이용약관' }
+
+/**
+ * [결함1 수정] mode==='signup'은 authService.register() 내부에서 이미
+ * REQUIRED_ACCOUNT_CONSENT_TYPES(privacy+terms) 동의를 강제하지만, mode==='login'은
+ * 기존 계정으로 로그인만 하고 끝나 이 검사를 전혀 거치지 않았다 - 특히 terms가
+ * 필수로 전환된 2026-08-23 이전에 가입한 계정은 terms 동의 기록 없이 선물 수행
+ * 전 과정을 통과할 수 있었다.
+ *
+ * signup/login 두 경로 모두 이 함수를 통과시켜 같은 게이트를 공유하게 한다(signup은
+ * register()가 이미 저장했으므로 아래 조회에서 항상 통과하는 사실상의 no-op).
+ * "이미 동의한 계정은 다시 받지 않는다"는 요구사항대로, 계정에 최신 동의 기록이
+ * 있으면 재요구하지 않고, 없는 항목만 확인한다 - 이번 요청에 그 항목의 동의가
+ * 함께 왔으면(linkAccountSchema는 mode 무관하게 consents를 optional로 허용한다)
+ * 그 자리에서 authService.saveConsents로 저장해 통과시키고, 그래도 없으면 400으로
+ * 막는다.
+ *
+ * photoService.assertPhotoConsents/willService의 콘텐츠별 동의(portrait/voice/
+ * ai_generation/posthumous_release)는 여기서 검사하지 않는다 - linkAccount 이후
+ * 사진/영상 제작은 photo/will 도메인의 기존 인증 엔드포인트를 그대로 타므로, 그
+ * 시점에 해당 도메인의 기존 게이트가 이미 막는다(중복 검사 방지).
+ */
+const ensureRequiredAccountConsents = async (userId, consents, { ipAddress, userAgent }) => {
+  const existing = await Promise.all(
+    authService.REQUIRED_ACCOUNT_CONSENT_TYPES.map((type) => authRepository.findConsentByType(userId, type)),
+  )
+  const missingTypes = authService.REQUIRED_ACCOUNT_CONSENT_TYPES.filter(
+    (type, i) => !existing[i] || existing[i].is_agreed !== 1,
+  )
+  if (missingTypes.length === 0) return
+
+  const providedForMissing = (consents ?? [])
+    .filter((c) => missingTypes.includes(c.type) && c.isAgreed)
+    .map((c) => ({ consentType: c.type, isAgreed: true }))
+
+  if (providedForMissing.length > 0) {
+    await authService.saveConsents(userId, providedForMissing, { ipAddress, userAgent })
+  }
+
+  const stillMissing = missingTypes.filter(
+    (type) => !providedForMissing.some((c) => c.consentType === type),
+  )
+  if (stillMissing.length > 0) {
+    const names = stillMissing.map((t) => CONSENT_LABELS[t] ?? t).join(', ')
+    throw Object.assign(
+      new Error(`${names} 동의가 필요합니다. 계정 연결 화면에서 동의 후 다시 시도해 주세요.`),
+      { status: 400 },
+    )
+  }
+}
+
 // ─── 링크 진입 (본인확인 이전) ──────────────────────────────────────────────────
 
 export const getPerformInfo = async (token) => {
@@ -163,6 +214,11 @@ export const linkAccount = async (token, { mode, email, password, nickname, cons
   }
 
   const recipientUserId = authResult.user.userId
+
+  // [결함1 수정] mode(signup/login) 무관하게 필수 계정 동의를 확인한다. gift 상태를
+  // 바꾸기(updateRecipientUserId/transitionGift) 전에, 그리고 컨트롤러가 토큰을
+  // 쿠키/응답에 실어 보내기 전에 막아야 하므로 여기서 가장 먼저 게이팅한다.
+  await ensureRequiredAccountConsents(recipientUserId, consents, { ipAddress, userAgent })
 
   // 이미 다른 계정으로 연결된 선물에 다른 계정을 또 연결하려는 시도만 막는다
   // (같은 계정으로 재로그인/새로고침 재시도는 멱등하게 통과)
@@ -356,11 +412,23 @@ export const completeGift = async (recipientUserId, giftId, { orderId, willId } 
   }
 
   if (gift.product_type === 'photo') {
-    if (!orderId) throw Object.assign(new Error('orderId가 필요합니다'), { status: 400 })
-    // 연결 존재 검증 - attach-photo-order로 저장된 연결과 다른 orderId를 들이밀어
-    // 완료 처리하려는 시도를 막는다(완료 보고 1절 (c))
+    // [결함2 수정] 사용자 메시지에서 "orderId" 같은 요청 필드명을 드러내지 않는다.
+    // 개발 진단에 필요한 정보(어떤 gift가 어떤 orderId 없이 호출됐는지)는 로그로만 남긴다.
+    if (!orderId) {
+      console.error('[giftPerformService.completeGift] orderId 누락', { giftId: gift.gift_id, recipientUserId })
+      throw Object.assign(new Error('사진 주문 정보가 필요합니다'), { status: 400 })
+    }
+    // 연결 존재 검증 - attachPhotoOrder로 저장된 연결과 다른 orderId를 들이밀어
+    // 완료 처리하려는 시도를 막는다(완료 보고 1절 (c)). 사용자에게는 내부 API 경로
+    // (attach-photo-order)를 노출하지 않고, 무엇을 다시 해야 하는지 자연어로 안내한다.
     if (gift.photo_order_id !== orderId) {
-      throw Object.assign(new Error('연결된 사진 주문과 일치하지 않습니다. attach-photo-order를 먼저 호출하세요'), { status: 400 })
+      console.error('[giftPerformService.completeGift] 연결된 photo_order_id와 불일치', {
+        giftId: gift.gift_id, linkedOrderId: gift.photo_order_id, requestedOrderId: orderId,
+      })
+      throw Object.assign(
+        new Error('연결된 사진 주문 정보가 일치하지 않습니다. 사진 제작 화면으로 돌아가 다시 진행해 주세요'),
+        { status: 400 },
+      )
     }
     const order = await photoRepository.findOrderById(orderId)
     if (!order || order.user_id !== recipientUserId) {
@@ -370,9 +438,18 @@ export const completeGift = async (recipientUserId, giftId, { orderId, willId } 
       throw Object.assign(new Error('아직 제작이 완료되지 않았습니다'), { status: 400 })
     }
   } else {
-    if (!willId) throw Object.assign(new Error('willId가 필요합니다'), { status: 400 })
+    if (!willId) {
+      console.error('[giftPerformService.completeGift] willId 누락', { giftId: gift.gift_id, recipientUserId })
+      throw Object.assign(new Error('영상 편지 정보가 필요합니다'), { status: 400 })
+    }
     if (gift.will_id !== willId) {
-      throw Object.assign(new Error('연결된 영상 편지와 일치하지 않습니다. attach-will을 먼저 호출하세요'), { status: 400 })
+      console.error('[giftPerformService.completeGift] 연결된 will_id와 불일치', {
+        giftId: gift.gift_id, linkedWillId: gift.will_id, requestedWillId: willId,
+      })
+      throw Object.assign(
+        new Error('연결된 영상 편지 정보가 일치하지 않습니다. 영상 편지 제작 화면으로 돌아가 다시 진행해 주세요'),
+        { status: 400 },
+      )
     }
     const will = await willRepository.findWillById(willId)
     if (!will || String(will.user_id) !== String(recipientUserId)) {

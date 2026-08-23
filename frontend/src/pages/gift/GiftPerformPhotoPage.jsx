@@ -1,12 +1,12 @@
 import { useRef, useCallback } from 'react'
-import { UploadCloud, Loader2, CheckCircle2, AlertCircle, ShieldCheck } from 'lucide-react'
+import { UploadCloud, Loader2, CheckCircle2, AlertCircle, ShieldCheck, RotateCcw } from 'lucide-react'
 import { Button } from '../../components/common/Button.jsx'
 import ConsentChecklist from '../../components/consent/ConsentChecklist.jsx'
 import useGiftPerformPhoto from './useGiftPerformPhoto.js'
 
 function GiftPerformPhotoPage() {
   const {
-    STEP, step, photoType, previewUrl, isUploading, error, photoTypes, canSubmit,
+    STEP, step, photoType, previewUrl, isUploading, error, isRefunded, photoTypes, canSubmit,
     consentItems, consents, allChecked, isSavingConsent,
     toggleConsentItem, toggleAllConsents, submitConsent,
     handleTypeSelect, handleFileUpload, handleSubmit,
@@ -48,6 +48,24 @@ function GiftPerformPhotoPage() {
             동의하고 시작하기
           </Button>
         </div>
+      </main>
+    )
+  }
+
+  // FIX: 무한 폴링 결함 - 환불은 "오류"가 아니라 "처리하지 못해 결제를 취소했다"는
+  // 정보다. 선물 경로는 결제자(자녀)와 이 화면을 보는 수행자(부모)가 다르므로,
+  // 환불이 보내주신 분(결제자)께 처리됐고 수행자는 따로 할 일이 없다는 점을
+  // 명확히 안내한다.
+  if (isRefunded) {
+    return (
+      <main style={{ maxWidth: 480, margin: '0 auto', padding: '64px var(--spacing-md)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--spacing-lg)' }}>
+        <RotateCcw size={44} color="var(--color-warm-accent)" aria-hidden="true" />
+        <p role="alert" style={{ fontSize: 'var(--fs-h3)', fontWeight: 700 }}>결제가 취소됐어요</p>
+        <p style={{ color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>
+          죄송합니다. 사진을 만드는 데 문제가 있어 결제하신 금액을 선물을 보내주신
+          분께 전액 환불해 드렸어요. 따로 하실 일은 없으니 걱정하지 않으셔도 괜찮아요.
+        </p>
+        <Button onClick={() => { window.location.href = '/my' }} fullWidth>마이페이지로 이동</Button>
       </main>
     )
   }

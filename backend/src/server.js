@@ -108,6 +108,13 @@ app.use(express.urlencoded({ extended: true, limit: '1mb' }))
 app.use(cookieParser())
 
 // 로깅
+// [결함3 관련 조치] 추모관 접근 코드(GET /api/memorial/:slug?accessCode=...)는 쿼리스트링으로
+// 전달된다(SPEC-03: 비공개 펫 추모 페이지를 "링크 하나로 공유"하는 설계 - accessCode를 헤더/
+// 바디로 옮기면 그 공유 링크 UX 자체가 깨진다, docs/specs/SPEC-03-memorial-access.md 2/3절).
+// URL 설계는 유지하되, morgan 기본 :url 토큰이 req.originalUrl(쿼리스트링 포함)을 그대로
+// 로그에 남기므로 accessCode 값만 여기서 마스킹한다 - 브라우저 히스토리·Referer 헤더는
+// 서버 코드로 제어할 수 없는 클라이언트 영역이라 이 조치의 대상이 아니다.
+morgan.token('url', (req) => (req.originalUrl || req.url).replace(/([?&]accessCode=)[^&]*/i, '$1[REDACTED]'))
 if (process.env.NODE_ENV !== 'test') {
   app.use(morgan('dev'))
 }

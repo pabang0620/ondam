@@ -125,8 +125,13 @@ adminApiClient.interceptors.response.use(
         // FIX: HIGH-1 - 예전에는 여기서 useAuthStore.getState().clearUser()를 호출해
         // 관리자 세션 갱신 실패가 일반 사용자 세션까지 로그아웃시켰다(두 store가
         // 같았을 때의 잔재). 이제 관리자 세션만 정리한다.
+        // FIX: DEV-28과 동일한 문제 - refresh 자체가 실패해도(리프레시 토큰 없음/만료 등)
+        // 원 요청이 실제로 받은 에러(error)를 그대로 전달한다. refreshError로 치환하면
+        // 원 요청의 실제 서버 메시지(예: 권한 부족 안내)가 "리프레시 토큰이 없습니다"
+        // 같은 무관한 문구로 가려진다.
+        console.error('[adminApiClient] 관리자 세션 갱신 실패:', refreshError?.message)
         clearAdminSession()
-        return Promise.reject(refreshError)
+        return Promise.reject(error)
       }
     }
 

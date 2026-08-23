@@ -52,13 +52,13 @@ const assertPhotoConsents = async (userId) => {
   ])
   if (!portraitConsent || portraitConsent.is_agreed !== 1) {
     throw Object.assign(
-      new Error('사진 처리를 위한 초상권 동의가 필요합니다. 설정 > 동의 관리에서 동의해 주세요.'),
+      new Error('사진 처리를 위한 초상권 동의가 필요합니다. 사진 접수 화면에서 동의 항목에 모두 체크한 후 다시 시도해 주세요.'),
       { status: 400 },
     )
   }
   if (!aiGenConsent || aiGenConsent.is_agreed !== 1) {
     throw Object.assign(
-      new Error('AI 생성물 이용 동의가 필요합니다. 설정 > 동의 관리에서 동의해 주세요.'),
+      new Error('AI 생성물 이용 동의가 필요합니다. 사진 접수 화면에서 동의 항목에 모두 체크한 후 다시 시도해 주세요.'),
       { status: 400 },
     )
   }

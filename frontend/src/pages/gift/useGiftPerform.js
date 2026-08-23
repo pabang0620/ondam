@@ -27,6 +27,7 @@ function useGiftPerform() {
   const [verifyError, setVerifyError] = useState(null)
   const [isVerifying, setIsVerifying] = useState(false)
   const [accountError, setAccountError] = useState(null)
+  const [needsAccountConsent, setNeedsAccountConsent] = useState(false)
   const [isLinking, setIsLinking] = useState(false)
   const [declineResult, setDeclineResult] = useState(null)
 
@@ -85,9 +86,21 @@ function useGiftPerform() {
     setPhase(PHASE.ACCOUNT)
   }, [isAuthenticated, info, navigate, token])
 
+  // 2026-08-23: 기존 계정으로 로그인(mode==='login')하는 수행자 중 약관 필수화
+  // 이전 가입자는 terms 동의 기록이 없어 서버(giftPerformService.linkAccount →
+  // ensureRequiredAccountConsents)가 400으로 막는다. 여기서는 그 특정 실패만
+  // 식별해 "동의 보완" 흐름을 열어준다 - 로그인 자격 실패(401)나 본인확인 미완료
+  // (400 '본인 확인이 먼저 필요합니다')와는 구분해야 하므로, 자격 검증을 통과한
+  // 뒤에만 도달하는 이 경로가 서버에서 공통으로 붙이는 고정 문구
+  // ('동의가 필요합니다')로 식별한다. 정확히 어떤 항목(privacy/terms)이 빠졌는지는
+  // 한글 라벨을 파싱하지 않는다(라벨 조합 순서·문구가 바뀌면 조용히 깨지는 취약한
+  // 방식이라) - 대신 필수 동의 항목 전체를 다시 보여준다. 이미 동의가 있는 항목을
+  // 함께 보내도 서버는 실제로 없는 항목만 저장하므로(ensureRequiredAccountConsents의
+  // missingTypes 필터링) 안전하다.
   const submitAccount = useCallback(async (payload) => {
     setIsLinking(true)
     setAccountError(null)
+    setNeedsAccountConsent(false)
     try {
       const { data } = await linkAccount(token, payload)
       const { accessToken, user, gift } = data.data
@@ -96,7 +109,12 @@ function useGiftPerform() {
       if (gift?.giftId) sessionStorage.setItem('giftContentGiftId', gift.giftId)
       navigate(`/gift/perform/${token}/${productType === 'will' ? 'will' : 'photo'}`, { replace: true })
     } catch (err) {
-      setAccountError(err?.response?.data?.message ?? '처리에 실패했습니다.')
+      const status = err?.response?.status
+      const message = err?.response?.data?.message ?? '처리에 실패했습니다.'
+      if (status === 400 && message.includes('동의가 필요합니다')) {
+        setNeedsAccountConsent(true)
+      }
+      setAccountError(message)
     } finally {
       setIsLinking(false)
     }
@@ -119,6 +137,7 @@ function useGiftPerform() {
     verifyError,
     isVerifying,
     accountError,
+    needsAccountConsent,
     isLinking,
     declineResult,
     submitVerification,

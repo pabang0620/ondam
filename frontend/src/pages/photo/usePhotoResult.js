@@ -25,8 +25,8 @@ function usePhotoResult() {
       setError(null)
 
       try {
-        const { data } = await getPhotoOrderResult(orderId)
-        if (!isMountedRef.current) return
+        const { data } = await getPhotoOrderResult(orderId, ac.signal)
+        if (!isMountedRef.current || ac.signal.aborted) return
         setOrder(data.data.order)
         setFiles(data.data.files ?? [])
       } catch (err) {
@@ -34,7 +34,7 @@ function usePhotoResult() {
         // FIX: DEV-24 - 결과 조회 실패를 가짜 사진으로 위장하지 않는다
         setError(err?.response?.data?.message ?? '결과를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.')
       } finally {
-        if (isMountedRef.current) setIsLoading(false)
+        if (isMountedRef.current && !ac.signal.aborted) setIsLoading(false)
       }
     }
 

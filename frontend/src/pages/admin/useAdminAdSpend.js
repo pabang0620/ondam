@@ -30,22 +30,24 @@ export function useAdminAdSpend() {
   const [isCacLoading, setIsCacLoading] = useState(false)
   const [cacError, setCacError] = useState(null)
 
-  const fetchList = useCallback(async (p = 1) => {
+  // FIX: 결함4 - signal 미전달로 abort()가 무효했던 문제 수정
+  const fetchList = useCallback(async (p = 1, signal) => {
     setIsLoading(true)
     setError(null)
     try {
-      const { data } = await adminApi.getAdSpendList(p, 20)
+      const { data } = await adminApi.getAdSpendList(p, 20, '', signal)
       if (data.success) {
         setItems(data.data ?? [])
         setTotal(data.meta?.total ?? 0)
       }
     } catch (err) {
+      if (err.name === 'CanceledError') return
       // 조회 실패를 가짜 데이터로 위장하지 않는다 (다른 admin 훅과 동일 원칙)
       setError(err?.response?.data?.message ?? '광고비 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.')
       setItems([])
       setTotal(0)
     } finally {
-      setIsLoading(false)
+      if (!signal?.aborted) setIsLoading(false)
     }
   }, [])
 
@@ -60,7 +62,7 @@ export function useAdminAdSpend() {
 
   useEffect(() => {
     const ac = new AbortController()
-    fetchList(page)
+    fetchList(page, ac.signal)
     return () => ac.abort()
   }, [fetchList, page])
 

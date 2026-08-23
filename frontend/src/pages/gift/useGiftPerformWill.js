@@ -19,6 +19,15 @@ export const STEP = {
   ERROR: 'error',
 }
 
+// FIX: 무한 폴링 결함 (will/useWillProcessing.js와 동일한 유형) - 결제자(선물을
+// 보내주신 분)와 이 화면을 보는 수행자(부모)가 다른 선물 경로 특성을 반영해
+// "본인이 결제했다"는 문구 없이 안내한다. will/useWillProcessing.js와 달리
+// job.errorMessage(AI 실패 사유)는 쓰지 않고 항상 이 문구만 보여준다 - 이유는
+// pollVideoReady의 'failed' 분기 주석 참고.
+const GIFT_WILL_FAILURE_MESSAGE =
+  '죄송합니다. 영상 편지를 만드는 데 문제가 발생했어요. 결제하신 금액은 선물을 ' +
+  '보내주신 분께 자동으로 환불되며, 따로 하실 일은 없어요.'
+
 function useGiftPerformWill() {
   const giftId = sessionStorage.getItem('giftContentGiftId')
 
@@ -128,8 +137,17 @@ function useGiftPerformWill() {
     pollRef.current = setInterval(async () => {
       try {
         const { data } = await willApi.getWillStatus(willId)
-        const willStatus = data.data?.willStatus
-        if (willStatus === 'active') {
+        // FIX: 무한 폴링 결함 - wills.status(WILL_STATUS: draft/paid/active/released/
+        // revoked)에는 'failed'가 없다(shared/constants/enums.js). activateWill이
+        // 큐 등록 직전에 이미 status='active'로 바꿔두기 때문에, 예전처럼
+        // willStatus==='active'를 완료 신호로 쓰면 실제 영상 생성이 시작되기도 전인
+        // 첫 폴링에서 곧바로 "완성됐어요"로 넘어가는 오판정이 있었다(진짜 결함은
+        // 이거였다 - '실패 분기가 없다'보다 근본적). 완료/실패는 반드시
+        // ai_jobs.job_status(AI_JOB_STATUS: queued/running/completed/failed, job
+        // 필드)로 판정한다 - will/useWillProcessing.js가 이미 이렇게 고쳐져 있다.
+        const job = data.data?.job
+        const jobStatus = job?.jobStatus
+        if (jobStatus === 'completed') {
           clearInterval(pollRef.current)
           try {
             await completeGift(giftId, { willId })
@@ -137,7 +155,29 @@ function useGiftPerformWill() {
             // gift 완료 표시 실패해도 영상 자체는 이미 완성됐다 - 조용히 넘어간다
           }
           setStep(STEP.DONE)
+        } else if (jobStatus === 'failed') {
+          // videoWorker.js의 finalizeWillFailure가 AI 처리 최종 실패 시 자동 환불하고
+          // wills.status를 'draft'(또는 환불 실패 시 'paid')로 되돌린다 - 이 분기가
+          // 없어 완료·실패 어느 쪽도 아닌 상태가 되어 5초마다 영원히 폴링했다.
+          //
+          // will/useWillProcessing.js(본인 결제 경로)는 job.errorMessage(안전 치환된
+          // AI 실패 사유)를 우선 보여준다. 선물 경로는 의도적으로 다르게 한다 - 실측
+          // 결과 toSafeFailureMessage가 인식하지 못하는 원문은 전부 "처리 중 문제가
+          // 발생했어요..."라는 범용 문구로 떨어지는데, 이 화면에서 정말 중요한 건 AI가
+          // 왜 실패했는지가 아니라 "환불은 보내주신 분(결제자)께 가고, 이 화면을 보는
+          // 수행자는 할 일이 없다"는 사실이다. job.errorMessage를 그대로 노출하면 이
+          // 정보가 아예 빠지므로, 여기서는 항상 GIFT_WILL_FAILURE_MESSAGE를 보여준다.
+          clearInterval(pollRef.current)
+          setError(GIFT_WILL_FAILURE_MESSAGE)
+          setStep(STEP.ERROR)
+        } else if (jobStatus && jobStatus !== 'queued' && jobStatus !== 'running') {
+          // 방어적 폴백: AI_JOB_STATUS에 없는 값이 오면(스키마 변경/오탈자 등) 무한
+          // 폴링에 빠지지 않도록 멈추고 새로고침을 안내한다.
+          clearInterval(pollRef.current)
+          setError('처리 상태를 확인할 수 없습니다. 잠시 후 페이지를 새로고침해 다시 시도해 주세요.')
+          setStep(STEP.ERROR)
         }
+        // queued/running(또는 job이 아직 조회되지 않는 경우)이면 다음 주기에 계속 폴링한다.
       } catch {
         // 일시적 폴링 실패는 무시
       }

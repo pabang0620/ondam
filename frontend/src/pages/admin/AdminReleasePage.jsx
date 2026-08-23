@@ -164,7 +164,9 @@ export default function AdminReleasePage() {
           </p>
         </div>
         <button
-          onClick={refetch}
+          // FIX: 결함4 - fetchReleases가 signal 파라미터를 받게 되면서, onClick={refetch}로
+          // 직접 연결하면 클릭 이벤트 객체가 signal 자리에 실려 요청이 깨진다.
+          onClick={() => refetch()}
           disabled={isLoading}
           style={{
             display: 'inline-flex',

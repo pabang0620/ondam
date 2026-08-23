@@ -19,7 +19,7 @@ export default function WillPreviewPage() {
 
   return (
     <div className="will-preview-page">
-      <WillStepHeader currentStep={4} title="미리보기" />
+      <WillStepHeader currentStep={5} title="미리보기" />
 
       <div className="will-preview__content">
         {/* 수집된 정보 요약 */}

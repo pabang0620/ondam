@@ -9,23 +9,25 @@ export function useAdminRelease() {
   const [actionError, setActionError] = useState(null)
   const [documentLoadingId, setDocumentLoadingId] = useState(null)
 
-  const fetchReleases = useCallback(async () => {
+  // FIX: 결함4 - signal 미전달로 abort()가 무효했던 문제 수정
+  const fetchReleases = useCallback(async (signal) => {
     setIsLoading(true)
     setError(null)
     try {
-      const { data } = await adminApi.getReleases(1, 20)
+      const { data } = await adminApi.getReleases(1, 20, signal)
       if (data.success) setReleases(data.data ?? [])
     } catch (err) {
+      if (err.name === 'CanceledError') return
       // FIX: DEV-24 - 목록 조회 실패를 가짜 데이터로 위장하지 않는다
       setError(err?.response?.data?.message ?? '사후공개 요청 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.')
     } finally {
-      setIsLoading(false)
+      if (!signal?.aborted) setIsLoading(false)
     }
   }, [])
 
   useEffect(() => {
     const ac = new AbortController()
-    fetchReleases()
+    fetchReleases(ac.signal)
     return () => ac.abort()
   }, [fetchReleases])
 

@@ -24,27 +24,29 @@ export function usePetSubscription() {
   // "확인 중" 상태를 실패처럼 보여주지 않는다.
   const [actionNotice, setActionNotice] = useState(null)
 
-  const fetchData = useCallback(async () => {
+  // FIX: 결함4 - signal 미전달로 abort()가 무효했던 문제 수정
+  const fetchData = useCallback(async (signal) => {
     setIsLoading(true)
     setError(null)
     try {
       const [plansRes, subRes] = await Promise.all([
-        petApi.getSubscriptionPlans(),
-        petApi.getMySubscription(),
+        petApi.getSubscriptionPlans(signal),
+        petApi.getMySubscription(signal),
       ])
       if (plansRes.data.success) setPlans(plansRes.data.data ?? [])
       if (subRes.data.success) setCurrentSubscription(subRes.data.data?.[0] ?? null)
     } catch (err) {
+      if (err.name === 'CanceledError') return
       // FIX: DEV-24 - 구독 조회 실패를 가짜 구독으로 위장하지 않는다
       setError(err?.response?.data?.message ?? '구독 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.')
     } finally {
-      setIsLoading(false)
+      if (!signal?.aborted) setIsLoading(false)
     }
   }, [])
 
   useEffect(() => {
     const ac = new AbortController()
-    fetchData()
+    fetchData(ac.signal)
     return () => ac.abort()
   }, [fetchData])
 

@@ -4,6 +4,10 @@ import { Button } from '../../components/common/Button.jsx'
 import { SIGNUP_CONSENT_ITEMS } from '../../components/consent/consentItems.js'
 import useGiftPerform, { PHASE } from './useGiftPerform.js'
 
+// FIX: 결함2 - WillWatchPage.jsx와 동일한 문제. Footer.jsx와 같은 패턴(VITE_CONTACT_PHONE이
+// 있으면 실제 번호를, 없으면 그 문구 자체를 노출하지 않는다)을 재사용한다.
+const CONTACT_PHONE = import.meta.env.VITE_CONTACT_PHONE
+
 const inputStyle = {
   height: 'var(--size-input-h)',
   minHeight: 'var(--min-touch-target)',
@@ -66,9 +70,21 @@ function LockedStep({ verifyError }) {
       <Lock size={48} color="var(--color-warm-accent)" aria-hidden="true" />
       <p style={{ fontSize: 'var(--fs-h3)', fontWeight: 700, color: 'var(--color-text-primary)' }}>잠시 확인이 필요합니다</p>
       <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>
-        {verifyError ?? '본인 확인 시도 횟수를 초과했습니다.'}<br />
-        아래 고객센터로 연락 주시면 바로 도와드리겠습니다.
+        {verifyError ?? '본인 확인 시도 횟수를 초과했습니다.'}
       </p>
+      {CONTACT_PHONE ? (
+        <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>
+          고객센터(
+          <a href={`tel:${CONTACT_PHONE}`} style={{ color: 'var(--color-primary)', fontWeight: 700, textDecoration: 'underline' }}>
+            {CONTACT_PHONE}
+          </a>
+          )로 연락 주시면 바로 도와드리겠습니다.
+        </p>
+      ) : (
+        <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>
+          고객센터 연락처는 준비 중입니다. 잠시 후 다시 시도해 주세요.
+        </p>
+      )}
     </div>
   )
 }
@@ -106,7 +122,15 @@ const initialSignupConsents = SIGNUP_CONSENT_ITEMS.reduce(
   {},
 )
 
-function AccountStep({ accountError, isLinking, onSubmit, onDecline }) {
+// 2026-08-23: 로그인(mode==='login') 모드는 기본적으로 동의 체크박스를 보여주지
+// 않는다 - 대다수 로그인 사용자는 이미 동의를 마친 계정이라 불필요한 체크박스를
+// 매번 보여주면 어르신 사용자에게 마찰만 늘린다. 서버가 "이 계정에 빠진 필수 동의가
+// 있다"(400, needsAccountConsent)고 응답했을 때만 로그인 폼 안에 같은 체크박스를
+// 인라인으로 펼쳐 보여주고, 입력해 둔 이메일·비밀번호는 그대로 유지한 채 재제출하게
+// 한다(전체 화면 전환·재입력 없음). 반대로 항상 먼저 보여주는 방식(안내 문서의 (b)
+// 안)은 이미 동의한 다수에게도 매번 체크를 요구해 더 큰 마찰이 된다 - 완료 보고에
+// 근거 상술.
+function AccountStep({ accountError, needsAccountConsent, isLinking, onSubmit, onDecline }) {
   const [mode, setMode] = useState('signup')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -115,11 +139,14 @@ function AccountStep({ accountError, isLinking, onSubmit, onDecline }) {
 
   const requiredItems = SIGNUP_CONSENT_ITEMS.filter((item) => item.required)
   const allRequiredAgreed = requiredItems.every((item) => consents[item.type])
+  const showLoginConsent = mode === 'login' && needsAccountConsent
 
   const canSubmit =
     email.trim() &&
     password.length >= (mode === 'signup' ? 8 : 1) &&
-    (mode === 'login' || (nickname.trim() && allRequiredAgreed)) &&
+    (mode === 'login'
+      ? (!showLoginConsent || allRequiredAgreed)
+      : (nickname.trim() && allRequiredAgreed)) &&
     !isLinking
 
   const handleConsentChange = (type) => {
@@ -136,7 +163,9 @@ function AccountStep({ accountError, isLinking, onSubmit, onDecline }) {
       nickname: nickname.trim() || undefined,
       consents: mode === 'signup'
         ? SIGNUP_CONSENT_ITEMS.map((item) => ({ type: item.type, isAgreed: consents[item.type] }))
-        : undefined,
+        : showLoginConsent
+          ? requiredItems.map((item) => ({ type: item.type, isAgreed: consents[item.type] }))
+          : undefined,
     })
   }
 
@@ -220,6 +249,35 @@ function AccountStep({ accountError, isLinking, onSubmit, onDecline }) {
             </div>
           </>
         )}
+        {showLoginConsent && (
+          <div
+            role="alert"
+            style={{
+              display: 'flex', flexDirection: 'column', gap: 10,
+              padding: 'var(--spacing-md)', borderRadius: 10,
+              background: 'var(--color-surface-warm)', border: '1px solid var(--color-border)',
+            }}
+          >
+            <p style={{ fontSize: 'var(--fs-body)', fontWeight: 600, color: 'var(--color-text-primary)' }}>
+              계속하려면 아래 약관에 동의해 주세요.
+            </p>
+            {requiredItems.map((item) => (
+              <label
+                key={item.type}
+                style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 'var(--fs-body)', color: 'var(--color-text-primary)', minHeight: 'var(--min-touch-target)' }}
+              >
+                <input
+                  type="checkbox"
+                  checked={consents[item.type]}
+                  onChange={() => handleConsentChange(item.type)}
+                  aria-required="true"
+                  style={{ width: 22, height: 22, flexShrink: 0 }}
+                />
+                {item.label}
+              </label>
+            ))}
+          </div>
+        )}
         {accountError && (
           <p role="alert" style={{ color: 'var(--color-error)', fontSize: 'var(--fs-body)' }}>{accountError}</p>
         )}
@@ -254,7 +312,7 @@ function DeclinedStep({ declineResult }) {
 
 export default function GiftPerformPage() {
   const {
-    phase, info, fetchError, verifyError, isVerifying, accountError, isLinking, declineResult,
+    phase, info, fetchError, verifyError, isVerifying, accountError, needsAccountConsent, isLinking, declineResult,
     submitVerification, goToAccount, submitAccount, submitDecline,
   } = useGiftPerform()
 
@@ -280,7 +338,13 @@ export default function GiftPerformPage() {
       {phase === PHASE.VERIFY && <VerifyStep verifyError={verifyError} isVerifying={isVerifying} onSubmit={submitVerification} />}
       {phase === PHASE.INTRO && <IntroStep info={info} onNext={goToAccount} onDecline={handleDecline} />}
       {phase === PHASE.ACCOUNT && (
-        <AccountStep accountError={accountError} isLinking={isLinking} onSubmit={submitAccount} onDecline={handleDecline} />
+        <AccountStep
+          accountError={accountError}
+          needsAccountConsent={needsAccountConsent}
+          isLinking={isLinking}
+          onSubmit={submitAccount}
+          onDecline={handleDecline}
+        />
       )}
       {phase === PHASE.DECLINED && <DeclinedStep declineResult={declineResult} />}
     </main>

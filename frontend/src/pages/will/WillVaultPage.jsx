@@ -56,7 +56,9 @@ export default function WillVaultPage() {
           <div className="will-vault__error" role="alert">
             <AlertCircle size={18} aria-hidden="true" />
             {fetchError}
-            <button type="button" className="will-vault__retry" onClick={refetch}>
+            {/* FIX: 결함4 - fetchWills가 signal 파라미터를 받게 되면서 onClick={refetch}
+                직결 시 클릭 이벤트 객체가 signal 자리로 전달돼 요청이 깨진다. */}
+            <button type="button" className="will-vault__retry" onClick={() => refetch()}>
               다시 시도
             </button>
           </div>

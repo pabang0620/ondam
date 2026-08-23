@@ -267,8 +267,8 @@ CREATE TABLE IF NOT EXISTS voice_samples (
   consent_id             CHAR(36) NOT NULL COMMENT 'user_consents.consent_id 참조 (voice 동의)',
 
   -- KMS 암호화 저장
-  s3_key_encrypted       VARBINARY(512) NOT NULL COMMENT 'AES-256/KMS 암호화된 S3 키',
-  kms_key_id             VARCHAR(200) NOT NULL COMMENT 'AWS KMS key ARN',
+  s3_key_encrypted       VARBINARY(512) NOT NULL COMMENT 'kms_key_id가 빈 문자열이면 평문 UTF-8 바이트(KMS_KEY_ID 미설정 로컬 개발 폴백, willService.encryptVoiceSampleS3Key 참고)',
+  kms_key_id             VARCHAR(200) NOT NULL COMMENT 'AWS KMS key ARN. NOT NULL이라 wills.content_text_kms_key_id처럼 NULL을 못 쓴다 - 빈 문자열이면 s3_key_encrypted가 실제로 암호화되지 않은 값',
 
   -- ElevenLabs 연동
   elevenlabs_voice_id    VARCHAR(100) NULL COMMENT 'ElevenLabs clone voice ID',

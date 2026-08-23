@@ -13,7 +13,7 @@ export default function WillPaymentPage() {
 
   return (
     <div className="will-payment-page">
-      <WillStepHeader currentStep={5} title="결제" />
+      <WillStepHeader currentStep={6} title="결제" />
 
       <div className="will-payment__content">
         {/* 주문 요약 */}

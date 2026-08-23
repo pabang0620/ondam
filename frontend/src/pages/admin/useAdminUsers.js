@@ -12,28 +12,32 @@ export function useAdminUsers() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
 
-  const fetchUsers = useCallback(async (p, q) => {
+  // FIX: 결함4 - signal 미전달로 abort()가 무효했던 문제 수정
+  const fetchUsers = useCallback(async (p, q, signal) => {
     setIsLoading(true)
     setError(null)
     try {
-      const { data } = await adminApi.getUsers(p, q, LIMIT)
+      const { data } = await adminApi.getUsers(p, q, LIMIT, signal)
       if (data.success) {
         setUsers(data.data ?? [])
         setTotal(data.meta?.total ?? 0)
       }
     } catch (err) {
+      if (err.name === 'CanceledError') return
       // FIX: DEV-24 - 회원 목록 조회 실패를 가짜 데이터로 위장하지 않는다
       setError(err?.response?.data?.message ?? '회원 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.')
       setUsers([])
       setTotal(0)
     } finally {
-      setIsLoading(false)
+      // FIX: 결함4 - 취소된(구) 요청의 finally가 방금 시작된 새 요청의 로딩 상태를
+      // false로 덮어써 스피너가 깜빡이며 사라지는 것을 방지한다.
+      if (!signal?.aborted) setIsLoading(false)
     }
   }, [])
 
   useEffect(() => {
     const ac = new AbortController()
-    fetchUsers(page, search)
+    fetchUsers(page, search, ac.signal)
     return () => ac.abort()
   }, [fetchUsers, page, search])
 

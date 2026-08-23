@@ -1,17 +1,18 @@
 import apiClient from '../../config/apiClient.js'
 
 export const mypageApi = {
-  getMe: () =>
-    apiClient.get('/users/me'),
+  // FIX: 결함4 - signal 미전달로 useMy.js의 AbortController.abort()가 무효했던 문제 수정
+  getMe: (signal) =>
+    apiClient.get('/users/me', { signal }),
 
-  getPhotoOrders: () =>
-    apiClient.get('/photo/orders'),
+  getPhotoOrders: (signal) =>
+    apiClient.get('/photo/orders', { signal }),
 
-  getWills: () =>
-    apiClient.get('/will/wills'),
+  getWills: (signal) =>
+    apiClient.get('/will/wills', { signal }),
 
-  getUnreadCount: () =>
-    apiClient.get('/notifications/unread-count'),
+  getUnreadCount: (signal) =>
+    apiClient.get('/notifications/unread-count', { signal }),
 
   getNotificationSettings: () =>
     apiClient.get('/notifications/settings'),

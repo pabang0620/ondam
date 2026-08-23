@@ -64,7 +64,10 @@ export default function Footer() {
                   key={to}
                   to={to}
                   style={{
-                    fontSize: 'var(--fs-caption)',
+                    // FIX: 결함5 - 실제로 페이지를 이동시키는 링크(행동형)라
+                    // 보조 정보가 아니다. --fs-body(16px)로 올린다. 터치 타겟은
+                    // 이미 --min-touch-target(48px)을 충족하고 있었다.
+                    fontSize: 'var(--fs-body)',
                     color: 'var(--color-text-secondary)',
                     transition: 'var(--transition-base)',
                     minHeight: 'var(--min-touch-target)',
@@ -111,7 +114,10 @@ export default function Footer() {
                   key={label}
                   href={href}
                   style={{
-                    fontSize: 'var(--fs-caption)',
+                    // FIX: 결함5 - 실제로 페이지를 이동시키는 링크(행동형)라
+                    // 보조 정보가 아니다. --fs-body(16px)로 올린다. 터치 타겟은
+                    // 이미 --min-touch-target(48px)을 충족하고 있었다.
+                    fontSize: 'var(--fs-body)',
                     color: 'var(--color-text-secondary)',
                     transition: 'var(--transition-base)',
                     minHeight: 'var(--min-touch-target)',

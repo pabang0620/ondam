@@ -4,6 +4,7 @@ import { S3Client } from '@aws-sdk/client-s3'
 import { v4 as uuidv4 } from 'uuid'
 import path from 'path'
 import { toSafeFailureMessage } from '../../utils/failureMessages.js'
+import { KMS_KEY_ID_MISSING_CODE } from '../../utils/kms.js'
 
 // ─── S3 클라이언트 ────────────────────────────────────────────────────────────
 
@@ -51,7 +52,13 @@ const assertUploadVendorConfigured = (useKms) => {
   }
   if (useKms && !process.env.KMS_KEY_ID) {
     console.error('[uploadMiddleware] KMS_KEY_ID 환경변수가 설정되지 않았습니다')
-    throw Object.assign(new Error(toSafeFailureMessage('KMS_KEY_ID 환경변수가 설정되지 않았습니다')), { status: 503 })
+    // [전수점검 - willService.js 회귀와 동일 클래스 예방] 현재 이 에러를 문자열로
+    // 분기해 폴백하는 호출부는 없다(하드 실패). kms.js/s3.js와 동일한 구조적
+    // 마커를 미리 붙여 향후 메시지 문자열 비교 분기가 생기지 않도록 한다.
+    throw Object.assign(
+      new Error(toSafeFailureMessage('KMS_KEY_ID 환경변수가 설정되지 않았습니다')),
+      { status: 503, code: KMS_KEY_ID_MISSING_CODE },
+    )
   }
 }
 

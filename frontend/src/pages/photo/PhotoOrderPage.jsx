@@ -212,7 +212,11 @@ function PhotoOrderPage() {
             <span style={{ fontWeight: 600, color: 'var(--color-text-secondary)', fontSize: 'var(--fs-body-lg)' }}>
               클릭하거나 사진을 끌어다 놓으세요
             </span>
-            <span style={{ fontSize: 'var(--fs-caption)' }}>JPG, PNG, WEBP, HEIC · 최대 20MB</span>
+            {/* FIX: 결함5 - 20MB 용량 제한은 파일 선택창(accept)이 걸러주지 못해
+                (브라우저가 파일 크기로 필터링할 수 없음) 이 문구를 못 읽으면 업로드가
+                실패로 끝난 뒤에야 알게 된다. 보조 정보가 아니라 행동(파일 선택) 전에
+                읽어야 하는 정보로 보고 --fs-body(16px)로 올린다. */}
+            <span style={{ fontSize: 'var(--fs-body)' }}>JPG, PNG, WEBP, HEIC · 최대 20MB</span>
           </button>
         )}
       </section>

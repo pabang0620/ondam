@@ -343,7 +343,17 @@ export default function JoinPage() {
         <Link
           to={ROUTES.LOGIN}
           className="font-semibold hover:underline"
-          style={{ color: 'var(--color-primary)' }}
+          // FIX: 결함5 - 폰트는 16px(부모 p의 --fs-body 상속)로 이미 충족했지만
+          // 인라인 텍스트라 실제 탭 가능 높이가 텍스트 줄 높이(약 24px)뿐이었다.
+          // inline-flex + min-height로 어르신 UX 기준(48px)을 채운다. 단일 문단의
+          // 마지막 요소라 줄 높이를 키워도 다른 레이아웃을 밀어내지 않는다.
+          style={{
+            color: 'var(--color-primary)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            minHeight: 'var(--min-touch-target)',
+            padding: '0 4px',
+          }}
         >
           로그인
         </Link>

@@ -18,8 +18,10 @@ export const getPhotoOrder = (orderId) =>
 export const getPhotoOrderStatus = (orderId) =>
   apiClient.get(`/photo/orders/${orderId}/status`)
 
-export const getPhotoOrderResult = (orderId) =>
-  apiClient.get(`/photo/orders/${orderId}/result`)
+// FIX: 결함4 - signal 미전달로 usePhotoResult.js의 AbortController.abort()가
+// 무효했던 문제 수정
+export const getPhotoOrderResult = (orderId, signal) =>
+  apiClient.get(`/photo/orders/${orderId}/result`, { signal })
 
 export const retryPhotoOrder = (orderId) =>
   apiClient.post(`/photo/orders/${orderId}/retry`)

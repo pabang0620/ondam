@@ -1,6 +1,7 @@
 import { S3Client, GetObjectCommand, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { toSafeFailureMessage } from './failureMessages.js'
+import { KMS_KEY_ID_MISSING_CODE } from './kms.js'
 
 const s3Client = new S3Client({ region: process.env.AWS_REGION })
 
@@ -158,8 +159,17 @@ export const uploadToS3 = async (s3Key, buffer, { contentType, useKms = false } 
       // [결함1 수정] err.status가 이미 있으면 wrapS3Error가 그대로 전파하므로(위
       // wrapS3Error의 `if (err.status) return err`), 이 시점에 바로 안전한
       // 메시지로 만들어야 한다.
+      // [전수점검 - willService.js 회귀와 동일 클래스 예방] 현재 이 에러를 호출부
+      // (videoWorker 등)가 메시지 문자열로 분기해 폴백하는 곳은 없다 - useKms 업로드는
+      // 항상 하드 실패한다(SSE-KMS 없이 영상 파일을 올리지 않는다). 다만 kms.js의
+      // getKmsKeyId()와 동일한 성격의 에러이므로, 향후 여기에도 로컬 개발 폴백이
+      // 추가될 경우를 대비해 동일한 구조적 마커(code)를 지금부터 붙여둔다 - 문자열
+      // 비교로 분기하는 코드가 새로 생기는 것을 원천 차단한다.
       console.error('[s3] KMS_KEY_ID 환경변수가 설정되지 않았습니다 (SSE-KMS 업로드 요청)')
-      throw Object.assign(new Error(toSafeFailureMessage('KMS_KEY_ID 환경변수가 설정되지 않았습니다')), { status: 503 })
+      throw Object.assign(
+        new Error(toSafeFailureMessage('KMS_KEY_ID 환경변수가 설정되지 않았습니다')),
+        { status: 503, code: KMS_KEY_ID_MISSING_CODE },
+      )
     }
 
     const params = {

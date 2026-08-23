@@ -1,7 +1,7 @@
 import crypto from 'crypto'
 import { v4 as uuidv4 } from 'uuid'
 import * as repo from './willRepository.js'
-import { encryptString, decryptBuffer, encryptStringEnvelope, decryptStringEnvelope } from '../../utils/kms.js'
+import { encryptString, decryptBuffer, encryptStringEnvelope, decryptStringEnvelope, KMS_KEY_ID_MISSING_CODE } from '../../utils/kms.js'
 import { getPresignedUrl, getPresignedDownloadUrl, extractS3KeyFromUrl } from '../../utils/s3.js'
 import { voiceCloneQueue, videoGenerateQueue, notificationQueue } from '../../jobs/queue.js'
 import pool from '../../config/db.js'
@@ -125,6 +125,33 @@ const WILL_BASIC_PRICE_KRW = 49000
 // KMS_KEY_ID가 반드시 설정되어 있어야 하고(validateEnv.js가 미설정 시 경고), 그
 // 경우 이 폴백은 절대 발동하지 않으며 항상 실제 KMS 봉투 암호화 경로를 탄다.
 //
+// [회귀 수정 2026-08] kms.js가 사용자 노출 메시지를 toSafeFailureMessage로 안전한
+// 문구로 치환하면서, 아래 폴백이 예전에 쓰던 "err.message === 원문 문자열" 비교가
+// 더 이상 매칭되지 않아 로컬 개발에서 유언장 생성이 항상 503으로 막히는 회귀가
+// 있었다(이번에 수정). 메시지 문자열은 안전화·번역 등으로 언제든 바뀔 수 있는
+// 표현이라 분기 조건으로 삼기에 취약하다 - 이제는 kms.js가 던지는 구조적 마커
+// (err.code === KMS_KEY_ID_MISSING_CODE)로 "환경변수가 아예 없다"만 식별한다.
+// 단, 이 마커 하나만으로 폴백을 여는 것은 여전히 위험하다 - wrapKmsError는
+// 자격 증명 무효·네트워크 장애 같은 실제 KMS 장애도 503으로 재분류하는데, 그런
+// 에러엔 이 code가 없으므로 여기서는 안 걸리지만, 혹시라도 잘못 분류되거나 향후
+// 코드가 바뀌어 code가 잘못 붙는 경우까지 대비해 "개발 환경일 것"을 두 번째
+// 조건으로 반드시 함께 요구한다(AND, OR 아님) - 두 조건 중 하나라도 프로덕션
+// 신호를 보이면 폴백하지 않고 그대로 503 실패로 흘려보낸다. 개발 환경 판정은
+// `process.env.NODE_ENV === 'development'`(server.js:196과 동일한 관용구,
+// 화이트리스트 비교)를 쓴다 - `!== 'production'`처럼 블랙리스트로 검사하면
+// NODE_ENV가 비어 있거나 'staging'·오타 등 예상 못 한 값일 때도 통과해버려
+// "설정을 안 하면 오히려 더 위험해지는" 실패-오픈(fail-open) 구조가 된다.
+// 화이트리스트 비교는 반대로 NODE_ENV가 정확히 'development'로 명시된 경우에만
+// 열리고, 그 외 모든 값(미설정 포함)은 실패-클로즈(fail-closed)로 떨어져
+// 평문 저장을 막는다 - 유언장처럼 KMS 암호화가 하드 요구사항인 데이터에는
+// 이쪽이 안전한 기본값이다. 참고로 server.js:196~213 주석에도 "NODE_ENV 설정에
+// 기대는 잔여 위험"이 이미 명시돼 있다 - 이는 근본적으로 해소 가능한 위험이
+// 아니라(어떤 신호를 쓰든 배포 설정 실수는 발생할 수 있다) 배포 체크리스트로
+// 관리해야 하는 항목이다. 이 프로젝트에 별도의 "프로덕션 확정" 신호(예: 클라우드
+// 메타데이터, 별도 인프라 플래그)가 아직 없으므로, 화이트리스트 NODE_ENV 비교 +
+// KMS 마커 이중 조건이 현재로선 최선의 근사치다.
+const isLocalDevEnvironment = () => process.env.NODE_ENV === 'development'
+//
 // 세 가지 저장 형태가 섞여 있을 수 있어 content_text_enc_format 컬럼으로 구분한다
 // (2026-08-23 추가, ondam_schema.sql 동일 반영):
 //   1) content_text_kms_key_id IS NULL
@@ -136,7 +163,6 @@ const WILL_BASIC_PRICE_KRW = 49000
 //      → 신 형식: 봉투 암호화(이번 수정, 4KB 제한 없음) - decryptStringEnvelope로 복호화
 // 기존 행은 어느 쪽도 새 값을 쓰지 않으므로(3번 조건에 해당하지 않음) 자동으로
 // 1번 또는 2번 규약을 그대로 유지하며 깨지지 않는다.
-const KMS_UNCONFIGURED_MESSAGE = 'KMS_KEY_ID 환경변수가 설정되지 않았습니다'
 const WILL_ENC_FORMAT_ENVELOPE = 'envelope'
 
 const encryptWillContent = async (plaintext) => {
@@ -148,7 +174,11 @@ const encryptWillContent = async (plaintext) => {
       contentTextEncFormat: WILL_ENC_FORMAT_ENVELOPE,
     }
   } catch (err) {
-    if (err.message === KMS_UNCONFIGURED_MESSAGE) {
+    // 이중 조건 - 둘 다 참일 때만 평문 폴백을 허용한다. 하나라도 아니면(마커가
+    // 없다 = 자격 증명·네트워크 등 실제 KMS 장애일 가능성, 또는 개발 환경이
+    // 아니다 = 프로덕션/스테이징일 가능성) 절대 폴백하지 않고 원래 503 에러를
+    // 그대로 던진다 - 유언장을 평문으로 저장하느니 실패하는 쪽을 택한다.
+    if (err.code === KMS_KEY_ID_MISSING_CODE && isLocalDevEnvironment()) {
       console.warn(
         '[willService] KMS_KEY_ID 미설정 - 로컬 개발 폴백으로 유언 텍스트를 암호화하지 ' +
         '않고 저장합니다(content_text_kms_key_id=NULL). 프로덕션 배포 전 반드시 KMS_KEY_ID를 설정하세요.',
@@ -177,6 +207,45 @@ const decryptWillContent = async (encryptedValue, kmsKeyId, encFormat) => {
 
 // ─── 음성 샘플 ────────────────────────────────────────────────────────────────
 
+// [비대칭 수정 - 2026-08] uploadVoiceSample의 encryptString(s3Key)에는 encryptWillContent와
+// 같은 로컬 개발 폴백이 없어서, KMS_KEY_ID가 비어 있는 로컬 개발 환경에서는 음성 샘플
+// "등록"(실제 파일 업로드가 아니라 이미 업로드된 s3Key를 DB에 기록하는 단계) 자체가
+// 항상 503으로 막혔다 - 그 결과 영상 편지 전체 플로우(음성 등록 → 유언장 생성 → 활성화)를
+// 로컬에서 끝까지 검증할 수 없었다.
+//
+// s3Key는 음성 파일의 내용이 아니라 파일 위치를 가리키는 참조 문자열이라 유언 본문
+// 텍스트보다 민감도는 낮지만, 이 프로젝트는 이미 그런 참조값(결과 영상 s3 키 등)도
+// 전부 KMS로 감싸는 정책이라 여기만 예외로 두면 오히려 정책이 일관되지 않는다 - 그래서
+// "폴백을 아예 두지 않는다"가 아니라 encryptWillContent와 정확히 같은 이중 조건으로
+// 통일한다: err.code === KMS_KEY_ID_MISSING_CODE(환경변수가 아예 없다는 구조적 마커)
+// AND NODE_ENV === 'development'(화이트리스트 비교, isLocalDevEnvironment) - 자격
+// 증명 무효·프로덕션 등 하나라도 다른 신호가 섞이면 폴백하지 않고 그대로 503.
+//
+// [스키마 제약] voice_samples.kms_key_id는 wills.content_text_kms_key_id와 달리
+// `VARCHAR(200) NOT NULL`이다(이 폴백이 생기기 전에 설계된 컬럼이라 NULL을 저장할
+// 수 없음). NOT NULL 제약을 완화하는 스키마 변경(별도 마이그레이션·승인 필요)까지는
+// 이번 수정 범위에 넣지 않고, 대신 빈 문자열('')을 "실제로 암호화되지 않았다" 마커로
+// 쓴다 - decryptWillContent와 동일하게 `if (!kmsKeyId)`(falsy 검사)로 판정하므로
+// ''도 NULL과 완전히 동일하게 처리된다(voiceWorker.js의 복호화 분기 참고).
+const VOICE_SAMPLE_KMS_FALLBACK_MARKER = ''
+
+const encryptVoiceSampleS3Key = async (s3Key) => {
+  try {
+    const { encrypted, kmsKeyId } = await encryptString(s3Key)
+    return { s3KeyEncrypted: encrypted, kmsKeyId }
+  } catch (err) {
+    // 이중 조건 - encryptWillContent와 동일 (하나라도 아니면 폴백하지 않고 503 유지)
+    if (err.code === KMS_KEY_ID_MISSING_CODE && isLocalDevEnvironment()) {
+      console.warn(
+        '[willService] KMS_KEY_ID 미설정 - 로컬 개발 폴백으로 음성 샘플 S3 키를 암호화하지 ' +
+        "않고 저장합니다(voice_samples.kms_key_id=''). 프로덕션 배포 전 반드시 KMS_KEY_ID를 설정하세요.",
+      )
+      return { s3KeyEncrypted: Buffer.from(s3Key, 'utf8'), kmsKeyId: VOICE_SAMPLE_KMS_FALLBACK_MARKER }
+    }
+    throw err
+  }
+}
+
 /**
  * 음성 샘플 업로드 등록
  * S3 업로드는 클라이언트 또는 업로드 미들웨어에서 먼저 완료한 뒤 s3Key 전달
@@ -201,12 +270,12 @@ export const uploadVoiceSample = async (userId, { s3Key, durationSec, fileSize }
   const consentRow = await repo.findVoiceConsent(userId)
   if (!consentRow || consentRow.is_agreed !== 1) {
     throw Object.assign(
-      new Error('음성 처리를 위한 동의가 필요합니다. 설정 > 음성 동의에서 동의해 주세요.'),
+      new Error('음성 처리를 위한 동의가 필요합니다. 동의 확인 화면으로 돌아가 동의 항목에 체크한 후 다시 시도해 주세요.'),
       { status: 400 },
     )
   }
 
-  const { encrypted, kmsKeyId } = await encryptString(s3Key)
+  const { s3KeyEncrypted: encrypted, kmsKeyId } = await encryptVoiceSampleS3Key(s3Key)
 
   const voiceSampleId = uuidv4()
   await repo.createVoiceSample({

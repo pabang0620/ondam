@@ -2,7 +2,12 @@ import { useNavigate } from 'react-router-dom'
 import { ChevronLeft } from 'lucide-react'
 import './WillStepHeader.css'
 
-const TOTAL_STEPS = 5
+// FIX: 결함7 - 실제 흐름(useWillConsent/useWillBeneficiaries/useWillRecord/
+// useWillPhoto/useWillPreview.js의 navigate() 대상 순서로 확인)은 동의 확인 →
+// 유가족 등록 → 음성 녹음 → 사진 업로드 → 미리보기 → 결제 6단계다. TOTAL_STEPS가
+// 5로 고정돼 있어 마지막 결제 단계까지 6개 화면이 5단계 안에 욱여넣어졌고, 그
+// 결과 "유가족 등록"과 "음성 녹음"이 둘 다 "2 / 5"로 겹쳐 표시됐다.
+const TOTAL_STEPS = 6
 
 export default function WillStepHeader({ currentStep, title }) {
   const navigate = useNavigate()
