@@ -1,7 +1,7 @@
 import crypto from 'crypto'
 import { v4 as uuidv4 } from 'uuid'
 import * as repo from './willRepository.js'
-import { encryptString, decryptBuffer } from '../../utils/kms.js'
+import { encryptString, decryptBuffer, encryptStringEnvelope, decryptStringEnvelope } from '../../utils/kms.js'
 import { getPresignedUrl, getPresignedDownloadUrl, extractS3KeyFromUrl } from '../../utils/s3.js'
 import { voiceCloneQueue, videoGenerateQueue, notificationQueue } from '../../jobs/queue.js'
 import pool from '../../config/db.js'
@@ -101,44 +101,62 @@ const extractPhoneLast4 = (phone) => {
 // preparePayment는 wills.price_krw(이 값으로 저장된 스냅샷)를 조회해 검증한다.
 const WILL_BASIC_PRICE_KRW = 49000
 
-// ─── 유언 텍스트 KMS 암호화 (보안 갭 1 수정) ─────────────────────────────────────
+// ─── 유언 텍스트 KMS 봉투 암호화 (보안 갭 1 수정 + 4KB 제한 수정 2026-08-23) ───────
 // CLAUDE.md 보안 규칙 1번·스키마 주석 모두 wills.content_text를 KMS 암호화 대상으로
 // 명시하는데, 지금까지 createWill이 encryptString 호출 없이 평문 그대로 저장하고
-// 있었다. 음성 파일·유언 영상은 S3 SSE-KMS로 보호되는데 텍스트만 빠져 있던 상태.
+// 있었다(보안 갭 1). 그 후 encryptString(KMS Encrypt API 직접 호출)로 수정됐으나,
+// 이 API는 평문 4,096바이트 제한이 있다 - 유언 텍스트는 라우트 zod가 최대 5,000자를
+// 허용하고 한글은 UTF-8로 글자당 최대 4바이트라 최대 약 20,000바이트까지 갈 수
+// 있어, 긴 유언장은 실제 AWS 환경에서 ValidationException으로 저장 자체가
+// 실패했다. 이제는 utils/kms.js의 encryptStringEnvelope/decryptStringEnvelope
+// (GenerateDataKey + 로컬 AES-256-GCM, AWS 공식 권장 봉투 암호화 패턴)를 쓴다 -
+// 크기 제한이 사실상 사라진다.
 //
-// 로컬 개발 폴백: KMS_KEY_ID가 .env에 비어 있으면 encryptString이 즉시 예외를
-// 던진다(kms.js getKmsKeyId). 다른 KMS 연동 지점(음성 샘플 업로드의 s3_key_encrypted,
-// S3 SSE-KMS 업로드)은 전부 이 경우 그대로 하드 실패하도록 되어 있다 - 그러나
-// "로컬 개발에서 유언장 생성이 막히면 안 된다"는 이 갭 수정 자체의 요구사항이라,
-// 여기서만 명시적으로 그 예외를 잡아 평문 바이트를 그대로 저장하는 개발 전용
-// 폴백을 둔다(새 암호화 방식을 만드는 게 아니라 "암호화하지 않고 그 사실을
-// kms_key_id=NULL로 남긴다"는 무연산 폴백이다). 프로덕션은 KMS_KEY_ID가 반드시
-// 설정되어 있어야 하고(validateEnv.js가 미설정 시 경고), 그 경우 이 폴백은 절대
-// 발동하지 않으며 항상 실제 KMS 암호화 경로를 탄다.
+// 로컬 개발 폴백: KMS_KEY_ID가 .env에 비어 있으면 encryptStringEnvelope이 즉시
+// 예외를 던진다(kms.js getKmsKeyId). 다른 KMS 연동 지점(음성 샘플 업로드의
+// s3_key_encrypted, S3 SSE-KMS 업로드)은 전부 이 경우 그대로 하드 실패하도록
+// 되어 있다 - 그러나 "로컬 개발에서 유언장 생성이 막히면 안 된다"는 이 갭 수정
+// 자체의 요구사항이라, 여기서만 명시적으로 그 예외를 잡아 평문 바이트를 그대로
+// 저장하는 개발 전용 폴백을 둔다(새 암호화 방식을 만드는 게 아니라 "암호화하지
+// 않고 그 사실을 kms_key_id=NULL로 남긴다"는 무연산 폴백이다). 프로덕션은
+// KMS_KEY_ID가 반드시 설정되어 있어야 하고(validateEnv.js가 미설정 시 경고), 그
+// 경우 이 폴백은 절대 발동하지 않으며 항상 실제 KMS 봉투 암호화 경로를 탄다.
 //
-// content_text_kms_key_id가 NULL ⇔ content_text_encrypted가 실제로 암호화되지
-// 않은 값(개발 폴백 또는 이번 스키마 전환 이전의 레거시 평문 행)이라는 뜻으로
-// 통일한다 - 별도 마이그레이션 스크립트 없이 ALTER TABLE(TEXT→BLOB 타입 변경,
-// 값 보존)만으로 기존 행도 동일한 규약을 따르게 된다.
+// 세 가지 저장 형태가 섞여 있을 수 있어 content_text_enc_format 컬럼으로 구분한다
+// (2026-08-23 추가, ondam_schema.sql 동일 반영):
+//   1) content_text_kms_key_id IS NULL
+//      → 평문(개발 폴백 또는 이번 KMS 도입 이전의 레거시 평문 행)
+//   2) content_text_kms_key_id NOT NULL, content_text_enc_format IS NULL
+//      → 구 형식: KMS Encrypt() 직접 호출 암호문(4KB 제한 있던 시절 생성분) -
+//        decryptBuffer로 복호화
+//   3) content_text_kms_key_id NOT NULL, content_text_enc_format = 'envelope'
+//      → 신 형식: 봉투 암호화(이번 수정, 4KB 제한 없음) - decryptStringEnvelope로 복호화
+// 기존 행은 어느 쪽도 새 값을 쓰지 않으므로(3번 조건에 해당하지 않음) 자동으로
+// 1번 또는 2번 규약을 그대로 유지하며 깨지지 않는다.
 const KMS_UNCONFIGURED_MESSAGE = 'KMS_KEY_ID 환경변수가 설정되지 않았습니다'
+const WILL_ENC_FORMAT_ENVELOPE = 'envelope'
 
 const encryptWillContent = async (plaintext) => {
   try {
-    const { encrypted, kmsKeyId } = await encryptString(plaintext)
-    return { contentTextEncrypted: encrypted, contentTextKmsKeyId: kmsKeyId }
+    const { encrypted, kmsKeyId } = await encryptStringEnvelope(plaintext)
+    return {
+      contentTextEncrypted: encrypted,
+      contentTextKmsKeyId: kmsKeyId,
+      contentTextEncFormat: WILL_ENC_FORMAT_ENVELOPE,
+    }
   } catch (err) {
     if (err.message === KMS_UNCONFIGURED_MESSAGE) {
       console.warn(
         '[willService] KMS_KEY_ID 미설정 - 로컬 개발 폴백으로 유언 텍스트를 암호화하지 ' +
         '않고 저장합니다(content_text_kms_key_id=NULL). 프로덕션 배포 전 반드시 KMS_KEY_ID를 설정하세요.',
       )
-      return { contentTextEncrypted: Buffer.from(plaintext, 'utf8'), contentTextKmsKeyId: null }
+      return { contentTextEncrypted: Buffer.from(plaintext, 'utf8'), contentTextKmsKeyId: null, contentTextEncFormat: null }
     }
     throw err
   }
 }
 
-const decryptWillContent = async (encryptedValue, kmsKeyId) => {
+const decryptWillContent = async (encryptedValue, kmsKeyId, encFormat) => {
   if (encryptedValue === null || encryptedValue === undefined) return null
   const buf = Buffer.isBuffer(encryptedValue) ? encryptedValue : Buffer.from(encryptedValue)
   if (!kmsKeyId) {
@@ -146,6 +164,11 @@ const decryptWillContent = async (encryptedValue, kmsKeyId) => {
     // 호출하지 않고 바로 문자열로 복원한다
     return buf.toString('utf8')
   }
+  if (encFormat === WILL_ENC_FORMAT_ENVELOPE) {
+    return decryptStringEnvelope(buf)
+  }
+  // enc_format이 NULL인데 kms_key_id는 있는 행 = 봉투 암호화 도입 이전, KMS
+  // Encrypt() 직접 호출로 암호화된 구 형식
   return decryptBuffer(buf)
 }
 
@@ -279,7 +302,7 @@ export const createWill = async (
   // 유언 텍스트 KMS 암호화 (보안 갭 1 수정) - 트랜잭션 진입 전에 암호화까지 끝내
   // 트랜잭션 내부에서는 순수 DB I/O만 남긴다(암호화 실패로 트랜잭션이 열린 채
   // 오래 대기하는 상황 방지)
-  const { contentTextEncrypted, contentTextKmsKeyId } = await encryptWillContent(contentText)
+  const { contentTextEncrypted, contentTextKmsKeyId, contentTextEncFormat } = await encryptWillContent(contentText)
 
   // 유언장 + 수혜자 트랜잭션 일괄 생성
   await repo.createWillWithBeneficiaries(
@@ -290,6 +313,7 @@ export const createWill = async (
       title,
       contentTextEncrypted,
       contentTextKmsKeyId,
+      contentTextEncFormat,
       releasePolicy: releasePolicy ?? 'manual_admin',
       priceKrw: WILL_BASIC_PRICE_KRW,
       eventType: eventType ?? null,
@@ -320,7 +344,9 @@ export const getWill = async (userId, willId) => {
   // KMS 복호화 (보안 갭 1 수정) - content_text_encrypted/content_text_kms_key_id는
   // WILL_PUBLIC_FIELDS 화이트리스트에 없으므로 애초에 응답에 새지 않는다. 복호화한
   // 평문을 'content_text' 키로 병합한 뒤 pick하면 화이트리스트가 정확히 그 키만 뽑는다.
-  const contentText = await decryptWillContent(will.content_text_encrypted, will.content_text_kms_key_id)
+  const contentText = await decryptWillContent(
+    will.content_text_encrypted, will.content_text_kms_key_id, will.content_text_enc_format,
+  )
   // 화이트리스트 응답 - result_video_s3_key_encrypted/result_video_kms_key_id(KMS 참조값)와
   // 내부 AUTO_INCREMENT id는 WILL_PUBLIC_FIELDS에 없으므로 자동으로 제외된다.
   return { ...toWillDto({ ...will, content_text: contentText }), beneficiaries }
@@ -337,7 +363,9 @@ export const getWills = async (userId, { page = 1, limit = 20 }) => {
   const willsWithPlainText = await Promise.all(
     wills.map(async (will) => ({
       ...will,
-      content_text: await decryptWillContent(will.content_text_encrypted, will.content_text_kms_key_id),
+      content_text: await decryptWillContent(
+        will.content_text_encrypted, will.content_text_kms_key_id, will.content_text_enc_format,
+      ),
     })),
   )
   return {
@@ -427,7 +455,9 @@ export const activateWill = async (userId, willId) => {
     // KMS 복호화 (보안 갭 1 수정) - videoWorker는 TTS 생성을 위해 평문이 필요하다.
     // content_text_encrypted를 그대로 큐 페이로드에 넣으면 워커가 KMS 복호화를
     // 몰라 그대로 TTS API에 암호문을 넘기게 된다.
-    const contentText = await decryptWillContent(will.content_text_encrypted, will.content_text_kms_key_id)
+    const contentText = await decryptWillContent(
+      will.content_text_encrypted, will.content_text_kms_key_id, will.content_text_enc_format,
+    )
 
     // BullMQ 영상 생성 큐 등록 (트랜잭션 내 - 롤백 시 큐 항목만 유실, 워커 멱등성으로 처리)
     const bullJob = await videoGenerateQueue.add('generate', {

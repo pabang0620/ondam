@@ -135,6 +135,7 @@ export const createWill = async ({
   title,
   contentTextEncrypted,
   contentTextKmsKeyId,
+  contentTextEncFormat,
   releasePolicy,
   priceKrw,
   eventType,
@@ -142,11 +143,13 @@ export const createWill = async ({
   const [result] = await pool.execute(
     `INSERT INTO wills
        (will_id, user_id, voice_sample_id, title, content_text_encrypted, content_text_kms_key_id,
+        content_text_enc_format,
         status, release_policy, release_status, price_krw, event_type,
         created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, 'draft', ?, 'locked', ?, ?, NOW(), NOW())`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, 'draft', ?, 'locked', ?, ?, NOW(), NOW())`,
     [
       willId, userId, voiceSampleId, title, contentTextEncrypted, contentTextKmsKeyId,
+      contentTextEncFormat ?? null,
       releasePolicy, priceKrw ?? 49000, eventType ?? null,
     ],
   )
@@ -205,6 +208,7 @@ const WILL_UPDATABLE_COLS = [
   'title',
   'content_text_encrypted',
   'content_text_kms_key_id',
+  'content_text_enc_format',
 ]
 
 export const updateWill = async (willId, updates) => {
@@ -564,18 +568,20 @@ export const createWillWithBeneficiaries = async (willData, beneficiariesData) =
 
     const {
       willId, userId, voiceSampleId, title,
-      contentTextEncrypted, contentTextKmsKeyId,
+      contentTextEncrypted, contentTextKmsKeyId, contentTextEncFormat,
       releasePolicy, priceKrw, eventType,
     } = willData
 
     await connection.execute(
       `INSERT INTO wills
          (will_id, user_id, voice_sample_id, title, content_text_encrypted, content_text_kms_key_id,
+          content_text_enc_format,
           status, release_policy, release_status, price_krw, event_type,
           created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, 'draft', ?, 'locked', ?, ?, NOW(), NOW())`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, 'draft', ?, 'locked', ?, ?, NOW(), NOW())`,
       [
         willId, userId, voiceSampleId, title, contentTextEncrypted, contentTextKmsKeyId,
+        contentTextEncFormat ?? null,
         releasePolicy, priceKrw ?? 49000, eventType ?? null,
       ],
     )

@@ -46,9 +46,17 @@ const signAdminAccessToken = (admin) =>
     { expiresIn: ADMIN_ACCESS_TOKEN_EXPIRES },
   )
 
+// [보안 수정 - D10] payload가 { adminId }뿐이면 iat가 초 단위 해상도라 같은 초에
+// refresh()의 rotation 경로가 두 번 호출되면(관리자 패널 탭 여러 개 동시 마운트 등)
+// 완전히 동일한 JWT 문자열이 두 번 생성된다. 저장은 hashToken(SHA-256)한 뒤
+// refresh_tokens.token_hash UNIQUE 제약에 INSERT하므로, 두 번째 INSERT가 그대로
+// 충돌(409)해 회전이 사실상 no-op가 된다(RT1==RT2, 위 ADMIN_REFRESH_REUSE_GRACE_MS
+// 유예 로직은 이 충돌 자체를 막지 않고 사후 관용 처리만 한다). jti(요청마다 새로
+// 만드는 랜덤 nonce)를 페이로드에 넣으면 같은 초에 발급돼도 항상 다른 JWT
+// 문자열이 되어 해시도 항상 달라진다.
 const signAdminRefreshToken = (admin) =>
   jwt.sign(
-    { adminId: admin.admin_id },
+    { adminId: admin.admin_id, jti: crypto.randomUUID() },
     process.env.JWT_REFRESH_SECRET,
     { expiresIn: ADMIN_REFRESH_TOKEN_EXPIRES },
   )

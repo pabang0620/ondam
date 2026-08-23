@@ -31,11 +31,19 @@ export const signAccessToken = (payload) =>
 
 /**
  * Refresh token 발급 (서명된 JWT)
+ *
+ * [보안 수정 - D10] payload가 { userId }뿐이면 iat가 초 단위 해상도라 같은 초에
+ * refresh()의 rotation 경로(회전 시 새 refreshToken 재발급)가 두 번 호출되면(탭
+ * 여러 개 동시 마운트 등) 완전히 동일한 JWT 문자열이 두 번 생성된다. 저장은
+ * hashToken(SHA-256)한 뒤 refresh_tokens.token_hash UNIQUE 제약에 INSERT하므로,
+ * 두 번째 INSERT가 그대로 충돌(409)해 회전이 사실상 no-op가 된다(RT1==RT2). jti
+ * (요청마다 새로 만드는 랜덤 nonce)를 페이로드에 넣으면 같은 초에 발급돼도 항상
+ * 다른 JWT 문자열이 되어 해시도 항상 달라진다 - 회전 로직 자체는 바꾸지 않는다.
  * @param {{ userId: string }} payload
  * @returns {string}
  */
 export const signRefreshToken = (payload) =>
-  jwt.sign(payload, process.env.JWT_REFRESH_SECRET, { expiresIn: '30d' })
+  jwt.sign({ ...payload, jti: crypto.randomUUID() }, process.env.JWT_REFRESH_SECRET, { expiresIn: '30d' })
 
 /**
  * 회원가입

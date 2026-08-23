@@ -283,7 +283,7 @@ CREATE TABLE IF NOT EXISTS voice_samples (
   COMMENT='AI 음성 복제 샘플 (민감 데이터 - s3_key KMS 암호화)';
 
 
--- 유언장 (민감 데이터: result_video_s3_key_encrypted)
+-- 유언장 (민감 데이터: content_text_encrypted, result_video_s3_key_encrypted)
 -- wills.release_policy ENUM SSOT: WILL_RELEASE_POLICY
 -- wills.release_status ENUM SSOT: WILL_RELEASE_STATUS
 -- wills.status         ENUM SSOT: WILL_STATUS
@@ -294,9 +294,11 @@ CREATE TABLE IF NOT EXISTS wills (
   user_id                      CHAR(36) NOT NULL COMMENT 'users.user_id 참조',
   voice_sample_id              CHAR(36) NULL COMMENT 'voice_samples.voice_sample_id 참조',
 
-  -- 유언 내용 (별도 암호화 저장 권장)
+  -- 유언 내용 (KMS 암호화 저장 - 보안 갭 1 수정 2026-08-23)
   title                        VARCHAR(200) NOT NULL,
-  content_text                 TEXT NULL COMMENT '유언 텍스트 (백엔드 KMS 암호화 처리)',
+  content_text_encrypted       BLOB NULL COMMENT 'content_text_kms_key_id가 NULL이면 평문 UTF-8 바이트(KMS_KEY_ID 미설정 로컬 개발 폴백 또는 전환 이전 레거시). NOT NULL인데 content_text_enc_format이 NULL이면 KMS Encrypt() 직접 호출 방식의 구 암호문(4KB 제한 있음). content_text_enc_format=envelope이면 봉투 암호화(GenerateDataKey+AES-256-GCM, 4KB 제한 없음) 포맷 - utils/kms.js encryptStringEnvelope 참고',
+  content_text_kms_key_id      VARCHAR(200) NULL COMMENT 'AWS KMS key ARN. NULL이면 content_text_encrypted가 실제로 암호화되지 않은 값',
+  content_text_enc_format      VARCHAR(20) NULL COMMENT 'NULL=구 형식(평문 또는 KMS Encrypt() 직접 호출, kms_key_id로 구분) / envelope=봉투 암호화(GenerateDataKey+AES-256-GCM, 4KB 제한 없음, 2026-08-23 도입)',
 
   -- 결과 영상 (KMS 암호화)
   result_video_s3_key_encrypted VARBINARY(512) NULL COMMENT 'AES-256/KMS 암호화된 S3 키',

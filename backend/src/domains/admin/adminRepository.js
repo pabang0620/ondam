@@ -237,9 +237,15 @@ export const getOrders = async ({ limit, offset, status, targetType }) => {
 
   const [rows] = await pool.query(
     `SELECT
-       po.order_id, po.photo_type, po.status, po.price_krw AS amountKrw,
-       po.created_at, po.updated_at,
-       u.user_id, u.email, u.nickname
+       po.order_id    AS orderId,
+       po.photo_type  AS photoType,
+       po.status      AS status,
+       po.price_krw   AS amountKrw,
+       po.created_at  AS createdAt,
+       po.updated_at  AS updatedAt,
+       u.user_id      AS userId,
+       u.email        AS email,
+       u.nickname     AS nickname
      FROM photo_orders po
      LEFT JOIN users u ON u.user_id = po.user_id
      WHERE ${where}
@@ -273,7 +279,13 @@ export const getUsers = async ({ limit, offset, search }) => {
   params.push(limit, offset)
 
   const [rows] = await pool.query(
-    `SELECT u.user_id, u.email, u.nickname, u.phone, u.role, u.is_active, u.created_at,
+    `SELECT u.user_id    AS userId,
+            u.email      AS email,
+            u.nickname   AS nickname,
+            u.phone      AS phone,
+            u.role       AS role,
+            u.is_active  AS isActive,
+            u.created_at AS createdAt,
             s.plan AS subscriptionPlan
      FROM users u
      LEFT JOIN subscriptions s ON s.user_id = u.user_id AND s.sub_status = 'active' AND s.deleted_at IS NULL
