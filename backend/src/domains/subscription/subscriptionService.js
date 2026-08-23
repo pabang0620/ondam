@@ -15,6 +15,35 @@ import {
 } from './subscriptionBillingService.js'
 import { registerBillingScanDueScheduler } from '../../queues/billingQueue.js'
 import pool from '../../config/db.js'
+import { pick, pickAll } from '../../utils/dto.js'
+
+// ─── 응답 화이트리스트 (결함2 수정 - 민감 필드 노출 방지) ───────────────────────
+// payment 도메인(paymentService.js PAYMENT_PUBLIC_FIELDS)과 동일한 패턴을 그대로
+// 따른다 - subscription_payment_logs 행을 가공 없이 그대로 응답에 흘려보내면
+// toss_payment_key(토스 결제 키)와 내부 식별자 user_id가 새어나간다(G11 위반).
+// SELECT 자체는 건드리지 않는다 - repository는 내부 로직(재시도 판정 등)에
+// toss_payment_key가 필요해 계속 조회한다. toss_payment_key는 절대 이 목록에
+// 넣지 않는다.
+const SUBSCRIPTION_PAYMENT_LOG_PUBLIC_FIELDS = [
+  'log_id', 'subscription_id', 'billing_cycle_date', 'attempt_no', 'attempt_type',
+  'toss_order_id', 'amount_krw', 'log_status', 'attempted_at', 'succeeded_at',
+  'failed_at', 'fail_code', 'fail_category', 'fail_reason', 'next_retry_at', 'created_at',
+]
+const toPaymentLogDtoList = (logs) => pickAll(logs, SUBSCRIPTION_PAYMENT_LOG_PUBLIC_FIELDS)
+
+// [G11 - 다른 응답 함께 점검] getSubscriptions(목록 조회)가 findSubscriptionsByUserId
+// 행을 `{ ...row, subStatus }`로 그대로 스프레드해 응답에 흘려보내고 있었다 - 현재
+// SELECT 목록에는 toss_billing_key_encrypted/billing_kms_key_id가 없어 당장 그 자체가
+// 새지는 않지만, user_id(내부 식별자)는 스프레드로 그대로 나가고 있었고 앞으로 테이블에
+// 민감 컬럼이 추가돼도(dto.js pick 유틸 문서의 경고와 동일한 이유) 자동으로 새어나가는
+// 구조였다. payment 도메인과 동일하게 화이트리스트로 명시한다 - 프론트가 쓰는 필드
+// (plan/price_krw/subStatus/next_billing_at 등, SubscriptionStatusCard.jsx 실측)는 모두 유지.
+const SUBSCRIPTION_PUBLIC_FIELDS = [
+  'subscription_id', 'plan', 'sub_status', 'subStatus', 'price_krw',
+  'next_billing_at', 'last_billed_at', 'canceled_at', 'cancel_reason',
+  'created_at', 'updated_at',
+]
+const toSubscriptionDtoList = (rows) => pickAll(rows, SUBSCRIPTION_PUBLIC_FIELDS)
 
 /**
  * 구독 플랜 상수
@@ -54,10 +83,12 @@ export const getPlans = () => {
  */
 export const getSubscriptions = async (userId) => {
   const rows = await subscriptionRepository.findSubscriptionsByUserId(userId)
-  return rows.map((row) => ({
+  const withSubStatus = rows.map((row) => ({
     ...row,
     subStatus: row.sub_status,
   }))
+  // [결함2 수정] user_id(내부 식별자) 등 비공개 필드를 화이트리스트로 제외
+  return toSubscriptionDtoList(withSubStatus)
 }
 
 /**
@@ -420,7 +451,8 @@ export const cancelSubscription = async (userId, subscriptionId) => {
       // 외부 호출 대기 중 이미 다른 요청으로 취소된 경우 - 멱등 처리
       await conn.commit()
       updated = await subscriptionRepository.findSubscriptionById(subscriptionId)
-      return updated
+      // [결함2 수정 - G11] billing_kms_key_id 등 raw 행을 그대로 응답하지 않는다
+      return pick(updated, SUBSCRIPTION_PUBLIC_FIELDS)
     }
 
     await subscriptionRepository.updateSubscriptionStatus(subscriptionId, {
@@ -458,7 +490,8 @@ export const cancelSubscription = async (userId, subscriptionId) => {
     conn.release()
   }
 
-  return updated
+  // [결함2 수정 - G11] billing_kms_key_id 등 raw 행을 그대로 응답하지 않는다
+  return pick(updated, SUBSCRIPTION_PUBLIC_FIELDS)
 }
 
 /**
@@ -640,7 +673,8 @@ export const getPaymentLogs = async (userId, subscriptionId, { page = 1, limit =
   )
 
   return {
-    logs,
+    // [결함2 수정] toss_payment_key(토스 결제 키)/user_id(내부 식별자) 제외
+    logs: toPaymentLogDtoList(logs),
     meta: {
       total,
       page: Number(page),

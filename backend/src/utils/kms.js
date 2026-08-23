@@ -1,5 +1,6 @@
 import crypto from 'crypto'
 import { KMSClient, EncryptCommand, DecryptCommand, GenerateDataKeyCommand } from '@aws-sdk/client-kms'
+import { toSafeFailureMessage } from './failureMessages.js'
 
 const kmsClient = new KMSClient({ region: process.env.AWS_REGION })
 
@@ -15,7 +16,10 @@ const kmsClient = new KMSClient({ region: process.env.AWS_REGION })
  */
 const assertKmsRegionConfigured = () => {
   if (!process.env.AWS_REGION) {
-    throw Object.assign(new Error('AWS_REGION 환경변수가 설정되지 않았습니다'), { status: 503 })
+    // [결함1 수정] 환경변수명은 내부 인프라 구조라 사용자 응답에 노출하지 않는다.
+    // 원본은 로그로만 남기고, 응답 메시지는 toSafeFailureMessage로 안전하게 치환한다.
+    console.error('[kms] AWS_REGION 환경변수가 설정되지 않았습니다')
+    throw Object.assign(new Error(toSafeFailureMessage('AWS_REGION 환경변수가 설정되지 않았습니다')), { status: 503 })
   }
 }
 
@@ -23,7 +27,8 @@ const getKmsKeyId = () => {
   assertKmsRegionConfigured()
   const keyId = process.env.KMS_KEY_ID
   if (!keyId) {
-    throw Object.assign(new Error('KMS_KEY_ID 환경변수가 설정되지 않았습니다'), { status: 503 })
+    console.error('[kms] KMS_KEY_ID 환경변수가 설정되지 않았습니다')
+    throw Object.assign(new Error(toSafeFailureMessage('KMS_KEY_ID 환경변수가 설정되지 않았습니다')), { status: 503 })
   }
   return keyId
 }
@@ -46,7 +51,11 @@ const wrapKmsError = (err) => {
   if (err.status) return err // 이미 분류된 에러(위 assert류의 503)는 재래핑하지 않고 그대로 전파
   const signature = `${err.name ?? ''} ${err.code ?? ''} ${err.message ?? ''}`
   if (VENDOR_UNAVAILABLE_ERROR_PATTERN.test(signature)) {
-    return Object.assign(new Error(`KMS 요청 실패: ${err.message}`), { status: 503 })
+    // [결함1 수정] AWS SDK 원문(자격 증명 오류 등)을 그대로 노출하지 않는다.
+    // 원본은 로그로만 남기고 안전한 문구로 치환한다.
+    console.error('[kms] 벤더 오류 (503로 재분류):', err.name, err.code, err.message)
+    const safeMessage = toSafeFailureMessage(err.message) ?? '지금은 처리가 어려워요. 잠시 후 다시 시도해 주세요.'
+    return Object.assign(new Error(safeMessage), { status: 503 })
   }
   return err
 }

@@ -34,6 +34,7 @@ import './queues/billingWorker.js'
 // (npm run workers / jobs/index.js)가 반드시 떠 있어야 한다는 전제가 생긴다.
 import { registerBillingScanDueScheduler } from './queues/billingQueue.js'
 import { checkDbConnection } from './config/db.js'
+import { toSafeFailureMessage } from './utils/failureMessages.js'
 
 const app = express()
 const httpServer = createServer(app)
@@ -187,15 +188,28 @@ app.use((err, req, res, _next) => {
   const status = err.status || 500
   const isDev = process.env.NODE_ENV === 'development'
 
-  // 5xx(예상 못 한 서버 오류)는 프로덕션에서 원본 메시지를 절대 노출하지 않는다.
-  // mysql2 에러(err.message)는 테이블·컬럼명을 담고 있어 그대로 내려주면 내부
-  // 구조 유출 + 어르신 사용자에게 영문 DB 오류가 그대로 보이는 문제가 있었다
-  // (G9-5). 원본 메시지는 위 console.error로만 남긴다.
+  // [결함3 - 정보 노출 방어 강화] 이전에는 "NODE_ENV==='development'가 아니면
+  // 5xx 메시지를 가린다"는 단일 문자열 비교 하나에 프로덕션 전체가 걸려 있었다 -
+  // 배포 시 NODE_ENV가 실수로 'development'로 남으면 즉시 raw mysql2 메시지·
+  // 벤더 SDK 원문이 전량 노출된다. 이제 5xx의 message 필드는 NODE_ENV 값과
+  // 무관하게 항상 toSafeFailureMessage()로 정제한다(결함1/2에서 uploadMiddleware·
+  // kms.js·s3.js가 쓰는 것과 동일한 유틸 재사용 - 새 매핑을 만들지 않는다).
+  // err.message에 실제로 어떤 내부 정보가 담겨 있는지와 무관하게 항상 안전하고,
+  // 이미 안전하게 다듬어진 메시지(예: 업로드 503 문구)가 들어와도 toSafeFailureMessage는
+  // 매칭되는 패턴이 없으면 그냥 일반 안내문으로 떨어지므로 이중 새니타이즈로
+  // 인한 부작용도 없다. 원본은 위 console.error로 서버 로그에는 그대로 남으므로
+  // 로컬 디버깅에는 지장이 없다.
+  // err.stack(파일 경로 등 원본 메시지보다 더 상세한 정보)만 기존과 동일하게
+  // NODE_ENV==='development'일 때만 추가로 실어준다 - 이 부분만은 여전히 NODE_ENV
+  // 설정에 기대는 잔여 위험이라, 배포 체크리스트에서 NODE_ENV=production 설정
+  // 여부를 반드시 확인해야 한다(완료 보고 3번 참조 - 과한 opt-in 플래그를 새로
+  // 두면 .env를 건드리지 않고는 로컬 개발 편의가 깨지므로 이 결함 수정 범위에서는
+  // message 필드 강화로 한정한다).
   // 4xx는 의도적으로 던진 사용자 메시지(Object.assign(new Error(...), { status })이므로
   // 그대로 전달한다.
   const clientMessage =
-    status >= 500 && !isDev
-      ? '서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.'
+    status >= 500
+      ? toSafeFailureMessage(err.message) ?? '서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.'
       : err.message || '서버 오류가 발생했습니다'
 
   res.status(status).json({

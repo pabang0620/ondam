@@ -3,6 +3,7 @@ import multerS3 from 'multer-s3'
 import { S3Client } from '@aws-sdk/client-s3'
 import { v4 as uuidv4 } from 'uuid'
 import path from 'path'
+import { toSafeFailureMessage } from '../../utils/failureMessages.js'
 
 // ─── S3 클라이언트 ────────────────────────────────────────────────────────────
 
@@ -32,16 +33,25 @@ const VENDOR_UNAVAILABLE_ERROR_PATTERN =
  * S3_BUCKET/AWS_REGION(및 useKms인 경우 KMS_KEY_ID) 환경변수 부재를
  * "예상 못 한 서버 버그"(500)가 아니라 "외부 의존성이 일시적으로 준비되지
  * 않음"(503)으로 구분한다. multer를 태우기 전에 먼저 확인한다.
+ *
+ * [결함1 수정] 환경변수 이름(AWS_REGION/S3_BUCKET/KMS_KEY_ID)은 우리 인프라
+ * 구조를 그대로 드러내는 내부 정보라 사용자 응답에 절대 실으면 안 된다. 원본은
+ * console.error로만 남기고, 사용자에게는 failureMessages.js의 기존 매핑
+ * (toSafeFailureMessage)을 그대로 재사용해 안전한 한국어 문구만 내려준다 -
+ * AI 처리 실패 경로와 동일한 방식이라 사용자가 보는 문구 톤도 일관된다.
  */
 const assertUploadVendorConfigured = (useKms) => {
   if (!process.env.AWS_REGION) {
-    throw Object.assign(new Error('AWS_REGION 환경변수가 설정되지 않았습니다'), { status: 503 })
+    console.error('[uploadMiddleware] AWS_REGION 환경변수가 설정되지 않았습니다')
+    throw Object.assign(new Error(toSafeFailureMessage('AWS_REGION 환경변수가 설정되지 않았습니다')), { status: 503 })
   }
   if (!process.env.S3_BUCKET) {
-    throw Object.assign(new Error('S3_BUCKET 환경변수가 설정되지 않았습니다'), { status: 503 })
+    console.error('[uploadMiddleware] S3_BUCKET 환경변수가 설정되지 않았습니다')
+    throw Object.assign(new Error(toSafeFailureMessage('S3_BUCKET 환경변수가 설정되지 않았습니다')), { status: 503 })
   }
   if (useKms && !process.env.KMS_KEY_ID) {
-    throw Object.assign(new Error('KMS_KEY_ID 환경변수가 설정되지 않았습니다'), { status: 503 })
+    console.error('[uploadMiddleware] KMS_KEY_ID 환경변수가 설정되지 않았습니다')
+    throw Object.assign(new Error(toSafeFailureMessage('KMS_KEY_ID 환경변수가 설정되지 않았습니다')), { status: 503 })
   }
 }
 
@@ -67,7 +77,15 @@ const wrapUpload = (multerHandler, useKms) => (req, res, callback) => {
       if (!(err instanceof multer.MulterError) && !err.status) {
         const signature = `${err.name ?? ''} ${err.code ?? ''} ${err.message ?? ''}`
         if (VENDOR_UNAVAILABLE_ERROR_PATTERN.test(signature)) {
-          return callback(Object.assign(new Error(`파일 업로드 실패: ${err.message}`), { status: 503 }))
+          // [결함1 수정] 벤더 SDK 원문(예: "The authorization header is malformed;
+          // a non-empty Access Key (AKID) must be provided in the credential.")을
+          // 그대로 사용자에게 보여주지 않는다. 원본은 로그로만 남기고
+          // toSafeFailureMessage로 안전한 문구만 응답에 싣는다.
+          console.error('[uploadMiddleware] 업로드 벤더 오류 (503로 재분류):', err.name, err.code, err.message)
+          const safeMessage =
+            toSafeFailureMessage(err.message) ??
+            '지금은 처리가 어려워요. 잠시 후 다시 시도해 주세요. 계속 안 되면 고객센터로 문의해 주세요.'
+          return callback(Object.assign(new Error(safeMessage), { status: 503 }))
         }
       }
       return callback(err)
