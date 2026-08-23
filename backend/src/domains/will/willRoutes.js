@@ -63,7 +63,7 @@ const createWillSchema = z.object({
   body: z.object({
     voiceSampleId: z.string().uuid('유효한 UUID'),
     title: z.string().trim().min(1, '제목을 입력하세요').max(200),
-    contentText: z.string().trim().min(1, '유언 내용을 입력하세요').max(5000, '유언 내용은 5000자 이하여야 합니다'),
+    contentText: z.string().trim().min(1, '편지 내용을 입력하세요').max(5000, '편지 내용은 5000자 이하여야 합니다'),
     releasePolicy: z.enum(WILL_RELEASE_POLICY).default('manual_admin'),
     // priceKrw는 클라이언트 입력을 받지 않는다 - 가격은 서버(willService의
     // WILL_BASIC_PRICE_KRW)가 단일 정본으로 결정한다. 결제 단계(preparePayment)의

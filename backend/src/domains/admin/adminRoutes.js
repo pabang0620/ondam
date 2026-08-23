@@ -14,9 +14,30 @@ const router = Router()
 // ---------------------------------------------------------------------------
 
 // 관리자 로그인 브루트포스 방지 - 일반 authLimiter보다 엄격
+//
+// [FIX D19] 예전엔 IP 전역 키(기본 keyGenerator)라 5분/5회 제한이 "그 IP 전체"에
+// 걸렸다 - 사무실 공유 IP에서 관리자 1명이 비밀번호를 5번 틀리면 같은 IP를 쓰는
+// 다른 관리자 전원이 5분간 로그인 자체를 못 했다(검증 중 실제로 재현). 이메일(계정)
+// + IP 조합으로 키를 잡아 잠금 범위를 "그 사람 본인의 그 시도"로 좁힌다.
+//
+// 계정 열거 공격(존재하지 않는 이메일로 다른 관리자를 잠그기) 방어: 키에 공격자
+// 자신의 IP가 항상 포함되므로, 공격자가 피해자 이메일로 5번 시도해도 잠기는 건
+// "그 이메일 + 공격자 IP" 조합뿐이다. 피해자가 자신의 실제 IP에서 로그인 시도하는
+// 순간은 완전히 다른 키라 전혀 영향받지 않는다 - 공격자가 피해자와 동일한 IP를
+// 공유해야만(같은 사무실 등) 잠금이 실제로 겹치는데, 이는 D19가 원래 다루던
+// "사무실 공유 IP" 시나리오와 동일한 잔여 리스크로 수용한다(계정 단독 키보다는
+// 훨씬 좁혀진 노출).
+//
+// 이메일은 소문자·trim 정규화 후 키에 넣는다 - 대소문자만 바꿔 카운터를 우회하는
+// 것을 막는다. body 파싱 전이라도 express.json()이 라우터 마운트보다 먼저
+// app.use()로 걸려 있어(server.js) req.body는 이 시점에 이미 채워져 있다.
 const adminLoginLimiter = rateLimit({
   windowMs: 5 * 60 * 1000, // 5분
   max: 5,                   // 5분 내 최대 5회
+  keyGenerator: (req) => {
+    const email = String(req.body?.email ?? '').trim().toLowerCase()
+    return `${email}:${req.ip}`
+  },
   message: { success: false, message: '너무 많은 로그인 시도입니다. 5분 후 다시 시도해주세요' },
   standardHeaders: true,
   legacyHeaders: false,
@@ -62,6 +83,13 @@ const rejectSchema = z.object({
 const releaseIdSchema = z.object({
   params: z.object({
     id: z.string().uuid('유효한 UUID가 아닙니다'),
+  }),
+})
+
+// D13 - 유가족 본인확인 잠금 해제 대상 수신인
+const beneficiaryIdParamSchema = z.object({
+  params: z.object({
+    beneficiaryId: z.string().uuid('유효한 UUID가 아닙니다'),
   }),
 })
 
@@ -201,6 +229,18 @@ router.post(
   adminApiLimiter,
   validate(rejectSchema),
   adminController.rejectRelease,
+)
+
+// D13 - 유가족 본인확인 5회 오입력 잠금(24시간, Redis) 즉시 해제. releases 검수와
+// 동일한 "검수 담당" 업무로 분류해 super_admin·content_moderator(reviewer)만 허용.
+router.post(
+  '/will/beneficiaries/:beneficiaryId/unlock',
+  requireAuth,
+  requireAdmin,
+  requireAdminRole('super', 'reviewer'),
+  adminApiLimiter,
+  validate(beneficiaryIdParamSchema),
+  adminController.unlockWillWatch,
 )
 
 router.get(

@@ -3,12 +3,52 @@ import { KMSClient, EncryptCommand, DecryptCommand, GenerateDataKeyCommand } fro
 
 const kmsClient = new KMSClient({ region: process.env.AWS_REGION })
 
+/**
+ * [FIX D14] KMS 벤더 설정(리전) 부재를 "예상 못 한 서버 버그"(500)가 아니라
+ * "외부 의존성이 일시적으로 준비되지 않음"(503)으로 구분한다. AWS_REGION이 없으면
+ * kmsClient.send()가 raw AWS SDK 에러("Region is missing" 등)를 던지는데, 이
+ * 에러엔 .status가 없어 글로벌 에러 핸들러가 무조건 500으로 응답해 왔다 - 그러면
+ * 모니터링에서 "서비스가 설정 미비로 잠시 못 뜬 것"과 "코드에 진짜 버그가 있는 것"을
+ * 구분할 수 없다. decryptBuffer/decryptStringEnvelope처럼 KMS_KEY_ID를 직접 쓰지
+ * 않는 함수(복호화는 ciphertext에 키 참조가 내장돼 있어 필요 없음)도 이 가드를
+ * 거치므로 getKmsKeyId() 안에서만 검사하지 않고 별도로 분리했다.
+ */
+const assertKmsRegionConfigured = () => {
+  if (!process.env.AWS_REGION) {
+    throw Object.assign(new Error('AWS_REGION 환경변수가 설정되지 않았습니다'), { status: 503 })
+  }
+}
+
 const getKmsKeyId = () => {
+  assertKmsRegionConfigured()
   const keyId = process.env.KMS_KEY_ID
   if (!keyId) {
-    throw Object.assign(new Error('KMS_KEY_ID 환경변수가 설정되지 않았습니다'), { status: 500 })
+    throw Object.assign(new Error('KMS_KEY_ID 환경변수가 설정되지 않았습니다'), { status: 503 })
   }
   return keyId
+}
+
+/**
+ * [FIX D14] "환경변수가 비어 있다"만으로는 실제 장애를 다 못 잡는다 - 실측해보니
+ * 이 프로젝트 개발 환경은 AWS_REGION/자격 증명이 형식상 전부 "존재"하지만(예:
+ * ~/.aws/credentials의 유효하지 않은 AKID), 그 값 자체가 유효하지 않아 kmsClient.send()가
+ * UnrecognizedClientException/InvalidClientTokenId 같은 raw AWS SDK 에러를 던진다 -
+ * 이 에러들도 .status가 없어 그대로 500이 된다. 자격 증명·네트워크가 원인인 에러
+ * 이름/코드만 골라 503으로 재분류하고, 그 외(예: ciphertext 손상을 뜻하는
+ * InvalidCiphertextException처럼 진짜 코드/데이터 버그일 가능성이 있는 에러)는
+ * 500 그대로 둔다 - "벤더에 닿을 수 없다"와 "우리 쪽 로직이 잘못됐다"를 구분하는
+ * 것이 이 수정의 목적이라, 후자까지 503으로 뭉개면 오히려 실제 버그를 숨기게 된다.
+ */
+const VENDOR_UNAVAILABLE_ERROR_PATTERN =
+  /CredentialsProviderError|UnrecognizedClientException|InvalidClientTokenId|InvalidAccessKeyId|AuthorizationHeaderMalformed|MissingAuthenticationToken|ExpiredTokenException|SignatureDoesNotMatch|AccessDenied|NetworkingError|TimeoutError|ETIMEDOUT|ECONNREFUSED|ECONNRESET|ENOTFOUND/i
+
+const wrapKmsError = (err) => {
+  if (err.status) return err // 이미 분류된 에러(위 assert류의 503)는 재래핑하지 않고 그대로 전파
+  const signature = `${err.name ?? ''} ${err.code ?? ''} ${err.message ?? ''}`
+  if (VENDOR_UNAVAILABLE_ERROR_PATTERN.test(signature)) {
+    return Object.assign(new Error(`KMS 요청 실패: ${err.message}`), { status: 503 })
+  }
+  return err
 }
 
 /**
@@ -22,10 +62,14 @@ export const encryptString = async (plaintext) => {
     KeyId: KMS_KEY_ID,
     Plaintext: Buffer.from(plaintext, 'utf8'),
   })
-  const response = await kmsClient.send(command)
-  return {
-    encrypted: Buffer.from(response.CiphertextBlob),
-    kmsKeyId: KMS_KEY_ID,
+  try {
+    const response = await kmsClient.send(command)
+    return {
+      encrypted: Buffer.from(response.CiphertextBlob),
+      kmsKeyId: KMS_KEY_ID,
+    }
+  } catch (err) {
+    throw wrapKmsError(err)
   }
 }
 
@@ -35,11 +79,16 @@ export const encryptString = async (plaintext) => {
  * @returns {Promise<string>}
  */
 export const decryptBuffer = async (encryptedBuffer) => {
+  assertKmsRegionConfigured()
   const command = new DecryptCommand({
     CiphertextBlob: encryptedBuffer,
   })
-  const response = await kmsClient.send(command)
-  return Buffer.from(response.Plaintext).toString('utf8')
+  try {
+    const response = await kmsClient.send(command)
+    return Buffer.from(response.Plaintext).toString('utf8')
+  } catch (err) {
+    throw wrapKmsError(err)
+  }
 }
 
 /**
@@ -93,9 +142,15 @@ const ENVELOPE_DATA_KEY_SPEC = 'AES_256'
 export const encryptStringEnvelope = async (plaintext) => {
   const KMS_KEY_ID = getKmsKeyId()
 
-  const { Plaintext: dataKeyPlain, CiphertextBlob: dataKeyEncrypted } = await kmsClient.send(
-    new GenerateDataKeyCommand({ KeyId: KMS_KEY_ID, KeySpec: ENVELOPE_DATA_KEY_SPEC }),
-  )
+  let dataKeyPlain
+  let dataKeyEncrypted
+  try {
+    ;({ Plaintext: dataKeyPlain, CiphertextBlob: dataKeyEncrypted } = await kmsClient.send(
+      new GenerateDataKeyCommand({ KeyId: KMS_KEY_ID, KeySpec: ENVELOPE_DATA_KEY_SPEC }),
+    ))
+  } catch (err) {
+    throw wrapKmsError(err)
+  }
 
   const iv = crypto.randomBytes(ENVELOPE_IV_LENGTH)
   const cipher = crypto.createCipheriv('aes-256-gcm', Buffer.from(dataKeyPlain), iv)
@@ -119,6 +174,7 @@ export const encryptStringEnvelope = async (plaintext) => {
  * @returns {Promise<string>}
  */
 export const decryptStringEnvelope = async (envelopeValue) => {
+  assertKmsRegionConfigured()
   const buf = Buffer.isBuffer(envelopeValue) ? envelopeValue : Buffer.from(envelopeValue, 'base64')
 
   const version = buf.readUInt8(0)
@@ -138,9 +194,14 @@ export const decryptStringEnvelope = async (envelopeValue) => {
   offset += ENVELOPE_AUTH_TAG_LENGTH
   const ciphertext = buf.subarray(offset)
 
-  const { Plaintext: dataKeyPlain } = await kmsClient.send(
-    new DecryptCommand({ CiphertextBlob: encryptedDataKey }),
-  )
+  let dataKeyPlain
+  try {
+    ;({ Plaintext: dataKeyPlain } = await kmsClient.send(
+      new DecryptCommand({ CiphertextBlob: encryptedDataKey }),
+    ))
+  } catch (err) {
+    throw wrapKmsError(err)
+  }
 
   const decipher = crypto.createDecipheriv('aes-256-gcm', Buffer.from(dataKeyPlain), iv)
   decipher.setAuthTag(authTag)

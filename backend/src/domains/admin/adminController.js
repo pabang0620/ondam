@@ -185,6 +185,25 @@ export const rejectRelease = async (req, res, next) => {
   }
 }
 
+// ─── POST /api/admin/will/beneficiaries/:beneficiaryId/unlock (D13) ───────────
+
+export const unlockWillWatch = async (req, res, next) => {
+  try {
+    const { beneficiaryId } = req.params
+    const adminId = req.user.adminId
+    const ipAddress = req.ip ?? req.headers['x-forwarded-for'] ?? null
+    const userAgent = req.headers['user-agent'] ?? null
+
+    const result = await adminService.unlockWillWatchAccess(adminId, beneficiaryId, {
+      ipAddress,
+      userAgent,
+    })
+    return success(res, result, '본인 확인 잠금이 해제되었습니다')
+  } catch (err) {
+    next(err)
+  }
+}
+
 // ─── GET /api/admin/orders ────────────────────────────────────────────────────
 
 export const getOrders = async (req, res, next) => {

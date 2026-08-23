@@ -10,6 +10,22 @@ import { PLANS } from '../subscription/subscriptionService.js'
 // paymentService에 의존하지 않으므로 순환이 생기지 않는다.
 import * as giftRepository from '../gift/giftRepository.js'
 import pool from '../../config/db.js'
+import { pick, pickAll } from '../../utils/dto.js'
+
+// ─── 응답 화이트리스트 (결함2 수정 - 민감 필드 노출 방지) ───────────────────────
+// [보안 수정] payments 행을 그대로(스프레드 없이도 findPaymentById 등이 이미
+// toss_payment_key/user_id까지 SELECT해 그대로) 응답으로 흘려보내면 결제 키(토스
+// paymentKey)와 내부 식별자 user_id가 새어나간다. G11(DB 행을 응답에 그대로
+// 스프레드하지 말 것)에 따라 화이트리스트로 명시한다 - SELECT 자체는 건드리지
+// 않는다(내부 로직은 toss_payment_key로 findPaymentByTossKey 등을 계속 써야 함).
+// toss_payment_key는 절대 이 목록에 넣지 않는다 - 실제 결제 취소/조회에 쓰이는
+// 토스 결제 키다.
+const PAYMENT_PUBLIC_FIELDS = [
+  'payment_id', 'target_type', 'target_id', 'toss_order_id', 'amount_krw', 'status',
+  'paid_at', 'canceled_at', 'cancel_reason', 'fail_reason', 'created_at', 'updated_at',
+]
+const toPaymentDto = (payment) => pick(payment, PAYMENT_PUBLIC_FIELDS)
+const toPaymentDtoList = (payments) => pickAll(payments, PAYMENT_PUBLIC_FIELDS)
 
 const TOSS_CONFIRM_URL = 'https://api.tosspayments.com/v1/payments/confirm'
 const TOSS_CANCEL_URL = (tossPaymentKey) =>
@@ -100,13 +116,13 @@ const _resolveServerPrice = async (targetType, targetId, userId) => {
   }
   if (targetType === 'will_order') {
     const will = await willRepository.findWillById(targetId)
-    if (!will) throw Object.assign(new Error('유언장을 찾을 수 없습니다'), { status: 404 })
+    if (!will) throw Object.assign(new Error('영상 편지를 찾을 수 없습니다'), { status: 404 })
     if (will.user_id !== userId) throw Object.assign(new Error('접근 권한이 없습니다'), { status: 403 })
     // wills.status ENUM: draft/paid/active/released/revoked. 결제 전 초안(draft)
     // 상태에서만 결제를 허용한다 - 이미 paid로 넘어간 유언장에 재청구되는 것을 막는다.
     if (will.status !== 'draft') {
       throw Object.assign(
-        new Error(`이미 처리된 유언장입니다 (현재 상태: ${will.status})`),
+        new Error(`이미 처리된 영상 편지입니다 (현재 상태: ${will.status})`),
         { status: 409 },
       )
     }
@@ -231,7 +247,7 @@ export const confirmPayment = async (userId, { paymentKey, orderId, amount }) =>
       throw Object.assign(new Error('접근 권한이 없습니다'), { status: 403 })
     }
     await _updateTargetStatus(existingByKey.target_type, existingByKey.target_id, existingByKey.payment_id)
-    return { success: true, payment: existingByKey, idempotent: true }
+    return { success: true, payment: toPaymentDto(existingByKey), idempotent: true }
   }
 
   // ── 짧은 트랜잭션 #1: 상태 확인 + 선점(claim), 즉시 commit ──
@@ -330,10 +346,10 @@ export const confirmPayment = async (userId, { paymentKey, orderId, amount }) =>
 
   if (claim.kind === 'done') {
     await _updateTargetStatus(claim.payment.target_type, claim.payment.target_id, claim.payment.payment_id)
-    return { success: true, payment: claim.payment, idempotent: true }
+    return { success: true, payment: toPaymentDto(claim.payment), idempotent: true }
   }
   if (claim.kind === 'mock') {
-    return { success: true, payment: claim.payment, mock: true }
+    return { success: true, payment: toPaymentDto(claim.payment), mock: true }
   }
 
   // ── 락 밖: 토스페이먼츠 승인 API 호출 (반드시 타임아웃 부여) ──
@@ -435,7 +451,7 @@ export const confirmPayment = async (userId, { paymentKey, orderId, amount }) =>
   }
 
   const updatedPayment = await paymentRepository.findPaymentById(payment.payment_id)
-  return { success: true, payment: updatedPayment }
+  return { success: true, payment: toPaymentDto(updatedPayment) }
 }
 
 /**
@@ -492,7 +508,7 @@ export const cancelPayment = async (userId, paymentId, { cancelReason }) => {
     ),
   )
 
-  return { success: true, payment: updatedPayment }
+  return { success: true, payment: toPaymentDto(updatedPayment) }
 }
 
 /**
@@ -609,7 +625,8 @@ export const getPayments = async (userId, { page = 1, limit = 20 }) => {
     offset,
   })
   return {
-    payments,
+    // [결함2 수정] toss_payment_key(토스 결제 키)/user_id(내부 식별자)를 화이트리스트로 제외
+    payments: toPaymentDtoList(payments),
     meta: { total, page: Number(page), limit: safeLimit, totalPages: Math.ceil(total / safeLimit) },
   }
 }
@@ -622,7 +639,8 @@ export const getPaymentHistory = async (userId) => {
     limit: 50,
     offset: 0,
   })
-  return payments
+  // [결함2 수정] toss_payment_key/user_id 제외
+  return toPaymentDtoList(payments)
 }
 
 /**
@@ -755,6 +773,39 @@ const _updateTargetStatus = async (targetType, targetId, paymentId, conn) => {
  * target 상태 환원 - 결제 취소 시
  * photo_orders.status ENUM에는 'canceled'가 없다('refunded'만 존재) - 잘못된 값으로 UPDATE하면
  * SQL 에러가 나서 환불은 완료됐는데 주문은 계속 'paid'로 남는 불일치가 발생한다.
+ *
+ * [결함1 수정 - 선물 결제 환불 시 연결 콘텐츠 미환원] gift_order 분기는 기존에
+ * gift_orders.status만 'refunded'로 되돌리고, gift_orders.will_id/photo_order_id로
+ * 연결된 실제 wills/photo_orders는 손대지 않았다. cancelGift(구매자 셀프 환불)는
+ * giftService의 D3 가드(photo_order_id/will_id가 채워져 있으면 애초에 취소 자체를
+ * 막음)가 있어 문제가 드러나지 않았지만, declinePerform(수행자 거절)과
+ * refundGiftFallback(AI 처리 최종 실패, giftShared.js)에는 그 가드가 없어
+ * gift_orders만 refunded로 바뀌고 wills.status='active'/photo_orders.status='paid'
+ * 그대로 남는 사고가 실측됐다(gift_id 831967da.../will_id cd4263ac... 사례).
+ * wills.status='active'로 남으면 willService.requestRelease(status==='active' 요구)를
+ * 통과해 환불된 유언장이 무결제로 사후 공개될 수 있다.
+ *
+ * 직접 결제 경로(위 photo_order/will_order 분기)와 동일한 목표 상태로 대칭
+ * 환원한다(photo_order → 'refunded', will_order → 'draft'). gift_orders 상태 변경과
+ * 연결 콘텐츠 상태 변경을 하나의 트랜잭션으로 묶어, gift만 refunded가 되고
+ * will/photo_order는 그대로 남는 부분 실패를 방지한다.
+ *
+ * [이미 처리(생성 완료)된 콘텐츠 판단] AI 처리가 이미 끝나 will.status='active' 또는
+ * photo_orders.status='completed'인 경우에도 예외 없이 되돌린다:
+ *   - wills.release_status(유가족 실제 공개 여부)는 이 UPDATE가 건드리는 wills.status와
+ *     완전히 별개 컬럼이다(willService.js resolveWatchTarget은 release_status만
+ *     확인하고 status는 보지 않는다) - 이미 가족에게 공개된 시청 링크를 무효화하지
+ *     않으므로 "이미 배포된 콘텐츠를 숨긴다" 같은 부작용이 없다.
+ *   - 반대로 여기서 되돌리지 않으면(=이미 처리된 건은 놔둔다는 예외를 두면)
+ *     결함1이 실제로 발생한 최악의 경우 - 콘텐츠 생성까지 다 끝난 뒤 거절/AI 실패로
+ *     환불된 건 - 가 계속 무방비로 남아, requestRelease 취약점이 정확히 가장 위험한
+ *     케이스에서만 재현된다. 그래서 별도 게이트를 추가하지 않고 상태만 대칭적으로
+ *     되돌린다(결제 상태 머신 재설계 없음).
+ *   - "이미 콘텐츠를 만들어줬는데 환불해도 되는가"라는 정책 판단은 이 함수(payment
+ *     도메인) 소관이 아니다 - declinePerform/refundGiftFallback(gift 도메인)이 애초에
+ *     환불을 허용할지 말지 결정할 자리이고, cancelGift에는 이미 그 가드(D3)가 있다.
+ *     자동 환불 경로에 동일한 가드를 추가할지는 gift 도메인 소관이라 이 작업
+ *     범위(payment/auth/utils) 밖이므로 별도 보고한다.
  */
 const _revertTargetStatus = async (targetType, targetId) => {
   if (targetType === 'photo_order') {
@@ -768,11 +819,36 @@ const _revertTargetStatus = async (targetType, targetId) => {
       [targetId]
     )
   } else if (targetType === 'gift_order') {
-    // cancelPayment(4-4 giver 셀프 환불)와 refundForAiFailure(4-5 수행자 거절 자동 환불)
-    // 양쪽 모두 여기로 도달한다 - 최종 상태는 동일하게 'refunded'.
-    await pool.execute(
-      `UPDATE gift_orders SET status = 'refunded', updated_at = NOW() WHERE gift_id = ? AND deleted_at IS NULL`,
-      [targetId]
-    )
+    // cancelPayment(4-4 giver 셀프 환불)와 refundForAiFailure(4-5 수행자 거절/AI 실패
+    // 자동 환불) 양쪽 모두 여기로 도달한다 - 최종 gift_orders 상태는 동일하게 'refunded'.
+    const conn = await pool.getConnection()
+    try {
+      await conn.beginTransaction()
+      // FOR UPDATE로 gift_orders 행을 잠근 뒤 photo_order_id/will_id를 읽는다 - 동시에
+      // attach(setPhotoOrderId/setWillId)가 들어와도 이 트랜잭션 안에서 일관된 값을 본다.
+      const gift = await giftRepository.findByGiftIdForUpdate(conn, targetId)
+      await conn.execute(
+        `UPDATE gift_orders SET status = 'refunded', updated_at = NOW() WHERE gift_id = ? AND deleted_at IS NULL`,
+        [targetId]
+      )
+      if (gift?.photo_order_id) {
+        await conn.execute(
+          `UPDATE photo_orders SET status = 'refunded', updated_at = NOW() WHERE order_id = ? AND deleted_at IS NULL`,
+          [gift.photo_order_id]
+        )
+      }
+      if (gift?.will_id) {
+        await conn.execute(
+          `UPDATE wills SET status = 'draft', updated_at = NOW() WHERE will_id = ? AND deleted_at IS NULL`,
+          [gift.will_id]
+        )
+      }
+      await conn.commit()
+    } catch (err) {
+      await conn.rollback().catch(() => {})
+      throw err
+    } finally {
+      conn.release()
+    }
   }
 }

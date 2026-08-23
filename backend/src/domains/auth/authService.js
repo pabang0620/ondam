@@ -13,6 +13,14 @@ import { CONSENT_TYPE } from '../../../../shared/constants/enums.js'
 const ACCESS_TOKEN_EXPIRES = '15m'
 const REFRESH_TOKEN_EXPIRES_MS = 30 * 24 * 60 * 60 * 1000 // 30일 (ms)
 
+// [결함3 수정] adminService.js의 ADMIN_REFRESH_REUSE_GRACE_MS와 동일한 값·동일한
+// 이름 관례(그 파일도 환경변수가 아니라 하드코딩된 상수다 - 새 메커니즘을 발명하지
+// 않고 그대로 따른다). 다중 탭 동시 refresh 경쟁 유예 시간 - 같은 rt 쿠키로 거의
+// 동시에 도착한 요청들 중 늦은 쪽이 "이미 회전된" 토큰을 드는 상황을 허용한다.
+// 10초는 왕복 네트워크 지연을 넉넉히 덮으면서도, 실제 탈취 후 재사용 시나리오
+// (공격자가 나중에 훔친 토큰을 쓰는 경우)에는 사실상 항상 지나 있을 만큼 짧다.
+const REFRESH_REUSE_GRACE_MS = 10 * 1000
+
 /**
  * Refresh token 문자열을 SHA-256으로 해시
  * @param {string} token
@@ -251,6 +259,39 @@ export const refresh = async (refreshToken) => {
   }
 
   if (stored.revoked_at) {
+    // [결함3 수정] adminService.refresh()와 동일한 회전 경쟁 유예 처리 - 다중 탭 동시
+    // 마운트 시 같은 rt 쿠키로 refresh가 여러 번 나가면, 먼저 도착한 요청이 토큰을
+    // 회전(revoke)시킨 직후 늦게 도착한 요청은 "이미 사용된" 토큰을 들게 된다. 토큰
+    // 값만 보면 실제 탈취 재사용과 구분이 안 되므로, 아주 짧은 유예 시간(GRACE_MS)
+    // 안의 재사용이면서 이 사용자의 활성(active) refresh token이 실제로 존재할
+    // 때만 "경쟁으로 인한 재사용"으로 관용 처리한다. 유예를 벗어났거나 활성 토큰이
+    // 없으면 진짜 탈취 재사용 가능성으로 간주해 하드 401을 던지고, 이 사용자의 모든
+    // 활성 세션을 revoke한다(재사용 탐지 방어를 무력화하지 않기 위한 피해 확산
+    // 차단 - 회전만으로는 "이미 도난된 다른 활성 토큰"을 막지 못하기 때문).
+    const revokedAgoMs = Date.now() - new Date(stored.revoked_at).getTime()
+    if (revokedAgoMs >= 0 && revokedAgoMs <= REFRESH_REUSE_GRACE_MS) {
+      const activeToken = await authRepository.findActiveRefreshToken(stored.user_id)
+      if (activeToken) {
+        const activeUser = await authRepository.findByUserId(stored.user_id)
+        if (activeUser && activeUser.is_active) {
+          // 새 accessToken만 발급하고 refreshToken은 null로 돌려준다 - 컨트롤러가
+          // 이를 보고 rt 쿠키를 다시 심지 않는다(먼저 도착한 탭이 이미 심어둔 최신
+          // 쿠키를 그대로 유지해야 한다).
+          return {
+            accessToken: signAccessToken({ userId: activeUser.user_id, role: activeUser.role }),
+            refreshToken: null,
+            user: {
+              userId: activeUser.user_id,
+              email: activeUser.email,
+              nickname: activeUser.nickname,
+              role: activeUser.role,
+            },
+          }
+        }
+      }
+    }
+
+    await authRepository.revokeAllRefreshTokens(stored.user_id)
     throw Object.assign(new Error('이미 사용된 리프레시 토큰입니다'), { status: 401 })
   }
 

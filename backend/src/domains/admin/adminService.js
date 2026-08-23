@@ -6,6 +6,12 @@ import * as adminRepository from './adminRepository.js'
 import { notificationQueue } from '../../jobs/queue.js'
 import { getPresignedUrl } from '../../utils/s3.js'
 import pool from '../../config/db.js'
+// [FIX D13] 잠금 해제는 will 도메인의 Redis 키 포맷(watchLockKey/watchAttemptsKey)을
+// 그대로 재사용해야 하므로 willService에서 가져온다 - gift 도메인이 payment/auth/
+// notification 서비스를 서비스-대-서비스로 직접 import하는 기존 관례(giftService.js,
+// giftPerformService.js)와 동일한 패턴이다.
+import { watchLockKey, watchAttemptsKey } from '../will/willService.js'
+import redis from '../../config/redis.js'
 
 // 사망증명서 열람용 presigned URL 만료(초). "몇 분~1시간" 요구 중 짧은 쪽을 택함 -
 // 검수 화면 특성상 관리자가 문서를 열고 대조하는 데 필요한 시간은 대부분 수 분
@@ -397,6 +403,42 @@ export const rejectRelease = async (
   })
 
   return { requestId, status: 'rejected' }
+}
+
+// ─── 유가족 본인확인 잠금 해제 (D13) ────────────────────────────────────────────
+// SPEC-05 2절은 "5회 오입력 시 24시간 잠금 → 고객센터 문의"까지만 정의했고, 해제
+// 수단은 24시간 자동 만료뿐이었다 - 고인의 영상 편지를 열람하지 못하는 유가족이
+// 하루를 그냥 기다려야 하는 상황이라 검수 담당 관리자가 즉시 풀어줄 수 있게 한다.
+//
+// 권한: SPEC-06 1절 매트릭스에 이 잠금(will_watch 흐름)을 위한 전용 행은 없지만,
+// 같은 흐름의 사망증명서 검수·공개 승인/반려(위 approveRelease/rejectRelease)를
+// super_admin·content_moderator(reviewer)로 제한하고 있어 동일한 "검수 담당" 업무로
+// 묶어 requireAdminRole('super', 'reviewer')를 그대로 적용한다(adminRoutes.js).
+// payment_specialist(manager)는 결제·집행 데이터 담당이라 이 업무와 무관하다.
+export const unlockWillWatchAccess = async (adminId, beneficiaryId, { ipAddress, userAgent } = {}) => {
+  const beneficiary = await adminRepository.findBeneficiaryById(beneficiaryId)
+  if (!beneficiary) {
+    throw Object.assign(new Error('수신인을 찾을 수 없습니다'), { status: 404 })
+  }
+
+  await redis.del(watchLockKey(beneficiary.beneficiary_id))
+  // 잠금뿐 아니라 시도 횟수도 함께 초기화한다 - 시도 횟수만 남아있으면 해제 직후
+  // 정답을 한 번만 틀려도 즉시 5회에 도달해 재잠금되어 해제가 사실상 무의미해진다.
+  await redis.del(watchAttemptsKey(beneficiary.beneficiary_id))
+
+  await adminRepository.createAuditLog({
+    logId: uuidv4(),
+    actorId: adminId,
+    actorType: 'admin',
+    action: 'will_watch_admin_unlocked',
+    targetType: 'will_beneficiary',
+    targetId: beneficiary.beneficiary_id,
+    ipAddress,
+    userAgent,
+    detail: { willId: beneficiary.will_id },
+  })
+
+  return { beneficiaryId: beneficiary.beneficiary_id, unlocked: true }
 }
 
 // ─── 주문 목록 ────────────────────────────────────────────────────────────────

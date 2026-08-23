@@ -290,17 +290,17 @@ export const attachWillOrder = async (recipientUserId, giftId, willId) => {
   // 이미 다른 유언장과 연결된 선물에 다른 유언장을 또 연결하려는 시도만 막는다
   // (같은 willId 재시도는 멱등하게 통과 - 완료 보고 1절)
   if (gift.will_id && gift.will_id !== willId) {
-    throw Object.assign(new Error('이미 다른 유언장과 연결된 선물입니다'), { status: 409 })
+    throw Object.assign(new Error('이미 다른 영상 편지와 연결된 선물입니다'), { status: 409 })
   }
   const alreadyLinked = gift.will_id === willId
 
   const will = await willRepository.findWillById(willId)
-  if (!will) throw Object.assign(new Error('유언장을 찾을 수 없습니다'), { status: 404 })
+  if (!will) throw Object.assign(new Error('영상 편지를 찾을 수 없습니다'), { status: 404 })
   if (String(will.user_id) !== String(recipientUserId)) {
     throw Object.assign(new Error('접근 권한이 없습니다'), { status: 403 })
   }
   if (!alreadyLinked && will.status !== 'draft') {
-    throw Object.assign(new Error(`이미 처리된 유언장입니다 (현재: ${will.status})`), { status: 409 })
+    throw Object.assign(new Error(`이미 처리된 영상 편지입니다 (현재: ${will.status})`), { status: 409 })
   }
 
   if (!alreadyLinked) {
@@ -321,7 +321,7 @@ export const attachWillOrder = async (recipientUserId, giftId, willId) => {
     await transitionGift(gift, 'in_progress', {
       changedBy: recipientUserId,
       changedByType: 'user',
-      reason: '유언장 연결',
+      reason: '영상 편지 연결',
     })
   }
 
@@ -362,7 +362,7 @@ export const completeGift = async (recipientUserId, giftId, { orderId, willId } 
   } else {
     if (!willId) throw Object.assign(new Error('willId가 필요합니다'), { status: 400 })
     if (gift.will_id !== willId) {
-      throw Object.assign(new Error('연결된 유언장과 일치하지 않습니다. attach-will을 먼저 호출하세요'), { status: 400 })
+      throw Object.assign(new Error('연결된 영상 편지와 일치하지 않습니다. attach-will을 먼저 호출하세요'), { status: 400 })
     }
     const will = await willRepository.findWillById(willId)
     if (!will || String(will.user_id) !== String(recipientUserId)) {

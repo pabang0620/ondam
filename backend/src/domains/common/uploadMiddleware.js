@@ -14,6 +14,68 @@ const s3 = new S3Client({
   },
 })
 
+// ─── 벤더 미설정·자격 증명 무효 → 503 가드 (utils/kms.js·utils/s3.js와 동일 근거) ─────
+//
+// [결함 4 수정] 이 파일은 원래 kms.js/s3.js의 wrapKmsError/getS3Bucket류 가드를 타지
+// 않았다 - S3_BUCKET/AWS_REGION이 비어 있거나 자격 증명이 무효하면 multer-s3가
+// 업로드 시점에 raw AWS SDK 에러(CredentialsProviderError, InvalidAccessKeyId 등)를
+// 던지는데, 그 에러엔 .status가 없어 multerErrorHandler(MulterError만 처리)를 그냥
+// 통과해버리고 글로벌 에러 핸들러에서 500이 됐다. willController.uploadReleaseDocument만
+// 컨트롤러 레벨에서 개별적으로 이 가드를 우회 구현하고 있었다 - 이제 미들웨어
+// 자체에 넣어 uploadSingleImage/uploadSingleAudio/uploadSingle/uploadMultiple/
+// uploadDeathCertificate를 쓰는 모든 라우트(uploads/photo, uploads/audio,
+// 사망증명서 업로드 등)가 일관되게 503을 받는다.
+const VENDOR_UNAVAILABLE_ERROR_PATTERN =
+  /CredentialsProviderError|UnrecognizedClientException|InvalidClientTokenId|InvalidAccessKeyId|AuthorizationHeaderMalformed|MissingAuthenticationToken|ExpiredTokenException|SignatureDoesNotMatch|AccessDenied|NetworkingError|TimeoutError|ETIMEDOUT|ECONNREFUSED|ECONNRESET|ENOTFOUND/i
+
+/**
+ * S3_BUCKET/AWS_REGION(및 useKms인 경우 KMS_KEY_ID) 환경변수 부재를
+ * "예상 못 한 서버 버그"(500)가 아니라 "외부 의존성이 일시적으로 준비되지
+ * 않음"(503)으로 구분한다. multer를 태우기 전에 먼저 확인한다.
+ */
+const assertUploadVendorConfigured = (useKms) => {
+  if (!process.env.AWS_REGION) {
+    throw Object.assign(new Error('AWS_REGION 환경변수가 설정되지 않았습니다'), { status: 503 })
+  }
+  if (!process.env.S3_BUCKET) {
+    throw Object.assign(new Error('S3_BUCKET 환경변수가 설정되지 않았습니다'), { status: 503 })
+  }
+  if (useKms && !process.env.KMS_KEY_ID) {
+    throw Object.assign(new Error('KMS_KEY_ID 환경변수가 설정되지 않았습니다'), { status: 503 })
+  }
+}
+
+/**
+ * multer 인스턴스의 .single()/.array() 핸들러를 감싸 (1) 업로드 시도 전 벤더 설정
+ * 부재를 503으로 먼저 걸러내고, (2) 환경변수는 있어도 값 자체가 무효한 자격
+ * 증명이라 multer-s3가 PutObject 시점에 던지는 raw AWS SDK 에러를 503으로
+ * 재분류한다. MulterError(파일 크기·개수 등)는 그대로 통과시켜 기존
+ * multerErrorHandler가 400으로 정규화하도록 둔다 - 벤더 도달 불가 원인이
+ * 아닌 에러(예: 우리 쪽 로직 문제)까지 503으로 뭉개지 않는다.
+ * @param {import('multer').Multer} multerHandler - upload.single(field) 또는 upload.array(field, n) 결과
+ * @param {boolean} useKms
+ */
+const wrapUpload = (multerHandler, useKms) => (req, res, callback) => {
+  try {
+    assertUploadVendorConfigured(useKms)
+  } catch (err) {
+    return callback(err)
+  }
+
+  multerHandler(req, res, (err) => {
+    if (err) {
+      if (!(err instanceof multer.MulterError) && !err.status) {
+        const signature = `${err.name ?? ''} ${err.code ?? ''} ${err.message ?? ''}`
+        if (VENDOR_UNAVAILABLE_ERROR_PATTERN.test(signature)) {
+          return callback(Object.assign(new Error(`파일 업로드 실패: ${err.message}`), { status: 503 }))
+        }
+      }
+      return callback(err)
+    }
+    return callback()
+  })
+}
+
 // ─── MIME / 확장자 허용 목록 ──────────────────────────────────────────────────
 //
 // 주의: multerS3는 파일을 S3로 스트리밍하므로 Node.js 레이어에서 magic bytes를
@@ -133,11 +195,14 @@ const buildFileFilter = (allowedMimes) => (req, file, cb) => {
  * @param {string} folder    - S3 경로 prefix (예: 'photos')
  */
 export const uploadSingleImage = (fieldName, folder) =>
-  multer({
-    storage: buildStorage(folder),
-    limits: { fileSize: IMAGE_MAX_BYTES },
-    fileFilter: buildFileFilter(ALLOWED_IMAGE_MIMES),
-  }).single(fieldName)
+  wrapUpload(
+    multer({
+      storage: buildStorage(folder),
+      limits: { fileSize: IMAGE_MAX_BYTES },
+      fileFilter: buildFileFilter(ALLOWED_IMAGE_MIMES),
+    }).single(fieldName),
+    false,
+  )
 
 /**
  * 오디오 단일 업로드 - SSE-KMS 적용 필수 (음성권 보호)
@@ -145,11 +210,14 @@ export const uploadSingleImage = (fieldName, folder) =>
  * @param {string} folder    - S3 경로 prefix (예: 'wills')
  */
 export const uploadSingleAudio = (fieldName, folder) =>
-  multer({
-    storage: buildStorage(folder, true),  // KMS 암호화 필수
-    limits: { fileSize: AUDIO_MAX_BYTES },
-    fileFilter: buildFileFilter(ALLOWED_AUDIO_MIMES),
-  }).single(fieldName)
+  wrapUpload(
+    multer({
+      storage: buildStorage(folder, true),  // KMS 암호화 필수
+      limits: { fileSize: AUDIO_MAX_BYTES },
+      fileFilter: buildFileFilter(ALLOWED_AUDIO_MIMES),
+    }).single(fieldName),
+    true,
+  )
 
 /**
  * 범용 단일 업로드 (이미지 + 오디오 모두 허용, 이미지 크기 기준 적용)
@@ -157,11 +225,14 @@ export const uploadSingleAudio = (fieldName, folder) =>
  * @param {string} folder
  */
 export const uploadSingle = (fieldName, folder) =>
-  multer({
-    storage: buildStorage(folder),
-    limits: { fileSize: AUDIO_MAX_BYTES },
-    fileFilter: buildFileFilter(ALLOWED_ALL_MIMES),
-  }).single(fieldName)
+  wrapUpload(
+    multer({
+      storage: buildStorage(folder),
+      limits: { fileSize: AUDIO_MAX_BYTES },
+      fileFilter: buildFileFilter(ALLOWED_ALL_MIMES),
+    }).single(fieldName),
+    false,
+  )
 
 /**
  * 사망증명서 등 신원 서류 업로드 (비회원, 초대 토큰 경유) - SSE-KMS 필수
@@ -170,11 +241,14 @@ export const uploadSingle = (fieldName, folder) =>
  * @param {string} fieldName - form-data 필드명
  */
 export const uploadDeathCertificate = (fieldName) =>
-  multer({
-    storage: buildTokenScopedStorage('wills', true), // KMS 암호화 필수 - 민감 신원 서류
-    limits: { fileSize: DOCUMENT_MAX_BYTES },
-    fileFilter: buildFileFilter(ALLOWED_DOCUMENT_MIMES),
-  }).single(fieldName)
+  wrapUpload(
+    multer({
+      storage: buildTokenScopedStorage('wills', true), // KMS 암호화 필수 - 민감 신원 서류
+      limits: { fileSize: DOCUMENT_MAX_BYTES },
+      fileFilter: buildFileFilter(ALLOWED_DOCUMENT_MIMES),
+    }).single(fieldName),
+    true,
+  )
 
 /**
  * 다중 파일 업로드
@@ -183,11 +257,14 @@ export const uploadDeathCertificate = (fieldName) =>
  * @param {string} folder
  */
 export const uploadMultiple = (fieldName, maxCount, folder) =>
-  multer({
-    storage: buildStorage(folder),
-    limits: { fileSize: IMAGE_MAX_BYTES },
-    fileFilter: buildFileFilter(ALLOWED_IMAGE_MIMES),
-  }).array(fieldName, maxCount)
+  wrapUpload(
+    multer({
+      storage: buildStorage(folder),
+      limits: { fileSize: IMAGE_MAX_BYTES },
+      fileFilter: buildFileFilter(ALLOWED_IMAGE_MIMES),
+    }).array(fieldName, maxCount),
+    false,
+  )
 
 /**
  * multer 에러를 400으로 정규화하는 에러 핸들러

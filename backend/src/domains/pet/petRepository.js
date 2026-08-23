@@ -108,7 +108,16 @@ const PET_UPDATABLE_COLS = {
   isPublic: 'is_public',
 }
 
-export const updatePet = async (petId, updates) => {
+/**
+ * @param {string} petId
+ * @param {object} updates
+ * @param {{prevStatus:string, nextStatus:string, changedBy:string, changedByType:string, reason?:string}|null} [statusChange]
+ *   [FIX D16] deathDate 등록으로 pet_status를 자동 전환할 때 petService가 넘긴다.
+ *   필드 UPDATE와 pet_status 전환 + pet_status_logs INSERT를 하나의 트랜잭션으로
+ *   묶어, 상태 전환 로그가 항상 필드 변경과 함께 커밋되도록 한다(둘 중 하나만
+ *   반영되는 상태 불일치 방지).
+ */
+export const updatePet = async (petId, updates, statusChange = null) => {
   // v !== undefined 로 필터링해 "필드를 아예 보내지 않음"(undefined, 값 유지)과
   // "명시적으로 null을 보냄"(값 제거, 예: deathDate 취소)을 구분한다.
   // 과거 `v ?? null`로 undefined까지 NULL로 바꾸면, 클라이언트가 일부 필드만 보낸
@@ -117,15 +126,48 @@ export const updatePet = async (petId, updates) => {
     .filter(([k, v]) => PET_UPDATABLE_COLS[k] !== undefined && v !== undefined)
     .map(([k, v]) => [PET_UPDATABLE_COLS[k], v])
 
-  if (entries.length === 0) return findPetById(petId)
+  if (entries.length === 0 && !statusChange) return findPetById(petId)
 
-  const setClauses = entries.map(([col]) => `${col} = ?`).join(', ')
-  const values = entries.map(([, v]) => v)
+  if (!statusChange) {
+    const setClauses = entries.map(([col]) => `${col} = ?`).join(', ')
+    const values = entries.map(([, v]) => v)
 
-  await pool.query(
-    `UPDATE pets SET ${setClauses}, updated_at = NOW() WHERE pet_id = ? AND deleted_at IS NULL`,
-    [...values, petId]
-  )
+    await pool.query(
+      `UPDATE pets SET ${setClauses}, updated_at = NOW() WHERE pet_id = ? AND deleted_at IS NULL`,
+      [...values, petId]
+    )
+    return findPetById(petId)
+  }
+
+  const conn = await pool.getConnection()
+  try {
+    await conn.beginTransaction()
+
+    const setClauses = [...entries.map(([col]) => `${col} = ?`), 'pet_status = ?'].join(', ')
+    const values = [...entries.map(([, v]) => v), statusChange.nextStatus]
+
+    await conn.query(
+      `UPDATE pets SET ${setClauses}, updated_at = NOW() WHERE pet_id = ? AND deleted_at IS NULL`,
+      [...values, petId]
+    )
+
+    await conn.query(
+      `INSERT INTO pet_status_logs
+         (log_id, pet_id, prev_status, next_status, changed_by, changed_by_type, reason, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
+      [
+        uuidv4(), petId, statusChange.prevStatus, statusChange.nextStatus,
+        statusChange.changedBy, statusChange.changedByType, statusChange.reason ?? null,
+      ]
+    )
+
+    await conn.commit()
+  } catch (err) {
+    await conn.rollback()
+    throw err
+  } finally {
+    conn.release()
+  }
   return findPetById(petId)
 }
 

@@ -128,10 +128,10 @@ const finalizeWillFailure = async ({ willId, userId, failReason }) => {
   }
 
   const message = effectiveRefund.refunded
-    ? '죄송합니다. 유언 영상 생성에 실패해 결제하신 금액을 전액 환불해 드렸어요. 카드사에 따라 환불 반영까지 며칠 걸릴 수 있어요. 내용을 다시 확인하고 시도해 보시겠어요?'
+    ? '죄송합니다. 영상 편지 생성에 실패해 결제하신 금액을 전액 환불해 드렸어요. 카드사에 따라 환불 반영까지 며칠 걸릴 수 있어요. 내용을 다시 확인하고 시도해 보시겠어요?'
     : effectiveRefund.reason === 'no_completed_payment'
-      ? '유언 영상 생성에 실패했습니다. 결제된 내역이 없어 별도 환불 없이 종료돼요. 다시 시도해 보시겠어요?'
-      : '죄송합니다. 유언 영상 생성에 실패했고, 환불 처리 중 문제가 발생했습니다. 저희가 곧 확인해서 환불해 드릴게요. 급하시면 고객센터로 연락해 주세요.'
+      ? '영상 편지 생성에 실패했습니다. 결제된 내역이 없어 별도 환불 없이 종료돼요. 다시 시도해 보시겠어요?'
+      : '죄송합니다. 영상 편지 생성에 실패했고, 환불 처리 중 문제가 발생했습니다. 저희가 곧 확인해서 환불해 드릴게요. 급하시면 고객센터로 연락해 주세요.'
 
   // [2026-08-22 컷오버] photoWorker.js와 동일 - AI 실패 자동 환불 통지는 payment_failed
   // 를 의미상 오용해 왔다. 전용 ENUM 값 'ai_processing_refunded'(마이그레이션 c)로 교체.
@@ -139,7 +139,7 @@ const finalizeWillFailure = async ({ willId, userId, failReason }) => {
     userId,
     type: 'ai_processing_refunded',
     referenceId: willId,
-    title: '유언 영상 생성 실패 안내',
+    title: '영상 편지 생성 실패 안내',
     message,
   }).catch((err) => console.error('[videoWorker] 실패 알림 INSERT 오류:', err.message))
 
@@ -151,7 +151,7 @@ const finalizeWillFailure = async ({ willId, userId, failReason }) => {
     await notificationQueue.add('will_video_failed_refund', {
       type: 'email',
       to: email,
-      subject: '[온담] 유언 영상 생성 실패 안내',
+      subject: '[온담] 영상 편지 생성 실패 안내',
       message,
     }).catch((err) => console.error('[videoWorker] 실패 알림 큐 등록 오류:', err.message))
   }
@@ -196,7 +196,7 @@ const processVideoGenerate = async (jobData, bullmqJobId) => {
     // contentText, elevenlabsVoiceId 검증
     const { elevenlabsVoiceId, contentText } = jobData
     if (!contentText || contentText.trim().length === 0) {
-      throw new Error('유언장 내용이 없습니다. 텍스트를 작성해 주세요.')
+      throw new Error('영상 편지 내용이 없습니다. 텍스트를 작성해 주세요.')
     }
     if (!elevenlabsVoiceId) {
       throw new Error('목소리 클론이 완료되지 않았습니다. 잠시 후 다시 시도해 주세요.')
@@ -304,8 +304,8 @@ const processVideoGenerate = async (jobData, bullmqJobId) => {
     userId,
     type: 'will_video_ready',
     referenceId: willId,
-    title: '유언 영상 생성 완료',
-    message: '유언 영상 AI 생성이 완료되었습니다.',
+    title: '영상 편지 생성 완료',
+    message: '영상 편지 AI 생성이 완료되었습니다.',
   }).catch((dbErr) => console.error('[videoWorker] 알림 INSERT 실패:', dbErr.message))
 }
 

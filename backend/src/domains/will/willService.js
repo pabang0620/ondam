@@ -87,8 +87,11 @@ const isTokenExpired = (beneficiary) =>
 // 새 토큰으로 4회 더"를 무한 반복해 5회 잠금이 사실상 우회됐다(D1 취약점의 핵심
 // 원인). beneficiary_id는 토큰이 아무리 회전해도 동일하므로, 동일 인물에 대한
 // 시도 횟수·잠금 상태가 토큰 회전과 무관하게 계속 누적된다.
-const watchAttemptsKey = (beneficiaryId) => `will:watch:attempts:${beneficiaryId}`
-const watchLockKey = (beneficiaryId) => `will:watch:locked:${beneficiaryId}`
+// [FIX D13] export - adminService.unlockWillWatchAccess가 동일한 Redis 키 포맷을
+// 재사용한다. 문자열을 admin 쪽에 따로 하드코딩하면 이 파일에서 포맷이 바뀔 때
+// 조용히 어긋나(admin이 엉뚱한 키를 지워 해제가 안 되는) 방식으로 깨질 수 있다.
+export const watchAttemptsKey = (beneficiaryId) => `will:watch:attempts:${beneficiaryId}`
+export const watchLockKey = (beneficiaryId) => `will:watch:locked:${beneficiaryId}`
 
 const extractPhoneLast4 = (phone) => {
   if (!phone) return null
@@ -280,7 +283,7 @@ export const createWill = async (
   }
   if (sample.clone_status !== 'ready') {
     throw Object.assign(
-      new Error('음성 클론이 아직 완료되지 않았습니다. clone_status가 ready일 때 유언장을 생성하세요.'),
+      new Error('음성 클론이 아직 완료되지 않았습니다. clone_status가 ready일 때 영상 편지를 생성하세요.'),
       { status: 400 },
     )
   }
@@ -330,7 +333,7 @@ export const createWill = async (
 export const getWill = async (userId, willId) => {
   const will = await repo.findWillById(willId)
   if (!will) {
-    throw Object.assign(new Error('유언장을 찾을 수 없습니다'), { status: 404 })
+    throw Object.assign(new Error('영상 편지를 찾을 수 없습니다'), { status: 404 })
   }
   if (String(will.user_id) !== String(userId)) {
     throw Object.assign(new Error('접근 권한이 없습니다'), { status: 403 })
@@ -358,20 +361,20 @@ export const getWill = async (userId, willId) => {
 export const getWills = async (userId, { page = 1, limit = 20 }) => {
   const offset = (page - 1) * limit
   const { wills, total } = await repo.findWillsByUserId(userId, { limit, offset })
-  // KMS 복호화 (보안 갭 1 수정) - 목록의 각 행도 getWill과 동일하게 복호화한 평문을
-  // 'content_text' 키로 병합한 뒤 화이트리스트를 거친다.
-  const willsWithPlainText = await Promise.all(
-    wills.map(async (will) => ({
-      ...will,
-      content_text: await decryptWillContent(
-        will.content_text_encrypted, will.content_text_kms_key_id, will.content_text_enc_format,
-      ),
-    })),
-  )
+  // [성능 수정] 목록 화면(마이페이지·보관함)은 title/status/날짜만 쓰고 본문을 쓰지
+  // 않는다(frontend/src/pages/{mypage,will}에서 content_text/contentText 참조 없음
+  // grep으로 확인 - MyPage.jsx·WillVaultPage.jsx는 will_id/title/status/created_at만
+  // 사용). 행마다 KMS Decrypt를 거는 것은 최대 limit(50)건 조회 시마다 최대 50회
+  // KMS 호출을 유발해 마이페이지 진입을 눈에 띄게 느리게 만든다 - 목록에서는
+  // 복호화를 아예 하지 않는다. 본문은 상세 조회(getWill)에서만 복호화한다.
+  // content_text를 병합하지 않으므로 toWillDtos(pick)가 'content_text in row'를
+  // false로 판정해 응답에서 자동으로 빠진다(WILL_PUBLIC_FIELDS는 그대로 두되
+  // 화이트리스트 특성상 값이 없으면 노출되지 않는다).
   return {
-    // 화이트리스트 응답 - result_video_s3_key_encrypted/result_video_kms_key_id(KMS
-    // 참조값)와 내부 AUTO_INCREMENT id는 WILL_PUBLIC_FIELDS에 없으므로 자동 제외된다.
-    wills: toWillDtos(willsWithPlainText),
+    // 화이트리스트 응답 - content_text_encrypted/content_text_kms_key_id,
+    // result_video_s3_key_encrypted/result_video_kms_key_id(KMS 참조값)와 내부
+    // AUTO_INCREMENT id는 WILL_PUBLIC_FIELDS에 없으므로 자동 제외된다.
+    wills: toWillDtos(wills),
     meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
   }
 }
@@ -392,8 +395,44 @@ export const getWills = async (userId, { page = 1, limit = 20 }) => {
  * 'paid' })`를 호출. 즉 'paid'만 검사하면 직접 결제·선물 결제 두 경로 모두
  * 정상 허용되고, 결제 자체가 없는 'draft'만 정확히 차단된다.
  */
+// [G4-4 동일 패턴 적용] activateWill도 paymentService.confirmPayment와 동일하게 락
+// 구간과 외부 호출(KMS 복호화, Redis BullMQ 등록) 구간을 분리한다. 이전에는 FOR
+// UPDATE 락을 쥔 채로 KMS 네트워크 호출까지 했다 - connectionLimit=10인 풀에서
+// KMS가 느려지면 결제와 무관한 다른 API까지 커넥션 고갈로 멈출 수 있었다.
+//
+//   1) 짧은 트랜잭션 #1 - FOR UPDATE로 상태·조건 확인 후, wills.status를
+//      'paid' → 'active'로 곧바로 확정하고 즉시 commit(락 해제). status ENUM에는
+//      payments.toss_payment_key 같은 별도 "선점(claim)" 컬럼이 없으므로, 'paid'만
+//      허용하는 상태 전이 자체가 곧 선점 마커다 - 동시에 들어온 두 번째 요청은
+//      같은 조건 검사에서 status !== 'paid'를 보고 즉시 거부되어, KMS/큐가 두 번
+//      호출되는 경쟁 조건이 발생하지 않는다(원래 FOR UPDATE의 목적 유지).
+//   2) 락 밖에서 KMS 복호화 → BullMQ videoGenerateQueue.add
+//   3) ai_jobs 기록은 bullJob.id가 필요해 큐 등록 성공 이후에만 가능하다
+//
+// 정합성 보장 - "큐 등록 성공 + DB 롤백(유령 잡)" vs "DB만 커밋 + 큐 등록 실패
+// (영영 미처리)" 두 실패 모드 중 어느 쪽이 발생해도 되돌릴 수 있는 쪽을 택한다:
+//   - status='active' 커밋을 큐 등록보다 먼저 확정한다. 그래야 KMS/큐 호출이
+//     실패해도 "이미 결제완료·비용 발생 전" 상태이므로 아래 catch에서 status를
+//     'paid'로 보상(compensate)해 되돌리면 사용자가 안전하게 재시도할 수 있다.
+//     반대로 큐 등록을 먼저 하고 DB 커밋을 나중에 하면, DB 커밋 실패 시 이미
+//     videoWorker가 ElevenLabs/립싱크 벤더 비용을 실제로 써버린 뒤라 되돌릴 수
+//     없는 유령 잡이 된다(보상 불가능한 실패 모드) - 그래서 이 순서를 택했다.
+//   - ai_jobs 기록 실패는 큐 등록이 이미 성공한 뒤이므로 상태를 되돌리지 않는다
+//     (paymentService confirmPayment의 conn2 실패 처리와 동일한 원칙 - "이미
+//     외부에서 확정된 사실을 DB 기록 실패를 이유로 되돌리면 더 큰 불일치가
+//     생긴다"). 대신 상세 로그만 남기고 큐 등록은 유효한 것으로 간주해 정상
+//     반환한다 - videoWorker의 updateAiJob은 bullmq_job_id로 매칭되는 행이 없으면
+//     0건 UPDATE로 조용히 넘어갈 뿐 워커 자체는 계속 진행되므로, 폴링 화면에
+//     진행률이 한동안 안 보일 수 있다는 것 외에는 영상 생성 자체는 정상 완료된다.
 export const activateWill = async (userId, willId) => {
+  // ── 짧은 트랜잭션 #1: 상태·조건 확인 + 'active' 확정, 즉시 commit ──
   const conn = await pool.getConnection()
+  let prevStatus
+  let sample
+  let photoS3Key
+  let contentTextEncrypted
+  let contentTextKmsKeyId
+  let contentTextEncFormat
   try {
     await conn.beginTransaction()
 
@@ -403,7 +442,7 @@ export const activateWill = async (userId, willId) => {
       [willId],
     )
     if (!will) {
-      throw Object.assign(new Error('유언장을 찾을 수 없습니다'), { status: 404 })
+      throw Object.assign(new Error('영상 편지를 찾을 수 없습니다'), { status: 404 })
     }
     if (String(will.user_id) !== String(userId)) {
       throw Object.assign(new Error('접근 권한이 없습니다'), { status: 403 })
@@ -415,11 +454,11 @@ export const activateWill = async (userId, willId) => {
       )
     }
     if (will.status !== 'paid') {
-      throw Object.assign(new Error('이미 처리 중이거나 완료된 유언장입니다'), { status: 400 })
+      throw Object.assign(new Error('이미 처리 중이거나 완료된 영상 편지입니다'), { status: 400 })
     }
 
-    // 음성 샘플 조회 - null이면 400 에러
-    const sample = await repo.findVoiceSampleById(will.voice_sample_id)
+    // 음성 샘플 조회 - null이면 400 에러 (순수 DB 조회, 외부 호출 아님 - 락 안에 유지)
+    sample = await repo.findVoiceSampleById(will.voice_sample_id)
     if (!sample) {
       throw Object.assign(new Error('음성 샘플이 없습니다'), { status: 400 })
     }
@@ -430,12 +469,12 @@ export const activateWill = async (userId, willId) => {
       )
     }
 
-    // 사용자 프로필 이미지 S3 키 조회 (videoWorker 사진 소스)
+    // 사용자 프로필 이미지 S3 키 조회 (videoWorker 사진 소스) - 순수 DB 조회
     const profileImageUrl = await repo.findUserProfileImageUrl(userId)
-    const photoS3Key = extractS3KeyFromUrl(profileImageUrl)
+    photoS3Key = extractS3KeyFromUrl(profileImageUrl)
     if (!photoS3Key) {
       throw Object.assign(
-        new Error('프로필 사진이 없습니다. 유언 영상 생성 전 프로필 사진을 등록해 주세요.'),
+        new Error('프로필 사진이 없습니다. 영상 편지 생성 전 프로필 사진을 등록해 주세요.'),
         { status: 400 },
       )
     }
@@ -452,15 +491,47 @@ export const activateWill = async (userId, willId) => {
       throw Object.assign(new Error('음성 처리 동의가 필요합니다'), { status: 400 })
     }
 
-    // KMS 복호화 (보안 갭 1 수정) - videoWorker는 TTS 생성을 위해 평문이 필요하다.
-    // content_text_encrypted를 그대로 큐 페이로드에 넣으면 워커가 KMS 복호화를
-    // 몰라 그대로 TTS API에 암호문을 넘기게 된다.
+    // KMS 복호화·큐 등록에 필요한 값만 락 안에서 꺼내두고(추가 네트워크 호출 없음),
+    // 실제 복호화(decryptWillContent)는 락 밖(2단계)에서 수행한다.
+    prevStatus = will.status
+    contentTextEncrypted = will.content_text_encrypted
+    contentTextKmsKeyId = will.content_text_kms_key_id
+    contentTextEncFormat = will.content_text_enc_format
+
+    // status 확정 - 'paid' → 'active'. 이 UPDATE 자체가 동시 요청에 대한 선점
+    // (claim) 역할을 한다(위 함수 주석 참고).
+    await conn.execute(
+      'UPDATE wills SET status = ?, updated_at = NOW() WHERE will_id = ?',
+      ['active', willId],
+    )
+    await repo.addWillStatusLog({
+      logId: uuidv4(),
+      willId,
+      prevStatus,
+      nextStatus: 'active',
+      changedBy: userId,
+      changedByType: 'user',
+      reason: '사용자 활성화 요청',
+    })
+
+    await conn.commit()
+  } catch (err) {
+    await conn.rollback().catch(() => {})
+    throw err
+  } finally {
+    conn.release()
+  }
+
+  // ── 락 밖: KMS 복호화 + BullMQ 큐 등록 ──
+  // videoWorker는 TTS 생성을 위해 평문이 필요하다. content_text_encrypted를 그대로
+  // 큐 페이로드에 넣으면 워커가 KMS 복호화를 몰라 그대로 TTS API에 암호문을 넘기게 된다.
+  let bullJob
+  try {
     const contentText = await decryptWillContent(
-      will.content_text_encrypted, will.content_text_kms_key_id, will.content_text_enc_format,
+      contentTextEncrypted, contentTextKmsKeyId, contentTextEncFormat,
     )
 
-    // BullMQ 영상 생성 큐 등록 (트랜잭션 내 - 롤백 시 큐 항목만 유실, 워커 멱등성으로 처리)
-    const bullJob = await videoGenerateQueue.add('generate', {
+    bullJob = await videoGenerateQueue.add('generate', {
       willId,
       userId,
       photoS3Key,
@@ -469,8 +540,37 @@ export const activateWill = async (userId, willId) => {
       elevenlabsVoiceId: sample.elevenlabs_voice_id ?? null,
       contentText,
     })
+  } catch (err) {
+    // [보상 트랜잭션] status='active'는 이미 커밋됐는데 KMS 복호화나 큐 등록이
+    // 실패했다 - 이대로 두면 결제·활성화는 완료 상태인데 영상 생성 잡이 전혀 없는
+    // "영영 처리되지 않는 유언장"이 된다. 아직 벤더 비용이 발생하지 않은 시점이므로
+    // status를 'paid'로 되돌려 사용자가 안전하게 재시도할 수 있게 한다.
+    await pool.execute(
+      "UPDATE wills SET status = 'paid', updated_at = NOW() WHERE will_id = ? AND status = 'active'",
+      [willId],
+    ).catch((compErr) => {
+      console.error(
+        '[willService] activateWill 보상(rollback to paid) 실패 - 수동 확인 필요:',
+        { willId, error: compErr.message },
+      )
+    })
+    await repo.addWillStatusLog({
+      logId: uuidv4(),
+      willId,
+      prevStatus: 'active',
+      nextStatus: 'paid',
+      changedBy: userId,
+      changedByType: 'user',
+      reason: `활성화 실패 자동 롤백 (${err.message})`,
+    }).catch(() => {})
+    throw err
+  }
 
-    const jobId = uuidv4()
+  // ai_jobs 기록 - bullJob.id가 필요해 큐 등록 성공 이후에만 가능하다. 이 시점부터는
+  // 큐 등록이 이미 확정된 사실이므로, 아래 INSERT가 실패해도 status를 되돌리지
+  // 않는다(위 함수 주석의 정합성 설명 참고) - 상세 로그만 남기고 정상 반환한다.
+  const jobId = uuidv4()
+  try {
     await repo.createAiJob({
       jobId,
       userId,
@@ -480,31 +580,14 @@ export const activateWill = async (userId, willId) => {
       targetId: willId,
       queueName: 'videoGenerate',
     })
-
-    // status 업데이트 - 같은 트랜잭션 내에서 커넥션을 직접 사용
-    await conn.execute(
-      'UPDATE wills SET status = ?, updated_at = NOW() WHERE will_id = ?',
-      ['active', willId],
-    )
-
-    await repo.addWillStatusLog({
-      logId: uuidv4(),
-      willId,
-      prevStatus: will.status,
-      nextStatus: 'active',
-      changedBy: userId,
-      changedByType: 'user',
-      reason: '사용자 활성화 요청',
-    })
-
-    await conn.commit()
-    return { jobId, bullJobId: String(bullJob.id) }
   } catch (err) {
-    await conn.rollback()
-    throw err
-  } finally {
-    conn.release()
+    console.error(
+      '[willService] activateWill ai_jobs 기록 실패 - 큐 등록은 이미 완료됨(수동 확인 필요):',
+      { willId, bullJobId: String(bullJob.id), error: err.message },
+    )
   }
+
+  return { jobId, bullJobId: String(bullJob.id) }
 }
 
 /**
@@ -513,7 +596,7 @@ export const activateWill = async (userId, willId) => {
 export const getVideoStatus = async (userId, willId) => {
   const will = await repo.findWillById(willId)
   if (!will) {
-    throw Object.assign(new Error('유언장을 찾을 수 없습니다'), { status: 404 })
+    throw Object.assign(new Error('영상 편지를 찾을 수 없습니다'), { status: 404 })
   }
   if (String(will.user_id) !== String(userId)) {
     throw Object.assign(new Error('접근 권한이 없습니다'), { status: 403 })
@@ -576,7 +659,7 @@ export const requestRelease = async (token, { deathCertS3Key, deathCertUrl }) =>
 
   const will = await repo.findWillById(beneficiary.will_id)
   if (!will) {
-    throw Object.assign(new Error('유언장을 찾을 수 없습니다'), { status: 404 })
+    throw Object.assign(new Error('영상 편지를 찾을 수 없습니다'), { status: 404 })
   }
 
   // 서류 소유권 스코프 검증 (온담 보안 규칙 G9-4) - uploadDeathCertificate가 발급하는
@@ -595,10 +678,10 @@ export const requestRelease = async (token, { deathCertS3Key, deathCertUrl }) =>
   // 생성 완료된 유언장은 status='active' 그대로 유지되고 release_status로 공개 여부만
   // 구분한다. 'completed'는 죽은 조건이라 제거했다.
   if (will.status !== 'active') {
-    throw Object.assign(new Error('활성화된 유언장만 공개 요청이 가능합니다'), { status: 400 })
+    throw Object.assign(new Error('활성화된 영상 편지만 공개 요청이 가능합니다'), { status: 400 })
   }
   if (will.release_status === 'released') {
-    throw Object.assign(new Error('이미 공개된 유언장입니다'), { status: 409 })
+    throw Object.assign(new Error('이미 공개된 영상 편지입니다'), { status: 409 })
   }
   if (will.release_status === 'pending_review') {
     throw Object.assign(new Error('이미 검토 중인 공개 요청이 있습니다'), { status: 409 })
@@ -631,11 +714,11 @@ const resolveWatchTarget = async (token) => {
 
   const will = await repo.findWillById(beneficiary.will_id)
   if (!will) {
-    throw Object.assign(new Error('유언장을 찾을 수 없습니다'), { status: 404 })
+    throw Object.assign(new Error('영상 편지를 찾을 수 없습니다'), { status: 404 })
   }
   if (will.release_status !== 'released') {
     throw Object.assign(
-      new Error('아직 공개되지 않은 유언장입니다. 관리자 검토 후 공개됩니다.'),
+      new Error('아직 공개되지 않은 영상 편지입니다. 관리자 검토 후 공개됩니다.'),
       { status: 403 },
     )
   }

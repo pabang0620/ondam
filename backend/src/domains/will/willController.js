@@ -37,7 +37,7 @@ export const createWill = async (req, res, next) => {
   try {
     const { userId } = req.user
     const result = await willService.createWill(userId, req.body)
-    return created(res, result, '유언장이 생성되었습니다')
+    return created(res, result, '영상 편지가 생성되었습니다')
   } catch (err) {
     next(err)
   }
@@ -73,7 +73,7 @@ export const activateWill = async (req, res, next) => {
     const { userId } = req.user
     const { willId } = req.params
     const result = await willService.activateWill(userId, willId)
-    return success(res, result, '유언장 활성화 및 영상 생성 작업이 시작되었습니다')
+    return success(res, result, '영상 편지 활성화 및 영상 생성 작업이 시작되었습니다')
   } catch (err) {
     next(err)
   }
@@ -110,11 +110,19 @@ export const attachReleaseContext = async (req, res, next) => {
  * 사망증명서 업로드 (비회원, 초대 토큰 경유) - attachReleaseContext 이후 호출됨
  * uploadRoutes.js와 동일한 관례: multer 인스턴스는 요청 시점에 생성한다
  * (라우터 등록 시점에 미리 만들면 S3_BUCKET 등 환경변수 로드 순서에 취약해진다)
+ *
+ * [결함 4 수정] S3_BUCKET/AWS_REGION 미설정·무효 자격 증명을 503으로 재분류하는
+ * 가드는 이제 common/uploadMiddleware.js(uploadDeathCertificate 내부 wrapUpload)가
+ * 담당한다 - 여기서 개별적으로 우회 구현하던 코드는 제거했다(중복 정리). 미들웨어가
+ * 정확히 같은 경로(uploadDeathCertificate가 반환하는 핸들러)를 덮으므로 동작은
+ * 약해지지 않는다 - uploadMiddleware.js의 wrapUpload/assertUploadVendorConfigured 참고.
  */
 export const uploadReleaseDocument = (req, res, next) => {
   const upload = uploadDeathCertificate('file')
   upload(req, res, (err) => {
-    if (err) return next(err) // willRoutes.js 하단 multerErrorHandler가 400으로 정규화
+    if (err) {
+      return next(err) // willRoutes.js 하단 multerErrorHandler가 400으로 정규화(503은 err.status로 그대로 전파)
+    }
     if (!req.file) {
       return next(Object.assign(new Error('업로드할 서류 파일이 없습니다'), { status: 400 }))
     }

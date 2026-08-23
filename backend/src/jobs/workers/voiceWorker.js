@@ -82,7 +82,7 @@ const processVoiceClone = async (jobData, bullmqJobId) => {
     // ElevenLabs Voice Clone API 호출
     const formData = new FormData()
     formData.append('name', `ondam-${voiceSampleId}`)
-    formData.append('description', '온담 유언장 음성 클론')
+    formData.append('description', '온담 영상 편지 음성 클론')
     formData.append(
       'files',
       new File([audioBuffer], `voice_${voiceSampleId}.mp3`, { type: 'audio/mpeg' }),
@@ -125,7 +125,7 @@ const processVoiceClone = async (jobData, bullmqJobId) => {
        (notification_id, user_id, notification_type, target_type, target_id,
         title, message, is_read, created_at)
      VALUES (?, ?, 'voice_clone_complete', NULL, NULL,
-             '음성 클론 완료', '음성 클론이 완료되었습니다. 이제 유언 영상을 생성할 수 있습니다.', 0, NOW())`,
+             '음성 클론 완료', '음성 클론이 완료되었습니다. 이제 영상 편지를 생성할 수 있습니다.', 0, NOW())`,
     [notifId, userId],
   ).catch((dbErr) => console.error('[voiceWorker] 알림 INSERT 실패:', dbErr.message))
 

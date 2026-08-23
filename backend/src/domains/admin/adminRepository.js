@@ -205,6 +205,21 @@ export const updateWillReleaseStatus = async (willId, releaseStatus) => {
   )
 }
 
+/**
+ * beneficiary_id(UUID)로 수신인 조회 (D13 - 유가족 본인확인 잠금 해제용)
+ * 잠금 상태 자체는 Redis(willService.watchLockKey)가 진실이라 이 조회는 "그런
+ * 수신인이 실제로 존재하는지"와 audit_logs에 남길 will_id만 확인하면 된다.
+ */
+export const findBeneficiaryById = async (beneficiaryId) => {
+  const [rows] = await pool.query(
+    `SELECT beneficiary_id, will_id, name FROM will_beneficiaries
+     WHERE beneficiary_id = ? AND deleted_at IS NULL
+     LIMIT 1`,
+    [beneficiaryId],
+  )
+  return rows[0] ?? null
+}
+
 export const findWillBeneficiaries = async (willId) => {
   const [rows] = await pool.query(
     `SELECT wb.beneficiary_id, wb.name, wb.email AS beneficiary_email, wb.phone AS beneficiary_phone,
@@ -308,10 +323,19 @@ export const getUsers = async ({ limit, offset, search }) => {
 export const getFailedJobs = async ({ limit, offset }) => {
   const [rows] = await pool.query(
     `SELECT
-       j.job_id, j.user_id, j.job_type, j.job_status, j.queue_name,
-       j.target_type, j.target_id, j.error_message, j.retry_cnt,
-       j.started_at, j.completed_at, j.created_at,
-       u.email AS user_email
+       j.job_id        AS jobId,
+       j.user_id       AS userId,
+       j.job_type      AS jobType,
+       j.job_status    AS jobStatus,
+       j.queue_name    AS queueName,
+       j.target_type   AS targetType,
+       j.target_id     AS targetId,
+       j.error_message AS errorMessage,
+       j.retry_cnt     AS retryCnt,
+       j.started_at    AS startedAt,
+       j.completed_at  AS completedAt,
+       j.created_at    AS createdAt,
+       u.email         AS userEmail
      FROM ai_jobs j
      LEFT JOIN users u ON u.user_id = j.user_id
      WHERE j.job_status = 'failed' AND j.deleted_at IS NULL
@@ -331,7 +355,12 @@ export const getFailedJobs = async ({ limit, offset }) => {
 // 안 갔다"를 파악할 수 있는 유일한 수단이므로 여기서 조회 가능하게 노출한다.
 export const getFailedNotifications = async ({ limit, offset }) => {
   const [rows] = await pool.query(
-    `SELECT log_id, target_type, target_id, detail, created_at
+    `SELECT
+       log_id      AS logId,
+       target_type AS targetType,
+       target_id   AS targetId,
+       detail      AS detail,
+       created_at  AS createdAt
      FROM audit_logs
      WHERE action = 'notification_delivery_failed'
      ORDER BY created_at DESC

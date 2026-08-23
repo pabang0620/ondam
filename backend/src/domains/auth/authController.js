@@ -79,7 +79,14 @@ export const refreshToken = async (req, res, next) => {
 
     const { accessToken, refreshToken: newRefreshToken, user } = await authService.refresh(token)
 
-    res.cookie(RT_COOKIE, newRefreshToken, RT_COOKIE_OPTIONS)
+    // [결함3 수정] adminController.refresh와 동일한 처리 - 다중 탭 그레이스 경로
+    // (authService.refresh 참고)에서는 newRefreshToken이 null로 온다. 이 경우 쿠키를
+    // 다시 심지 않는다 - 먼저 도착한 탭이 이미 심어둔 최신 rt 쿠키를 그대로 둬야 한다.
+    // (여기서 무조건 res.cookie를 호출하면 값이 문자열 "null"로 직렬화되어 쿠키가
+    // 깨진 토큰으로 덮어써진다.)
+    if (newRefreshToken) {
+      res.cookie(RT_COOKIE, newRefreshToken, RT_COOKIE_OPTIONS)
+    }
 
     return success(res, { accessToken, user }, '토큰 갱신 성공')
   } catch (err) {

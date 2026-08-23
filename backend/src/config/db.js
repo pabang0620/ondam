@@ -12,7 +12,18 @@ const pool = mysql.createPool({
   connectionLimit: 10,
   charset: 'utf8mb4',
   timezone: '+09:00',
-  dateStrings: false,
+  // [FIX D15] DATE 컬럼(시각 개념 없음: pets.birth_date/death_date,
+  // ad_spend.period_start/period_end, subscriptions.billing_cycle_date)을 mysql2가
+  // 기본 JS Date 객체로 역직렬화하면, 이후 JSON.stringify()가 항상 UTC로 변환하며
+  // KST(+09:00) 자정을 전날 15:00Z로 밀어버린다 - "2015-03-01" 저장값이
+  // "2015-02-28T15:00:00.000Z"로 응답되는 하루 밀림 버그(생일·기일이 하루 틀리면
+  // 이 서비스에선 치명적이다). mysql2는 dateStrings에 컬럼 타입명 배열을 주면 그
+  // 타입만 선택적으로 문자열로 반환한다(node_modules/mysql2/lib/helpers.js
+  // typeMatch - Types[t]와 일치하는 타입만 파싱 단계에서 문자열 취급). ['DATE']만
+  // 지정해 DATETIME/TIMESTAMP(시각이 실제로 의미 있는 created_at 등)는 건드리지
+  // 않는다 - 그 컬럼들은 계속 JS Date 객체로 와야 시간 계산(예: 정기결제
+  // next_billing_date 비교)이 그대로 동작한다.
+  dateStrings: ['DATE'],
   supportBigNumbers: true,
 })
 

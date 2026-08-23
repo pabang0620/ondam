@@ -46,8 +46,22 @@ export const getPets = async (req, res, next) => {
  */
 export const getPet = async (req, res, next) => {
   try {
-    const pet = await petService.getPet(req.user.userId, req.params.petId)
+    const pet = await petService.getPetDetail(req.user.userId, req.params.petId)
     return success(res, pet)
+  } catch (err) {
+    next(err)
+  }
+}
+
+/**
+ * GET /api/pet/:petId/memorial-code
+ * [FIX D17] 추모관 접근 코드 전용 조회 - 일반 펫 CRUD 응답에서는 더 이상 내려주지
+ * 않고, 소유자가 코드를 다시 확인하고 싶을 때 이 경로로만 조회한다.
+ */
+export const getMemorialAccessCode = async (req, res, next) => {
+  try {
+    const result = await petService.getMemorialAccessCode(req.user.userId, req.params.petId)
+    return success(res, result)
   } catch (err) {
     next(err)
   }

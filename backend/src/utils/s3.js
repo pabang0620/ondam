@@ -29,12 +29,40 @@ export const extractS3KeyFromUrl = (url) => {
   }
 }
 
+/**
+ * [FIX D14] S3 벤더 설정(리전·버킷) 부재를 "예상 못 한 서버 버그"(500)가 아니라
+ * "외부 의존성이 일시적으로 준비되지 않음"(503)으로 구분한다 - kms.js의
+ * assertKmsRegionConfigured와 동일한 근거. AWS_REGION이 없으면 getSignedUrl이
+ * 서명 단계에서 이미 raw AWS SDK 에러를 던질 수 있어 버킷 확인과 함께 체크한다.
+ */
 const getS3Bucket = () => {
+  if (!process.env.AWS_REGION) {
+    throw Object.assign(new Error('AWS_REGION 환경변수가 설정되지 않았습니다'), { status: 503 })
+  }
   const bucket = process.env.S3_BUCKET
   if (!bucket) {
-    throw Object.assign(new Error('S3_BUCKET 환경변수가 설정되지 않았습니다'), { status: 500 })
+    throw Object.assign(new Error('S3_BUCKET 환경변수가 설정되지 않았습니다'), { status: 503 })
   }
   return bucket
+}
+
+/**
+ * [FIX D14] kms.js의 wrapKmsError와 동일한 근거 - 환경변수가 형식상 존재해도 값
+ * 자체가 유효하지 않으면(만료/무효 자격 증명 등) s3Client.send()가 raw AWS SDK
+ * 에러(InvalidAccessKeyId 등)를 던지고, 이 역시 .status가 없어 500이 된다. 벤더에
+ * 닿을 수 없는 원인만 503으로 재분류하고, 그 외(예: 잘못된 Key로 인한 NoSuchKey처럼
+ * 우리 쪽 로직 문제일 가능성이 있는 에러)는 500 그대로 둔다.
+ */
+const VENDOR_UNAVAILABLE_ERROR_PATTERN =
+  /CredentialsProviderError|UnrecognizedClientException|InvalidClientTokenId|InvalidAccessKeyId|AuthorizationHeaderMalformed|MissingAuthenticationToken|ExpiredTokenException|SignatureDoesNotMatch|AccessDenied|NetworkingError|TimeoutError|ETIMEDOUT|ECONNREFUSED|ECONNRESET|ENOTFOUND/i
+
+const wrapS3Error = (err, fallbackMessage) => {
+  if (err.status) return err // getS3Bucket()의 503은 재래핑하지 않고 그대로 전파
+  const signature = `${err.name ?? ''} ${err.code ?? ''} ${err.message ?? ''}`
+  if (VENDOR_UNAVAILABLE_ERROR_PATTERN.test(signature)) {
+    return Object.assign(new Error(`S3 요청 실패: ${err.message}`), { status: 503 })
+  }
+  return Object.assign(new Error(fallbackMessage), { status: 500 })
 }
 
 /**
@@ -99,10 +127,7 @@ export const downloadFromS3 = async (s3Key) => {
     }
     return Buffer.concat(chunks)
   } catch (err) {
-    throw Object.assign(
-      new Error(`S3 다운로드 실패 (${s3Key}): ${err.message}`),
-      { status: 500 },
-    )
+    throw wrapS3Error(err, `S3 다운로드 실패 (${s3Key}): ${err.message}`)
   }
 }
 
@@ -118,7 +143,7 @@ export const uploadToS3 = async (s3Key, buffer, { contentType, useKms = false } 
     const bucket = getS3Bucket()
 
     if (useKms && !process.env.KMS_KEY_ID) {
-      throw Object.assign(new Error('KMS_KEY_ID 환경변수가 설정되지 않았습니다'), { status: 500 })
+      throw Object.assign(new Error('KMS_KEY_ID 환경변수가 설정되지 않았습니다'), { status: 503 })
     }
 
     const params = {
@@ -137,11 +162,7 @@ export const uploadToS3 = async (s3Key, buffer, { contentType, useKms = false } 
 
     return `https://${bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${s3Key}`
   } catch (err) {
-    if (err.status) throw err  // 이미 래핑된 에러는 그대로 전파
-    throw Object.assign(
-      new Error(`S3 업로드 실패 (${s3Key}): ${err.message}`),
-      { status: 500 },
-    )
+    throw wrapS3Error(err, `S3 업로드 실패 (${s3Key}): ${err.message}`)
   }
 }
 
@@ -158,10 +179,6 @@ export const deleteFromS3 = async (s3Key) => {
     })
     await s3Client.send(command)
   } catch (err) {
-    if (err.status) throw err
-    throw Object.assign(
-      new Error(`S3 삭제 실패 (${s3Key}): ${err.message}`),
-      { status: 500 },
-    )
+    throw wrapS3Error(err, `S3 삭제 실패 (${s3Key}): ${err.message}`)
   }
 }

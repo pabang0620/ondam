@@ -26,6 +26,20 @@ const PET_MEDIA_PUBLIC_FIELDS = [
 const toPetMediaDto = (media) => pick(media, PET_MEDIA_PUBLIC_FIELDS)
 const toPetMediaDtos = (rows) => pickAll(rows, PET_MEDIA_PUBLIC_FIELDS)
 
+// [FIX D17] petRepository.findPetById는 SELECT에 memorial_access_code를 포함한다
+// (자기 자신의 추모 코드를 나중에 다시 확인할 수 있어야 한다는 요구 - petRepository.js
+// DEV-31 주석 참고). 문제는 findPetById를 호출하는 createPet/getPet/updatePet/
+// updatePetStatus 4개 함수가 그 결과를 그대로 컨트롤러에 반환하면서, 펫을 만들거나
+// 이름만 바꾸는 등 접근 코드를 조회할 의도가 전혀 없는 모든 요청에도 코드가 매번
+// 응답 본문에 실려 나갔다는 점이다(소유자 한정이라 직접적인 악용 경로는 아니지만,
+// 노출 표면은 최소화하는 것이 원칙). 화이트리스트에서 memorial_access_code를 빼고,
+// 코드가 정말 필요한 순간에만 getMemorialAccessCode 전용 조회 엔드포인트로 분리한다.
+const PET_PUBLIC_FIELDS = [
+  'pet_id', 'user_id', 'name', 'species', 'breed', 'birth_date', 'death_date',
+  'pet_status', 'memorial_slug', 'is_public', 'profile_image_url', 'created_at', 'updated_at',
+]
+const toPetDto = (pet) => pick(pet, PET_PUBLIC_FIELDS)
+
 // AI_JOB_TARGET_TYPE 배열에서 조회 - 오타 시 undefined가 되어 INSERT가 즉시
 // 실패하므로(NOT NULL) 리터럴 오타가 조용히 DB에 들어가는 것을 방지한다
 const TARGET_TYPE_PET = AI_JOB_TARGET_TYPE.find((t) => t === 'pet')
@@ -58,10 +72,17 @@ const nextMonthStartKST = () => {
 
 /**
  * 펫 생성
+ *
+ * [FIX D16] deathDate를 입력해 만들어도 pet_status가 항상 'alive'로 고정돼 있어,
+ * 사용자가 별도로 PATCH /:petId/status를 호출하지 않는 한 추모 페이지가 항상 404
+ * 였다(스모크 검증에서 발견된 최초 원인). 생성 시점에 deathDate가 있으면 이미
+ * 고인이 된 반려동물을 등록하는 것이므로 pet_status를 곧바로 'deceased'로 잡는다.
+ * (생성 시점은 기존에도 pet_status_logs에 로그를 남기지 않던 경로라 - prevStatus가
+ * 없는 최초 상태 - 여기서도 로그는 남기지 않는다, 기존 관례 유지.)
  */
 export const createPet = async (userId, { name, species, breed, birthDate, deathDate }) => {
   const petId = uuidv4()
-  return petRepository.createPet({
+  const pet = await petRepository.createPet({
     petId,
     userId,
     name,
@@ -69,8 +90,9 @@ export const createPet = async (userId, { name, species, breed, birthDate, death
     breed,
     birthDate,
     deathDate,
-    petStatus: 'alive',
+    petStatus: deathDate ? 'deceased' : 'alive',
   })
+  return toPetDto(pet)
 }
 
 /**
@@ -87,6 +109,12 @@ export const getPets = async (userId, { page, limit }) => {
 
 /**
  * 단일 펫 조회 (소유자 확인)
+ *
+ * [FIX D17] 내부 전용 - memorial_access_code를 포함한 원본 행을 그대로 반환한다.
+ * updatePet/updatePetStatus/deletePet/addMedia/getMedia/requestPortrait 등 서비스
+ * 내부 로직이 pet_status/memorial_slug 등을 확인하는 데 이 전체 행을 쓴다.
+ * 컨트롤러에 직접 응답으로 내보낼 때는 아래 getPetDetail(화이트리스트 적용)을 쓴다 -
+ * 이 함수를 그대로 컨트롤러 응답에 흘려보내면 접근 코드가 다시 새어나간다.
  */
 export const getPet = async (userId, petId) => {
   const pet = await petRepository.findPetById(petId)
@@ -100,8 +128,40 @@ export const getPet = async (userId, petId) => {
 }
 
 /**
+ * GET /api/pet/:petId 응답 전용 - getPet()의 화이트리스트 버전 (D17)
+ */
+export const getPetDetail = async (userId, petId) => {
+  const pet = await getPet(userId, petId)
+  return toPetDto(pet)
+}
+
+/**
+ * GET /api/pet/:petId/memorial-code 전용 - 추모관 접근 코드만 별도로 반환한다 (D17).
+ * 소유자 본인이 저장 직후 화면을 벗어난 뒤에도 코드를 다시 확인할 수 있어야 한다는
+ * 요구(petRepository.js DEV-31)는 유지하되, 그 코드가 필요 없는 일반 펫 CRUD
+ * 응답에서는 더 이상 노출되지 않는다 - 이 전용 경로에서만 명시적으로 조회한다.
+ */
+export const getMemorialAccessCode = async (userId, petId) => {
+  const pet = await getPet(userId, petId)
+  return { memorialAccessCode: pet.memorial_access_code ?? null }
+}
+
+/**
  * 펫 정보 수정 (소유자 확인)
  * memorial_slug 변경 시 중복 확인 포함
+ *
+ * [FIX D16] deathDate가 새로 채워지면(이전엔 없었거나, alive/unknown 상태였던 펫에)
+ * pet_status를 'deceased'로 자동 전환한다 - 그렇지 않으면 PATCH /:petId/status를
+ * 별도로 호출해야만 추모 페이지가 열리는 문제가 PUT 경로에도 동일하게 있었다.
+ *
+ * 반대로 deathDate를 지우는 경우(null로 명시 전송)는 pet_status를 자동으로 되돌리지
+ * 않는다 - 판단 근거:
+ *   1. deceased → alive 되돌림은 이미 공개된 추모 페이지를 갑자기 404로 되돌릴 수
+ *      있는 파괴적 부작용이 있다. deathDate 필드 하나를 실수로 비웠다가 다시 채우는
+ *      흔한 오탈자 수정 흐름에서도 상태가 반대로 튀는 것은 유가족 경험상 더 위험하다.
+ *   2. deathDate 설정(→deceased)은 "몰랐던 사실이 새로 확정"되는 단방향 이벤트에
+ *      가깝지만, 그 역방향(→alive)은 실제로 "살아있다"는 재확정이 필요한 별개의
+ *      의사결정이라 명시적 PATCH /:petId/status로만 허용한다(오너 재확인 필요).
  */
 export const updatePet = async (userId, petId, updates) => {
   const pet = await getPet(userId, petId)
@@ -113,7 +173,19 @@ export const updatePet = async (userId, petId, updates) => {
     }
   }
 
-  return petRepository.updatePet(petId, updates)
+  let statusChange = null
+  if (updates.deathDate && pet.pet_status !== 'deceased') {
+    statusChange = {
+      prevStatus: pet.pet_status,
+      nextStatus: 'deceased',
+      changedBy: userId,
+      changedByType: 'system',
+      reason: 'deathDate 등록으로 자동 전환',
+    }
+  }
+
+  const updated = await petRepository.updatePet(petId, updates, statusChange)
+  return toPetDto(updated)
 }
 
 /**
@@ -122,13 +194,14 @@ export const updatePet = async (userId, petId, updates) => {
 export const updatePetStatus = async (userId, petId, { nextStatus, reason }) => {
   const pet = await getPet(userId, petId)
 
-  return petRepository.updatePetStatus(petId, {
+  const updated = await petRepository.updatePetStatus(petId, {
     prevStatus: pet.pet_status,
     nextStatus,
     changedBy: userId,
     changedByType: 'user',
     reason,
   })
+  return toPetDto(updated)
 }
 
 /**

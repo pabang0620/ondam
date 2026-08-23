@@ -149,6 +149,34 @@ export const upsertConsent = async (userId, consentType, isAgreed) => {
   )
 }
 
+// [결함3 수정] adminRepository.findActiveAdminRefreshToken과 동일 패턴 - 다중 탭 동시
+// refresh 경쟁에서, 늦게 도착한 요청이 "이미 회전된(revoked)" 토큰을 들고 있을 때
+// 이게 진짜 재사용 공격인지 판별하려면 "지금 이 사용자에게 유효한 refresh token이
+// 실제로 존재하는지"를 확인해야 한다.
+export const findActiveRefreshToken = async (userId) => {
+  const [rows] = await pool.query(
+    `SELECT token_hash, user_id, expires_at, revoked_at, created_at
+     FROM refresh_tokens
+     WHERE user_id = ? AND revoked_at IS NULL AND expires_at > NOW()
+     ORDER BY created_at DESC
+     LIMIT 1`,
+    [userId],
+  )
+  return rows[0] ?? null
+}
+
+// [결함3 수정] adminRepository.revokeAllAdminRefreshTokens와 동일 패턴 - 유예 시간 밖의
+// 재사용(진짜 탈취 가능성)이 확인되면, 회전으로 살아있는 다른 활성 토큰까지 전부
+// 무효화해 피해 확산을 막는다.
+export const revokeAllRefreshTokens = async (userId) => {
+  await pool.query(
+    `UPDATE refresh_tokens
+     SET revoked_at = NOW()
+     WHERE user_id = ? AND revoked_at IS NULL`,
+    [userId],
+  )
+}
+
 /**
  * 카카오 ID로 사용자 조회 (소프트삭제 제외)
  * @param {string} kakaoId

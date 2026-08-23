@@ -9,7 +9,8 @@
     "start": "TZ=Asia/Seoul node src/server.js",
     "test": "node --experimental-vm-modules node_modules/.bin/jest --testPathPattern=tests/ --runInBand",
     "lint": "eslint src/",
-    "workers": "TZ=Asia/Seoul node src/jobs/index.js"
+    "workers": "TZ=Asia/Seoul node src/jobs/index.js",
+    "seed:admin": "node scripts/seed-admin.js"
   },
   "jest": {
     "transform": {},
