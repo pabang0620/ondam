@@ -116,15 +116,47 @@ export const getDashboardStats = async () => {
 // 노출된다. 목록은 열람 여부 판단에 필요한 메타데이터만 내려주고, 실제 서류
 // 열람은 상세 시점(GET /admin/releases/:id/document-url)에 짧은 만료의 presigned
 // URL을 그때그때 발급한다(전건 발급은 낭비이자 불필요한 서명 URL 확산).
+// [FIX D7, 2026-08-23] 예전 쿼리는 `u.user_id = r.requested_by`로 users 테이블과
+// LEFT JOIN했는데, requested_by에는 실제로 beneficiary_id가 들어간다(will_release_requests
+// 스키마 주석: "요청한 유가족 users.user_id 또는 beneficiary_id" - willService.js의
+// createReleaseRequest 호출부는 항상 beneficiary.beneficiary_id를 넣는다). 요청자인
+// 유가족은 사후 공개를 요청하는 시점에 회원가입이 되어 있지 않은 경우가 대부분이라
+// users 테이블에 아예 없고, 그 결과 requester_email/nickname이 항상 NULL로
+// 나갔다(1차 감사 2026-08-21에서도 지적됐으나 미수정 상태였음) - 관리자가 누가
+// 요청했는지 전혀 모른 채 사후 영상 공개를 승인하는 상황이었다.
+//
+// will_beneficiaries.beneficiary_id로 조인해 요청자(수신인) 본인의 이름·이메일·
+// 연락처·고인과의 관계를 가져온다. r.beneficiary_id가 NULL인 과거 데이터 대비
+// COALESCE(r.beneficiary_id, r.requested_by)로 폴백한다(둘 다 항상 같은 값이
+// 들어가는 게 코드상 보장이지만, 스키마 주석상 beneficiary_id는 nullable이라
+// 방어적으로 둔다).
+//
+// 필드명은 camelCase로 통일한다 - 프론트(AdminReleasePage.jsx)가 이미
+// release.willId/release.createdAt(camelCase)을 읽고 있었는데 이 쿼리만
+// snake_case를 내려줘 화면에 빈 값이 나오는 별개의 drift가 같이 있었다(범위 밖
+// 발견이지만 이 쿼리를 다시 쓰는 김에 함께 정정 - AdminOrdersPage/AdminUsersPage에도
+// 같은 drift가 남아있음은 별도 보고).
 export const getPendingReleaseRequests = async ({ limit, offset }) => {
   const [rows] = await pool.query(
     `SELECT
-       r.request_id AS releaseId, r.will_id, r.requested_by, r.beneficiary_id,
-       r.req_status AS status, r.reviewed_by, r.reviewed_at,
-       r.reject_reason, r.created_at, r.updated_at,
-       u.email AS requester_email, u.nickname AS requester_nickname
+       r.request_id     AS releaseId,
+       r.will_id        AS willId,
+       r.requested_by   AS requestedBy,
+       r.beneficiary_id AS beneficiaryId,
+       r.req_status     AS status,
+       r.reviewed_by    AS reviewedBy,
+       r.reviewed_at    AS reviewedAt,
+       r.reject_reason  AS rejectReason,
+       r.created_at     AS createdAt,
+       r.updated_at     AS updatedAt,
+       wb.name          AS requesterName,
+       wb.email         AS requesterEmail,
+       wb.phone         AS requesterPhone,
+       wb.relationship  AS requesterRelationship
      FROM will_release_requests r
-     LEFT JOIN users u ON u.user_id = r.requested_by
+     LEFT JOIN will_beneficiaries wb
+       ON wb.beneficiary_id = COALESCE(r.beneficiary_id, r.requested_by)
+       AND wb.deleted_at IS NULL
      WHERE r.req_status = 'pending' AND r.deleted_at IS NULL
      ORDER BY r.created_at ASC
      LIMIT ? OFFSET ?`,
@@ -279,6 +311,25 @@ export const getFailedJobs = async ({ limit, offset }) => {
     `SELECT COUNT(*) AS total FROM ai_jobs WHERE job_status = 'failed' AND deleted_at IS NULL`,
   )
   return { jobs: rows, total }
+}
+
+// ─── 알림 발송 최종 실패 조회 (FIX D5) ──────────────────────────────────────────
+// notificationWorker가 재시도(3회) 소진 후에도 실패하면 audit_logs에
+// action='notification_delivery_failed'로 남긴다 - 운영자가 "보냈다고 기록됐는데
+// 안 갔다"를 파악할 수 있는 유일한 수단이므로 여기서 조회 가능하게 노출한다.
+export const getFailedNotifications = async ({ limit, offset }) => {
+  const [rows] = await pool.query(
+    `SELECT log_id, target_type, target_id, detail, created_at
+     FROM audit_logs
+     WHERE action = 'notification_delivery_failed'
+     ORDER BY created_at DESC
+     LIMIT ? OFFSET ?`,
+    [limit, offset],
+  )
+  const [[{ total }]] = await pool.query(
+    `SELECT COUNT(*) AS total FROM audit_logs WHERE action = 'notification_delivery_failed'`,
+  )
+  return { failures: rows, total }
 }
 
 // ─── audit_logs ───────────────────────────────────────────────────────────────

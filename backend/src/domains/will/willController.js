@@ -165,11 +165,13 @@ export const verifyWatchAccess = async (req, res, next) => {
 }
 
 // [SPEC-05 3절] 만료된(또는 만료 임박한) 열람 링크를 새 토큰으로 재발급한다.
+// [보안 수정 - D1] 응답에는 새 토큰이 담기지 않는다(willService 주석 참고) -
+// 등록된 연락처로만 새 링크가 발송된다.
 export const requestWatchLinkExtension = async (req, res, next) => {
   try {
     const { token } = req.params
     const data = await willService.requestWatchLinkExtension(token)
-    return success(res, data, '새 링크가 발급되었습니다')
+    return success(res, data, '등록된 연락처로 새 링크를 보내드렸어요')
   } catch (err) {
     next(err)
   }

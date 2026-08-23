@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Heart, AlertCircle, Clock, Lock, ShieldCheck, Download } from 'lucide-react'
+import { Heart, AlertCircle, Clock, Lock, ShieldCheck, Download, Mail } from 'lucide-react'
 import { useWillWatch, PHASE } from './useWillWatch.js'
 import './WillWatchPage.css'
 
@@ -111,6 +111,25 @@ function ExpiredStep({ isExtending, extendError, onExtend }) {
   )
 }
 
+/* 연장 요청 완료 화면 - [보안 수정 - D1] 새 링크는 화면에 직접 표시되지 않고
+   등록된 연락처(이메일/문자)로만 전달된다. 사용자가 다음에 뭘 하면 되는지만
+   명확히 안내한다. */
+function ExtensionSentStep() {
+  return (
+    <div className="will-watch__error" role="status">
+      <Mail size={48} aria-hidden="true" />
+      <p className="will-watch__error-title">새 링크를 보내드렸어요</p>
+      <p className="will-watch__error-desc">
+        등록하신 연락처로 새로운 열람 링크를 보내드렸어요.<br />
+        문자나 이메일을 확인해서 다시 접속해 주세요.
+      </p>
+      <p className="will-watch__error-desc">
+        잠시 후에도 도착하지 않으면 고객센터로 문의해 주세요.
+      </p>
+    </div>
+  )
+}
+
 /* 준비 화면 - 자동 재생하지 않는다(SPEC-05 2절). 감정적 충격을 배려해 사용자가
    직접 눌렀을 때만 영상이 나타난다. */
 function PrepareStep({ willTitle, onStart }) {
@@ -180,6 +199,14 @@ export default function WillWatchPage() {
     return (
       <div className="will-watch-page">
         <ExpiredStep isExtending={isExtending} extendError={extendError} onExtend={requestExtension} />
+      </div>
+    )
+  }
+
+  if (phase === PHASE.EXTENSION_SENT) {
+    return (
+      <div className="will-watch-page">
+        <ExtensionSentStep />
       </div>
     )
   }

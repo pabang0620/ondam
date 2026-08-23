@@ -121,23 +121,34 @@ export const findUserNicknameById = async (userId) => {
 
 // ─── wills ────────────────────────────────────────────────────────────────────
 
+/**
+ * @param {Buffer} contentTextEncrypted - KMS 암호화된 유언 텍스트 바이트
+ *   (willService.encryptWillContent가 만든 값). KMS_KEY_ID 미설정 로컬 개발
+ *   폴백일 때는 평문 UTF-8 바이트가 그대로 들어온다 - contentTextKmsKeyId로 구분한다.
+ * @param {string|null} contentTextKmsKeyId - AWS KMS key ARN. NULL이면 위 값이
+ *   실제로 암호화되지 않았다는 뜻(보안 갭 1 수정 - willService.js 참고)
+ */
 export const createWill = async ({
   willId,
   userId,
   voiceSampleId,
   title,
-  contentText,
+  contentTextEncrypted,
+  contentTextKmsKeyId,
   releasePolicy,
   priceKrw,
   eventType,
 }) => {
   const [result] = await pool.execute(
     `INSERT INTO wills
-       (will_id, user_id, voice_sample_id, title, content_text,
+       (will_id, user_id, voice_sample_id, title, content_text_encrypted, content_text_kms_key_id,
         status, release_policy, release_status, price_krw, event_type,
         created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, 'draft', ?, 'locked', ?, ?, NOW(), NOW())`,
-    [willId, userId, voiceSampleId, title, contentText, releasePolicy, priceKrw ?? 49000, eventType ?? null],
+     VALUES (?, ?, ?, ?, ?, ?, 'draft', ?, 'locked', ?, ?, NOW(), NOW())`,
+    [
+      willId, userId, voiceSampleId, title, contentTextEncrypted, contentTextKmsKeyId,
+      releasePolicy, priceKrw ?? 49000, eventType ?? null,
+    ],
   )
   return result
 }
@@ -192,7 +203,8 @@ const WILL_UPDATABLE_COLS = [
   'result_video_kms_key_id',
   'result_video_duration_sec',
   'title',
-  'content_text',
+  'content_text_encrypted',
+  'content_text_kms_key_id',
 ]
 
 export const updateWill = async (willId, updates) => {
@@ -551,16 +563,21 @@ export const createWillWithBeneficiaries = async (willData, beneficiariesData) =
     await connection.beginTransaction()
 
     const {
-      willId, userId, voiceSampleId, title, contentText, releasePolicy, priceKrw, eventType,
+      willId, userId, voiceSampleId, title,
+      contentTextEncrypted, contentTextKmsKeyId,
+      releasePolicy, priceKrw, eventType,
     } = willData
 
     await connection.execute(
       `INSERT INTO wills
-         (will_id, user_id, voice_sample_id, title, content_text,
+         (will_id, user_id, voice_sample_id, title, content_text_encrypted, content_text_kms_key_id,
           status, release_policy, release_status, price_krw, event_type,
           created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, 'draft', ?, 'locked', ?, ?, NOW(), NOW())`,
-      [willId, userId, voiceSampleId, title, contentText, releasePolicy, priceKrw ?? 49000, eventType ?? null],
+       VALUES (?, ?, ?, ?, ?, ?, 'draft', ?, 'locked', ?, ?, NOW(), NOW())`,
+      [
+        willId, userId, voiceSampleId, title, contentTextEncrypted, contentTextKmsKeyId,
+        releasePolicy, priceKrw ?? 49000, eventType ?? null,
+      ],
     )
 
     if (beneficiariesData.length > 0) {

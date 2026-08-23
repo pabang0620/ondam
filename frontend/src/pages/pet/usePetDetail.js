@@ -52,11 +52,16 @@ export function usePetDetail(petId) {
     setUploadError(null)
     try {
       const uploadRes = await petApi.uploadPhoto(file)
-      const { s3Key, url } = uploadRes.data.data
+      // FIX D6 - mimeType/size는 항상 업로드 응답에 실려 있는데(uploadRoutes.js
+      // POST /uploads/photo) 지금까지 꺼내지 않고 버려서, pet_media.mime_type/
+      // file_size(둘 다 NOT NULL)가 항상 NULL로 INSERT 시도돼 500이 났다.
+      const { s3Key, url, mimeType, size } = uploadRes.data.data
       const addRes = await petApi.addPetMedia(petId, {
         mediaType: 'photo',
         fileUrl: url,
         s3Key,
+        mimeType,
+        fileSize: size,
       })
       if (addRes.data.success) {
         setMedia((prev) => [...prev, addRes.data.data])

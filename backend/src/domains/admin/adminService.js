@@ -277,6 +277,15 @@ export const approveRelease = async (adminId, requestId, { ipAddress, userAgent 
   // {to, message} 형태를 기대하는데, 프로듀서가 {type:'will_released', userId, ...}
   // 형태로 넣고 있어 항상 default 분기("알 수 없는 알림 타입")에서 예외가 나 3회
   // 재시도 후 실패 - 이메일/SMS 발송이 0건이었다. 워커 계약에 맞춰 enqueue한다.
+  //
+  // [FIX D5, 2026-08-23] delivered_at을 "큐 등록 성공" 시점에 여기서 기록하지 않는다.
+  // Gmail/Coolsms 환경변수가 없으면 워커가 3회 재시도 후 전부 실패하는데도 DB에는
+  // "전달됨"으로 남아 실제로는 아무것도 안 나간 상태를 거짓으로 기록하는 사고가 있었다.
+  // 마이그레이션 c README 3-1절 정의("유가족에게 실제로 알림이 발송된 시각")와
+  // 4절 6번의 "catch 분기에서는 기록 금지"라는 원칙은 유지하되, 그 "성공"의 기준을
+  // 큐 등록이 아니라 실제 발송 완료(워커의 'completed' 이벤트)로 옮긴다. 그러려면
+  // 워커가 어떤 수신인 것인지 알아야 하므로 beneficiaryId를 잡 데이터에 함께 싣는다.
+  // 실제 기록 지점은 notificationWorker.js의 markBeneficiaryDelivered 참고.
   const beneficiaries = await adminRepository.findWillBeneficiaries(request.will_id)
   for (const beneficiary of beneficiaries) {
     // findWillBeneficiaries는 wb(will_beneficiaries)와 u(users)를 LEFT JOIN한다.
@@ -293,6 +302,7 @@ export const approveRelease = async (adminId, requestId, { ipAddress, userAgent 
           to: recipientEmail,
           subject: RELEASE_EMAIL_SUBJECT,
           message,
+          beneficiaryId: beneficiary.beneficiary_id,
         })
       }
       if (recipientPhone) {
@@ -300,22 +310,8 @@ export const approveRelease = async (adminId, requestId, { ipAddress, userAgent 
           type: 'sms',
           to: recipientPhone,
           message,
+          beneficiaryId: beneficiary.beneficiary_id,
         })
-      }
-
-      // 전달(발송) 시각 기록 (SPEC-05, 마이그레이션 c README 3-1절/4절 6번) - 이메일/SMS
-      // 중 하나라도 큐 등록에 성공한 이 시점을 "전달"로 본다("유가족이 최소 한
-      // 채널로는 연락받을 수 있었다"가 리드타임 지표의 취지에 가깝다는 README 권장을
-      // 따름). 비회원 수신인(beneficiary.user_id 없음)도 이메일/SMS 발송 대상이므로,
-      // user_id가 있어야만 도는 아래 in-app 블록이 아니라 여기서 기록해야 놓치지 않는다.
-      // delivered_at IS NULL 가드는 방어적 idempotency(이미 위에서 req_status로도
-      // 이중 승인은 막혀 있지만, 값을 덮어쓰지 않기 위해 추가).
-      if (recipientEmail || recipientPhone) {
-        await pool.execute(
-          `UPDATE will_beneficiaries SET delivered_at = NOW(), updated_at = NOW()
-           WHERE beneficiary_id = ? AND deleted_at IS NULL AND delivered_at IS NULL`,
-          [beneficiary.beneficiary_id],
-        )
       }
 
       // in-app 알림도 함께 기록한다. 비회원 수혜자는 beneficiary.user_id가 null이므로
@@ -418,6 +414,22 @@ export const getUsers = async ({ page, limit, search }) => {
   const { users, total } = await adminRepository.getUsers({ limit, offset, search })
   return {
     users,
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    },
+  }
+}
+
+// ─── 알림 발송 최종 실패 목록 (FIX D5) ─────────────────────────────────────────
+
+export const getFailedNotifications = async ({ page, limit }) => {
+  const offset = (page - 1) * limit
+  const { failures, total } = await adminRepository.getFailedNotifications({ limit, offset })
+  return {
+    failures,
     meta: {
       total,
       page,

@@ -211,7 +211,7 @@ export default function AdminReleasePage() {
         >
           <thead>
             <tr style={{ background: 'var(--color-surface-warm)' }}>
-              {['유언장 ID', '요청일', '사망증명서', '상태', '액션'].map((th) => (
+              {['유언장 ID', '요청자', '요청일', '사망증명서', '상태', '액션'].map((th) => (
                 <th key={th} scope="col" style={thStyle}>{th}</th>
               ))}
             </tr>
@@ -219,14 +219,14 @@ export default function AdminReleasePage() {
           <tbody>
             {isLoading && (
               <tr>
-                <td colSpan={5} style={{ padding: 'var(--spacing-2xl)', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: 'var(--fs-body)' }}>
+                <td colSpan={6} style={{ padding: 'var(--spacing-2xl)', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: 'var(--fs-body)' }}>
                   불러오는 중...
                 </td>
               </tr>
             )}
             {!isLoading && releases.length === 0 && (
               <tr>
-                <td colSpan={5} style={{ padding: 'var(--spacing-2xl)', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: 'var(--fs-body)' }}>
+                <td colSpan={6} style={{ padding: 'var(--spacing-2xl)', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: 'var(--fs-body)' }}>
                   대기 중인 요청이 없습니다.
                 </td>
               </tr>
@@ -246,6 +246,20 @@ export default function AdminReleasePage() {
                 >
                   <td style={{ padding: '12px 16px', fontFamily: 'monospace', fontSize: 'var(--fs-caption)', color: 'var(--color-text-muted)' }}>
                     {release.willId?.slice(0, 12)}...
+                  </td>
+                  {/* FIX D7 - 요청자(수신인) 정보. 이 값이 채워져야 관리자가 "누가
+                      요청했는지" 알고 사망증명서를 대조해 승인 판단을 내릴 수 있다.
+                      비회원 유가족이 대부분이라 이름/연락처/관계는 will_beneficiaries
+                      기준(회원가입 이메일이 아님)이다. */}
+                  <td style={{ padding: '12px 16px', fontSize: 'var(--fs-caption)', color: 'var(--color-text-secondary)' }}>
+                    <div style={{ fontWeight: 700, color: 'var(--color-primary)' }}>
+                      {release.requesterName ?? '알 수 없음'}
+                      {release.requesterRelationship ? ` (${release.requesterRelationship})` : ''}
+                    </div>
+                    <div style={{ color: 'var(--color-text-muted)' }}>
+                      {release.requesterEmail ?? '-'}
+                      {release.requesterPhone ? ` · ${release.requesterPhone}` : ''}
+                    </div>
                   </td>
                   <td style={{ padding: '12px 16px', whiteSpace: 'nowrap', fontSize: 'var(--fs-caption)', color: 'var(--color-text-secondary)' }}>
                     {new Date(release.createdAt).toLocaleDateString('ko-KR')}

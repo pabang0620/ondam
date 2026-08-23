@@ -440,6 +440,13 @@ export const confirmPayment = async (userId, { paymentKey, orderId, amount }) =>
 
 /**
  * 결제 취소 (토스페이먼츠 cancel API 호출)
+ *
+ * [D4] confirmPayment(:287)와 동일한 조건·동일한 방식으로 PAYMENT_MOCK 분기를 둔다.
+ * 이 분기가 없으면 TOSS_SECRET_KEY가 비어 있는 로컬/테스트 환경에서 getTossAuthHeader가
+ * 즉시 throw해 환불 경로 전체가 실행조차 되지 않는다(실측: 수행자 거절 시
+ * refundForAiFailure가 502로 실패, giver 셀프 취소는 500).
+ * **PAYMENT_MOCK=true는 로컬 전용이다 - 프로덕션에서 이 값이 켜지면 절대 안 된다**
+ * (실제 카드 청구를 취소하지 않고 DB만 취소 처리하게 되어 금전 불일치가 발생한다).
  */
 export const cancelPayment = async (userId, paymentId, { cancelReason }) => {
   const payment = await paymentRepository.findPaymentById(paymentId)
@@ -449,25 +456,27 @@ export const cancelPayment = async (userId, paymentId, { cancelReason }) => {
     throw Object.assign(new Error('완료된 결제만 취소할 수 있습니다'), { status: 400 })
   }
 
-  // 토스페이먼츠 취소 API 호출
-  let tossResponse
-  try {
-    const res = await fetch(TOSS_CANCEL_URL(payment.toss_payment_key), {
-      method: 'POST',
-      headers: {
-        Authorization: getTossAuthHeader(),
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ cancelReason: cancelReason ?? '사용자 취소' }),
-    })
-    tossResponse = await res.json()
+  if (process.env.PAYMENT_MOCK !== 'true') {
+    // 토스페이먼츠 취소 API 호출
+    let tossResponse
+    try {
+      const res = await fetch(TOSS_CANCEL_URL(payment.toss_payment_key), {
+        method: 'POST',
+        headers: {
+          Authorization: getTossAuthHeader(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ cancelReason: cancelReason ?? '사용자 취소' }),
+      })
+      tossResponse = await res.json()
 
-    if (!res.ok) {
-      throw Object.assign(new Error(tossResponse?.message ?? '취소 실패'), { status: 400 })
+      if (!res.ok) {
+        throw Object.assign(new Error(tossResponse?.message ?? '취소 실패'), { status: 400 })
+      }
+    } catch (err) {
+      if (err.status) throw err
+      throw Object.assign(new Error('결제 취소 중 오류가 발생했습니다'), { status: 502 })
     }
-  } catch (err) {
-    if (err.status) throw err
-    throw Object.assign(new Error('결제 취소 중 오류가 발생했습니다'), { status: 502 })
   }
 
   const updatedPayment = await paymentRepository.updatePaymentCanceled(paymentId, {
@@ -528,44 +537,48 @@ export const refundForAiFailure = async (targetType, targetId, { reason }) => {
 
   const payment = await paymentRepository.findLatestPaymentByTarget(targetType, targetId)
 
-  // ── 토스페이먼츠 취소 API 호출 (cancelPayment와 동일한 엔드포인트 재사용) ──
-  let tossResponse
-  try {
-    const res = await fetch(TOSS_CANCEL_URL(payment.toss_payment_key), {
-      method: 'POST',
-      headers: {
-        Authorization: getTossAuthHeader(),
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ cancelReason: reason ?? 'AI 처리 실패로 인한 자동 환불' }),
-      signal: AbortSignal.timeout(TOSS_CONFIRM_TIMEOUT_MS),
-    })
-    tossResponse = await res.json()
-    if (!res.ok) {
-      throw new Error(tossResponse?.message ?? '토스 환불 실패')
+  // [D4] confirmPayment/cancelPayment와 동일한 조건·동일한 방식의 PAYMENT_MOCK 분기.
+  // **PAYMENT_MOCK=true는 로컬 전용이다 - 프로덕션에서 켜지면 절대 안 된다.**
+  if (process.env.PAYMENT_MOCK !== 'true') {
+    // ── 토스페이먼츠 취소 API 호출 (cancelPayment와 동일한 엔드포인트 재사용) ──
+    let tossResponse
+    try {
+      const res = await fetch(TOSS_CANCEL_URL(payment.toss_payment_key), {
+        method: 'POST',
+        headers: {
+          Authorization: getTossAuthHeader(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ cancelReason: reason ?? 'AI 처리 실패로 인한 자동 환불' }),
+        signal: AbortSignal.timeout(TOSS_CONFIRM_TIMEOUT_MS),
+      })
+      tossResponse = await res.json()
+      if (!res.ok) {
+        throw new Error(tossResponse?.message ?? '토스 환불 실패')
+      }
+    } catch (err) {
+      // 환불 실패 - 조용히 삼키지 않는다. payments.status는 실제 청구 상태를 정확히
+      // 반영해야 하므로 'done'을 그대로 둔다(돈이 실제로는 반환되지 않았으므로 임의로
+      // 'canceled'로 바꾸면 거짓 기록이 된다). fail_reason에 사유를 남기고 크게
+      // 로그를 찍어 관리자가 수동 환불하도록 한다. cancel_reason의 claim 마커는
+      // [SYSTEM_REFUND_FAILED]로 갱신해 실패 사실 자체는 남기되, 무한 자동 재시도는
+      // 막는다(다음 자동 호출도 cancel_reason IS NULL 조건에 걸려 스킵된다 - 수동
+      // 개입이 필요한 건이라 자동 재시도 대상이 아니다).
+      const failMsg = err.message ?? '토스 환불 API 오류'
+      await pool.execute(
+        `UPDATE payments SET fail_reason = ?, cancel_reason = ?, updated_at = NOW() WHERE payment_id = ?`,
+        [
+          `자동 환불 실패 (수동 환불 필요): ${failMsg}`.slice(0, 500),
+          `[SYSTEM_REFUND_FAILED] ${reason ?? 'AI 처리 실패'}`.slice(0, 500),
+          payment.payment_id,
+        ],
+      )
+      console.error(
+        '[paymentService] AI 실패 자동 환불 - 토스 취소 API 오류 (수동 환불 필요):',
+        { paymentId: payment.payment_id, targetType, targetId, tossPaymentKey: payment.toss_payment_key, error: failMsg },
+      )
+      return { refunded: false, reason: 'refund_api_failed', payment }
     }
-  } catch (err) {
-    // 환불 실패 - 조용히 삼키지 않는다. payments.status는 실제 청구 상태를 정확히
-    // 반영해야 하므로 'done'을 그대로 둔다(돈이 실제로는 반환되지 않았으므로 임의로
-    // 'canceled'로 바꾸면 거짓 기록이 된다). fail_reason에 사유를 남기고 크게
-    // 로그를 찍어 관리자가 수동 환불하도록 한다. cancel_reason의 claim 마커는
-    // [SYSTEM_REFUND_FAILED]로 갱신해 실패 사실 자체는 남기되, 무한 자동 재시도는
-    // 막는다(다음 자동 호출도 cancel_reason IS NULL 조건에 걸려 스킵된다 - 수동
-    // 개입이 필요한 건이라 자동 재시도 대상이 아니다).
-    const failMsg = err.message ?? '토스 환불 API 오류'
-    await pool.execute(
-      `UPDATE payments SET fail_reason = ?, cancel_reason = ?, updated_at = NOW() WHERE payment_id = ?`,
-      [
-        `자동 환불 실패 (수동 환불 필요): ${failMsg}`.slice(0, 500),
-        `[SYSTEM_REFUND_FAILED] ${reason ?? 'AI 처리 실패'}`.slice(0, 500),
-        payment.payment_id,
-      ],
-    )
-    console.error(
-      '[paymentService] AI 실패 자동 환불 - 토스 취소 API 오류 (수동 환불 필요):',
-      { paymentId: payment.payment_id, targetType, targetId, tossPaymentKey: payment.toss_payment_key, error: failMsg },
-    )
-    return { refunded: false, reason: 'refund_api_failed', payment }
   }
 
   const updatedPayment = await paymentRepository.updatePaymentCanceled(payment.payment_id, {

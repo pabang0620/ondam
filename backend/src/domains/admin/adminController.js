@@ -218,6 +218,23 @@ export const getUsers = async (req, res, next) => {
   }
 }
 
+// ─── GET /api/admin/notifications/failed ───────────────────────────────────────
+// FIX D5 - 재시도 소진 후에도 발송에 실패한 알림(이메일/SMS)을 운영자가 조회할
+// 수 있게 한다. audit_logs(action='notification_delivery_failed')가 소스.
+
+export const getFailedNotifications = async (req, res, next) => {
+  try {
+    const { page = 1, limit = 20 } = req.query
+    const result = await adminService.getFailedNotifications({
+      page: Number(page),
+      limit: Math.min(Number(limit), 100),
+    })
+    return paginated(res, result.failures, result.meta, '알림 발송 실패 목록 조회 성공')
+  } catch (err) {
+    next(err)
+  }
+}
+
 // ─── GET /api/admin/jobs/failed ───────────────────────────────────────────────
 
 export const getFailedJobs = async (req, res, next) => {

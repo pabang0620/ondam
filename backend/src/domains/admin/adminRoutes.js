@@ -230,6 +230,19 @@ router.get(
   adminController.getFailedJobs,
 )
 
+// FIX D5 - 발송 재시도 소진 후 최종 실패한 알림 조회. 사후공개 검수와 같은 성격의
+// 정보(승인은 했는데 실제로 유가족에게 전달됐는지)이므로 releases와 동일하게
+// super_admin, content_moderator(reviewer)로 제한한다.
+router.get(
+  '/notifications/failed',
+  requireAuth,
+  requireAdmin,
+  requireAdminRole('super', 'reviewer'),
+  adminApiLimiter,
+  validate(paginationSchema),
+  adminController.getFailedNotifications,
+)
+
 // ─── ad_spend (광고비 입력 + CAC 산출) ─────────────────────────────────────
 // 12-analytics-plan.md 2-10절(이벤트#62), 8-1절(P0). SPEC-06 1절 매트릭스에는
 // "광고비 입력·CAC"가 별도 행으로 없으나, 성격상 재량 환불·구독 관리와 동일한

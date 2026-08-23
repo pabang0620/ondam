@@ -1,6 +1,8 @@
 import { Worker } from 'bullmq'
 import nodemailer from 'nodemailer'
+import { randomUUID } from 'node:crypto'
 import redis from '../../config/redis.js'
+import pool from '../../config/db.js'
 
 const QUEUE_NAME = 'notification'
 const AI_MOCK = process.env.AI_MOCK === 'true'
@@ -118,6 +120,66 @@ const dispatch = async (jobData) => {
   }
 }
 
+// ─── 전달(delivered_at) 기록 + 최종 실패 가시화 (FIX D5, 2026-08-23) ───────────
+//
+// delivered_at은 adminService.approveRelease의 큐 등록 시점이 아니라, 여기 실제
+// 발송 성공(worker 'completed' 이벤트) 시점에 기록한다. 마이그레이션 c README
+// 3-1절 정의("유가족에게 실제로 알림이 발송된 시각")와 4절 6번 지침("catch
+// 분기에선 기록 금지")의 의도를 그대로 따르되, "성공"의 기준점을 큐 등록에서
+// 실제 발송 완료로 옮긴 것이다 - 큐 등록은 성공해도 Gmail/Coolsms 키가 없거나
+// API가 거부하면 실제로는 아무것도 나가지 않는데 DB만 "전달됨"이라 거짓 기록하는
+// 사고가 있었다.
+
+/**
+ * release_approved 잡이 실제로 완료됐을 때 수신인의 delivered_at을 기록한다.
+ * 이메일/SMS 각각 별도 잡으로 큐에 들어가므로(adminService.approveRelease),
+ * 같은 beneficiaryId에 대해 두 번 호출될 수 있다 - delivered_at IS NULL 가드로
+ * 두 번째 호출은 조용히 no-op된다(멱등). 비회원 수신인(user_id NULL)도 이
+ * 컬럼 기준으로는 동일하게 동작한다(in-app 알림 유무와 무관).
+ */
+const markBeneficiaryDelivered = async (job) => {
+  const beneficiaryId = job?.data?.beneficiaryId
+  if (job?.name !== 'release_approved' || !beneficiaryId) return
+
+  await pool.execute(
+    `UPDATE will_beneficiaries SET delivered_at = NOW(), updated_at = NOW()
+     WHERE beneficiary_id = ? AND deleted_at IS NULL AND delivered_at IS NULL`,
+    [beneficiaryId],
+  )
+}
+
+/**
+ * 재시도(attempts=3)가 전부 소진된 뒤에도 발송이 실패하면, DB 어디에도 흔적이
+ * 남지 않아 운영자가 "안 갔다"는 사실 자체를 알 방법이 없었다. audit_logs에
+ * 남겨 관리자가 조회할 수 있게 한다(GET /api/admin/notifications/failed).
+ * actor_id는 사람이 아니라 워커이므로 NULL + actor_type='system'.
+ */
+const recordFinalDeliveryFailure = async (job, err) => {
+  const { type, to, beneficiaryId, notificationId, userId } = job?.data ?? {}
+  const targetType = beneficiaryId ? 'will_beneficiary' : 'notification'
+  const targetId = beneficiaryId ?? notificationId ?? null
+
+  await pool.execute(
+    `INSERT INTO audit_logs
+       (log_id, actor_id, actor_type, action, target_type, target_id, detail, created_at)
+     VALUES (?, NULL, 'system', 'notification_delivery_failed', ?, ?, ?, NOW())`,
+    [
+      randomUUID(),
+      targetType,
+      targetId,
+      JSON.stringify({
+        jobName: job?.name ?? null,
+        jobId: job?.id ?? null,
+        notificationType: type ?? null,
+        to: to ?? null,
+        userId: userId ?? null,
+        attemptsMade: job?.attemptsMade ?? null,
+        error: err?.message ?? String(err),
+      }),
+    ],
+  )
+}
+
 // ─── 워커 등록 ────────────────────────────────────────────────────────────────
 
 const worker = new Worker(
@@ -132,13 +194,29 @@ const worker = new Worker(
   },
 )
 
-worker.on('completed', (job) => {
+worker.on('completed', async (job) => {
   console.log(`[notificationWorker] job ${job.id} completed (type=${job.data?.type})`)
+  try {
+    await markBeneficiaryDelivered(job)
+  } catch (err) {
+    // 발송 자체는 성공했으므로 job은 completed로 유지한다 - DB 기록 실패만으로
+    // 이메일/SMS를 다시 보내면 유가족에게 중복 발송된다.
+    console.error(`[notificationWorker] delivered_at 기록 실패 (발송은 성공) job=${job.id}:`, err.message)
+  }
 })
 
-worker.on('failed', (job, err) => {
+worker.on('failed', async (job, err) => {
   const maxAttempts = job?.opts?.attempts ?? 1
-  console.error(`[notificationWorker] job ${job?.id} failed (attempt ${job?.attemptsMade}/${maxAttempts}):`, err.message)
+  const attemptsMade = job?.attemptsMade ?? 0
+  console.error(`[notificationWorker] job ${job?.id} failed (attempt ${attemptsMade}/${maxAttempts}):`, err.message)
+
+  if (job && attemptsMade >= maxAttempts) {
+    try {
+      await recordFinalDeliveryFailure(job, err)
+    } catch (auditErr) {
+      console.error(`[notificationWorker] 최종 실패 audit_logs 기록 실패 job=${job?.id}:`, auditErr.message)
+    }
+  }
 })
 
 worker.on('error', (err) => {

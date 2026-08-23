@@ -4,7 +4,19 @@ import * as photoRepository from './photoRepository.js'
 import { extractS3KeyFromUrl, getPresignedUrl } from '../../utils/s3.js'
 import { getVariantMetaByKey } from './photoResultSet.js'
 import pool from '../../config/db.js'
-import { omitId, omitIds, pick } from '../../utils/dto.js'
+import { omitId, pick } from '../../utils/dto.js'
+import { toSafeFailureMessage } from '../../utils/failureMessages.js'
+
+// ─── 실패 사유 응답 매핑 (보안 갭 2 수정) ──────────────────────────────────────
+// [보안 수정] photoWorker.js는 실패 시 err.message(내부 원문 - 환경변수명, 벤더
+// 응답 원문 등)를 photo_orders.fail_reason에 그대로 저장한다(운영 진단 목적,
+// 그대로 둔다). 문제는 getOrder/getResult가 order 행을 통째로(omitId만 거쳐)
+// 응답으로 흘려보내면서 fail_reason 원문까지 소유자에게 그대로 노출됐다는 점 -
+// DB 저장은 건드리지 않고 응답 변환 시점에만 안전한 문구로 치환한다.
+const toSafeOrderDto = (order) => ({
+  ...omitId(order),
+  fail_reason: toSafeFailureMessage(order.fail_reason),
+})
 
 // ─── 응답 화이트리스트 (내부 S3 키 원본 경로 유출 방지) ───────────────────────────
 // [보안 수정] photo_files 행을 그대로(스프레드로) 응답에 흘려보내면 s3_key(내부
@@ -45,7 +57,8 @@ export const getOrder = async (userId, orderId) => {
     throw Object.assign(new Error('접근 권한이 없습니다'), { status: 403 })
   }
   // 내부 AUTO_INCREMENT id는 외부에 노출하지 않는다(order_id UUID만 노출) - DEV-33
-  return omitId(order)
+  // fail_reason은 안전한 문구로 치환한다(보안 갭 2 수정, toSafeOrderDto 참고)
+  return toSafeOrderDto(order)
 }
 
 // ─── 주문 목록 조회 (paginated) ───────────────────────────────────────────────
@@ -55,7 +68,8 @@ export const getOrders = async (userId, { page, limit }) => {
   const { orders, total } = await photoRepository.findOrdersByUserId(userId, { limit, offset })
   return {
     // 내부 AUTO_INCREMENT id는 외부에 노출하지 않는다(order_id UUID만 노출) - DEV-33
-    orders: omitIds(orders),
+    // fail_reason은 안전한 문구로 치환한다(보안 갭 2 수정, toSafeOrderDto 참고)
+    orders: orders.map(toSafeOrderDto),
     meta: {
       total,
       page,
@@ -206,8 +220,9 @@ export const getResult = async (orderId, userId) => {
   })
 
   // order: 내부 AUTO_INCREMENT id는 외부에 노출하지 않는다(order_id UUID만 노출, DEV-33).
+  // fail_reason은 안전한 문구로 치환한다(보안 갭 2 수정, toSafeOrderDto 참고)
   // files: 위에서 이미 PHOTO_FILE_PUBLIC_FIELDS 화이트리스트를 거쳐 id/s3_key 모두 제외됨.
-  return { order: omitId(order), files: sortedFiles }
+  return { order: toSafeOrderDto(order), files: sortedFiles }
 }
 
 // ─── 실패 주문 재처리 ─────────────────────────────────────────────────────────

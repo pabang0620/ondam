@@ -7,6 +7,7 @@ import { voiceCloneQueue, videoGenerateQueue, notificationQueue } from '../../jo
 import pool from '../../config/db.js'
 import redis from '../../config/redis.js'
 import { pick, pickAll } from '../../utils/dto.js'
+import { toSafeFailureMessage } from '../../utils/failureMessages.js'
 
 // ─── 응답 화이트리스트 (KMS 참조값 유출 방지) ────────────────────────────────────
 // [보안 수정] wills 행을 그대로(스프레드로) 응답에 흘려보내면 result_video_s3_key_
@@ -80,8 +81,14 @@ const WATCH_TOKEN_TTL_DAYS = 90
 const isTokenExpired = (beneficiary) =>
   Boolean(beneficiary.token_expires_at) && new Date(beneficiary.token_expires_at) < new Date()
 
-const watchAttemptsKey = (token) => `will:watch:attempts:${token}`
-const watchLockKey = (token) => `will:watch:locked:${token}`
+// [보안 수정 - D1] 잠금·시도 횟수 키를 토큰이 아니라 수신인(beneficiary_id) 기준으로
+// 둔다. 토큰은 /watch/:token/extend로 얼마든지 회전(재발급)될 수 있는데, 키가
+// 토큰 문자열이면 재발급 즉시 시도 횟수·잠금이 초기화되어 "4회 오입력 → extend →
+// 새 토큰으로 4회 더"를 무한 반복해 5회 잠금이 사실상 우회됐다(D1 취약점의 핵심
+// 원인). beneficiary_id는 토큰이 아무리 회전해도 동일하므로, 동일 인물에 대한
+// 시도 횟수·잠금 상태가 토큰 회전과 무관하게 계속 누적된다.
+const watchAttemptsKey = (beneficiaryId) => `will:watch:attempts:${beneficiaryId}`
+const watchLockKey = (beneficiaryId) => `will:watch:locked:${beneficiaryId}`
 
 const extractPhoneLast4 = (phone) => {
   if (!phone) return null
@@ -93,6 +100,54 @@ const extractPhoneLast4 = (phone) => {
 // 단일 정본이며 클라이언트 입력(priceKrw)을 받지 않는다. payment 도메인의
 // preparePayment는 wills.price_krw(이 값으로 저장된 스냅샷)를 조회해 검증한다.
 const WILL_BASIC_PRICE_KRW = 49000
+
+// ─── 유언 텍스트 KMS 암호화 (보안 갭 1 수정) ─────────────────────────────────────
+// CLAUDE.md 보안 규칙 1번·스키마 주석 모두 wills.content_text를 KMS 암호화 대상으로
+// 명시하는데, 지금까지 createWill이 encryptString 호출 없이 평문 그대로 저장하고
+// 있었다. 음성 파일·유언 영상은 S3 SSE-KMS로 보호되는데 텍스트만 빠져 있던 상태.
+//
+// 로컬 개발 폴백: KMS_KEY_ID가 .env에 비어 있으면 encryptString이 즉시 예외를
+// 던진다(kms.js getKmsKeyId). 다른 KMS 연동 지점(음성 샘플 업로드의 s3_key_encrypted,
+// S3 SSE-KMS 업로드)은 전부 이 경우 그대로 하드 실패하도록 되어 있다 - 그러나
+// "로컬 개발에서 유언장 생성이 막히면 안 된다"는 이 갭 수정 자체의 요구사항이라,
+// 여기서만 명시적으로 그 예외를 잡아 평문 바이트를 그대로 저장하는 개발 전용
+// 폴백을 둔다(새 암호화 방식을 만드는 게 아니라 "암호화하지 않고 그 사실을
+// kms_key_id=NULL로 남긴다"는 무연산 폴백이다). 프로덕션은 KMS_KEY_ID가 반드시
+// 설정되어 있어야 하고(validateEnv.js가 미설정 시 경고), 그 경우 이 폴백은 절대
+// 발동하지 않으며 항상 실제 KMS 암호화 경로를 탄다.
+//
+// content_text_kms_key_id가 NULL ⇔ content_text_encrypted가 실제로 암호화되지
+// 않은 값(개발 폴백 또는 이번 스키마 전환 이전의 레거시 평문 행)이라는 뜻으로
+// 통일한다 - 별도 마이그레이션 스크립트 없이 ALTER TABLE(TEXT→BLOB 타입 변경,
+// 값 보존)만으로 기존 행도 동일한 규약을 따르게 된다.
+const KMS_UNCONFIGURED_MESSAGE = 'KMS_KEY_ID 환경변수가 설정되지 않았습니다'
+
+const encryptWillContent = async (plaintext) => {
+  try {
+    const { encrypted, kmsKeyId } = await encryptString(plaintext)
+    return { contentTextEncrypted: encrypted, contentTextKmsKeyId: kmsKeyId }
+  } catch (err) {
+    if (err.message === KMS_UNCONFIGURED_MESSAGE) {
+      console.warn(
+        '[willService] KMS_KEY_ID 미설정 - 로컬 개발 폴백으로 유언 텍스트를 암호화하지 ' +
+        '않고 저장합니다(content_text_kms_key_id=NULL). 프로덕션 배포 전 반드시 KMS_KEY_ID를 설정하세요.',
+      )
+      return { contentTextEncrypted: Buffer.from(plaintext, 'utf8'), contentTextKmsKeyId: null }
+    }
+    throw err
+  }
+}
+
+const decryptWillContent = async (encryptedValue, kmsKeyId) => {
+  if (encryptedValue === null || encryptedValue === undefined) return null
+  const buf = Buffer.isBuffer(encryptedValue) ? encryptedValue : Buffer.from(encryptedValue)
+  if (!kmsKeyId) {
+    // 개발 폴백(또는 전환 이전 레거시) 값 - 실제로 암호화된 적이 없으므로 KMS를
+    // 호출하지 않고 바로 문자열로 복원한다
+    return buf.toString('utf8')
+  }
+  return decryptBuffer(buf)
+}
 
 // ─── 음성 샘플 ────────────────────────────────────────────────────────────────
 
@@ -221,6 +276,11 @@ export const createWill = async (
     inviteToken: crypto.randomBytes(32).toString('hex'),
   }))
 
+  // 유언 텍스트 KMS 암호화 (보안 갭 1 수정) - 트랜잭션 진입 전에 암호화까지 끝내
+  // 트랜잭션 내부에서는 순수 DB I/O만 남긴다(암호화 실패로 트랜잭션이 열린 채
+  // 오래 대기하는 상황 방지)
+  const { contentTextEncrypted, contentTextKmsKeyId } = await encryptWillContent(contentText)
+
   // 유언장 + 수혜자 트랜잭션 일괄 생성
   await repo.createWillWithBeneficiaries(
     {
@@ -228,7 +288,8 @@ export const createWill = async (
       userId,
       voiceSampleId,
       title,
-      contentText,
+      contentTextEncrypted,
+      contentTextKmsKeyId,
       releasePolicy: releasePolicy ?? 'manual_admin',
       priceKrw: WILL_BASIC_PRICE_KRW,
       eventType: eventType ?? null,
@@ -256,9 +317,13 @@ export const getWill = async (userId, willId) => {
   // BENEFICIARY_PUBLIC_FIELDS에 없으므로 자동으로 제외된다 - DEV-33 + KMS 참조값
   // 유출 수정과 동일한 원칙(화이트리스트가 새 민감 컬럼에도 안전).
   const beneficiaries = toBeneficiaryDtos(rawBeneficiaries)
+  // KMS 복호화 (보안 갭 1 수정) - content_text_encrypted/content_text_kms_key_id는
+  // WILL_PUBLIC_FIELDS 화이트리스트에 없으므로 애초에 응답에 새지 않는다. 복호화한
+  // 평문을 'content_text' 키로 병합한 뒤 pick하면 화이트리스트가 정확히 그 키만 뽑는다.
+  const contentText = await decryptWillContent(will.content_text_encrypted, will.content_text_kms_key_id)
   // 화이트리스트 응답 - result_video_s3_key_encrypted/result_video_kms_key_id(KMS 참조값)와
   // 내부 AUTO_INCREMENT id는 WILL_PUBLIC_FIELDS에 없으므로 자동으로 제외된다.
-  return { ...toWillDto(will), beneficiaries }
+  return { ...toWillDto({ ...will, content_text: contentText }), beneficiaries }
 }
 
 /**
@@ -267,10 +332,18 @@ export const getWill = async (userId, willId) => {
 export const getWills = async (userId, { page = 1, limit = 20 }) => {
   const offset = (page - 1) * limit
   const { wills, total } = await repo.findWillsByUserId(userId, { limit, offset })
+  // KMS 복호화 (보안 갭 1 수정) - 목록의 각 행도 getWill과 동일하게 복호화한 평문을
+  // 'content_text' 키로 병합한 뒤 화이트리스트를 거친다.
+  const willsWithPlainText = await Promise.all(
+    wills.map(async (will) => ({
+      ...will,
+      content_text: await decryptWillContent(will.content_text_encrypted, will.content_text_kms_key_id),
+    })),
+  )
   return {
     // 화이트리스트 응답 - result_video_s3_key_encrypted/result_video_kms_key_id(KMS
     // 참조값)와 내부 AUTO_INCREMENT id는 WILL_PUBLIC_FIELDS에 없으므로 자동 제외된다.
-    wills: toWillDtos(wills),
+    wills: toWillDtos(willsWithPlainText),
     meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
   }
 }
@@ -278,6 +351,18 @@ export const getWills = async (userId, { page = 1, limit = 20 }) => {
 /**
  * 유언장 활성화 - 영상 생성 큐 등록 (결제 후 호출)
  * FOR UPDATE 비관적 락으로 동시 활성화 요청 경쟁 조건 방지
+ *
+ * [보안 수정 - D2] wills.status는 draft(미결제) → paid(결제 완료) → active(영상 생성
+ * 요청됨)로 전이한다. 예전 코드는 ['draft','paid'] 둘 다 허용해서 결제 한 번도
+ * 없이 draft 상태 그대로 activate를 호출해도 통과했다 - ElevenLabs·립싱크 벤더
+ * 비용이 실제로 드는 videoGenerate 큐가 무결제로 등록된 것(D2 취약점).
+ * status='paid'는 두 경로 모두에서만 설정된다: (1) 직접 결제 -
+ * paymentService._updateTargetStatus의 target_type='will_order' 분기가
+ * `UPDATE wills SET status='paid'`를 실행 (2) 선물 결제 경유 -
+ * giftPerformService.attachWillOrder가 gift_orders.payment_id가 채워진(결제 완료된)
+ * 선물을 will에 attach할 때 동일하게 `willRepository.updateWill(willId, { status:
+ * 'paid' })`를 호출. 즉 'paid'만 검사하면 직접 결제·선물 결제 두 경로 모두
+ * 정상 허용되고, 결제 자체가 없는 'draft'만 정확히 차단된다.
  */
 export const activateWill = async (userId, willId) => {
   const conn = await pool.getConnection()
@@ -295,7 +380,13 @@ export const activateWill = async (userId, willId) => {
     if (String(will.user_id) !== String(userId)) {
       throw Object.assign(new Error('접근 권한이 없습니다'), { status: 403 })
     }
-    if (!['draft', 'paid'].includes(will.status)) {
+    if (will.status === 'draft') {
+      throw Object.assign(
+        new Error('결제가 아직 완료되지 않았어요. 결제 후 이용하실 수 있어요.'),
+        { status: 400 },
+      )
+    }
+    if (will.status !== 'paid') {
       throw Object.assign(new Error('이미 처리 중이거나 완료된 유언장입니다'), { status: 400 })
     }
 
@@ -333,6 +424,11 @@ export const activateWill = async (userId, willId) => {
       throw Object.assign(new Error('음성 처리 동의가 필요합니다'), { status: 400 })
     }
 
+    // KMS 복호화 (보안 갭 1 수정) - videoWorker는 TTS 생성을 위해 평문이 필요하다.
+    // content_text_encrypted를 그대로 큐 페이로드에 넣으면 워커가 KMS 복호화를
+    // 몰라 그대로 TTS API에 암호문을 넘기게 된다.
+    const contentText = await decryptWillContent(will.content_text_encrypted, will.content_text_kms_key_id)
+
     // BullMQ 영상 생성 큐 등록 (트랜잭션 내 - 롤백 시 큐 항목만 유실, 워커 멱등성으로 처리)
     const bullJob = await videoGenerateQueue.add('generate', {
       willId,
@@ -341,7 +437,7 @@ export const activateWill = async (userId, willId) => {
       voiceS3KeyEncrypted: sample.s3_key_encrypted.toString('base64'),
       voiceKmsKeyId: sample.kms_key_id,
       elevenlabsVoiceId: sample.elevenlabs_voice_id ?? null,
-      contentText: will.content_text,
+      contentText,
     })
 
     const jobId = uuidv4()
@@ -403,7 +499,11 @@ export const getVideoStatus = async (userId, willId) => {
           jobStatus: job.job_status,
           progress: job.progress,
           resultUrl: job.result_url ?? null,
-          errorMessage: job.error_message ?? null,
+          // [보안 수정] ai_jobs.error_message는 videoWorker가 err.message(내부 원문 -
+          // 환경변수명, ElevenLabs/립싱크 벤더 응답 원문 등)를 그대로 저장한 값이다
+          // (운영 진단 목적으로 DB에는 원문 그대로 남긴다). 소유자에게 나가는 응답만
+          // 안전한 문구로 치환한다(보안 갭 2 수정, utils/failureMessages.js).
+          errorMessage: toSafeFailureMessage(job.error_message),
         }
       : null,
   }
@@ -567,7 +667,7 @@ const issueWatchVideoUrl = async (beneficiary, will) => {
  */
 export const getWatchInfo = async (token) => {
   const { beneficiary, will } = await resolveWatchTarget(token)
-  const locked = Boolean(await redis.get(watchLockKey(token)))
+  const locked = Boolean(await redis.get(watchLockKey(beneficiary.beneficiary_id)))
 
   return {
     beneficiaryName: beneficiary.name,
@@ -596,7 +696,7 @@ export const verifyWatchAccess = async (token, phoneLast4, { ipAddress, userAgen
     )
   }
 
-  const lockKey = watchLockKey(token)
+  const lockKey = watchLockKey(beneficiary.beneficiary_id)
   const alreadyLocked = await redis.get(lockKey)
   if (alreadyLocked) {
     throw Object.assign(
@@ -609,7 +709,7 @@ export const verifyWatchAccess = async (token, phoneLast4, { ipAddress, userAgen
   const matched = expectedLast4 !== null && expectedLast4 === phoneLast4
 
   if (!matched) {
-    const attemptsKey = watchAttemptsKey(token)
+    const attemptsKey = watchAttemptsKey(beneficiary.beneficiary_id)
     const attempts = await redis.incr(attemptsKey)
     if (attempts === 1) {
       await redis.expire(attemptsKey, WATCH_VERIFY_ATTEMPTS_TTL_SEC)
@@ -653,7 +753,7 @@ export const verifyWatchAccess = async (token, phoneLast4, { ipAddress, userAgen
   }
 
   // 성공 - 시도 카운터 초기화 + verified_at 기록 + audit
-  await redis.del(watchAttemptsKey(token))
+  await redis.del(watchAttemptsKey(beneficiary.beneficiary_id))
   await repo.updateBeneficiaryVerifiedAt(beneficiary.beneficiary_id)
   await repo.createAuditLog({
     logId: uuidv4(),
@@ -683,6 +783,13 @@ export const verifyWatchAccess = async (token, phoneLast4, { ipAddress, userAgen
  * 이미 만료된 토큰이라도 findBeneficiaryByToken은 만료 여부와 무관하게 값으로
  * 조회하므로(만료는 verifyWatchAccess/getWatchInfo에서만 판정) 만료 화면에 남아있는
  * 옛 링크로도 연장 요청이 가능하다.
+ *
+ * [보안 수정 - D1] 이 함수는 더 이상 새 토큰을 반환하지 않는다. 예전 구현은
+ * `{ token: newToken }`을 응답 본문에 그대로 실어 보냈는데, 이러면 잠금(423)
+ * 상태에서도 이 엔드포인트가 무인증인 데다 만료 검사도 하지 않아 "새 토큰으로
+ * 갈아타 시도 횟수/잠금을 초기화"하는 우회 경로가 됐다(D1 취약점). 대신 등록된
+ * 연락처(이메일/SMS)로만 새 링크를 발송하고, 응답에는 "보냈다"는 사실만 담는다 -
+ * 토큰을 아는 것만으로는 더 이상 새 토큰을 얻을 수 없다.
  */
 export const requestWatchLinkExtension = async (token) => {
   const beneficiary = await repo.findBeneficiaryByToken(token)
@@ -690,6 +797,16 @@ export const requestWatchLinkExtension = async (token) => {
     throw Object.assign(
       new Error('유효하지 않은 링크입니다. 문자나 카카오톡으로 받으신 링크를 다시 확인해 주세요.'),
       { status: 404 },
+    )
+  }
+
+  // [보안 수정 - D1] 잠긴 수신인은 연장도 할 수 없다 - beneficiary_id 기준 잠금이므로
+  // 토큰을 회전해도 우회되지 않는다(watchAttemptsKey/watchLockKey 주석 참고).
+  const alreadyLocked = await redis.get(watchLockKey(beneficiary.beneficiary_id))
+  if (alreadyLocked) {
+    throw Object.assign(
+      new Error('본인 확인 시도 횟수를 초과해 잠시 이용이 제한됐어요. 고객센터로 문의해 주세요.'),
+      { status: 423 },
     )
   }
 
@@ -721,8 +838,10 @@ export const requestWatchLinkExtension = async (token) => {
     },
   })
 
-  // 새 링크 안내 발송 - 비차단(실패해도 재발급 자체는 유효, 화면에서 바로 새 토큰으로
-  // 이동시킬 수 있으므로 지금 이 순간의 발송 성공 여부가 재발급 자체를 막을 이유는 없다)
+  // 새 링크 안내 발송 - [보안 수정 - D1] 새 토큰은 API 응답이 아니라 오직 이
+  // 알림(등록된 이메일/SMS)을 통해서만 수신인에게 전달된다. 발송 자체는 비차단으로
+  // 두되(실패해도 재발급 자체는 유효 - 재시도로 복구 가능), 응답에 토큰을 담지
+  // 않으므로 발송 실패 시 수신인은 등록된 연락처로 재요청하거나 CS로 안내받아야 한다.
   const watchUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/watch/${newToken}`
   const greeting = beneficiary.name ? `${beneficiary.name}님, ` : ''
   const message = `${greeting}요청하신 영상 편지 링크를 새로 보내드려요. 아래 링크로 다시 확인하실 수 있어요.`
@@ -746,5 +865,7 @@ export const requestWatchLinkExtension = async (token) => {
     console.error('[willService] 연장 안내 발송 큐 등록 실패 (재발급 자체는 유지):', err.message)
   }
 
-  return { token: newToken, expiresAt: newExpiresAt }
+  // [보안 수정 - D1] newToken을 응답에 절대 포함하지 않는다 - 등록된 연락처로만
+  // 전달된다. 프론트는 이 응답을 받으면 "새 링크를 보내드렸어요" 안내만 보여준다.
+  return { sent: true, expiresAt: newExpiresAt }
 }

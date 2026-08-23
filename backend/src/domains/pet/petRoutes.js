@@ -107,6 +107,17 @@ const mediaTypeEnum = z.enum(
   { errorMap: () => ({ message: '유효하지 않은 미디어 타입입니다' }) }
 )
 
+// [FIX D6, 2026-08-23] mimeType/fileSize는 pet_media 테이블에서 NOT NULL인데
+// 여기서는 .optional().nullable()이라 zod는 통과시키고 그대로 DB까지 내려가
+// `Column 'mime_type' cannot be null` 원본 mysql2 에러가 500으로 사용자에게
+// 노출됐다(raw MySQL 에러 유출 - 서버 오류 메시지 원칙 위반이기도 하다).
+// 두 값 다 POST /api/uploads/photo 응답(req.file.mimetype, req.file.size)에
+// 항상 실려 있어 클라이언트가 못 보낼 이유가 없다(uploadRoutes.js 확인) -
+// 프론트가 그동안 이 두 필드를 응답에서 꺼내 쓰지 않고 버리고 있었을 뿐이다
+// (usePetDetail.js도 함께 수정, D6 지시의 "클라이언트가 실제로 보낼 수 있는지"
+// 확인 결과). 그래서 (a) 서버가 기본값을 채우는 대신 (b) zod를 필수로 바꿔
+// 프론트 누락을 400으로 막는 쪽을 택한다 - 기본값을 채우면 실제로 값이 있는데도
+// 조용히 버려지는 프론트 버그를 영구히 가려버린다.
 const addMediaSchema = z.object({
   params: z.object({
     petId: z.string().uuid('유효하지 않은 petId입니다'),
@@ -117,8 +128,8 @@ const addMediaSchema = z.object({
     s3Key: z.string().min(1, 'S3 키를 입력해주세요'),
     thumbnailS3Key: z.string().optional().nullable(),
     thumbnailUrl: z.string().url().optional().nullable(),
-    mimeType: z.string().optional().nullable(),
-    fileSize: z.number().int().positive().optional().nullable(),
+    mimeType: z.string().min(1, 'mimeType을 입력해주세요'),
+    fileSize: z.number().int().positive('fileSize는 1 이상이어야 합니다'),
     width: z.number().int().positive().optional().nullable(),
     height: z.number().int().positive().optional().nullable(),
     durationSec: z.number().positive().optional().nullable(),

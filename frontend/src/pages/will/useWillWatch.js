@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { willApi } from './willApi.js'
 
 // 화면 단계 - SPEC-05 2절 순서를 그대로 따른다
@@ -10,6 +10,10 @@ const PHASE = {
   VERIFY: 'verify',
   LOCKED: 'locked',
   EXPIRED: 'expired', // SPEC-05 3절 - 열람 링크(90일) 만료, 연장 요청 가능
+  // [보안 수정 - D1] 연장 요청 성공 시 새 토큰으로 즉시 이동시키지 않고, "등록된
+  // 연락처로 새 링크를 보냈다"는 안내만 보여주는 종료 상태. 새 토큰은 응답에
+  // 담기지 않으므로 프론트가 알 방법이 없다(정상 - 등록된 연락처로만 전달됨).
+  EXTENSION_SENT: 'extension_sent',
   PREPARE: 'prepare',
   PLAYING: 'playing',
   ERROR: 'error',
@@ -17,7 +21,6 @@ const PHASE = {
 
 export function useWillWatch() {
   const { token } = useParams()
-  const navigate = useNavigate()
   const [phase, setPhase] = useState(PHASE.LOADING)
   const [beneficiaryName, setBeneficiaryName] = useState('')
   const [willTitle, setWillTitle] = useState('')
@@ -91,26 +94,30 @@ export function useWillWatch() {
     setPhase(PHASE.PLAYING)
   }, [])
 
-  // 만료 화면의 "연장 요청하기" 버튼 - 새 토큰을 발급받아 그 페이지로 바로 이동시킨다
-  // (SPEC-05 3절, 재발급마다 구토큰 무효화는 서버가 처리)
+  // 만료 화면의 "연장 요청하기" 버튼 - [보안 수정 - D1] 서버 응답에 새 토큰이 더 이상
+  // 담기지 않는다(등록된 이메일/SMS로만 전달됨). 예전처럼 응답의 토큰으로 즉시
+  // navigate하지 않고, "새 링크를 보내드렸어요" 안내 화면(EXTENSION_SENT)으로 전환한다.
   const requestExtension = useCallback(async () => {
     if (!token || isExtending) return
     setIsExtending(true)
     setExtendError(null)
     try {
-      const { data } = await willApi.requestWatchExtension(token)
-      const newToken = data?.data?.token
-      if (newToken) {
-        navigate(`/watch/${newToken}`, { replace: true })
-      } else {
-        setExtendError('링크 연장에 실패했습니다. 잠시 후 다시 시도해 주세요.')
-      }
+      await willApi.requestWatchExtension(token)
+      setPhase(PHASE.EXTENSION_SENT)
     } catch (err) {
-      setExtendError(err?.response?.data?.message ?? '링크 연장 요청에 실패했습니다. 잠시 후 다시 시도해 주세요.')
+      const status = err?.response?.status
+      const message = err?.response?.data?.message
+      if (status === 423) {
+        // 잠긴 수신인은 연장도 할 수 없다 - 잠금 화면으로 전환
+        setPhase(PHASE.LOCKED)
+        setVerifyError(message ?? '본인 확인 시도 횟수를 초과했습니다. 고객센터로 문의해 주세요.')
+      } else {
+        setExtendError(message ?? '링크 연장 요청에 실패했습니다. 잠시 후 다시 시도해 주세요.')
+      }
     } finally {
       setIsExtending(false)
     }
-  }, [token, isExtending, navigate])
+  }, [token, isExtending])
 
   return {
     phase,
