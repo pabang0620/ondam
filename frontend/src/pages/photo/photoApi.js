@@ -1,5 +1,11 @@
 import apiClient from '../../config/apiClient.js'
 
+// 결함C: AI 사진관은 초상권 동의 화면이 0개였다. useWillConsent.js가 쓰는
+// /auth/consents(consentType/isAgreed) 형식을 그대로 따른다 - 백엔드가 사진 주문·
+// 처리 시작 전 portrait 동의(user_consents.consent_type='portrait')를 검증한다.
+export const savePhotoConsents = (consents) =>
+  apiClient.post('/auth/consents', { consents })
+
 export const createPhotoOrder = (photoType, sourceImageUrl) =>
   apiClient.post('/photo/orders', { photoType, sourceImageUrl })
 

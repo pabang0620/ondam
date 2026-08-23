@@ -41,14 +41,30 @@ apiClient.interceptors.request.use((config) => {
 // - refresh 실패 시에는 clearUser()로 로그아웃 상태만 만들고, 하드 리다이렉트는 하지
 //   않는다. 공개 페이지에서는 비로그인 상태로 그대로 머물러야 하고, 보호 라우트는
 //   PrivateRoute/AdminLayout이 isAuthenticated를 구독해 알아서 /login으로 이동시킨다.
+// FIX: 본인확인 시도 횟수 2배 차감 결함 - 무인증 공개 링크(선물 수행/유언 열람/공개
+// 임종 등록)는 로그인 세션과 완전히 무관하다. 이 경로들을 401 재시도 대상에서
+// 제외하지 않으면:
+//   (a) 비로그인 방문자 - refreshAuth()가 "리프레시 토큰이 없습니다"로 실패하고
+//       그 refreshError가 서버가 실제로 보낸 메시지(예: 본인확인 "N회 남음" 안내)를
+//       덮어써 화면에 엉뚱한 문구가 뜬다.
+//   (b) 로그인 상태 - refreshAuth()가 성공해 시도 횟수를 차감하는 원 요청(POST
+//       verify)이 자동 재시도되어, 버튼 1클릭에 서버 상태(시도 횟수)가 2번 바뀐다.
+// 근본 원인은 서버가 본인확인 실패를 401로 잘못 응답하던 것이었고(백엔드에서 400으로
+// 수정 완료), 이 제외 목록은 그와 무관하게 "무인증 공개 경로는 애초에 리프레시
+// 대상이 아니다"를 보장하는 방어선(defense in depth)이다 - 향후 이 경로들에서 다른
+// 이유로 401이 나더라도 side-effect가 있는 요청이 함부로 재시도되지 않는다.
+const PUBLIC_UNAUTH_PATH_PATTERNS = ['/gifts/perform/', '/will/watch/', '/will/release/']
+
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config
 
-    const isExcluded =
+    const isAuthEndpoint =
       originalRequest?.url?.includes('/auth/login') ||
       originalRequest?.url?.includes('/auth/refresh')
+    const isPublicUnauthPath = PUBLIC_UNAUTH_PATH_PATTERNS.some((p) => originalRequest?.url?.includes(p))
+    const isExcluded = isAuthEndpoint || isPublicUnauthPath
     const is401 = error.response?.status === 401
     const alreadyRetried = originalRequest?._retry
 
@@ -59,8 +75,12 @@ apiClient.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${newToken}`
         return apiClient(originalRequest)
       } catch (refreshError) {
+        // refresh 자체가 실패해도(리프레시 토큰 없음/만료 등) 원 요청이 실제로 받은
+        // 에러(error)를 그대로 전달한다 - refreshError로 치환하면 원 요청의 실제
+        // 서버 메시지가 "리프레시 토큰이 없습니다" 같은 무관한 문구로 가려진다.
+        console.error('[apiClient] 토큰 갱신 실패:', refreshError?.message)
         useAuthStore.getState().clearUser()
-        return Promise.reject(refreshError)
+        return Promise.reject(error)
       }
     }
 

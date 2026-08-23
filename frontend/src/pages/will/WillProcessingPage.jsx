@@ -1,5 +1,5 @@
+import { AlertCircle, Mic, Video, Lock } from 'lucide-react'
 import { useWillProcessing } from './useWillProcessing.js'
-import { Mic, Video, Lock } from 'lucide-react'
 import './WillProcessingPage.css'
 
 const STAGES = [
@@ -18,6 +18,26 @@ function getStageIndex(jobStatus) {
 export default function WillProcessingPage() {
   const { jobStatus, progress, pollError } = useWillProcessing()
   const activeStage = getStageIndex(jobStatus)
+
+  // FIX: 결함3 - pollError가 있으면(생성 실패 또는 상태 확인 실패) 폴링은 이미
+  // 멈춘 상태다(useWillProcessing.js). 그런데도 스피너와 "완료되면 자동으로
+  // 보관함으로 이동합니다 / 페이지를 닫아도 처리는 계속됩니다" 안내가 그대로
+  // 남아있으면, 실제로는 멈췄는데 여전히 처리 중인 것처럼 보이는 혼란을 준다.
+  if (pollError) {
+    return (
+      <div className="will-proc-page">
+        <div className="will-proc__content">
+          <div className="will-proc__spinner-wrap" aria-hidden="true">
+            <AlertCircle size={48} color="var(--color-error)" />
+          </div>
+
+          <h1 className="will-proc__title">영상 편지를 만들지 못했습니다</h1>
+
+          <p className="will-proc__error" role="alert">{pollError}</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="will-proc-page">
@@ -61,10 +81,6 @@ export default function WillProcessingPage() {
             </div>
             <span className="will-proc__progress-pct">{progress}%</span>
           </div>
-        )}
-
-        {pollError && (
-          <p className="will-proc__error" role="alert">{pollError}</p>
         )}
 
         <p className="will-proc__note" aria-live="polite">

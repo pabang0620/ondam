@@ -3,6 +3,13 @@ import { useSearchParams, useNavigate } from 'react-router-dom'
 import { Loader2, AlertCircle, Clock3 } from 'lucide-react'
 import { Button } from '../../components/common/Button.jsx'
 import { confirmPayment, startProcessing } from './photoApi.js'
+import { getSafeErrorMessage } from '../../lib/safeErrorMessage.js'
+
+// 결함4 - startProcessing이 던지는 400 메시지("초상권 처리 동의가 필요합니다" 등)는
+// 사용자가 바로 행동할 수 있는 구체적 사유다. 이를 버리고 "문제가 발생했습니다"로만
+// 뭉뚱그리면 사용자는 원인을 모른 채 재시도 버튼만 반복 누르게 된다(WillPaymentSuccessPage와
+// 동일한 결함 패턴).
+const START_FAILED_FALLBACK = 'AI 처리를 시작하는 중 문제가 발생했습니다. 아래 버튼을 눌러 다시 시작해 주세요.'
 
 // DEV-25: 토스 결제창이 successUrl로 리다이렉트하며 붙여주는 쿼리(paymentKey, orderId,
 // amount)를 받아 confirm을 호출하는 콜백 페이지. usePhotoPayment.js가 리다이렉트 직전
@@ -38,6 +45,7 @@ export default function PhotoPaymentSuccessPage() {
   // 못함 / error: confirm 자체가 명확히 실패
   const [state, setState] = useState('processing')
   const [message, setMessage] = useState(null)
+  const [startFailedMessage, setStartFailedMessage] = useState(START_FAILED_FALLBACK)
   const [photoOrderId, setPhotoOrderId] = useState(null)
   const processed = useRef(false)
 
@@ -76,9 +84,11 @@ export default function PhotoPaymentSuccessPage() {
         try {
           await startProcessing(resolvedOrderId)
           navigate(`/photo/processing/${resolvedOrderId}`, { replace: true })
-        } catch {
+        } catch (startErr) {
           // 결제는 이미 완료됐다 - 처리 시작 요청만 실패한 것이므로 결제 실패로
           // 보여주면 안 된다(이미 청구된 금액을 취소된 것처럼 오해하게 만든다).
+          // FIX: 결함4 - 서버가 준 구체적 사유를 버리지 않는다(안전 필터 통과분만).
+          setStartFailedMessage(getSafeErrorMessage(startErr, START_FAILED_FALLBACK, 'photo-start-processing'))
           setState('start-failed')
         }
       })
@@ -108,7 +118,8 @@ export default function PhotoPaymentSuccessPage() {
     try {
       await startProcessing(photoOrderId)
       navigate(`/photo/processing/${photoOrderId}`, { replace: true })
-    } catch {
+    } catch (startErr) {
+      setStartFailedMessage(getSafeErrorMessage(startErr, START_FAILED_FALLBACK, 'photo-start-processing-retry'))
       setState('start-failed')
     }
   }
@@ -164,9 +175,9 @@ export default function PhotoPaymentSuccessPage() {
         <p style={{ fontSize: 'var(--fs-h3)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
           결제는 완료됐어요
         </p>
-        <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>
-          다만 AI 처리를 시작하는 중 문제가 발생했습니다. 아래 버튼을 눌러 다시
-          시작해 주세요.
+        {/* FIX: 결함4 - 서버가 준 구체적 사유를 그대로 보여준다(안전 필터 통과분만) */}
+        <p role="alert" style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>
+          {startFailedMessage}
         </p>
         <Button onClick={retryStart} fullWidth>처리 다시 시작하기</Button>
       </CenterMessage>

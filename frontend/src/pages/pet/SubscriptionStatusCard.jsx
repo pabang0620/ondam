@@ -1,15 +1,18 @@
 import { formatKst } from '../../utils/dateKst.js'
 
+// [2026-08-23 수정] will_premium(월 1,900원)·all(9,900원) 플랜은 DEV-17/DEV-32로
+// 폐지되어 pet_archive 4,900원 단일가만 신규 가입 가능하다(백엔드
+// subscriptionService.js PLANS 참조, docs/strategy/03-product-pricing.md와도 일치).
+// 다만 이미 will_premium/all로 구독 중이던 기존 행은 강제취소하지 않았으므로
+// (subscriptionService.js 주석) 화면에 여전히 나타날 수 있다 - PLAN_NAMES에는
+// 표시용으로 남겨두되, 가격은 하드코딩하지 않는다(가격 정본은 항상 서버가 응답에
+// 실어 보내는 subscription.price_krw다 - 폐지된 플랜은 원가가 이미 바뀌어
+// 하드코딩 표를 유지관리할 수 없다. 결제 화면 금액이 서버 금액과 어긋나면 결제가
+// 100% 실패하므로 프론트에 별도 가격표를 두지 않는 것이 원칙).
 const PLAN_NAMES = {
   pet_archive: '반려동물 아카이브',
   will_premium: 'AI 영상 편지 프리미엄',
   all: '전체 이용권',
-}
-
-const PLAN_PRICES = {
-  pet_archive: 9900,
-  will_premium: 29900,
-  all: 39900,
 }
 
 const STATUS_CONFIG = {
@@ -65,7 +68,9 @@ export default function SubscriptionStatusCard({ subscription, onCancel, onRetry
   if (!subscription) return null
 
   const planName = PLAN_NAMES[subscription.plan] ?? subscription.plan
-  const planPrice = PLAN_PRICES[subscription.plan]
+  // 가격은 하드코딩 표가 아니라 서버가 내려주는 실제 청구액(price_krw)을 그대로 쓴다 -
+  // 이게 구독 시점에 실제로 청구된 금액의 단일 정본이다(폐지된 플랜이어도 정확함).
+  const planPrice = subscription.price_krw ?? subscription.priceKrw
   const status = subscription.subStatus ?? subscription.status ?? 'canceled'
 
   return (
@@ -132,7 +137,12 @@ export default function SubscriptionStatusCard({ subscription, onCancel, onRetry
         {(status === 'past_due' || status === 'suspended') && (
           <button
             type="button"
-            onClick={() => onRetry(subscription.subscriptionId)}
+            // FIX: 결함1 전수 점검 - subscriptionService.getSubscriptions는 원본 DB
+            // 행(snake_case)을 그대로 스프레드하고 subStatus만 별도로 추가한다
+            // (subscription_id, camelCase 변환 없음). subscription.subscriptionId는
+            // 항상 undefined였고, 재결제 버튼이 POST /subscriptions/undefined/
+            // retry-payment를 호출해 항상 실패했다.
+            onClick={() => onRetry(subscription.subscription_id)}
             disabled={isProcessing}
             style={{
               flex: 1,

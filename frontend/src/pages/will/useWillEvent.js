@@ -3,7 +3,7 @@
 // 흐리고, 1인 운영에서 핵심 상품도 아직 실환경 검증 전이라는 근거로 상품에서
 // 제외됨. 이 파일 자체는 삭제하지 않고 보존한다. 되살릴 경우 App.jsx의
 // WillEventPage 라우트 등록과 routes.js의 WILL_EVENT를 복구하면 된다.)
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { willApi } from './willApi.js'
 
@@ -22,6 +22,9 @@ export function useWillEvent() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState(null)
   const [willsError, setWillsError] = useState(null)
+  // FIX: ep-006 - 렌더마다 새로 만들어지는 `{ current: false }` 리터럴은 ref가
+  // 아니라 죽은 가드였다. 훅 최상위 useRef로 교체.
+  const pendingRef = useRef(false)
 
   useEffect(() => {
     const ac = new AbortController()
@@ -32,7 +35,10 @@ export function useWillEvent() {
         const { data } = await willApi.getWills()
         const list = (data.data || []).filter((w) => w.status === 'active')
         setWills(list)
-        if (list.length > 0) setSelectedWillId(list[0].id || list[0].willId)
+        // FIX: 결함1 전수 점검 - willService.toWillDtos는 snake_case(will_id)로
+        // 응답한다. w.id/w.willId는 응답에 없는 필드라 항상 undefined였다(이 파일은
+        // 현재 라우트 비활성 상태라 실사용 영향은 없지만, 되살릴 경우를 위해 함께 수정).
+        if (list.length > 0) setSelectedWillId(list[0].will_id)
       } catch (err) {
         // FIX: DEV-27 - 조회 실패를 빈 목록으로 조용히 흘려보내지 않는다. 빈 목록은
         // "유언장이 없음"으로 보여 조회 실패를 사용자가 오인하게 되고, 그 상태로 제출하면
@@ -62,7 +68,6 @@ export function useWillEvent() {
       return
     }
 
-    const pendingRef = { current: false }
     if (pendingRef.current) return
     pendingRef.current = true
 
@@ -79,7 +84,8 @@ export function useWillEvent() {
         beneficiaries: [],
       }
       const { data } = await willApi.createWill(payload)
-      const willId = data.data?.willId || data.data?.id
+      // FIX: 결함1 전수 점검 - 실제 응답 필드는 will_id다 (useWillPreview.js와 동일)
+      const willId = data.data?.will_id
       navigate(`/will/payment?willId=${willId}`)
     } catch (err) {
       // FIX: DEV-24 - 생성 실패를 가짜 will_id로 위장해 결제 단계로 진행시키지 않는다

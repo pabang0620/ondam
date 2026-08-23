@@ -1,10 +1,15 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { petApi } from './petApi.js'
 import { getTossPayments } from '../../lib/tossPayments.js'
 import { useAuthStore } from '../../store/authStore.js'
 
 export function usePetSubscription() {
   const user = useAuthStore((s) => s.user)
+
+  // FIX: ep-006 - 렌더마다 새로 만들어지는 `{ current: false }` 리터럴은 ref가
+  // 아니라 죽은 가드였다. 재결제/해지는 서로 다른 버튼이라 별도 ref로 분리한다.
+  const retryPendingRef = useRef(false)
+  const cancelPendingRef = useRef(false)
 
   const [plans, setPlans] = useState([])
   const [currentSubscription, setCurrentSubscription] = useState(null)
@@ -65,8 +70,10 @@ export function usePetSubscription() {
   }
 
   const handleRetryPayment = async (subscriptionId) => {
-    if (isProcessing) return
-    const pendingRef = { current: true }
+    // FIX: ep-006 - isProcessing state 체크만으로는 연타 시 두 클릭이 같은
+    // 렌더의 stale 클로저를 참조해 둘 다 통과할 수 있다. useRef 동기 락으로 보강.
+    if (isProcessing || retryPendingRef.current) return
+    retryPendingRef.current = true
     setIsProcessing(true)
     setActionError(null)
     setActionNotice(null)
@@ -91,10 +98,8 @@ export function usePetSubscription() {
       // FIX: DEV-24 - 재결제 실패를 성공으로 위장하지 않는다
       setActionError(err?.response?.data?.message ?? '재결제에 실패했습니다. 카드 정보를 확인한 후 다시 시도해 주세요.')
     } finally {
-      if (pendingRef.current) {
-        setIsProcessing(false)
-        pendingRef.current = false
-      }
+      setIsProcessing(false)
+      retryPendingRef.current = false
     }
   }
 
@@ -102,8 +107,8 @@ export function usePetSubscription() {
   const closeCancelModal = () => setIsCancelModalOpen(false)
 
   const confirmCancel = async (subscriptionId) => {
-    if (isProcessing) return
-    const pendingRef = { current: true }
+    if (isProcessing || cancelPendingRef.current) return
+    cancelPendingRef.current = true
     setIsProcessing(true)
     setActionError(null)
     try {
@@ -117,10 +122,8 @@ export function usePetSubscription() {
       // FIX: DEV-24 - 해지 API 실패를 로컬에서만 성공 처리하지 않는다 (정기결제가 실제로는 계속돼 환불 분쟁으로 이어짐)
       setActionError(err?.response?.data?.message ?? '구독 해지에 실패했습니다. 잠시 후 다시 시도해 주세요.')
     } finally {
-      if (pendingRef.current) {
-        setIsProcessing(false)
-        pendingRef.current = false
-      }
+      setIsProcessing(false)
+      cancelPendingRef.current = false
     }
   }
 

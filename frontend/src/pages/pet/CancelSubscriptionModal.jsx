@@ -119,7 +119,8 @@ export default function CancelSubscriptionModal({ isOpen, onClose, onConfirm, su
           <button
             ref={confirmButtonRef}
             type="button"
-            onClick={() => onConfirm(subscription?.subscriptionId)}
+            // FIX: 결함1 전수 점검 - subscription_id가 실제 필드명이다 (SubscriptionStatusCard.jsx 참고)
+            onClick={() => onConfirm(subscription?.subscription_id)}
             disabled={isProcessing}
             style={{
               flex: 1,

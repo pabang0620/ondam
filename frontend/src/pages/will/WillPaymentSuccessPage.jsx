@@ -3,6 +3,13 @@ import { useSearchParams, useNavigate } from 'react-router-dom'
 import { Loader2, AlertCircle, Clock3 } from 'lucide-react'
 import { Button } from '../../components/common/Button.jsx'
 import { willApi } from './willApi.js'
+import { getSafeErrorMessage } from '../../lib/safeErrorMessage.js'
+import { ROUTES } from '../../constants/routes.js'
+
+// 결함4: activateWill이 던지는 400 메시지("프로필 사진이 없습니다..." 등)는 사용자가
+// 바로 행동할 수 있는 구체적 사유다 - 이 사유를 버리고 "문제가 발생했습니다"로
+// 뭉뚱그리면 사용자는 원인을 모른 채 재시도 버튼만 반복 누르게 된다.
+const START_FAILED_FALLBACK = '영상 생성을 시작하는 중 문제가 발생했습니다. 아래 버튼을 눌러 다시 시작해 주세요.'
 
 // DEV-25: 토스 결제창이 successUrl로 리다이렉트하며 붙여주는 쿼리(paymentKey, orderId,
 // amount)를 받아 confirm을 호출하는 콜백 페이지. useWillPayment.js가 리다이렉트 직전
@@ -38,6 +45,7 @@ export default function WillPaymentSuccessPage() {
   // 특정 못함 / error: confirm 자체가 명확히 실패
   const [state, setState] = useState('processing')
   const [message, setMessage] = useState(null)
+  const [startFailedMessage, setStartFailedMessage] = useState(START_FAILED_FALLBACK)
   const [willId, setWillId] = useState(null)
   const processed = useRef(false)
 
@@ -77,9 +85,13 @@ export default function WillPaymentSuccessPage() {
         try {
           await willApi.activateWill(resolvedWillId)
           navigate(`/will/processing/${resolvedWillId}`, { replace: true })
-        } catch {
+        } catch (activateErr) {
           // 결제는 이미 완료됐다 - 영상 생성 시작 요청만 실패한 것이므로 결제 실패로
           // 보여주면 안 된다(이미 청구된 금액을 취소된 것처럼 오해하게 만든다).
+          // FIX: 결함4 - 서버가 준 구체적 사유(예: "프로필 사진이 없습니다...")를
+          // 버리지 않는다. 단, 안전 필터를 거쳐 벤더 원문·환경변수명이 섞여 있으면
+          // 대체 문구로 바꾼다(다른 에이전트가 백엔드를 손보는 중이라도 방어 유지).
+          setStartFailedMessage(getSafeErrorMessage(activateErr, START_FAILED_FALLBACK, 'will-activate'))
           setState('start-failed')
         }
       })
@@ -107,10 +119,15 @@ export default function WillPaymentSuccessPage() {
     try {
       await willApi.activateWill(willId)
       navigate(`/will/processing/${willId}`, { replace: true })
-    } catch {
+    } catch (activateErr) {
+      setStartFailedMessage(getSafeErrorMessage(activateErr, START_FAILED_FALLBACK, 'will-activate-retry'))
       setState('start-failed')
     }
   }
+
+  // 결함4: 원인이 "프로필 사진 미등록"이면 재시도 버튼만 반복 눌러도 같은 이유로
+  // 계속 실패한다 - 실제로 해결할 수 있는 화면으로 바로 이동하는 버튼을 함께 준다.
+  const isMissingProfilePhoto = startFailedMessage.includes('프로필 사진')
 
   if (state === 'processing') {
     return (
@@ -163,11 +180,18 @@ export default function WillPaymentSuccessPage() {
         <p style={{ fontSize: 'var(--fs-h3)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
           결제는 완료됐어요
         </p>
-        <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>
-          다만 영상 생성을 시작하는 중 문제가 발생했습니다. 아래 버튼을 눌러 다시
-          시작해 주세요.
+        {/* FIX: 결함4 - 서버가 준 구체적 사유를 그대로 보여준다(안전 필터 통과분만) */}
+        <p role="alert" style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>
+          {startFailedMessage}
         </p>
-        <Button onClick={retryStart} fullWidth>영상 생성 다시 시작하기</Button>
+        {isMissingProfilePhoto && (
+          <Button onClick={() => navigate(ROUTES.WILL_PHOTO)} fullWidth>
+            프로필 사진 등록하러 가기
+          </Button>
+        )}
+        <Button onClick={retryStart} variant={isMissingProfilePhoto ? 'secondary' : 'primary'} fullWidth>
+          영상 생성 다시 시작하기
+        </Button>
       </CenterMessage>
     )
   }

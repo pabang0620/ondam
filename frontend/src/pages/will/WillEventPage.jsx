@@ -69,8 +69,9 @@ export default function WillEventPage() {
               value={selectedWillId}
               onChange={(e) => setSelectedWillId(e.target.value)}
             >
+              {/* FIX: 결함1 전수 점검 - 실제 응답 필드는 will_id다 (WillVaultPage.jsx와 동일 수정) */}
               {wills.map((w) => (
-                <option key={w.id || w.willId} value={w.id || w.willId}>
+                <option key={w.will_id} value={w.will_id}>
                   {w.title || '영상 편지'}
                 </option>
               ))}

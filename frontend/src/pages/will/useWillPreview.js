@@ -65,7 +65,11 @@ export function useWillPreview() {
       }
 
       const { data } = await willApi.createWill(payload)
-      const willId = data.data?.willId || data.data?.id
+      // FIX: 결함1 전수 점검 - willService.toWillDto는 WILL_PUBLIC_FIELDS(pick)
+      // 화이트리스트를 거쳐 snake_case 그대로 응답한다(will_id, camelCase 변환 없음).
+      // willId/id 둘 다 실제로는 존재하지 않는 필드라 항상 undefined였고, 결제
+      // 페이지가 /will/payment?willId=undefined로 이동해 결제가 전건 실패했다.
+      const willId = data.data?.will_id
       localStorage.setItem('will_current_id', willId)
       navigate(`/will/payment?willId=${willId}`)
     } catch (err) {

@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useParams } from 'react-router-dom'
 import { willApi } from './willApi.js'
 
@@ -14,6 +14,9 @@ export function useWillRelease() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState(null)
   const [isSubmitted, setIsSubmitted] = useState(false)
+  // FIX: ep-006 - 렌더마다 새로 만들어지는 `{ current: false }` 리터럴은 ref가
+  // 아니라 죽은 가드였다. 훅 최상위 useRef로 교체.
+  const pendingRef = useRef(false)
 
   useEffect(() => {
     return () => {
@@ -49,7 +52,6 @@ export function useWillRelease() {
       return
     }
 
-    const pendingRef = { current: false }
     if (pendingRef.current) return
     pendingRef.current = true
 
