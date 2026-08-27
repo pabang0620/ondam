@@ -27,12 +27,12 @@ const PROCESS_STEPS = [
 export default function HomeProcess() {
   return (
     <section className="w-full" style={{ backgroundColor: 'var(--color-bg-alt)' }}>
-      <div className="max-w-6xl mx-auto px-4 sm:px-8 lg:px-12 py-14 sm:py-20 lg:py-24">
+      <div className="max-w-6xl mx-auto px-4 sm:px-8 lg:px-12 py-20 sm:py-28 lg:py-32">
         <h2
           className="text-center font-bold mb-4 sm:mb-5"
           style={{
-            fontFamily: 'var(--font-serif)',
-            fontSize: 'clamp(22px, 4vw, var(--fs-h2))',
+            fontFamily: 'var(--font-brand)',
+            fontSize: 'clamp(19px, 3.4vw, 26px)',
             fontWeight: 700,
             color: 'var(--color-text-primary)',
             letterSpacing: 'var(--ls-heading-ko)',
@@ -43,9 +43,11 @@ export default function HomeProcess() {
         </h2>
         <p
           className="text-center mb-12 sm:mb-16"
-          style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)', wordBreak: 'keep-all' }}
+          style={{ fontSize: 'var(--fs-body-lg)', color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)', wordBreak: 'keep-all' }}
         >
-          사진 한 장이면 시작할 수 있어요. 절차는 이렇게 진행돼요.
+          사진 한 장이면 시작할 수 있어요.
+          <br />
+          절차는 이렇게 진행돼요.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-10 lg:gap-12">
@@ -82,7 +84,9 @@ export default function HomeProcess() {
           className="text-center mt-12 sm:mt-16"
           style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-text-muted)', wordBreak: 'keep-all' }}
         >
-          실제 제작 예시와 전후 비교는 준비 중입니다. 준비되는 대로 이 자리에서 보여드릴게요.
+          실제 제작 예시와 전후 비교는 준비 중입니다.
+          <br />
+          준비되는 대로 이 자리에서 보여드릴게요.
         </p>
       </div>
     </section>

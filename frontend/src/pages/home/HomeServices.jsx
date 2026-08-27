@@ -46,24 +46,27 @@ const SERVICES = [
 export default function HomeServices() {
   return (
     <section className="w-full">
-      <div className="max-w-6xl mx-auto px-4 sm:px-8 lg:px-12 py-16 sm:py-20 lg:py-24">
+      <div className="max-w-6xl mx-auto px-4 sm:px-8 lg:px-12 py-20 sm:py-28 lg:py-32">
         <h2
           className="text-center font-bold mb-4 sm:mb-5"
           style={{
-            fontSize: 'clamp(22px, 4vw, var(--fs-h2))',
+            fontFamily: 'var(--font-brand)',
+            fontSize: 'clamp(19px, 3.4vw, 26px)',
             fontWeight: 700,
             color: 'var(--color-text-primary)',
             letterSpacing: 'var(--ls-heading-ko)',
             wordBreak: 'keep-all',
           }}
         >
-          온담의 서비스
+          리멤버미의 서비스
         </h2>
         <p
           className="text-center mb-12 sm:mb-16"
-          style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)', wordBreak: 'keep-all' }}
+          style={{ fontSize: 'var(--fs-body-lg)', color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)', wordBreak: 'keep-all' }}
         >
-          가격은 문의 없이 바로 확인하실 수 있어요. 결제 전에 무엇을 받으시는지 미리 알려드려요.
+          가격은 문의 없이 바로 확인하실 수 있어요.
+          <br />
+          결제 전에 무엇을 받으시는지 미리 알려드려요.
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">

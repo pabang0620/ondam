@@ -4,12 +4,12 @@ import { ROUTES } from '../../constants/routes.js'
 export default function HomeBottomCta() {
   return (
     <section className="w-full" style={{ backgroundColor: 'var(--color-bg-alt)' }}>
-      <div className="max-w-6xl mx-auto px-4 sm:px-8 lg:px-12 py-16 sm:py-24 lg:py-28 text-center">
+      <div className="max-w-6xl mx-auto px-4 sm:px-8 lg:px-12 py-20 sm:py-28 lg:py-36 text-center">
         <h2
           className="font-bold mb-5 sm:mb-6"
           style={{
-            fontFamily: 'var(--font-serif)',
-            fontSize: 'clamp(22px, 4vw, var(--fs-h2))',
+            fontFamily: 'var(--font-brand)',
+            fontSize: 'clamp(21px, 3.7vw, 32px)',
             fontWeight: 700,
             color: 'var(--color-text-primary)',
             letterSpacing: 'var(--ls-heading-ko)',
@@ -20,7 +20,7 @@ export default function HomeBottomCta() {
         </h2>
         <p
           style={{
-            fontSize: 'var(--fs-body)',
+            fontSize: 'var(--fs-body-lg)',
             color: 'var(--color-text-secondary)',
             maxWidth: '400px',
             margin: '0 auto 40px',

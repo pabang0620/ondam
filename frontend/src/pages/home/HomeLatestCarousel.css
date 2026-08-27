@@ -1,0 +1,293 @@
+/*
+ * HomeLatestCarousel - 애플 스토어 홈 "최신 제품"(shelf-2) 섹션 참고 카드 캐러셀.
+ * 네이티브 CSS scroll-snap만 사용한다(무거운 캐러셀 라이브러리 미사용).
+ * 어르신 UX 하한선: 버튼 48px 이상, 본문/캡션 16px 이상 - 애플 원본의 작은
+ * eyebrow(약 13px)도 여기서는 --fs-body(16px)로 확대했다.
+ */
+
+.home-latest {
+  width: 100%;
+  background: var(--color-bg);
+}
+
+.home-latest__inner {
+  max-width: 1152px;
+  margin: 0 auto;
+  padding-block: clamp(80px, 10vw, 128px);
+  padding-inline: clamp(16px, 4vw, 48px);
+}
+
+.home-latest__heading {
+  text-align: center;
+  font-family: var(--font-brand);
+  font-size: clamp(19px, 3.4vw, 26px);
+  font-weight: 700;
+  letter-spacing: var(--ls-heading-ko);
+  word-break: keep-all;
+  margin-bottom: 40px;
+}
+
+.home-latest__heading-bold {
+  color: var(--color-text-primary);
+}
+
+.home-latest__heading-grey {
+  color: var(--color-text-secondary);
+}
+
+.home-latest__viewport {
+  position: relative;
+}
+
+.home-latest__track {
+  display: flex;
+  gap: 20px;
+  list-style: none;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding-left: 4px;
+  padding: 4px 4px 28px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.home-latest__track::-webkit-scrollbar {
+  display: none;
+}
+
+.home-latest__slide {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  /* 모바일: 카드 1.2~1.5장이 보이도록 뷰포트 폭 기준으로 계산 */
+  width: min(78vw, 300px);
+}
+
+@media (min-width: 640px) {
+  .home-latest__slide {
+    width: 320px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .home-latest__slide {
+    width: 340px;
+  }
+}
+
+.home-latest__card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 460px;
+  padding: 28px 24px 24px;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--color-border);
+  text-decoration: none;
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+}
+
+.home-latest__card[data-tone='dark'] {
+  border-color: transparent;
+}
+
+.home-latest__card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+}
+
+.home-latest__card:focus-visible {
+  outline: 3px solid var(--color-warm-accent);
+  outline-offset: 3px;
+}
+
+.home-latest__body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 어르신 UX: 애플 원본은 작은 캡션(약 13px)이지만 --fs-body(16px)로 확대 */
+.home-latest__eyebrow {
+  font-size: var(--fs-body);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.home-latest__name {
+  font-size: var(--fs-h3);
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: var(--ls-heading-ko);
+}
+
+/* 어르신 UX 하한선(16px) 유지 - 더 가볍게 보이도록 줄간격만 살짝 좁힌다
+   (--lh-relaxed 1.6 대신 1.5) */
+.home-latest__desc {
+  font-size: var(--fs-body);
+  line-height: 1.5;
+}
+
+.home-latest__price {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 4px;
+}
+
+.home-latest__price-value {
+  font-size: var(--fs-body);
+  font-weight: 800;
+}
+
+.home-latest__price-note {
+  font-size: var(--fs-body);
+  font-weight: 500;
+}
+
+.home-latest__media {
+  position: relative;
+  margin-top: auto;
+  min-height: 160px;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+}
+
+/*
+ * "GIF처럼" 살아있는 느낌 요청(오너, 2026-08-26) - 실제 움직이는 소스(동영상/움짤)
+ * 대신 은은한 Ken Burns 효과(천천히 확대되는 팬-줌) CSS 애니메이션으로 구현한다.
+ * 이유: (1) 움짤/동영상을 새로 구하면 다시 라이선스 확인이 필요하고, (2) GIF는
+ * 용량이 커서 저사양·저속 환경의 어르신 이용자에게 부담이며, (3) CSS 애니메이션이
+ * 훨씬 가볍고 이미 라이선스 확인된 기존 5개 Unsplash 이미지를 그대로 재사용할 수
+ * 있다. 카드 컨테이너(.home-latest__media)에 overflow:hidden이 있어 확대된
+ * 이미지가 카드 밖으로 새지 않는다.
+ */
+.home-latest__media-img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  display: block;
+  transform-origin: center center;
+  animation-name: home-latest-kenburns;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+  will-change: transform;
+}
+
+@keyframes home-latest-kenburns {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.08);
+  }
+}
+
+/* 카드마다 주기·시작 시점을 다르게 해서 전부 똑같이 움직이지 않도록 한다 */
+.home-latest__slide:nth-child(1) .home-latest__media-img {
+  animation-duration: 9s;
+  animation-delay: 0s;
+}
+
+.home-latest__slide:nth-child(2) .home-latest__media-img {
+  animation-duration: 11s;
+  animation-delay: 1.2s;
+}
+
+.home-latest__slide:nth-child(3) .home-latest__media-img {
+  animation-duration: 10s;
+  animation-delay: 2.4s;
+}
+
+.home-latest__slide:nth-child(4) .home-latest__media-img {
+  animation-duration: 12s;
+  animation-delay: 0.6s;
+}
+
+.home-latest__slide:nth-child(5) .home-latest__media-img {
+  animation-duration: 8.5s;
+  animation-delay: 1.8s;
+}
+
+/* 이미지 위 아이콘 배지 - 도메인 컬러 인지를 유지하기 위해 기존 아이콘을
+   작게 유지한다(이미지가 배경, 아이콘+타이틀은 오버레이 형태) */
+.home-latest__media-icon {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  width: 36px;
+  height: 36px;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-pill);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
+}
+
+.home-latest__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 16px;
+  font-size: var(--fs-button);
+  font-weight: 700;
+}
+
+.home-latest__nav-btn {
+  position: absolute;
+  top: 40%;
+  transform: translateY(-50%);
+  width: 52px;
+  height: 52px;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+  z-index: 2;
+  transition: opacity var(--transition-fast);
+}
+
+.home-latest__nav-btn--prev {
+  left: 4px;
+}
+
+.home-latest__nav-btn--next {
+  right: 4px;
+}
+
+.home-latest__nav-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* 모바일: 애플 원본처럼 다음 버튼만 노출(이전 버튼은 스와이프로 대체) */
+@media (max-width: 767px) {
+  .home-latest__nav-btn--prev {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-latest__track {
+    scroll-behavior: auto;
+  }
+
+  /*
+   * global.css 전역 규칙(모든 요소 animation-duration: 0.01ms)으로도 사실상
+   * 정지되지만, Ken Burns 확대 애니메이션은 여기서 명시적으로 꺼서 의도를
+   * 분명히 하고 카드 이미지가 항상 원본 배율(scale(1))로 고정되게 한다.
+   */
+  .home-latest__media-img {
+    animation: none;
+    transform: scale(1);
+  }
+}

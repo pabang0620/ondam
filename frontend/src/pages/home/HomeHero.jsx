@@ -6,19 +6,21 @@ export default function HomeHero() {
     <section
       className="relative overflow-hidden"
       style={{
-        background: `linear-gradient(160deg, var(--color-primary) 0%, var(--color-primary-soft) 100%)`,
+        /* Apple 스토어 히어로 참조 - 그라디언트 대신 절제된 단색 블랙 배경 위에
+           아주 옅은 방사형 하이라이트만 남겨 "이미지가 숨쉬는" 여백감을 살린다 */
+        background: 'var(--color-primary)',
       }}
     >
       <div
         className="absolute inset-0"
         style={{
-          backgroundImage: 'radial-gradient(ellipse at 75% 25%, rgba(201,162,75,0.18) 0%, transparent 55%)',
+          backgroundImage: 'radial-gradient(ellipse at 75% 20%, rgba(255,255,255,0.06) 0%, transparent 60%)',
           pointerEvents: 'none',
         }}
         aria-hidden="true"
       />
 
-      <div className="relative max-w-3xl mx-auto text-center px-4 sm:px-6 lg:px-8 py-14 sm:py-20 lg:py-28">
+      <div className="relative max-w-3xl mx-auto text-center px-4 sm:px-6 lg:px-8 py-20 sm:py-28 lg:py-36">
         <span
           className="inline-block mb-6"
           style={{
@@ -39,12 +41,12 @@ export default function HomeHero() {
         <h1
           className="font-bold leading-tight mb-6"
           style={{
-            fontFamily: 'var(--font-serif)',
-            fontSize: 'clamp(28px, 6vw, 48px)',
-            fontWeight: 800,
+            fontFamily: 'var(--font-brand)',
+            fontSize: 'clamp(22px, 5vw, 30px)',
+            fontWeight: 700,
             color: 'var(--color-text-on-dark)',
             letterSpacing: 'var(--ls-heading-ko)',
-            lineHeight: 1.3,
+            lineHeight: 1.15,
             wordBreak: 'keep-all',
           }}
         >
@@ -56,7 +58,7 @@ export default function HomeHero() {
         <p
           style={{
             fontSize: 'clamp(var(--fs-body), 2.5vw, var(--fs-body-lg))',
-            color: 'rgba(245,239,230,0.82)',
+            color: 'rgba(245,245,247,0.82)',
             maxWidth: '520px',
             margin: '0 auto 40px',
             lineHeight: 'var(--lh-relaxed)',
@@ -100,7 +102,7 @@ export default function HomeHero() {
               backgroundColor: 'transparent',
               color: 'var(--color-text-on-dark)',
               borderRadius: 'var(--radius-pill)',
-              border: '1.5px solid rgba(245,239,230,0.5)',
+              border: '1.5px solid rgba(245,245,247,0.5)',
             }}
           >
             영상 편지 알아보기

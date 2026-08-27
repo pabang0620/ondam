@@ -1,26 +1,50 @@
 @import "tailwindcss";
 
-/* 온담 디자인 토큰 */
+/*
+ * "강한육군"(StrongArmy) 웹폰트 - 눈누(noonnu.cc) 등록 상업용 무료 폰트, 임베딩
+ * 허용 확인됨. 외부 CDN 의존 없이 자체 호스팅한다(src/assets/fonts). 브랜드
+ * 헤드라인 전용(--font-brand)이라 500/700 두 굵기만 필요하다.
+ */
+@font-face {
+  font-family: 'StrongArmy';
+  src: url('../assets/fonts/StrongArmy-Medium.woff') format('woff');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'StrongArmy';
+  src: url('../assets/fonts/StrongArmy-Bold.woff') format('woff');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* 리멤버미 디자인 토큰 - Apple 스토어 톤(중립 그레이스케일 + 절제된 포인트 컬러) */
 :root {
   /* 반응형 브레이크포인트 */
   --breakpoint-sm: 480px;
   --breakpoint-md: 768px;
 
-  /* Base - 크림/베이지 베이스 */
-  --color-bg: #FAF7F2;
-  --color-bg-alt: #F0E9DC;
+  /* Base - Apple 스타일 중립 그레이 베이스 (크림톤 → 뉴트럴 그레이) */
+  --color-bg: #F5F5F7;
+  --color-bg-alt: #E8E8ED;
   --color-surface: #FFFFFF;
-  --color-surface-warm: #F7F1E6;
+  --color-surface-warm: #FBFBFD;
 
-  /* Brand - 차콜 + 머스터드 골드 */
-  --color-primary: #2A2826;
-  --color-primary-soft: #4A4541;
+  /* Brand - Apple 근접 블랙 + 머스터드 골드(포인트 컬러는 최소한으로만 사용) */
+  --color-primary: #1D1D1F;
+  --color-primary-soft: #424245;
   --color-warm-accent: #C9A24B;
   --color-warm-accent-soft: #E6CB8E;
 
+  /* Apple 스타일 링크/정보 강조색 - 절제된 강조에만 사용(본문 전반 색상은 흑백 위주 유지) */
+  --color-link: #0071E3;
+
   /* 기존 변수명 호환 */
-  --color-primary-light: #4A4541;
-  --color-primary-dark: #1A1715;
+  --color-primary-light: #424245;
+  --color-primary-dark: #050505;
   --color-gold: #C9A24B;
 
   /* Domain accents */
@@ -30,19 +54,19 @@
   --color-pet: #C77B5C;          /* 반려동물: 테라코타 */
   --color-pet-soft: #E8C8AE;
 
-  /* Text */
-  --color-text-primary: #2A2826;
-  --color-text-secondary: #6B6660;
-  --color-text-muted: #9B9590;
-  --color-text-on-dark: #F5EFE6;
-  --color-border: #ECE7DD;
-  --color-border-strong: #D9D2C3;
+  /* Text - Apple 뉴트럴 그레이 스케일 (본문 대비는 WCAG AA 이상 유지) */
+  --color-text-primary: #1D1D1F;
+  --color-text-secondary: #6E6E73;
+  --color-text-muted: #6B6B70;
+  --color-text-on-dark: #F5F5F7;
+  --color-border: #D2D2D7;
+  --color-border-strong: #B8B8BD;
 
   /* Semantic */
   --color-success: #6B8E5A;
   --color-error: #B85C50;
   --color-warning: #C9A24B;
-  --color-accent: #F7F1E6;
+  --color-accent: #FBFBFD;
 
   /* 기존 변수명 호환 (background → bg) */
   --color-background: var(--color-bg);
@@ -52,12 +76,40 @@
   --color-error-muted: #e8a9a4;
   --color-accent-light: var(--color-surface-warm);
 
-  /* Type */
+  /*
+   * Type - Apple 스토어 참조(스크린샷 apple_top/apple_seg_01~04) 타이포그래피 톤 적용.
+   * 실제 SF Pro 폰트 파일은 라이선스상 임베드하지 않고, 시스템 산세리프 폴백 스택만
+   * 사용한다(-apple-system, BlinkMacSystemFont). --font-serif도 더 이상 세리프를 쓰지
+   * 않고 동일한 산세리프 스택으로 통일 - Apple은 헤드라인에도 세리프를 쓰지 않는다.
+   * 폰트 크기는 어르신 UX 하한선(본문 16px 이상, 버튼 16px 이상)을 넘지 않는 선에서만
+   * 확대했다 - 캡션(14px)은 기존 관행(보조 정보) 그대로 유지.
+   * 헤드라인(h1/h2/h3)은 오너 피드백(2026-08-26)에 따라 두 차례 축소했다 - 강한육군
+   * 볼드 디스플레이 폰트가 헤드라인에 적용되면서 실제 픽셀 크기보다 커 보이는 효과가
+   * 겹쳐 전체적으로 과도하게 커 보였다.
+   * 1차: h1 34→28px, h2 28→24px, h3 22→20px, 히어로 clamp 44→36px.
+   * 2차(같은 날 추가 피드백): h1 28→24px, h2 24→21px, h3 20→18px, 히어로 clamp
+   * 26/36→22/30px, 섹션 제목 clamp 22/32→19/26px, 하단 CTA clamp 24/38→21/32px.
+   * h3(18px)는 본문(16px) 대비 1.3배에 살짝 못 미치지만(1.125배), 카드 제목·가격
+   * 등 대부분 위치에서 font-weight 700~800과 함께 쓰여 시각적 위계는 유지된다 -
+   * 추가 축소 여지가 필요하면 h3만 별도로 조정할 것.
+   * 본문(--fs-body 16px)/버튼(--fs-button 17px)/터치 타겟(48px)은 어르신 UX
+   * 하한선이라 이번에도 축소 대상에서 제외한다.
+   */
   --font-sans: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Noto Sans KR', sans-serif;
-  --font-serif: 'Pretendard Serif', 'Noto Serif KR', Georgia, serif;
-  --fs-h1: 30px;
-  --fs-h2: 24px;
-  --fs-h3: 20px;
+  --font-serif: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Noto Sans KR', sans-serif;
+  /*
+   * --font-brand: "강한육군"(StrongArmy) 웹폰트 - 눈누(noonnu.cc) 등록 상업용 무료
+   * 폰트, 임베딩(웹폰트) 허용 확인됨. 두꺼운 고딕 디스플레이 서체라 브랜드 노출이
+   * 중요한 헤드라인(h1/h2, 히어로 타이틀, 섹션 제목, 로고 워드마크)에만 한정 적용한다.
+   * 본문/버튼/폼 등 일반 텍스트는 가독성을 위해 --font-sans(시스템 산세리프)를 그대로
+   * 유지 - 어르신 UX상 가독성이 최우선이라 body 텍스트는 건드리지 않는다.
+   * 폰트 로드 실패/지연 시에도 브랜드 톤이 유지되도록 기존 시스템 산세리프 스택을
+   * 폴백으로 둔다.
+   */
+  --font-brand: 'StrongArmy', 'Pretendard', -apple-system, BlinkMacSystemFont, 'Noto Sans KR', sans-serif;
+  --fs-h1: 24px;
+  --fs-h2: 21px;
+  --fs-h3: 18px;
   --fs-body-lg: 18px;
   --fs-body: 16px;
   --fs-caption: 14px;
@@ -71,32 +123,33 @@
   --font-size-2xl: 24px;
 
   --lh-relaxed: 1.6;
-  --ls-heading-ko: -0.02em;
+  /* Apple 헤드라인 특유의 살짝 좁힌 자간(tracking) */
+  --ls-heading-ko: -0.03em;
 
-  /* Radius */
+  /* Radius - Apple 카드류는 그림자 없이 라운드만으로 절제된 입체감을 준다 */
   --radius-sm: 10px;
-  --radius-card: 16px;
-  --radius-lg: 20px;
+  --radius-card: 18px;
+  --radius-lg: 22px;
   --radius-pill: 999px;
 
   /* 기존 변수명 호환 */
   --radius-md: 12px;
   --radius-full: 999px;
 
-  /* Spacing */
+  /* Spacing - 섹션 간 여백을 Apple 수준으로 넉넉하게(대형 화면일수록 더 크게) */
   --spacing-xs: 4px;
   --spacing-sm: 8px;
   --spacing-md: 16px;
   --spacing-lg: 24px;
   --spacing-xl: 32px;
-  --spacing-2xl: 48px;
+  --spacing-2xl: 56px;
   --space-4: 16px;
   --space-5: 24px;
   --space-6: 32px;
   --space-7: 48px;
   --space-8: 64px;
-  --spacing-section: 64px;
-  --spacing-section-lg: 96px;
+  --spacing-section: 80px;
+  --spacing-section-lg: 120px;
 
   /* Sizing */
   --min-touch-target: 48px;
@@ -107,6 +160,9 @@
   /* Transition */
   --transition-fast: 0.15s ease;
   --transition-base: 0.2s ease;
+
+  /* Shadow - 카드류 절제된 입체감 (rgba 값은 --color-text-primary와 동일 톤) */
+  --shadow-card: 0 12px 32px rgba(29, 29, 31, 0.07);
 }
 
 /* 기본 리셋 - @layer base 안에 두어야 Tailwind utilities(mx-auto, px-*, py-*)가 이를 덮어쓸 수 있음 */
