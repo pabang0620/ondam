@@ -78,7 +78,7 @@ const toSessionUser = (admin) => ({
 
 // 사후 공개 알림 문구 (SPEC-04 5절 - 민감 발송 문구 원칙)
 // 죽음을 직접 언급하는 단어를 최소화하고, 열람을 강요하지 않는 톤을 쓴다.
-const RELEASE_EMAIL_SUBJECT = '온담 - 소중한 분이 남긴 영상이 도착했습니다'
+const RELEASE_EMAIL_SUBJECT = '리멤버미 - 소중한 분이 남긴 영상이 도착했습니다'
 const buildReleaseMessage = (recipientName) =>
   `${recipientName ? recipientName + '님, ' : ''}소중한 분이 남긴 영상이 도착했습니다. 마음의 준비가 되실 때 열어보세요.`
 

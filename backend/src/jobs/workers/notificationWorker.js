@@ -87,7 +87,7 @@ const sendEmail = async ({ to, subject, message }) => {
   await transport.sendMail({
     from: process.env.GMAIL_USER,
     to,
-    subject: subject ?? '온담 알림',
+    subject: subject ?? '리멤버미 알림',
     text: message,
   })
 }

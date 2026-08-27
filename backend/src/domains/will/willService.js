@@ -53,7 +53,7 @@ const WATCH_URL_EXPIRES = 24 * 60 * 60 // 1일(초) - 매 열람마다 재발급
 // fallback 쪽까지 방어되지 않는다).
 const buildDownloadFilename = (ownerNickname) => {
   const safeName = String(ownerNickname ?? '').replace(/[\\/"'*?:|<>\r\n]/g, '').trim()
-  return `마지막영상편지_${safeName || '온담'}.mp4`
+  return `마지막영상편지_${safeName || '리멤버미'}.mp4`
 }
 
 // ─── 열람 본인 확인 (SPEC-05 2절) ────────────────────────────────────────────
@@ -1062,7 +1062,7 @@ export const requestWatchLinkExtension = async (token) => {
       await notificationQueue.add('will_watch_token_reissued', {
         type: 'email',
         to: beneficiary.email,
-        subject: '온담 - 영상 편지 링크를 다시 보내드려요',
+        subject: '리멤버미 - 영상 편지 링크를 다시 보내드려요',
         message: `${message}\n${watchUrl}`,
       })
     }

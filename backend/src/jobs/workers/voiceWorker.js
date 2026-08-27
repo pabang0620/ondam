@@ -108,7 +108,7 @@ const processVoiceClone = async (jobData, bullmqJobId) => {
     // ElevenLabs Voice Clone API 호출
     const formData = new FormData()
     formData.append('name', `ondam-${voiceSampleId}`)
-    formData.append('description', '온담 영상 편지 음성 클론')
+    formData.append('description', '리멤버미 영상 편지 음성 클론')
     formData.append(
       'files',
       new File([audioBuffer], `voice_${voiceSampleId}.mp3`, { type: 'audio/mpeg' }),

@@ -170,7 +170,7 @@ const finalizeWillFailure = async ({ willId, userId, failReason }) => {
     await notificationQueue.add('will_video_failed_refund', {
       type: 'email',
       to: email,
-      subject: '[온담] 영상 편지 생성 실패 안내',
+      subject: '[리멤버미] 영상 편지 생성 실패 안내',
       message,
     }).catch((err) => console.error('[videoWorker] 실패 알림 큐 등록 오류:', err.message))
   }
