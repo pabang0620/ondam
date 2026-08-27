@@ -48,7 +48,7 @@ export default function AdminLoginPage() {
         {/* 로고 */}
         <div style={{ textAlign: 'center' }}>
           <p style={{ fontSize: 'var(--fs-h1)', fontWeight: 800, color: 'var(--color-primary)', letterSpacing: 'var(--ls-heading-ko)' }}>
-            온담
+            리멤버미
           </p>
           <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-muted)', marginTop: 4 }}>
             관리자 로그인

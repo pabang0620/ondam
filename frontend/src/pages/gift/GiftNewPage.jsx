@@ -51,7 +51,7 @@ function GiftNewPage() {
           </h1>
         </div>
         <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>
-          부모님께 온담 서비스를 선물해 드리세요. 결제는 지금 하시고, 사진 올리기·녹음은
+          부모님께 리멤버미 서비스를 선물해 드리세요. 결제는 지금 하시고, 사진 올리기·녹음은
           부모님이 편하실 때 링크로 직접 하시면 돼요.
         </p>
       </header>
@@ -111,7 +111,7 @@ function GiftNewPage() {
               type="text"
               value={recipientName}
               onChange={(e) => setRecipientName(e.target.value)}
-              placeholder="예: 김온담"
+              placeholder="예: 김리멤버"
               style={{
                 height: 'var(--size-input-h)',
                 minHeight: 'var(--min-touch-target)',

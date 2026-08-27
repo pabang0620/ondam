@@ -27,7 +27,7 @@ function useGiftPayment() {
       await toss.requestPayment('카드', {
         amount: amountKrw,
         orderId: tossOrderId,
-        orderName: '온담 선물하기',
+        orderName: '리멤버미 선물하기',
         successUrl: window.location.origin + '/gift/payment/success',
         failUrl: window.location.origin + '/gift/payment/fail',
       })

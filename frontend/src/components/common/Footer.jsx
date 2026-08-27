@@ -22,7 +22,7 @@ export default function Footer() {
           <div className="flex flex-col gap-3">
             <img
               src={logoUrl}
-              alt="온담"
+              alt="리멤버미"
               height={36}
               width={135}
               style={{ display: 'block' }}
@@ -149,7 +149,7 @@ export default function Footer() {
             color: 'var(--color-text-muted)',
           }}
         >
-          © {new Date().getFullYear()} 온담. All rights reserved.
+          © {new Date().getFullYear()} 리멤버미. All rights reserved.
         </div>
       </div>
     </footer>

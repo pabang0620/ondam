@@ -125,12 +125,12 @@ export default function Header() {
           <Link
             to={ROUTES.HOME}
             className="flex items-center"
-            aria-label="온담 홈으로 이동"
+            aria-label="리멤버미 홈으로 이동"
           >
             {/* 모바일: 마크만 */}
             <img
               src={logoMarkUrl}
-              alt="온담"
+              alt="리멤버미"
               height={36}
               width={36}
               className="sm:hidden"
@@ -138,7 +138,7 @@ export default function Header() {
             {/* 데스크톱: 전체 로고 */}
             <img
               src={logoUrl}
-              alt="온담 - AI 기억사진관"
+              alt="리멤버미 - AI 기억사진관"
               height={40}
               width={150}
               className="hidden sm:block"
@@ -369,14 +369,14 @@ export default function Header() {
             >
               <span
                 style={{
-                  fontFamily: 'var(--font-serif)',
+                  fontFamily: 'var(--font-brand)',
                   fontWeight: 700,
                   fontSize: 'var(--fs-h3)',
                   letterSpacing: 'var(--ls-heading-ko)',
                   color: 'var(--color-text-primary)',
                 }}
               >
-                온담
+                리멤버미
               </span>
               <button
                 type="button"

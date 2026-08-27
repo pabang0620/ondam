@@ -17,7 +17,7 @@ export default function AuthLayout() {
       <Link
         to={ROUTES.HOME}
         className="mb-6 sm:mb-8 flex flex-col items-center gap-1"
-        aria-label="온담 홈으로 이동"
+        aria-label="리멤버미 홈으로 이동"
       >
         <span
           style={{
@@ -28,7 +28,7 @@ export default function AuthLayout() {
             color: 'var(--color-text-primary)',
           }}
         >
-          온담
+          리멤버미
         </span>
         <span
           style={{

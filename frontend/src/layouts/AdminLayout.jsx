@@ -196,7 +196,7 @@ export default function AdminLayout() {
               letterSpacing: 'var(--ls-heading-ko)',
             }}
           >
-            온담
+            리멤버미
           </span>
           <span
             style={{
@@ -449,7 +449,7 @@ export default function AdminLayout() {
               letterSpacing: 'var(--ls-heading-ko)',
             }}
           >
-            온담 관리자
+            리멤버미 관리자
           </span>
         </div>
 
