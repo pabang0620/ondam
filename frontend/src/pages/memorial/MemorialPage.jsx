@@ -93,7 +93,7 @@ export default function MemorialPage() {
             </button>
           </form>
 
-          <Link to="/" className="memorial-home-link">리멤버미 홈으로</Link>
+          <Link to="/" className="memorial-home-link">온담 홈으로</Link>
         </div>
       </main>
     )
@@ -188,10 +188,10 @@ export default function MemorialPage() {
         </p>
       </section>
 
-      {/* 리멤버미 링크 */}
+      {/* 온담 링크 */}
       <footer className="memorial-footer">
         <Link to="/" className="memorial-footer__link">
-          리멤버미에서 반려동물의 기억을 간직하세요
+          온담에서 반려동물의 기억을 간직하세요
         </Link>
       </footer>
     </main>

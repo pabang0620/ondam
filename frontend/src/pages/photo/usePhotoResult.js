@@ -97,7 +97,7 @@ function usePhotoResult() {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: '리멤버미 AI 사진관',
+          title: '온담 AI 사진관',
           text: '소중한 사진을 AI로 복원했습니다.',
           url,
         })

@@ -1,11 +1,13 @@
-import { UploadCloud, Sparkles, PackageCheck } from 'lucide-react'
+import { UploadCloud, Sparkles, PackageCheck, Image as ImageIcon } from 'lucide-react'
 
-// 사진관 제작 과정을 텍스트·아이콘으로 안내한다.
-// PLACEHOLDER 안내: 원래 이 위치에는 복원 전후 비교 슬라이더와 실제 제작 예시
-// 영상이 들어가야 하지만(03 문서 4절), 아직 실물 자산이 없다. 브랜드 원칙(11 문서
-// 5절 "미검증 자산을 검증된 실적처럼 포장 금지")에 따라 가짜 이미지·연출된
-// before/after는 만들지 않는다. 실물 자산이 확보되면 이 섹션을 슬라이더/영상
-// 컴포넌트로 교체할 것 - 지금은 절차를 담백하게 설명하는 3단계 안내로 대체한다.
+// 사진관 제작 과정을 "좌(이미지 목업) - 우(텍스트 타임라인)" 2단 레이아웃으로 안내한다.
+// PLACEHOLDER 안내: 원래 이 위치에는 실제 제작 예시 스크린샷/영상이 들어가야
+// 하지만(03 문서 4절), 아직 실물 자산이 없다. 브랜드 원칙(11 문서 5절 "미검증
+// 자산을 검증된 실적처럼 포장 금지")에 따라 실제 화면인 것처럼 보이는 가짜
+// 캡처는 만들지 않는다 - 대신 div/CSS로만 그린 추상적인 "앱 미리보기" 프레임을
+// 좌측에 배치해 절차를 시각적으로 암시하고, 우측에는 절차를 담백하게 설명하는
+// 텍스트 타임라인을 둔다. 실물 자산이 확보되면 좌측 목업만 실제 스크린샷으로
+// 교체하면 된다.
 const PROCESS_STEPS = [
   {
     icon: UploadCloud,
@@ -31,7 +33,6 @@ export default function HomeProcess() {
         <h2
           className="text-center font-bold mb-4 sm:mb-5"
           style={{
-            fontFamily: 'var(--font-brand)',
             fontSize: 'clamp(19px, 3.4vw, 26px)',
             fontWeight: 700,
             color: 'var(--color-text-primary)',
@@ -50,34 +51,168 @@ export default function HomeProcess() {
           절차는 이렇게 진행돼요.
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-10 lg:gap-12">
-          {PROCESS_STEPS.map(({ icon: Icon, title, description }) => (
-            <div key={title} className="flex flex-col items-center text-center gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          {/* 좌측: CSS로 그린 "앱 미리보기" 목업 (실제 스크린샷 아님, 순수 장식) */}
+          <div aria-hidden="true" className="w-full">
+            <div
+              className="w-full mx-auto"
+              style={{
+                maxWidth: '420px',
+                backgroundColor: 'var(--color-surface)',
+                border: '1px solid var(--color-border)',
+                borderRadius: 'var(--radius-lg)',
+                boxShadow: '0 24px 50px rgba(0,0,0,0.10)',
+                overflow: 'hidden',
+              }}
+            >
+              {/* 상단 바 */}
               <div
-                className="w-14 h-14 flex items-center justify-center flex-shrink-0"
+                className="flex items-center gap-2"
                 style={{
-                  backgroundColor: 'var(--color-surface)',
-                  borderRadius: 'var(--radius-card)',
-                  border: '1px solid var(--color-border)',
+                  padding: '14px 18px',
+                  borderBottom: '1px solid var(--color-border)',
+                  backgroundColor: 'var(--color-bg-alt)',
                 }}
-                aria-hidden="true"
               >
-                <Icon size={24} style={{ color: 'var(--color-warm-accent)' }} />
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: 'var(--home-color-accent)' }} />
+                {/* 흰색이 된 --home-color-secondary는 상단 바 배경(--color-bg-alt, 거의
+                    흰색)과 구분되지 않으므로 얇은 테두리를 더해 점 형태를 유지한다. */}
+                <span
+                  style={{
+                    width: '10px',
+                    height: '10px',
+                    borderRadius: '50%',
+                    backgroundColor: 'var(--home-color-secondary)',
+                    border: '1px solid var(--color-border)',
+                  }}
+                />
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: 'var(--home-color-primary-light)' }} />
+                <span
+                  style={{
+                    marginLeft: '8px',
+                    flex: 1,
+                    height: '20px',
+                    borderRadius: 'var(--radius-pill)',
+                    backgroundColor: 'var(--color-surface)',
+                    border: '1px solid var(--color-border)',
+                  }}
+                />
               </div>
-              <h3
-                className="font-bold"
-                style={{ fontSize: 'var(--fs-h3)', color: 'var(--color-text-primary)', wordBreak: 'keep-all' }}
-              >
-                {title}
-              </h3>
-              <p
-                className="leading-relaxed"
-                style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', wordBreak: 'keep-all' }}
-              >
-                {description}
-              </p>
+
+              {/* 본문 */}
+              <div style={{ padding: '22px' }}>
+                <div className="flex items-center gap-2" style={{ marginBottom: '14px' }}>
+                  <UploadCloud size={16} style={{ color: 'var(--home-color-primary)' }} />
+                  <span style={{ fontSize: 'var(--fs-caption)', fontWeight: 700, color: 'var(--color-text-secondary)' }}>
+                    업로드한 사진
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2.5" style={{ marginBottom: '22px' }}>
+                  <div
+                    className="flex items-center justify-center"
+                    style={{ aspectRatio: '1 / 1', borderRadius: 'var(--radius-card)', backgroundColor: 'var(--home-color-primary-soft)' }}
+                  >
+                    <ImageIcon size={22} style={{ color: 'var(--home-color-primary)' }} />
+                  </div>
+                  {/* 소프트 옐로우(--home-color-secondary-soft)는 흰색으로 바뀌지 않았지만
+                      매우 옅은 톤이라 거의 흰 배경 위에서 형태가 잘 드러나지 않으므로
+                      얇은 테두리를 더해 썸네일 placeholder 윤곽을 유지한다. */}
+                  <div
+                    style={{
+                      aspectRatio: '1 / 1',
+                      borderRadius: 'var(--radius-card)',
+                      backgroundColor: 'var(--home-color-secondary-soft)',
+                      border: '1px solid var(--color-border)',
+                    }}
+                  />
+                  <div style={{ aspectRatio: '1 / 1', borderRadius: 'var(--radius-card)', backgroundColor: 'var(--home-color-primary-light)', opacity: 0.35 }} />
+                  <div style={{ aspectRatio: '1 / 1', borderRadius: 'var(--radius-card)', backgroundColor: 'var(--home-color-primary-soft)' }} />
+                </div>
+
+                <div className="flex items-center gap-2" style={{ marginBottom: '8px' }}>
+                  <Sparkles size={16} style={{ color: 'var(--home-color-primary)' }} />
+                  <span style={{ fontSize: 'var(--fs-caption)', fontWeight: 700, color: 'var(--color-text-secondary)' }}>
+                    AI 보정 중 · 72%
+                  </span>
+                </div>
+                <div
+                  style={{
+                    height: '10px',
+                    borderRadius: 'var(--radius-pill)',
+                    backgroundColor: 'var(--home-color-primary-soft)',
+                    overflow: 'hidden',
+                    marginBottom: '22px',
+                  }}
+                >
+                  <div style={{ width: '72%', height: '100%', borderRadius: 'var(--radius-pill)', backgroundColor: 'var(--home-color-primary)' }} />
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <PackageCheck size={16} style={{ color: 'var(--home-color-primary)' }} />
+                  <span style={{ fontSize: 'var(--fs-caption)', fontWeight: 700, color: 'var(--color-text-secondary)' }}>
+                    결과물 4종 준비 완료
+                  </span>
+                </div>
+              </div>
             </div>
-          ))}
+          </div>
+
+          {/* 우측: 3단계 텍스트 타임라인 */}
+          <div className="w-full">
+            {PROCESS_STEPS.map(({ icon: Icon, title, description }, index) => (
+              <div key={title} className="grid" style={{ gridTemplateColumns: '56px 1fr', columnGap: '20px' }}>
+                <div className="flex flex-col items-center">
+                  <div
+                    className="flex items-center justify-center flex-shrink-0"
+                    style={{
+                      width: '56px',
+                      height: '56px',
+                      backgroundColor: 'var(--home-color-primary-soft)',
+                      borderRadius: 'var(--radius-card)',
+                      border: '1px solid var(--color-border)',
+                    }}
+                    aria-hidden="true"
+                  >
+                    <Icon size={24} style={{ color: 'var(--home-color-primary)' }} />
+                  </div>
+                  {index < PROCESS_STEPS.length - 1 && (
+                    <div
+                      aria-hidden="true"
+                      style={{
+                        width: '2px',
+                        flex: '1 1 auto',
+                        minHeight: '28px',
+                        backgroundColor: 'var(--color-border)',
+                        margin: '6px 0',
+                      }}
+                    />
+                  )}
+                </div>
+
+                <div style={{ paddingBottom: index < PROCESS_STEPS.length - 1 ? '32px' : 0 }}>
+                  <span
+                    className="block font-bold"
+                    style={{ fontSize: 'var(--fs-caption)', color: 'var(--home-color-primary)', marginBottom: '4px', letterSpacing: '0.02em' }}
+                  >
+                    STEP {index + 1}
+                  </span>
+                  <h3
+                    className="font-bold"
+                    style={{ fontSize: 'var(--fs-h3)', color: 'var(--color-text-primary)', wordBreak: 'keep-all', marginBottom: '6px' }}
+                  >
+                    {title}
+                  </h3>
+                  <p
+                    className="leading-relaxed"
+                    style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', wordBreak: 'keep-all' }}
+                  >
+                    {description}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
         <p

@@ -76,7 +76,7 @@ export default function WillPage() {
       {/* 핵심 특징 */}
       <section className="will-features">
         <div className="will-section-inner">
-          <h2 className="will-section-title">리멤버미 AI 영상 편지가 특별한 이유</h2>
+          <h2 className="will-section-title">온담 AI 영상 편지가 특별한 이유</h2>
           <div className="will-features__grid">
             {FEATURES.map(({ icon: Icon, title, desc }) => (
               <div key={title} className="will-feature-card">

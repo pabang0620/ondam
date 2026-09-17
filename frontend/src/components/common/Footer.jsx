@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom'
 import { ROUTES } from '../../constants/routes.js'
-import logoUrl from '../../assets/logo.svg'
 
 // 전화 문의 번호는 하드코딩하지 않는다. 미설정 시 '고객센터' 항목은
 // 임시 링크(href="#")로 남긴다 - DEV-13 HomePage.jsx와 동일한 규약.
@@ -20,13 +19,16 @@ export default function Footer() {
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-8 sm:gap-12">
           {/* 브랜드 */}
           <div className="flex flex-col gap-3">
-            <img
-              src={logoUrl}
-              alt="리멤버미"
-              height={36}
-              width={135}
-              style={{ display: 'block' }}
-            />
+            <span
+              style={{
+                fontWeight: 800,
+                fontSize: 22,
+                letterSpacing: 'var(--ls-heading-ko)',
+                color: 'var(--color-text-primary)',
+              }}
+            >
+              온담
+            </span>
             <p
               style={{
                 fontSize: 'var(--fs-caption)',
@@ -149,7 +151,7 @@ export default function Footer() {
             color: 'var(--color-text-muted)',
           }}
         >
-          © {new Date().getFullYear()} 리멤버미. All rights reserved.
+          © {new Date().getFullYear()} 온담. All rights reserved.
         </div>
       </div>
     </footer>

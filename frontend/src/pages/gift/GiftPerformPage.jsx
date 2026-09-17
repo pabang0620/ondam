@@ -174,7 +174,7 @@ function AccountStep({ accountError, needsAccountConsent, isLinking, onSubmit, o
       <div style={{ textAlign: 'center' }}>
         <p style={{ fontSize: 'var(--fs-h3)', fontWeight: 700, color: 'var(--color-text-primary)' }}>계정을 만들어 주세요</p>
         <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', marginTop: 6 }}>
-          만든 사진·영상은 리멤버미에서 언제든 다시 볼 수 있어요.
+          만든 사진·영상은 온담에서 언제든 다시 볼 수 있어요.
         </p>
       </div>
 

@@ -87,7 +87,7 @@ export default function GiftPaymentSuccessPage() {
     if (!link) return
     if (navigator.share) {
       try {
-        await navigator.share({ title: '리멤버미 선물이 도착했어요', text: '소중한 분께 리멤버미 선물을 보내드렸어요.', url: link })
+        await navigator.share({ title: '온담 선물이 도착했어요', text: '소중한 분께 온담 선물을 보내드렸어요.', url: link })
       } catch {
         // 사용자가 공유를 취소한 경우 - 에러로 취급하지 않는다
       }
@@ -143,7 +143,7 @@ export default function GiftPaymentSuccessPage() {
           </Button>
           {link && (
             <a
-              href={`sms:?body=${encodeURIComponent(`리멤버미에서 선물이 도착했어요. ${link}`)}`}
+              href={`sms:?body=${encodeURIComponent(`온담에서 선물이 도착했어요. ${link}`)}`}
               style={{
                 display: 'flex',
                 alignItems: 'center',

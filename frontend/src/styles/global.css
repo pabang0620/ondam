@@ -1,6 +1,74 @@
 @import "tailwindcss";
 
 /*
+ * Paperozi(Paperlogy) 웹폰트 - jsDelivr CDN 임베딩. BrandLoader 브랜드 로딩
+ * 애니메이션 전용(--font-brand 등 기존 전역 폰트 변수는 그대로 유지, 이 폰트는
+ * 별도로 BrandLoader.css에서 font-family: 'Paperozi', ... 형태로만 사용한다).
+ */
+@font-face {
+    font-family: 'Paperozi';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-1Thin.woff2') format('woff2');
+    font-weight: 100;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Paperozi';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-2ExtraLight.woff2') format('woff2');
+    font-weight: 200;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Paperozi';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-3Light.woff2') format('woff2');
+    font-weight: 300;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Paperozi';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-4Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Paperozi';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-5Medium.woff2') format('woff2');
+    font-weight: 500;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Paperozi';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-6SemiBold.woff2') format('woff2');
+    font-weight: 600;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Paperozi';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-7Bold.woff2') format('woff2');
+    font-weight: 700;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Paperozi';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-8ExtraBold.woff2') format('woff2');
+    font-weight: 800;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Paperozi';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-9Black.woff2') format('woff2');
+    font-weight: 900;
+    font-display: swap;
+}
+
+/*
  * "강한육군"(StrongArmy) 웹폰트 - 눈누(noonnu.cc) 등록 상업용 무료 폰트, 임베딩
  * 허용 확인됨. 외부 CDN 의존 없이 자체 호스팅한다(src/assets/fonts). 브랜드
  * 헤드라인 전용(--font-brand)이라 500/700 두 굵기만 필요하다.
@@ -21,7 +89,7 @@
   font-display: swap;
 }
 
-/* 리멤버미 디자인 토큰 - Apple 스토어 톤(중립 그레이스케일 + 절제된 포인트 컬러) */
+/* 온담 디자인 토큰 - Apple 스토어 톤(중립 그레이스케일 + 절제된 포인트 컬러) */
 :root {
   /* 반응형 브레이크포인트 */
   --breakpoint-sm: 480px;
@@ -38,6 +106,13 @@
   --color-primary-soft: #424245;
   --color-warm-accent: #C9A24B;
   --color-warm-accent-soft: #E6CB8E;
+
+  /* 브랜드 워드마크 전용 색상 - 온담 로고 텍스트에만 사용. 도메인별 accent(--color-photo
+     /will/pet/memorial)나 --color-primary(중립 다크)와는 별개로, 헤더/로고에 쓰이는
+     사이트 전역 브랜드 하늘색(sky blue)이다. 홈페이지 섹션 색상(--home-color-*,
+     HomePage.jsx에서 해당 페이지 범위로만 스코프됨)의 --home-color-primary와 값은
+     같지만 용도가 다르므로 별도 토큰으로 둔다(두 토큰은 항상 동기화 유지). */
+  --color-brand: #0278B2;
 
   /* Apple 스타일 링크/정보 강조색 - 절제된 강조에만 사용(본문 전반 색상은 흑백 위주 유지) */
   --color-link: #0071E3;

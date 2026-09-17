@@ -4,8 +4,6 @@ import { useAuthStore } from '../../store/authStore.js'
 import { ROUTES } from '../../constants/routes.js'
 import apiClient from '../../config/apiClient.js'
 import { logoutAdminSession } from '../../config/adminApiClient.js'
-import logoUrl from '../../assets/logo.svg'
-import logoMarkUrl from '../../assets/logo-mark.svg'
 
 const NAV_LINKS = [
   { to: ROUTES.PHOTO, label: 'AI 사진관' },
@@ -14,6 +12,9 @@ const NAV_LINKS = [
   { to: ROUTES.GIFT_NEW, label: '선물하기' },
 ]
 
+// 스크롤이 이 값(px)을 넘으면 헤더가 나타난다
+const HEADER_SCROLL_THRESHOLD = 80
+
 export default function Header() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const clearUser = useAuthStore((s) => s.clearUser)
@@ -21,8 +22,40 @@ export default function Header() {
   const location = useLocation()
 
   const [drawerOpen, setDrawerOpen] = useState(false)
+  // 헤더 표시 여부 - 드로어 열림/닫힘과는 별개 상태(최상단에서는 숨김, 스크롤 시 노출)
+  // 홈이 아닌 페이지에서는 항상 true로 취급(일반 sticky 헤더, 숨김 로직 없음)
+  const [headerVisible, setHeaderVisible] = useState(false)
   const drawerRef = useRef(null)
   const hamburgerRef = useRef(null)
+
+  // 홈 화면에서만 "초기 숨김 + 스크롤 시 노출"되는 fixed 헤더를 적용한다.
+  // 그 외 페이지는 문서 흐름 안에서 항상 보이는 sticky 헤더를 유지해야 하므로
+  // 스크롤 위치에 따라 콘텐츠를 덮어버리는 fixed+숨김 로직을 아예 적용하지 않는다.
+  const isHome = location.pathname === ROUTES.HOME
+
+  // 스크롤 위치에 따라 헤더 표시 토글 - requestAnimationFrame으로 쓰로틀링 (홈 전용)
+  useEffect(() => {
+    if (!isHome) {
+      // 홈이 아니면 sticky 헤더가 항상 보여야 하므로 표시 상태를 고정하고
+      // 스크롤 리스너 자체를 등록하지 않는다(불필요한 리스너 방지).
+      setHeaderVisible(true)
+      return
+    }
+
+    setHeaderVisible(window.scrollY > HEADER_SCROLL_THRESHOLD)
+
+    let ticking = false
+    const handleScroll = () => {
+      if (ticking) return
+      ticking = true
+      window.requestAnimationFrame(() => {
+        setHeaderVisible(window.scrollY > HEADER_SCROLL_THRESHOLD)
+        ticking = false
+      })
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [isHome])
 
   // 페이지 이동 시 drawer 닫기
   useEffect(() => {
@@ -112,12 +145,20 @@ export default function Header() {
     <>
       <header
         style={{
-          position: 'sticky',
+          position: isHome ? 'fixed' : 'sticky',
           top: 0,
+          left: 0,
+          right: 0,
           zIndex: 50,
           backgroundColor: 'var(--color-bg)',
           borderBottom: '1px solid var(--color-border)',
           paddingTop: 'env(safe-area-inset-top, 0px)',
+          // 홈: 스크롤 전 숨김 -> HEADER_SCROLL_THRESHOLD 초과 시 노출
+          // 그 외 페이지: 항상 제자리(translateY(0))인 일반 sticky 헤더
+          transform: isHome && !headerVisible ? 'translateY(-100%)' : 'translateY(0)',
+          transition: isHome ? 'transform 0.25s ease' : 'none',
+          // 홈에서 떠 있는 상태일 때만 그림자를 주고, 그 외에는 기존처럼 borderBottom만 사용
+          boxShadow: isHome && headerVisible ? '0 2px 8px rgba(42, 40, 38, 0.08)' : 'none',
         }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
@@ -125,24 +166,18 @@ export default function Header() {
           <Link
             to={ROUTES.HOME}
             className="flex items-center"
-            aria-label="리멤버미 홈으로 이동"
+            aria-label="온담 홈으로 이동"
           >
-            {/* 모바일: 마크만 */}
-            <img
-              src={logoMarkUrl}
-              alt="리멤버미"
-              height={36}
-              width={36}
-              className="sm:hidden"
-            />
-            {/* 데스크톱: 전체 로고 */}
-            <img
-              src={logoUrl}
-              alt="리멤버미 - AI 기억사진관"
-              height={40}
-              width={150}
-              className="hidden sm:block"
-            />
+            <span
+              style={{
+                fontWeight: 800,
+                fontSize: 22,
+                letterSpacing: 'var(--ls-heading-ko)',
+                color: 'var(--color-brand)',
+              }}
+            >
+              온담
+            </span>
           </Link>
 
           {/* 데스크톱 네비게이션 */}
@@ -369,14 +404,13 @@ export default function Header() {
             >
               <span
                 style={{
-                  fontFamily: 'var(--font-brand)',
-                  fontWeight: 700,
+                  fontWeight: 800,
                   fontSize: 'var(--fs-h3)',
                   letterSpacing: 'var(--ls-heading-ko)',
-                  color: 'var(--color-text-primary)',
+                  color: 'var(--color-brand)',
                 }}
               >
-                리멤버미
+                온담
               </span>
               <button
                 type="button"

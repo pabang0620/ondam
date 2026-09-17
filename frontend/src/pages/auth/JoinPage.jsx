@@ -102,7 +102,7 @@ export default function JoinPage() {
           회원가입
         </h1>
         <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)' }}>
-          리멤버미와 함께 소중한 기억을 간직하세요
+          온담과 함께 소중한 기억을 간직하세요
         </p>
       </div>
 

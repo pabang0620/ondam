@@ -17,18 +17,17 @@ export default function AuthLayout() {
       <Link
         to={ROUTES.HOME}
         className="mb-6 sm:mb-8 flex flex-col items-center gap-1"
-        aria-label="리멤버미 홈으로 이동"
+        aria-label="온담 홈으로 이동"
       >
         <span
           style={{
-            fontFamily: 'var(--font-serif)',
-            fontWeight: 700,
+            fontWeight: 800,
             fontSize: 'var(--fs-h1)',
             letterSpacing: 'var(--ls-heading-ko)',
             color: 'var(--color-text-primary)',
           }}
         >
-          리멤버미
+          온담
         </span>
         <span
           style={{

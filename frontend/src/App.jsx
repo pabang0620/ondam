@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './store/authStore.js'
+import BrandLoader from './components/common/BrandLoader.jsx'
 
 import MainLayout from './layouts/MainLayout.jsx'
 import AuthLayout from './layouts/AuthLayout.jsx'
@@ -75,19 +76,6 @@ const Placeholder = ({ title }) => (
   </div>
 )
 
-function PageFallback() {
-  return (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <div
-        className="w-10 h-10 rounded-full border-4 border-t-transparent animate-spin"
-        style={{ borderColor: 'var(--color-primary)', borderTopColor: 'transparent' }}
-        role="status"
-        aria-label="페이지 불러오는 중"
-      />
-    </div>
-  )
-}
-
 export default function App() {
   useEffect(() => {
     useAuthStore.getState().initAuth()
@@ -95,7 +83,13 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <Suspense fallback={<PageFallback />}>
+      <Suspense
+        fallback={
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <BrandLoader />
+          </div>
+        }
+      >
         <Routes>
           {/* 공개 메인 레이아웃 - 인증 불필요 */}
           <Route element={<MainLayout />}>

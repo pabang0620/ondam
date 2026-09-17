@@ -28,7 +28,7 @@ import memorialImg from '../../assets/images/home-latest/memorial.jpg'
 import giftImg from '../../assets/images/home-latest/gift.jpg'
 
 // DEV-13 후속: 애플 스토어 홈 "최신 제품"(shelf-2) 섹션 참고 카드 캐러셀.
-// 콘텐츠는 애플 제품이 아니라 리멤버미 실제 서비스 5종으로 채운다. 카피·가격은
+// 콘텐츠는 애플 제품이 아니라 온담 실제 서비스 5종으로 채운다. 카피·가격은
 // HomeServices.jsx / GiftNewPage.jsx / MemorialPage.jsx에 이미 확정된 문구를 그대로
 // 재사용하거나 최소한만 다듬었다 - 새로운 가격·기능을 지어내지 않는다.
 //
@@ -115,16 +115,18 @@ const CARDS = [
     dark: false,
     eyebrow: '결제는 지금, 사용은 나중에',
     title: '선물하기',
-    description: '부모님께 리멤버미 서비스를 선물해 드리세요. 사용은 부모님이 편하실 때 하시면 돼요.',
+    description: '부모님께 온담 서비스를 선물해 드리세요. 사용은 부모님이 편하실 때 하시면 돼요.',
     price: '9,900원부터',
     priceNote: 'AI 사진관 · 영상 편지 중 선택',
     cta: '선물하기',
     to: ROUTES.GIFT_NEW,
-    domainColor: 'var(--color-warm-accent)',
-    mediaBg: 'var(--color-warm-accent-soft)',
-    iconColor: 'var(--color-warm-accent)',
+    // 옐로우는 배지/아이콘 배경 등 소면적에만 사용 - 흰 원형 배지 위 아이콘 자체는
+    // 대비 확보를 위해 홈 주색(그린)을 쓴다(옐로우 아이콘은 흰 배경과 대비가 약함)
+    domainColor: 'var(--home-color-secondary)',
+    mediaBg: 'var(--home-color-secondary-soft)',
+    iconColor: 'var(--home-color-primary)',
     image: giftImg,
-    imageAlt: '리본 장식이 달린 선물 상자 - 리멤버미 선물하기 서비스',
+    imageAlt: '리본 장식이 달린 선물 상자 - 온담 선물하기 서비스',
   },
 ]
 
@@ -183,7 +185,7 @@ export default function HomeLatestCarousel() {
           className="home-latest__viewport"
           role="region"
           aria-roledescription="carousel"
-          aria-label="리멤버미 서비스 카드 목록"
+          aria-label="온담 서비스 카드 목록"
           onKeyDown={handleKeyDown}
         >
           <ul
@@ -208,7 +210,7 @@ export default function HomeLatestCarousel() {
                   <div className="home-latest__body">
                     <p
                       className="home-latest__eyebrow"
-                      style={{ color: 'var(--color-warm-accent)' }}
+                      style={{ color: dark ? 'var(--home-color-primary-light)' : 'var(--home-color-primary)' }}
                     >
                       {eyebrow}
                     </p>
@@ -228,7 +230,7 @@ export default function HomeLatestCarousel() {
                       {price && (
                         <span
                           className="home-latest__price-value"
-                          style={{ color: 'var(--color-warm-accent)' }}
+                          style={{ color: dark ? 'var(--home-color-primary-light)' : 'var(--home-color-primary)' }}
                         >
                           {price}
                         </span>

@@ -29,7 +29,7 @@ export default function LoginPage() {
           로그인
         </h1>
         <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)' }}>
-          리멤버미에 오신 것을 환영합니다
+          온담에 오신 것을 환영합니다
         </p>
       </div>
 

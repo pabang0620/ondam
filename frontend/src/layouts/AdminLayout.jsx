@@ -189,14 +189,13 @@ export default function AdminLayout() {
         >
           <span
             style={{
-              fontFamily: 'var(--font-serif)',
-              fontWeight: 700,
+              fontWeight: 800,
               fontSize: 'var(--fs-body-lg)',
               color: 'var(--color-text-on-dark)',
               letterSpacing: 'var(--ls-heading-ko)',
             }}
           >
-            리멤버미
+            온담
           </span>
           <span
             style={{
@@ -442,14 +441,13 @@ export default function AdminLayout() {
           </button>
           <span
             style={{
-              fontFamily: 'var(--font-serif)',
-              fontWeight: 700,
+              fontWeight: 800,
               fontSize: 'var(--fs-body-lg)',
               color: 'var(--color-text-on-dark)',
               letterSpacing: 'var(--ls-heading-ko)',
             }}
           >
-            리멤버미 관리자
+            온담 관리자
           </span>
         </div>
 
