@@ -2,6 +2,7 @@ import { Loader2, AlertCircle, RotateCcw } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '../../components/common/Button.jsx'
 import usePhotoProcessing from './usePhotoProcessing.js'
+import { ROUTES } from '../../constants/routes.js'
 
 // FIX: 결함3 - 이 라벨은 photo_orders.status(PHOTO_ORDER_STATUS: pending_payment/
 // paid/processing/completed/failed/refunded)를 키로 쓰는데, 예전 키(queued/running)는
@@ -19,7 +20,16 @@ const STATUS_LABELS = {
 
 function PhotoProcessingPage() {
   const navigate = useNavigate()
-  const { status, progress, error, isRefunded } = usePhotoProcessing()
+  const {
+    orderId,
+    status,
+    progress,
+    error,
+    canRetry,
+    retry,
+    isPaymentIncomplete,
+    isRefunded,
+  } = usePhotoProcessing()
 
   // 결함3: 환불된 경우는 "오류"가 아니라 "처리하지 못해 결제를 취소했다"는 정보다.
   // error 브랜치와 분리해 톤·아이콘·다음 행동을 다르게 안내한다.
@@ -48,7 +58,42 @@ function PhotoProcessingPage() {
           죄송합니다. 사진을 처리하지 못해 결제하신 금액을 전액 환불해 드렸습니다.
           카드사에 따라 환불 반영까지 며칠 걸릴 수 있습니다. 다시 시도해 보시겠어요?
         </p>
-        <Button onClick={() => navigate('/photo')} fullWidth>주문 내역으로 이동</Button>
+        {/* FE-PP-15: 주문 내역은 마이페이지에 있다 */}
+        <Button onClick={() => navigate(ROUTES.MY)} fullWidth>주문 내역으로 이동</Button>
+      </main>
+    )
+  }
+
+  // FE-PP-6: 결제가 확정되지 않은 채 오래 기다린 경우 - 오류가 아니라 안내
+  if (isPaymentIncomplete) {
+    return (
+      <main
+        style={{
+          maxWidth: 480,
+          margin: '0 auto',
+          padding: 'var(--spacing-xl) var(--spacing-md)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 'var(--spacing-lg)',
+          textAlign: 'center',
+        }}
+      >
+        <AlertCircle size={56} color="var(--color-warm-accent)" aria-hidden="true" />
+        <p
+          role="alert"
+          style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700, color: 'var(--color-text-primary)' }}
+        >
+          결제가 아직 완료되지 않았어요
+        </p>
+        <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>
+          결제가 확인되지 않아 사진 처리를 시작하지 못했습니다.
+          결제를 마치셨다면 "다시 확인"을 눌러 주시고, 아니라면 결제 화면에서 다시 결제해 주세요.
+        </p>
+        <Button onClick={retry} fullWidth>다시 확인</Button>
+        <Button variant="secondary" onClick={() => navigate(`/photo/payment?orderId=${orderId}`)} fullWidth>
+          결제 화면으로
+        </Button>
       </main>
     )
   }
@@ -77,6 +122,8 @@ function PhotoProcessingPage() {
         <p style={{ fontSize: 'var(--font-size-base)', color: 'var(--color-text-secondary)' }}>
           {error}
         </p>
+        {canRetry && <Button onClick={retry} fullWidth>다시 확인</Button>}
+        <Button variant="secondary" onClick={() => navigate(ROUTES.MY)} fullWidth>마이페이지로</Button>
       </main>
     )
   }
@@ -165,7 +212,7 @@ function PhotoProcessingPage() {
         </p>
       </div>
 
-      <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-text-muted)' }}>
+      <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)' }}>
         평균 처리 시간은 1~3분입니다.
       </p>
 

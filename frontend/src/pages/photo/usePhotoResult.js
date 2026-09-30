@@ -32,7 +32,13 @@ function usePhotoResult() {
       } catch (err) {
         if (!isMountedRef.current || ac.signal.aborted) return
         // FIX: DEV-24 - 결과 조회 실패를 가짜 사진으로 위장하지 않는다
-        setError(err?.response?.data?.message ?? '결과를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.')
+        // FE-PP-7: 서버 메시지(영문·내부 문구일 수 있음)를 그대로 보이지 않고 고정 한국어로 안내한다.
+        // 400은 결과물이 한 장도 만들어지지 않은(전량 실패) 경우다.
+        setError(
+          err?.response?.status === 400
+            ? '만들어진 결과물이 없어 보여드릴 수 없습니다. 마이페이지에서 주문 상태를 확인해 주세요.'
+            : '결과를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.',
+        )
       } finally {
         if (isMountedRef.current && !ac.signal.aborted) setIsLoading(false)
       }
@@ -54,6 +60,9 @@ function usePhotoResult() {
   // 'failed'(전액 환불 대상)이지만 enhancedFiles는 1장 이상 존재할 수 있다.
   const isPartialFailure = order?.status === 'failed' && enhancedFiles.length > 0
 
+  // FE-PP-7: 재처리는 주문이 실패 상태일 때만 요청할 수 있다
+  const canRetry = order?.status === 'failed'
+
   const handleDownload = useCallback((fileUrl, fileName) => {
     const a = document.createElement('a')
     a.href = fileUrl
@@ -66,17 +75,41 @@ function usePhotoResult() {
   }, [])
 
   // 전체 저장 - 별도 zip 생성 백엔드 없이, 개별 다운로드를 순차 트리거한다.
-  // 브라우저 다운로드 팝업 차단을 피하려 약간의 간격을 둔다.
+  // FE-PP-3: 두 번째 이후 다운로드는 사용자 클릭 밖(setTimeout)에서 일어나 브라우저가
+  // 막을 수 있다. 막혔을 때 할 일을 화면에 안내하고, 연타로 중복 저장되지 않게 막는다.
+  const [isDownloadingAll, setIsDownloadingAll] = useState(false)
+  const [downloadNotice, setDownloadNotice] = useState(null)
+  const downloadAllTimersRef = useRef([])
+
+  useEffect(() => () => {
+    downloadAllTimersRef.current.forEach(clearTimeout)
+  }, [])
+
   const handleDownloadAll = useCallback(() => {
-    enhancedFiles.forEach((file, idx) => {
+    if (isDownloadingAll) return
+    setIsDownloadingAll(true)
+    setDownloadNotice(null)
+    downloadAllTimersRef.current.forEach(clearTimeout)
+
+    const timers = enhancedFiles.map((file, idx) =>
       setTimeout(() => {
         handleDownload(file.file_url, `ondam_${file.variantKey ?? idx + 1}.jpg`)
-      }, idx * 400)
-    })
-  }, [enhancedFiles, handleDownload])
+      }, idx * 400),
+    )
+    timers.push(
+      setTimeout(() => {
+        if (!isMountedRef.current) return
+        setIsDownloadingAll(false)
+        setDownloadNotice(
+          '저장이 막히면 사진별 저장 버튼을 눌러 주세요. iPhone은 사진을 길게 눌러 저장할 수 있어요.',
+        )
+      }, enhancedFiles.length * 400),
+    )
+    downloadAllTimersRef.current = timers
+  }, [enhancedFiles, handleDownload, isDownloadingAll])
 
   const handleRetry = useCallback(async () => {
-    if (isRetrying) return
+    if (isRetrying || !canRetry) return
 
     setIsRetrying(true)
     setRetryError(null)
@@ -90,28 +123,10 @@ function usePhotoResult() {
     } finally {
       setIsRetrying(false)
     }
-  }, [orderId, isRetrying, navigate])
+  }, [orderId, isRetrying, canRetry, navigate])
 
-  const handleShare = useCallback(async () => {
-    const url = window.location.href
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: '온담 AI 사진관',
-          text: '소중한 사진을 AI로 복원했습니다.',
-          url,
-        })
-      } catch {
-        // 사용자가 공유 취소 - 무시
-      }
-    } else {
-      try {
-        await navigator.clipboard.writeText(url)
-      } catch {
-        // 클립보드 접근 실패 시 조용히 무시
-      }
-    }
-  }, [])
+  // FE-PP-10(D7): 결과 페이지는 로그인한 주문자만 열 수 있어 링크를 받은 사람은
+  // 사진을 볼 수 없다 - "공유" 기능을 제거했다.
 
   return {
     orderId,
@@ -119,14 +134,16 @@ function usePhotoResult() {
     rawFile,
     enhancedFiles,
     isPartialFailure,
+    canRetry,
     isLoading,
     isRetrying,
+    isDownloadingAll,
+    downloadNotice,
     error,
     retryError,
     handleDownload,
     handleDownloadAll,
     handleRetry,
-    handleShare,
   }
 }
 

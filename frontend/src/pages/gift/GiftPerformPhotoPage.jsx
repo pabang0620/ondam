@@ -6,7 +6,7 @@ import useGiftPerformPhoto from './useGiftPerformPhoto.js'
 
 function GiftPerformPhotoPage() {
   const {
-    STEP, step, photoType, previewUrl, isUploading, error, isRefunded, photoTypes, canSubmit,
+    STEP, step, photoType, previewUrl, isUploading, isSubmitting, completeWarning, error, isRefunded, photoTypes, canSubmit,
     consentItems, consents, allChecked, isSavingConsent,
     toggleConsentItem, toggleAllConsents, submitConsent,
     handleTypeSelect, handleFileUpload, handleSubmit,
@@ -76,9 +76,19 @@ function GiftPerformPhotoPage() {
         <Loader2 size={40} color="var(--color-photo)" style={{ animation: 'spin 1s linear infinite' }} />
         <p style={{ fontSize: 'var(--fs-h3)', fontWeight: 700 }}>사진을 만들고 있어요</p>
         <p style={{ color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>
-          잠시만 기다려 주세요. 이 화면을 닫아도 계속 진행돼요.
+          잠시만 기다려 주세요. 완성될 때까지 이 화면을 열어 두세요.
         </p>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </main>
+    )
+  }
+
+  if (step === STEP.POLL_FAILED) {
+    return (
+      <main style={{ maxWidth: 480, margin: '0 auto', padding: '64px var(--spacing-md)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--spacing-lg)' }}>
+        <AlertCircle size={44} color="var(--color-warm-accent)" aria-hidden="true" />
+        <p role="alert" style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-primary)', lineHeight: 'var(--lh-relaxed)' }}>{error}</p>
+        <Button onClick={() => window.location.reload()} fullWidth>새로고침</Button>
       </main>
     )
   }
@@ -91,6 +101,11 @@ function GiftPerformPhotoPage() {
         <p style={{ color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>
           수고하셨어요. 마이페이지에서 언제든 다시 보실 수 있어요.
         </p>
+        {completeWarning && (
+          <p role="alert" style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-primary)', background: 'var(--color-surface-warm)', border: '1px solid var(--color-border)', borderRadius: 10, padding: 'var(--spacing-md)', lineHeight: 'var(--lh-relaxed)' }}>
+            {completeWarning}
+          </p>
+        )}
         <Button onClick={() => { window.location.href = '/my' }} fullWidth>결과물 보러가기</Button>
       </main>
     )
@@ -113,6 +128,9 @@ function GiftPerformPhotoPage() {
             return (
               <button
                 key={type}
+                type="button"
+                aria-pressed={isSelected}
+                disabled={isSubmitting}
                 onClick={() => handleTypeSelect(type)}
                 style={{
                   height: 'var(--size-button-h)', minHeight: 'var(--min-touch-target)', padding: '0 var(--spacing-lg)',
@@ -159,7 +177,7 @@ function GiftPerformPhotoPage() {
         </p>
       )}
 
-      <Button onClick={handleSubmit} disabled={!canSubmit} fullWidth>완료</Button>
+      <Button onClick={handleSubmit} isLoading={isSubmitting} disabled={!canSubmit} fullWidth>완료</Button>
     </main>
   )
 }

@@ -3,7 +3,7 @@ import { AlertCircle, CheckCircle2, Loader2, Mic, Camera, ShieldCheck } from 'lu
 import { Button } from '../../components/common/Button.jsx'
 import LegalNotice from '../../components/common/LegalNotice.jsx'
 import ConsentChecklist from '../../components/consent/ConsentChecklist.jsx'
-import useGiftPerformWill from './useGiftPerformWill.js'
+import useGiftPerformWill, { TITLE_MAX_LENGTH, CONTENT_MAX_LENGTH } from './useGiftPerformWill.js'
 
 const inputStyle = {
   height: 'var(--size-input-h)',
@@ -24,7 +24,7 @@ const Screen = ({ children }) => (
 
 function GiftPerformWillPage() {
   const {
-    STEP, step, error, busy, title, setTitle, contentText, setContentText, beneficiary, setBeneficiary,
+    STEP, step, error, busy, completeWarning, title, setTitle, contentText, setContentText, beneficiary, setBeneficiary,
     consentItems, consents, allChecked, toggleConsentItem, toggleAllConsents,
     submitConsent, uploadProfilePhoto, uploadVoice, submitMessage, submitBeneficiary,
   } = useGiftPerformWill()
@@ -128,7 +128,7 @@ function GiftPerformWillPage() {
         <p style={{ fontSize: 'var(--fs-h3)', fontWeight: 700, textAlign: 'center' }}>전하고 싶은 말을 적어주세요</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           <label htmlFor="title" style={{ fontWeight: 600 }}>제목</label>
-          <input id="title" value={title} onChange={(e) => setTitle(e.target.value)} style={inputStyle} placeholder="예: 사랑하는 우리 가족에게" />
+          <input id="title" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={TITLE_MAX_LENGTH} style={inputStyle} placeholder="예: 사랑하는 우리 가족에게" />
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           <label htmlFor="contentText" style={{ fontWeight: 600 }}>편지 내용</label>
@@ -136,10 +136,15 @@ function GiftPerformWillPage() {
             id="contentText"
             value={contentText}
             onChange={(e) => setContentText(e.target.value)}
+            maxLength={CONTENT_MAX_LENGTH}
+            aria-describedby="contentTextCount"
             rows={8}
             style={{ ...inputStyle, height: 'auto', padding: 16, lineHeight: 'var(--lh-relaxed)' }}
             placeholder="영상에서 읽어드릴 내용을 자유롭게 적어주세요"
           />
+          <span id="contentTextCount" style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', textAlign: 'right' }}>
+            {contentText.length} / {CONTENT_MAX_LENGTH}자
+          </span>
         </div>
         <ErrorBox />
         <Button onClick={submitMessage} disabled={!title.trim() || !contentText.trim()} fullWidth>다음</Button>
@@ -191,7 +196,7 @@ function GiftPerformWillPage() {
           <Loader2 size={40} style={{ animation: 'spin 1s linear infinite' }} color="var(--color-primary)" />
           <p style={{ fontSize: 'var(--fs-h3)', fontWeight: 700 }}>영상을 만들고 있어요</p>
           <p style={{ color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>
-            시간이 조금 걸려요. 이 화면을 닫아도 계속 진행돼요.
+            시간이 조금 걸려요. 완성될 때까지 이 화면을 열어 두세요.
           </p>
           <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
@@ -208,6 +213,11 @@ function GiftPerformWillPage() {
           <p style={{ color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>
             수고하셨어요. 마이페이지에서 언제든 다시 보실 수 있어요.
           </p>
+          {completeWarning && (
+            <p role="alert" style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-primary)', background: 'var(--color-surface-warm)', border: '1px solid var(--color-border)', borderRadius: 10, padding: 'var(--spacing-md)', lineHeight: 'var(--lh-relaxed)' }}>
+              {completeWarning}
+            </p>
+          )}
           <Button onClick={() => { window.location.href = '/my' }} fullWidth>마이페이지로 이동</Button>
         </div>
       </Screen>

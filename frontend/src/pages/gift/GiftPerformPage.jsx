@@ -1,6 +1,8 @@
 import { useState } from 'react'
-import { Heart, AlertCircle, Lock, ShieldCheck, Gift, LogIn, UserPlus } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { Heart, AlertCircle, Lock, ShieldCheck, Gift, LogIn, UserPlus, Info } from 'lucide-react'
 import { Button } from '../../components/common/Button.jsx'
+import { ROUTES } from '../../constants/routes.js'
 import { SIGNUP_CONSENT_ITEMS } from '../../components/consent/consentItems.js'
 import useGiftPerform, { PHASE } from './useGiftPerform.js'
 
@@ -18,6 +20,22 @@ const inputStyle = {
   background: 'var(--color-surface)',
   width: '100%',
 }
+
+// Button.jsx의 primary/secondary와 같은 모양의 링크(라우터 이동이라 <a>가 맞다)
+const linkButtonStyle = (variant) => ({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: '100%',
+  minHeight: 'var(--size-button-h)',
+  borderRadius: 'var(--radius-pill)',
+  fontSize: 'var(--fs-button)',
+  fontWeight: 700,
+  textDecoration: 'none',
+  ...(variant === 'primary'
+    ? { background: 'var(--color-primary)', color: 'var(--color-text-on-dark)' }
+    : { background: 'transparent', color: 'var(--color-text-primary)', border: '1px solid var(--color-border-strong)' }),
+})
 
 /* 본인확인 - WillWatchPage.jsx와 동일한 UX 원칙(48px 터치, 16px+ 폰트) */
 function VerifyStep({ verifyError, isVerifying, onSubmit }) {
@@ -89,7 +107,29 @@ function LockedStep({ verifyError }) {
   )
 }
 
-function IntroStep({ info, onNext, onDecline }) {
+// FE-GMA-8: 거절 실패 안내 + 처리 중 잠금을 Intro/Account 단계가 공유한다.
+function DeclineButton({ onDecline, isDeclining, declineError, disabled = false }) {
+  return (
+    <>
+      {declineError && (
+        <p role="alert" style={{ color: 'var(--color-error)', fontSize: 'var(--fs-body)', display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
+          <AlertCircle size={16} aria-hidden="true" /> {declineError}
+        </p>
+      )}
+      <button
+        type="button"
+        onClick={onDecline}
+        disabled={isDeclining || disabled}
+        aria-busy={isDeclining}
+        style={{ background: 'none', border: 'none', color: 'var(--color-text-muted)', fontSize: 'var(--fs-body)', textDecoration: 'underline', cursor: isDeclining || disabled ? 'not-allowed' : 'pointer', minHeight: 'var(--min-touch-target)' }}
+      >
+        {isDeclining ? '거절 처리 중...' : '정중히 거절하기'}
+      </button>
+    </>
+  )
+}
+
+function IntroStep({ info, onNext, onDecline, isDeclining, declineError }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--spacing-lg)', textAlign: 'center' }}>
       <Gift size={44} color="var(--color-primary)" aria-hidden="true" />
@@ -101,14 +141,8 @@ function IntroStep({ info, onNext, onDecline }) {
           ? '사진과 목소리로 소중한 분께 남기는 영상 편지예요. 준비되시면 시작해 주세요.'
           : '오래된 사진을 새롭게 되살려 드릴게요. 준비되시면 시작해 주세요.'}
       </p>
-      <Button onClick={onNext} fullWidth>시작하기</Button>
-      <button
-        type="button"
-        onClick={onDecline}
-        style={{ background: 'none', border: 'none', color: 'var(--color-text-muted)', fontSize: 'var(--fs-body)', textDecoration: 'underline', cursor: 'pointer', minHeight: 'var(--min-touch-target)' }}
-      >
-        정중히 거절하기
-      </button>
+      <Button onClick={onNext} disabled={isDeclining} fullWidth>시작하기</Button>
+      <DeclineButton onDecline={onDecline} isDeclining={isDeclining} declineError={declineError} />
     </div>
   )
 }
@@ -130,7 +164,7 @@ const initialSignupConsents = SIGNUP_CONSENT_ITEMS.reduce(
 // 한다(전체 화면 전환·재입력 없음). 반대로 항상 먼저 보여주는 방식(안내 문서의 (b)
 // 안)은 이미 동의한 다수에게도 매번 체크를 요구해 더 큰 마찰이 된다 - 완료 보고에
 // 근거 상술.
-function AccountStep({ accountError, needsAccountConsent, isLinking, onSubmit, onDecline }) {
+function AccountStep({ accountError, needsAccountConsent, isLinking, onSubmit, onDecline, isDeclining, declineError }) {
   const [mode, setMode] = useState('signup')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -182,6 +216,7 @@ function AccountStep({ accountError, needsAccountConsent, isLinking, onSubmit, o
         <button
           type="button"
           onClick={() => setMode('signup')}
+          aria-pressed={mode === 'signup'}
           style={{
             flex: 1, minHeight: 'var(--min-touch-target)', borderRadius: 'var(--radius-pill)',
             border: `2px solid ${mode === 'signup' ? 'var(--color-primary)' : 'var(--color-border)'}`,
@@ -195,6 +230,7 @@ function AccountStep({ accountError, needsAccountConsent, isLinking, onSubmit, o
         <button
           type="button"
           onClick={() => setMode('login')}
+          aria-pressed={mode === 'login'}
           style={{
             flex: 1, minHeight: 'var(--min-touch-target)', borderRadius: 'var(--radius-pill)',
             border: `2px solid ${mode === 'login' ? 'var(--color-primary)' : 'var(--color-border)'}`,
@@ -281,18 +317,12 @@ function AccountStep({ accountError, needsAccountConsent, isLinking, onSubmit, o
         {accountError && (
           <p role="alert" style={{ color: 'var(--color-error)', fontSize: 'var(--fs-body)' }}>{accountError}</p>
         )}
-        <Button type="submit" isLoading={isLinking} disabled={!canSubmit} fullWidth>
+        <Button type="submit" isLoading={isLinking} disabled={!canSubmit || isDeclining} fullWidth>
           {mode === 'signup' ? '계정 만들고 시작하기' : '로그인하고 시작하기'}
         </Button>
       </form>
 
-      <button
-        type="button"
-        onClick={onDecline}
-        style={{ background: 'none', border: 'none', color: 'var(--color-text-muted)', fontSize: 'var(--fs-body)', textDecoration: 'underline', cursor: 'pointer', minHeight: 'var(--min-touch-target)' }}
-      >
-        정중히 거절하기
-      </button>
+      <DeclineButton onDecline={onDecline} isDeclining={isDeclining} disabled={isLinking} declineError={declineError} />
     </div>
   )
 }
@@ -312,11 +342,13 @@ function DeclinedStep({ declineResult }) {
 
 export default function GiftPerformPage() {
   const {
-    phase, info, fetchError, verifyError, isVerifying, accountError, needsAccountConsent, isLinking, declineResult,
+    phase, info, fetchError, fetchStatus, verifyError, isVerifying, accountError, needsAccountConsent, isLinking,
+    declineResult, declineError, isDeclining,
     submitVerification, goToAccount, submitAccount, submitDecline,
   } = useGiftPerform()
 
   const handleDecline = () => {
+    if (isDeclining) return
     if (window.confirm('정말 선물을 거절하시겠어요? 보내주신 분께 결제 금액이 환불돼요.')) {
       submitDecline()
     }
@@ -327,16 +359,35 @@ export default function GiftPerformPage() {
       {phase === PHASE.LOADING && (
         <div style={{ textAlign: 'center', color: 'var(--color-text-secondary)' }} aria-live="polite">불러오는 중입니다...</div>
       )}
-      {phase === PHASE.ERROR && (
+      {/* FE-GMA-11: 410(이미 완성/거절/환불/만료)은 사용자가 잘못한 게 아니므로 오류색
+          대신 안내 톤으로 보여주고, 다음에 갈 곳(마이페이지/홈)을 버튼으로 제공한다. */}
+      {phase === PHASE.ERROR && fetchStatus === 410 && (
+        <div role="status" style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)', alignItems: 'center' }}>
+          <Info size={48} color="var(--color-primary)" aria-hidden="true" />
+          <p style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 700, color: 'var(--color-text-primary)' }}>안내드립니다</p>
+          <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>{fetchError}</p>
+          <Link to={ROUTES.MY} style={linkButtonStyle('primary')}>마이페이지로 이동</Link>
+          <Link to={ROUTES.HOME} style={linkButtonStyle('secondary')}>홈으로 가기</Link>
+        </div>
+      )}
+      {phase === PHASE.ERROR && fetchStatus !== 410 && (
         <div role="alert" style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)', alignItems: 'center' }}>
-          <AlertCircle size={48} color="var(--color-error)" />
+          <AlertCircle size={48} color="var(--color-error)" aria-hidden="true" />
           <p style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 700 }}>링크를 열 수 없습니다</p>
-          <p style={{ color: 'var(--color-text-secondary)' }}>{fetchError}</p>
+          <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)' }}>{fetchError}</p>
         </div>
       )}
       {phase === PHASE.LOCKED && <LockedStep verifyError={verifyError} />}
       {phase === PHASE.VERIFY && <VerifyStep verifyError={verifyError} isVerifying={isVerifying} onSubmit={submitVerification} />}
-      {phase === PHASE.INTRO && <IntroStep info={info} onNext={goToAccount} onDecline={handleDecline} />}
+      {phase === PHASE.INTRO && (
+        <IntroStep
+          info={info}
+          onNext={goToAccount}
+          onDecline={handleDecline}
+          isDeclining={isDeclining}
+          declineError={declineError}
+        />
+      )}
       {phase === PHASE.ACCOUNT && (
         <AccountStep
           accountError={accountError}
@@ -344,6 +395,8 @@ export default function GiftPerformPage() {
           isLinking={isLinking}
           onSubmit={submitAccount}
           onDecline={handleDecline}
+          isDeclining={isDeclining}
+          declineError={declineError}
         />
       )}
       {phase === PHASE.DECLINED && <DeclinedStep declineResult={declineResult} />}

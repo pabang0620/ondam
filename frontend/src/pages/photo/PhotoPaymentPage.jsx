@@ -71,7 +71,7 @@ function PhotoPaymentPage() {
           }}
         >
           <span style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--fs-body)' }}>주문 번호</span>
-          <span style={{ fontSize: 'var(--fs-caption)', fontFamily: 'monospace', wordBreak: 'break-all', textAlign: 'right', maxWidth: '60%' }}>{orderId}</span>
+          <span style={{ fontSize: 'var(--fs-body)', fontFamily: 'monospace', wordBreak: 'break-all', textAlign: 'right', maxWidth: '60%' }}>{orderId}</span>
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

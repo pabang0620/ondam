@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { CheckCircle, XCircle, ExternalLink, RefreshCw } from 'lucide-react'
-import { useAdminRelease } from './useAdminRelease.js'
+import { CheckCircle, XCircle, ExternalLink, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react'
+import { useAdminRelease, RELEASE_PAGE_LIMIT } from './useAdminRelease.js'
 import { useAdminAuthStore } from '../../config/adminApiClient.js'
 import './admin.css'
 
@@ -120,11 +120,14 @@ function RejectModal({ releaseId, onConfirm, onClose }) {
 export default function AdminReleasePage() {
   const {
     releases,
+    page,
+    total,
     isLoading,
     error,
     processingId,
     actionError,
     documentLoadingId,
+    handlePageChange,
     handleApprove,
     handleReject,
     handleViewDocument,
@@ -134,6 +137,20 @@ export default function AdminReleasePage() {
   const [rejectTarget, setRejectTarget] = useState(null)
   const adminRole = useAdminAuthStore((s) => s.adminUser?.adminRole)
   const canReview = CAN_REVIEW_RELEASES.includes(adminRole)
+  const totalPages = Math.ceil(total / RELEASE_PAGE_LIMIT) || 1
+
+  // FE-GMA-6: 사후공개 승인은 되돌릴 수 없는 공개(수신인에게 영상 전달)라, 누구의
+  // 요청인지 확인하는 단계를 한 번 거친다.
+  const onApproveClick = (release) => {
+    if (processingId) return
+    const requester = release.requesterName ?? '알 수 없음'
+    const relationship = release.requesterRelationship ? ` (${release.requesterRelationship})` : ''
+    const ok = window.confirm(
+      `${requester}${relationship}님의 사후공개 요청을 승인하시겠습니까?\n` +
+      '승인하면 영상 편지가 수신인에게 공개되며 되돌릴 수 없습니다.',
+    )
+    if (ok) handleApprove(release.releaseId)
+  }
 
   const onRejectConfirm = async (id, reason) => {
     setRejectTarget(null)
@@ -319,8 +336,9 @@ export default function AdminReleasePage() {
                       <div style={{ display: 'flex', gap: 'var(--spacing-sm)' }}>
                         {/* 승인 버튼 - success 색 */}
                         <button
-                          onClick={() => handleApprove(release.releaseId)}
+                          onClick={() => onApproveClick(release)}
                           disabled={!!processingId}
+                          aria-busy={isProcessing}
                           style={{
                             display: 'inline-flex',
                             alignItems: 'center',
@@ -339,7 +357,7 @@ export default function AdminReleasePage() {
                           }}
                         >
                           <CheckCircle size={14} aria-hidden="true" />
-                          승인
+                          {isProcessing ? '처리 중...' : '승인'}
                         </button>
                         {/* 거절 버튼 - danger #B85C50 */}
                         <button
@@ -374,6 +392,60 @@ export default function AdminReleasePage() {
           </tbody>
         </table>
       </div>
+
+      {/* 페이지네이션 - FE-GMA-13: AdminOrdersPage.jsx와 같은 마크업 */}
+      {totalPages > 1 && (
+        <div
+          className="admin-pagination"
+          aria-label="페이지 탐색"
+        >
+          <button
+            onClick={() => handlePageChange(page - 1)}
+            disabled={page <= 1 || isLoading}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 40,
+              height: 40,
+              minHeight: 'var(--min-touch-target)',
+              background: 'var(--color-surface)',
+              border: '1.5px solid var(--color-border)',
+              borderRadius: 'var(--radius-sm)',
+              cursor: page <= 1 ? 'not-allowed' : 'pointer',
+              opacity: page <= 1 ? 0.4 : 1,
+            }}
+            aria-label="이전 페이지"
+          >
+            <ChevronLeft size={18} aria-hidden="true" />
+          </button>
+
+          <span style={{ fontSize: 'var(--fs-body)', fontWeight: 600, color: 'var(--color-primary)' }}>
+            {page} / {totalPages}
+          </span>
+
+          <button
+            onClick={() => handlePageChange(page + 1)}
+            disabled={page >= totalPages || isLoading}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 40,
+              height: 40,
+              minHeight: 'var(--min-touch-target)',
+              background: 'var(--color-surface)',
+              border: '1.5px solid var(--color-border)',
+              borderRadius: 'var(--radius-sm)',
+              cursor: page >= totalPages ? 'not-allowed' : 'pointer',
+              opacity: page >= totalPages ? 0.4 : 1,
+            }}
+            aria-label="다음 페이지"
+          >
+            <ChevronRight size={18} aria-hidden="true" />
+          </button>
+        </div>
+      )}
 
       {/* 거절 모달 */}
       {rejectTarget && (

@@ -23,6 +23,9 @@ function usePhotoOrder() {
   const [isUploading, setIsUploading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState(null)
+  // FE-PP-1: 업로드 오류는 사진 종류를 바꿔도 지우지 않는다(업로드 실패 사실을
+  // 사용자가 놓치지 않게). 제출 오류 등 나머지는 error에 둔다.
+  const [uploadError, setUploadError] = useState(null)
 
   // 결함C: 영정/증명/취업 사진 모두 업로드된 얼굴을 AI로 합성·보정한다 -
   // 초상권·AI 생성물 동의 없이 처리하지 않는다 (WillConsentPage와 동일한 원칙)
@@ -37,16 +40,22 @@ function usePhotoOrder() {
   const handleFileUpload = useCallback(async (file) => {
     if (!file) return
 
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/heic']
+    // FE-PP-8: 서버가 HEIC를 허용하지 않으므로 클라이언트에서도 받지 않는다
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
     if (!allowedTypes.includes(file.type)) {
-      setError('JPG, PNG, WEBP, HEIC 파일만 업로드할 수 있습니다.')
+      setUploadError('JPG, PNG, WEBP 파일만 업로드할 수 있습니다.')
       return
     }
 
     if (file.size > 20 * 1024 * 1024) {
-      setError('파일 크기는 20MB 이하여야 합니다.')
+      setUploadError('파일 크기는 20MB 이하여야 합니다.')
       return
     }
+
+    // FE-PP-1: 새 업로드를 시작하면 이전 업로드 결과를 먼저 비운다 - 업로드가
+    // 실패해도 예전 사진 키로 주문이 만들어지는 일을 막는다
+    setUploadedS3Key(null)
+    setUploadedUrl(null)
 
     // 이전 미리보기 URL 해제
     if (previewUrl) {
@@ -56,6 +65,7 @@ function usePhotoOrder() {
     const localUrl = URL.createObjectURL(file)
     setPreviewUrl(localUrl)
     setError(null)
+    setUploadError(null)
     setIsUploading(true)
 
     try {
@@ -64,7 +74,7 @@ function usePhotoOrder() {
       setUploadedUrl(data.data.url)
     } catch (err) {
       // FIX: DEV-24 - 업로드 실패를 가짜 S3 키로 위장해 다음 단계로 진행시키지 않는다
-      setError(err?.response?.data?.message ?? '사진 업로드에 실패했습니다. 잠시 후 다시 시도해 주세요.')
+      setUploadError(err?.response?.data?.message ?? '사진 업로드에 실패했습니다. 잠시 후 다시 시도해 주세요.')
     } finally {
       setIsUploading(false)
     }
@@ -107,7 +117,7 @@ function usePhotoOrder() {
     previewUrl,
     isUploading,
     isSubmitting,
-    error,
+    error: uploadError ?? error,
     canSubmit,
     photoTypeLabels: PHOTO_TYPE_LABELS,
     consentItems: PHOTO_CONSENT_ITEMS,

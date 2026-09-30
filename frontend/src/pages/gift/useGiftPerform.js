@@ -1,7 +1,10 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore.js'
-import { getPerformInfo, verifyPerform, linkAccount, declinePerform } from './giftApi.js'
+import {
+  getPerformInfo, verifyPerform, linkAccount, declinePerform,
+  getGiftErrorMessage, isRecipientMismatch, markAccountLinked, isAccountLinked,
+} from './giftApi.js'
 
 export const PHASE = {
   LOADING: 'loading',
@@ -24,12 +27,25 @@ function useGiftPerform() {
   const [phase, setPhase] = useState(PHASE.LOADING)
   const [info, setInfo] = useState(null)
   const [fetchError, setFetchError] = useState(null)
+  // FE-GMA-11: 410(완료/거절/환불/만료)은 "오류"가 아니라 안내라 화면 톤을 달리한다.
+  const [fetchStatus, setFetchStatus] = useState(null)
   const [verifyError, setVerifyError] = useState(null)
   const [isVerifying, setIsVerifying] = useState(false)
   const [accountError, setAccountError] = useState(null)
   const [needsAccountConsent, setNeedsAccountConsent] = useState(false)
   const [isLinking, setIsLinking] = useState(false)
   const [declineResult, setDeclineResult] = useState(null)
+  // FE-GMA-8: 거절 실패는 verifyError(본인확인 단계 전용)가 아니라 별도 state로 두고
+  // Intro/Account 단계에서 보여준다. ref 잠금으로 연타 중복 요청을 막는다.
+  const [declineError, setDeclineError] = useState(null)
+  const [isDeclining, setIsDeclining] = useState(false)
+  const declinePendingRef = useRef(false)
+
+  const showFetchError = useCallback((err, fallback) => {
+    setFetchStatus(err?.response?.status ?? null)
+    setFetchError(err?.response?.data?.message ?? fallback)
+    setPhase(PHASE.ERROR)
+  }, [])
 
   const load = useCallback(async () => {
     setPhase(PHASE.LOADING)
@@ -46,10 +62,9 @@ function useGiftPerform() {
         setPhase(PHASE.VERIFY)
       }
     } catch (err) {
-      setFetchError(err?.response?.data?.message ?? '링크를 확인할 수 없습니다.')
-      setPhase(PHASE.ERROR)
+      showFetchError(err, '링크를 확인할 수 없습니다.')
     }
-  }, [token])
+  }, [token, showFetchError])
 
   useEffect(() => {
     load()
@@ -67,24 +82,32 @@ function useGiftPerform() {
       if (status === 423) {
         setPhase(PHASE.LOCKED)
         setVerifyError(err?.response?.data?.message)
+      } else if (status === 410) {
+        showFetchError(err, '더 이상 유효하지 않은 링크입니다.')
       } else {
         setVerifyError(err?.response?.data?.message ?? '본인 확인에 실패했습니다.')
       }
     } finally {
       setIsVerifying(false)
     }
-  }, [token])
+  }, [token, showFetchError])
 
-  // 이미 로그인된 상태로 재진입한 경우(같은 기기·같은 세션에서 이어하기) 계정
-  // 연결 단계를 다시 거치지 않고 바로 콘텐츠 화면으로 보낸다.
+  const goToContent = useCallback((productType) => {
+    navigate(`/gift/perform/${token}/${productType === 'will' ? 'will' : 'photo'}`, { replace: true })
+  }, [navigate, token])
+
+  // FE-GMA-1: 예전에는 "로그인 상태면" linkAccount 없이 곧장 콘텐츠로 보냈다 - 다른
+  // 계정(예: 선물을 보낸 자녀 본인)으로 로그인된 기기에서 열면 수령자 연결 없이
+  // 진행돼 서버 검증(403)에 막히거나 엉뚱한 계정에 결과물이 쌓였다. 이제는 이 탭에서
+  // 이 선물 링크로 계정 연결이 성공한 경우에만 계정 단계를 건너뛴다.
   const goToAccount = useCallback(() => {
-    if (isAuthenticated) {
-      const productType = info?.productType
-      navigate(`/gift/perform/${token}/${productType === 'will' ? 'will' : 'photo'}`, { replace: true })
+    setDeclineError(null)
+    if (isAuthenticated && isAccountLinked(token)) {
+      goToContent(info?.productType)
       return
     }
     setPhase(PHASE.ACCOUNT)
-  }, [isAuthenticated, info, navigate, token])
+  }, [isAuthenticated, info, token, goToContent])
 
   // 2026-08-23: 기존 계정으로 로그인(mode==='login')하는 수행자 중 약관 필수화
   // 이전 가입자는 terms 동의 기록이 없어 서버(giftPerformService.linkAccount →
@@ -100,46 +123,66 @@ function useGiftPerform() {
   const submitAccount = useCallback(async (payload) => {
     setIsLinking(true)
     setAccountError(null)
+    setDeclineError(null)
     setNeedsAccountConsent(false)
     try {
       const { data } = await linkAccount(token, payload)
       const { accessToken, user, gift } = data.data
       setAuth(user, accessToken)
+      markAccountLinked(token)
       const productType = gift?.productType ?? info?.productType
       if (gift?.giftId) sessionStorage.setItem('giftContentGiftId', gift.giftId)
-      navigate(`/gift/perform/${token}/${productType === 'will' ? 'will' : 'photo'}`, { replace: true })
+      goToContent(productType)
     } catch (err) {
       const status = err?.response?.status
-      const message = err?.response?.data?.message ?? '처리에 실패했습니다.'
-      if (status === 400 && message.includes('동의가 필요합니다')) {
+      if (status === 410) {
+        showFetchError(err, '더 이상 유효하지 않은 링크입니다.')
+        return
+      }
+      const message = getGiftErrorMessage(err, '처리에 실패했습니다.')
+      if (!isRecipientMismatch(err) && status === 400 && message.includes('동의가 필요합니다')) {
         setNeedsAccountConsent(true)
       }
       setAccountError(message)
     } finally {
       setIsLinking(false)
     }
-  }, [token, navigate, setAuth, info])
+  }, [token, setAuth, info, goToContent, showFetchError])
 
   const submitDecline = useCallback(async () => {
+    if (declinePendingRef.current) return
+    declinePendingRef.current = true
+    setIsDeclining(true)
+    setDeclineError(null)
     try {
       const { data } = await declinePerform(token)
       setDeclineResult(data.data)
       setPhase(PHASE.DECLINED)
     } catch (err) {
-      setVerifyError(err?.response?.data?.message ?? '거절 처리에 실패했습니다.')
+      if (err?.response?.status === 410) {
+        showFetchError(err, '더 이상 유효하지 않은 링크입니다.')
+      } else {
+        setDeclineError(getGiftErrorMessage(err, '거절 처리에 실패했습니다. 잠시 후 다시 시도해 주세요.'))
+      }
+    } finally {
+      setIsDeclining(false)
+      declinePendingRef.current = false
     }
-  }, [token])
+  }, [token, showFetchError])
 
   return {
     phase,
     info,
     fetchError,
+    fetchStatus,
     verifyError,
     isVerifying,
     accountError,
     needsAccountConsent,
     isLinking,
     declineResult,
+    declineError,
+    isDeclining,
     submitVerification,
     goToAccount,
     submitAccount,

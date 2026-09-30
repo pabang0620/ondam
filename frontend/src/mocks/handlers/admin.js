@@ -19,7 +19,7 @@
 //     (AdminReleasePage.jsx: releaseId/willId/requesterName/requesterRelationship/
 //      requesterEmail/requesterPhone/createdAt/status - pending/approved/rejected)
 // - GET  /admin/releases/:id/document-url           -> handleViewDocument: data.data.url
-// - POST /admin/releases/:id/approve, /reject       -> 로컬 상태만 갱신하므로 success만 필요
+// - POST /admin/releases/:id/approve, /reject       -> 처리 후 목록을 refetch하므로 mock 상태도 갱신
 import { http, HttpResponse } from 'msw'
 
 // ─── 대시보드 통계 ──────────────────────────────────────────────────────────

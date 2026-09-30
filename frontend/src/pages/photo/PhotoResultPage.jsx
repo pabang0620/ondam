@@ -1,4 +1,7 @@
-import { Download, RefreshCw, Share2, Loader2, AlertCircle, DownloadCloud } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Download, RefreshCw, Loader2, AlertCircle, DownloadCloud } from 'lucide-react'
+import { Button } from '../../components/common/Button.jsx'
+import { ROUTES } from '../../constants/routes.js'
 import usePhotoResult from './usePhotoResult.js'
 import './PhotoResultPage.css'
 
@@ -7,9 +10,9 @@ function PhotoImage({ src, alt, label }) {
     <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
       <p
         style={{
-          fontSize: 'var(--fs-caption)',
+          fontSize: 'var(--fs-body)',
           fontWeight: 600,
-          color: 'var(--color-text-muted)',
+          color: 'var(--color-text-secondary)',
           textAlign: 'center',
           textTransform: 'uppercase',
           letterSpacing: '0.06em',
@@ -105,18 +108,21 @@ function ResultSetCard({ file, index, onDownload }) {
 }
 
 function PhotoResultPage() {
+  const navigate = useNavigate()
   const {
     rawFile,
     enhancedFiles,
     isPartialFailure,
+    canRetry,
     isLoading,
     isRetrying,
+    isDownloadingAll,
+    downloadNotice,
     error,
     retryError,
     handleDownload,
     handleDownloadAll,
     handleRetry,
-    handleShare,
   } = usePhotoResult()
 
   if (isLoading) {
@@ -161,6 +167,9 @@ function PhotoResultPage() {
         <p role="alert" style={{ fontSize: 'var(--font-size-lg)', color: 'var(--color-error)', fontWeight: 700 }}>
           {error}
         </p>
+        {/* FE-PP-7: 오류 화면에서 막히지 않도록 다음 행동을 제공한다 */}
+        <Button onClick={() => navigate(ROUTES.PHOTO)} fullWidth>사진관으로</Button>
+        <Button variant="secondary" onClick={() => navigate(ROUTES.MY)} fullWidth>마이페이지로</Button>
       </main>
     )
   }
@@ -179,12 +188,15 @@ function PhotoResultPage() {
     >
       <header>
         <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 800, color: 'var(--color-photo)', marginBottom: 'var(--spacing-sm)', letterSpacing: 'var(--ls-heading-ko)' }}>
-          처리 완료
+          {/* FE-PP-15: 부분 실패인데 "처리 완료/성공"으로 안내하지 않는다 */}
+          {isPartialFailure ? '일부 결과물만 준비됐어요' : '처리 완료'}
         </h1>
         <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>
-          {enhancedFiles.length > 0
-            ? `AI가 사진을 성공적으로 복원했습니다. 결과물 ${enhancedFiles.length}장을 확인해 보세요.`
-            : 'AI가 사진을 성공적으로 복원했습니다. 결과물을 확인해 보세요.'}
+          {isPartialFailure
+            ? `준비된 결과물 ${enhancedFiles.length}장을 아래에서 확인해 보세요.`
+            : enhancedFiles.length > 0
+              ? `AI가 사진을 성공적으로 복원했습니다. 결과물 ${enhancedFiles.length}장을 확인해 보세요.`
+              : 'AI가 사진을 성공적으로 복원했습니다. 결과물을 확인해 보세요.'}
         </p>
       </header>
 
@@ -230,7 +242,7 @@ function PhotoResultPage() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: 'var(--color-text-muted)',
-                fontSize: 'var(--fs-caption)',
+                fontSize: 'var(--fs-body)',
               }}
             >
               원본 없음
@@ -251,7 +263,7 @@ function PhotoResultPage() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: 'var(--color-text-muted)',
-                fontSize: 'var(--fs-caption)',
+                fontSize: 'var(--fs-body)',
               }}
             >
               보정본 없음
@@ -298,7 +310,10 @@ function PhotoResultPage() {
         {/* 전체 저장 - 항목이 2장 이상일 때만 노출 */}
         {enhancedFiles.length > 1 && (
           <button
+            type="button"
             onClick={handleDownloadAll}
+            disabled={isDownloadingAll}
+            aria-busy={isDownloadingAll}
             style={{
               width: '100%',
               height: 'var(--size-button-h)',
@@ -350,32 +365,25 @@ function PhotoResultPage() {
           </button>
         )}
 
-        {/* 공유 */}
-        <button
-          onClick={handleShare}
+        {/* FE-PP-3: 전체 저장 뒤 안내 - 브라우저가 연속 저장을 막았을 때 할 일 */}
+        <p
+          aria-live="polite"
           style={{
-            width: '100%',
-            height: 'var(--size-button-h)',
-            minHeight: 'var(--size-button-h)',
-            background: 'var(--color-surface)',
-            color: 'var(--color-text-primary)',
-            border: '1px solid var(--color-border)',
-            borderRadius: 'var(--radius-pill)',
             fontSize: 'var(--fs-body)',
-            fontWeight: 600,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 'var(--spacing-sm)',
+            color: 'var(--color-text-primary)',
+            lineHeight: 'var(--lh-relaxed)',
+            margin: 0,
           }}
         >
-          <Share2 size={18} />
-          공유하기
-        </button>
+          {downloadNotice}
+        </p>
 
-        {/* 재처리 */}
+        {/* FE-PP-10(D7): 받는 사람이 열 수 없는 링크라 "공유" 버튼은 두지 않는다 */}
+
+        {/* 재처리 - FE-PP-7: 주문이 실패 상태일 때만 */}
+        {canRetry && (
         <button
+          type="button"
           onClick={handleRetry}
           disabled={isRetrying}
           aria-disabled={isRetrying}
@@ -409,6 +417,7 @@ function PhotoResultPage() {
             </>
           )}
         </button>
+        )}
       </section>
 
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>

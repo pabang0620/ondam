@@ -27,7 +27,8 @@ export function LoadingSpinner({ size = 40, label = '로딩 중...' }) {
       />
       <span
         style={{
-          fontSize: 'var(--fs-caption)',
+          // FE-GMA-15: 진행 상태 안내는 정보성 텍스트라 16px 이상
+          fontSize: 'var(--fs-body)',
           color: 'var(--color-text-muted)',
         }}
       >

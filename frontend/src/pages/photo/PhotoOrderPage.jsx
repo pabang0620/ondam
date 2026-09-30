@@ -39,6 +39,8 @@ function PhotoOrderPage() {
   const onFileChange = useCallback(
     (e) => {
       const file = e.target.files?.[0]
+      // FE-PP-1: 같은 파일을 다시 골라도 onChange가 발생하도록 값을 비운다
+      e.target.value = ''
       if (file) handleFileUpload(file)
     },
     [handleFileUpload],
@@ -81,7 +83,9 @@ function PhotoOrderPage() {
             return (
               <button
                 key={type}
+                type="button"
                 onClick={() => handleTypeSelect(type)}
+                aria-pressed={isSelected}
                 style={{
                   height: 'var(--size-button-h)',
                   minHeight: 'var(--size-button-h)',
@@ -112,7 +116,7 @@ function PhotoOrderPage() {
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/jpeg,image/png,image/webp,image/heic"
+          accept="image/jpeg,image/png,image/webp"
           style={{ display: 'none' }}
           onChange={onFileChange}
         />
@@ -206,7 +210,6 @@ function PhotoOrderPage() {
               e.currentTarget.style.borderColor = 'var(--color-border-strong)'
               e.currentTarget.style.backgroundColor = 'var(--color-bg)'
             }}
-            aria-label="사진 업로드 영역, 클릭 또는 드래그"
           >
             <UploadCloud size={40} color="var(--color-photo)" />
             <span style={{ fontWeight: 600, color: 'var(--color-text-secondary)', fontSize: 'var(--fs-body-lg)' }}>
@@ -216,7 +219,7 @@ function PhotoOrderPage() {
                 (브라우저가 파일 크기로 필터링할 수 없음) 이 문구를 못 읽으면 업로드가
                 실패로 끝난 뒤에야 알게 된다. 보조 정보가 아니라 행동(파일 선택) 전에
                 읽어야 하는 정보로 보고 --fs-body(16px)로 올린다. */}
-            <span style={{ fontSize: 'var(--fs-body)' }}>JPG, PNG, WEBP, HEIC · 최대 20MB</span>
+            <span style={{ fontSize: 'var(--fs-body)' }}>JPG, PNG, WEBP · 최대 20MB</span>
           </button>
         )}
       </section>

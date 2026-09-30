@@ -86,44 +86,47 @@
 }
 
 .my-profile__email {
-  font-size: var(--fs-caption);
+  /* FE-GMA-15: 정보성 텍스트는 16px 이상 (어르신 UX 규칙) */
+  font-size: var(--fs-body);
   color: var(--color-text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.my-profile__edit {
+/* FE-GMA-10: 프로필 "수정" 버튼(.my-profile__edit)은 제거됐다 */
+
+/* FE-GMA-12: 불러오기 실패 시 "다시 시도" 버튼 */
+.my-retry-btn {
   display: inline-flex;
   align-items: center;
-  gap: var(--spacing-xs);
-  background: var(--color-bg-alt);
+  justify-content: center;
+  background: var(--color-surface);
   color: var(--color-text-primary);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-pill);
-  /* 모바일: 최소 너비 확보, 패딩 조정 */
-  padding: 0 var(--spacing-sm);
-  min-height: var(--size-button-h);
-  min-width: 64px;
-  /* FIX: 결함5 - "수정" 버튼은 누르면 실제로 화면을 이동시키는 행동형 텍스트라
-     보조 정보(캡션)가 아니다. --fs-body(16px)로 올린다. 높이는 이미
-     --size-button-h(56px)로 48px 기준을 충족한다. */
+  padding: 0 var(--spacing-lg);
+  min-height: var(--min-touch-target);
+  min-width: 120px;
   font-size: var(--fs-body);
   font-weight: 600;
   cursor: pointer;
-  white-space: nowrap;
-  flex-shrink: 0;
   transition: background-color var(--transition-base);
 }
 
-@media (min-width: 640px) {
-  .my-profile__edit {
-    padding: 0 var(--spacing-md);
-  }
+.my-retry-btn:hover {
+  background: var(--color-bg-alt);
 }
 
-.my-profile__edit:hover {
-  background: var(--color-border-strong);
+.my-retry-btn:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* FE-GMA-15: 알림 토글 - 투명 input 대신 트랙에 키보드 포커스를 표시한다 */
+.my-toggle__input:focus-visible + .my-toggle__track {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 /* 탭 네비게이션 */
@@ -246,13 +249,13 @@
 }
 
 .my-list-item__date {
-  font-size: var(--fs-caption);
+  font-size: var(--fs-body);
   color: var(--color-text-muted);
   white-space: nowrap;
 }
 
 .my-list-item__badge {
-  font-size: var(--fs-caption);
+  font-size: var(--fs-body);
   font-weight: 700;
   flex-shrink: 0;
 }

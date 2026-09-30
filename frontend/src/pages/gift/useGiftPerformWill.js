@@ -1,10 +1,14 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
 import apiClient from '../../config/apiClient.js'
 // will 도메인의 검증된 API 호출 함수를 그대로 재사용한다(재설계 없음) - 음성 클론·
 // 유언장 생성·영상 활성화·상태폴링 로직은 willApi.js/willService.js와 동일하다.
 import { willApi } from '../will/willApi.js'
 import { uploadPhoto } from '../photo/photoApi.js'
-import { attachWillOrder, completeGift } from './giftApi.js'
+import {
+  attachWillOrder, completeGiftWithRetry, getGiftErrorMessage, isAccountLinked,
+  saveGiftProgress, loadGiftProgress, clearGiftProgress,
+} from './giftApi.js'
 import { WILL_CONSENT_ITEMS } from '../../components/consent/consentItems.js'
 import { useConsentChecklist } from '../../components/consent/useConsentChecklist.js'
 
@@ -19,6 +23,14 @@ export const STEP = {
   ERROR: 'error',
 }
 
+export const TITLE_MAX_LENGTH = 200
+export const CONTENT_MAX_LENGTH = 5000
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+// FE-GMA-2/4: 일시적 폴링 실패는 넘기되, 연속으로 이만큼 실패하면 멈추고 안내한다
+// (예전에는 catch{}로 무제한 무시해 네트워크가 끊겨도 스피너만 영원히 돌았다).
+const MAX_POLL_FAILURES = 5
+
 // FIX: 무한 폴링 결함 (will/useWillProcessing.js와 동일한 유형) - 결제자(선물을
 // 보내주신 분)와 이 화면을 보는 수행자(부모)가 다른 선물 경로 특성을 반영해
 // "본인이 결제했다"는 문구 없이 안내한다. will/useWillProcessing.js와 달리
@@ -29,11 +41,15 @@ const GIFT_WILL_FAILURE_MESSAGE =
   '보내주신 분께 자동으로 환불되며, 따로 하실 일은 없어요.'
 
 function useGiftPerformWill() {
+  const { token } = useParams()
+  const navigate = useNavigate()
   const giftId = sessionStorage.getItem('giftContentGiftId')
 
   const [step, setStep] = useState(STEP.CONSENT)
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(false)
+  // FE-GMA-4: 영상은 완성됐지만 선물 완료 표시(completeGift)가 재시도 후에도 실패한 경우
+  const [completeWarning, setCompleteWarning] = useState(null)
 
   const [profileImageUrl, setProfileImageUrl] = useState(null)
   const [voiceSampleId, setVoiceSampleId] = useState(null)
@@ -47,11 +63,38 @@ function useGiftPerformWill() {
   const { consents, allChecked, toggleItem, toggleAll } = useConsentChecklist(WILL_CONSENT_ITEMS)
 
   const pollRef = useRef(null)
-  useEffect(() => () => clearInterval(pollRef.current), [])
+  const pollFailuresRef = useRef(0)
+  // FE-GMA-2: 언마운트 뒤에 늦게 도착한 폴링 응답이 새 인터벌을 만들거나 상태를 바꾸지 않게 한다.
+  const mountedRef = useRef(true)
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+      clearInterval(pollRef.current)
+      pollRef.current = null
+    }
+  }, [])
+
+  const stopPolling = useCallback(() => {
+    clearInterval(pollRef.current)
+    pollRef.current = null
+  }, [])
+
+  // FE-GMA-9: giftId는 수행 첫 화면(/gift/perform/:token)이 sessionStorage에 넣어준다.
+  // 없거나(새 탭·직접 URL 진입) 이 탭에서 계정 연결을 마치지 않았다면 첫 화면으로 돌려보낸다.
+  const needsRedirect = !giftId || !isAccountLinked(token)
+  useEffect(() => {
+    if (needsRedirect) navigate(`/gift/perform/${token}`, { replace: true })
+  }, [needsRedirect, navigate, token])
 
   // ep-006: 비동기 클릭 핸들러는 setState보다 먼저 반영되는 ref로 즉시 잠근다
   // (busy state 갱신 전에 도착하는 연타로 인한 중복 POST 방지).
   const consentPendingRef = useRef(false)
+  const beneficiaryPendingRef = useRef(false)
+  // FE-GMA-3: 수신인 제출이 중간(연결/활성화)에서 실패해 다시 누를 때 유언장을 또
+  // 만들지 않도록 이미 끝난 단계를 기억한다.
+  const createdWillIdRef = useRef(null)
+  const attachedWillIdRef = useRef(null)
 
   const submitConsent = useCallback(async () => {
     if (!allChecked || consentPendingRef.current) return
@@ -92,24 +135,38 @@ function useGiftPerformWill() {
     }
   }, [])
 
+  // FE-GMA-2: 클론 대기 중에는 busy를 유지해 "처리하고 있어요" 표시를 계속 보여주고,
+  // 준비 완료/실패/연속 폴링 실패 중 하나로 끝날 때만 busy를 푼다.
   const pollVoiceReady = useCallback((sampleId) => {
+    stopPolling()
+    pollFailuresRef.current = 0
     pollRef.current = setInterval(async () => {
       try {
         const { data } = await willApi.getVoiceSampleStatus(sampleId)
+        if (!mountedRef.current) return
+        pollFailuresRef.current = 0
         const status = data.data?.cloneStatus
         if (status === 'ready') {
-          clearInterval(pollRef.current)
+          stopPolling()
           setVoiceSampleId(sampleId)
+          setBusy(false)
           setStep(STEP.MESSAGE)
         } else if (status === 'failed') {
-          clearInterval(pollRef.current)
+          stopPolling()
+          setBusy(false)
           setError('음성 처리 중 문제가 발생했습니다. 다시 녹음해 주세요.')
         }
       } catch {
-        // 일시적 폴링 실패는 무시
+        if (!mountedRef.current) return
+        pollFailuresRef.current += 1
+        if (pollFailuresRef.current >= MAX_POLL_FAILURES) {
+          stopPolling()
+          setBusy(false)
+          setError('인터넷 연결이 불안정해 목소리 처리 상태를 확인하지 못했어요. 잠시 후 녹음 파일을 다시 올려 주세요.')
+        }
       }
     }, 4000)
-  }, [])
+  }, [stopPolling])
 
   const uploadVoice = useCallback(async (file) => {
     setBusy(true)
@@ -120,23 +177,36 @@ function useGiftPerformWill() {
       const { data: uploadRes } = await willApi.uploadAudio(formData)
       const { s3Key, size } = uploadRes.data
       const { data: sampleRes } = await willApi.createVoiceSample({ s3Key, fileSize: size })
+      if (!mountedRef.current) return
       pollVoiceReady(sampleRes.data.voiceSampleId)
     } catch (err) {
       setError(err?.response?.data?.message ?? '음성 업로드에 실패했습니다.')
-    } finally {
       setBusy(false)
     }
   }, [pollVoiceReady])
 
   const submitMessage = useCallback(() => {
     if (!title.trim() || !contentText.trim()) return
+    if (title.trim().length > TITLE_MAX_LENGTH) {
+      setError(`제목은 ${TITLE_MAX_LENGTH}자 이내로 적어 주세요.`)
+      return
+    }
+    if (contentText.trim().length > CONTENT_MAX_LENGTH) {
+      setError(`편지 내용은 ${CONTENT_MAX_LENGTH}자 이내로 적어 주세요.`)
+      return
+    }
+    setError(null)
     setStep(STEP.BENEFICIARY)
   }, [title, contentText])
 
   const pollVideoReady = useCallback((willId) => {
+    stopPolling()
+    pollFailuresRef.current = 0
     pollRef.current = setInterval(async () => {
       try {
         const { data } = await willApi.getWillStatus(willId)
+        if (!mountedRef.current) return
+        pollFailuresRef.current = 0
         // FIX: 무한 폴링 결함 - wills.status(WILL_STATUS: draft/paid/active/released/
         // revoked)에는 'failed'가 없다(shared/constants/enums.js). activateWill이
         // 큐 등록 직전에 이미 status='active'로 바꿔두기 때문에, 예전처럼
@@ -148,12 +218,19 @@ function useGiftPerformWill() {
         const job = data.data?.job
         const jobStatus = job?.jobStatus
         if (jobStatus === 'completed') {
-          clearInterval(pollRef.current)
+          stopPolling()
+          // FE-GMA-4: 완료 표시 실패를 삼키지 않는다 - 1회 재시도 후에도 실패하면
+          // 안내하고, 진행 기록은 남겨 새로고침 시 다시 완료 표시를 시도하게 한다.
           try {
-            await completeGift(giftId, { willId })
-          } catch {
-            // gift 완료 표시 실패해도 영상 자체는 이미 완성됐다 - 조용히 넘어간다
+            await completeGiftWithRetry(giftId, { willId })
+            clearGiftProgress(giftId)
+          } catch (err) {
+            setCompleteWarning(getGiftErrorMessage(
+              err,
+              '영상은 완성됐지만 보내주신 분께 완료 소식을 전하지 못했어요. 이 화면을 새로고침하면 다시 시도해요.',
+            ))
           }
+          if (!mountedRef.current) return
           setStep(STEP.DONE)
         } else if (jobStatus === 'failed') {
           // videoWorker.js의 finalizeWillFailure가 AI 처리 최종 실패 시 자동 환불하고
@@ -167,46 +244,86 @@ function useGiftPerformWill() {
           // 왜 실패했는지가 아니라 "환불은 보내주신 분(결제자)께 가고, 이 화면을 보는
           // 수행자는 할 일이 없다"는 사실이다. job.errorMessage를 그대로 노출하면 이
           // 정보가 아예 빠지므로, 여기서는 항상 GIFT_WILL_FAILURE_MESSAGE를 보여준다.
-          clearInterval(pollRef.current)
+          stopPolling()
+          clearGiftProgress(giftId)
           setError(GIFT_WILL_FAILURE_MESSAGE)
           setStep(STEP.ERROR)
         } else if (jobStatus && jobStatus !== 'queued' && jobStatus !== 'running') {
           // 방어적 폴백: AI_JOB_STATUS에 없는 값이 오면(스키마 변경/오탈자 등) 무한
           // 폴링에 빠지지 않도록 멈추고 새로고침을 안내한다.
-          clearInterval(pollRef.current)
+          stopPolling()
           setError('처리 상태를 확인할 수 없습니다. 잠시 후 페이지를 새로고침해 다시 시도해 주세요.')
           setStep(STEP.ERROR)
         }
         // queued/running(또는 job이 아직 조회되지 않는 경우)이면 다음 주기에 계속 폴링한다.
       } catch {
-        // 일시적 폴링 실패는 무시
+        if (!mountedRef.current) return
+        pollFailuresRef.current += 1
+        if (pollFailuresRef.current >= MAX_POLL_FAILURES) {
+          // 진행 기록(saveGiftProgress)은 남겨 두므로 새로고침하면 이어서 확인한다.
+          stopPolling()
+          setError('인터넷 연결이 불안정해 진행 상태를 확인하지 못했어요. 영상은 계속 만들어지고 있을 수 있으니, 화면을 새로고침해 다시 확인해 주세요.')
+          setStep(STEP.ERROR)
+        }
       }
     }, 5000)
-  }, [giftId])
+  }, [giftId, stopPolling])
+
+  // FE-GMA-4: 이 탭에서 이미 영상 제작을 시작한 선물로 다시 들어오면(새로고침 등)
+  // 동의부터 다시 시작하지 않고 진행 상태 확인을 이어서 한다. 서버의 수행 정보
+  // 응답(getPerformInfo)에는 연결된 willId가 없어 다른 탭·기기에서는 복원할 수 없다.
+  useEffect(() => {
+    if (needsRedirect) return undefined
+    const progress = loadGiftProgress(giftId)
+    if (progress?.willId) {
+      setStep(STEP.GENERATING)
+      pollVideoReady(progress.willId)
+    }
+    return () => stopPolling()
+  }, [needsRedirect, giftId, pollVideoReady, stopPolling])
 
   const submitBeneficiary = useCallback(async () => {
-    if (!beneficiary.name.trim() || !beneficiary.email.trim() || !beneficiary.relationship.trim()) return
+    if (beneficiaryPendingRef.current) return
+    const name = beneficiary.name.trim()
+    const email = beneficiary.email.trim()
+    const relationship = beneficiary.relationship.trim()
+    if (!name || !email || !relationship) return
+    if (!EMAIL_PATTERN.test(email)) {
+      setError('이메일 주소 형식을 확인해 주세요. 예: family@example.com')
+      return
+    }
     if (!giftId || !voiceSampleId) return
+    beneficiaryPendingRef.current = true
     setBusy(true)
     setError(null)
     try {
-      const { data: willRes } = await willApi.createWill({
-        voiceSampleId,
-        title: title.trim(),
-        contentText: contentText.trim(),
-        releasePolicy: 'manual_admin',
-        beneficiaries: [beneficiary],
-      })
-      const willId = willRes.data.willId
-      await attachWillOrder(giftId, willId)
+      let willId = createdWillIdRef.current
+      if (!willId) {
+        const { data: willRes } = await willApi.createWill({
+          voiceSampleId,
+          title: title.trim(),
+          contentText: contentText.trim(),
+          releasePolicy: 'manual_admin',
+          beneficiaries: [{ ...beneficiary, name, email, relationship, phone: beneficiary.phone.trim() }],
+        })
+        willId = willRes.data.willId
+        createdWillIdRef.current = willId
+      }
+      if (attachedWillIdRef.current !== willId) {
+        await attachWillOrder(giftId, willId)
+        attachedWillIdRef.current = willId
+      }
       await willApi.activateWill(willId)
+      saveGiftProgress(giftId, { willId })
+      if (!mountedRef.current) return
       setStep(STEP.GENERATING)
       pollVideoReady(willId)
     } catch (err) {
-      setError(err?.response?.data?.message ?? '진행 중 문제가 발생했습니다.')
-      setStep(STEP.ERROR)
+      // FE-GMA-3: 되돌릴 수 없는 ERROR 화면 대신 입력 화면에 머물며 다시 시도하게 한다.
+      setError(getGiftErrorMessage(err, '진행 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.'))
     } finally {
       setBusy(false)
+      beneficiaryPendingRef.current = false
     }
   }, [beneficiary, giftId, voiceSampleId, title, contentText, pollVideoReady])
 
@@ -215,6 +332,7 @@ function useGiftPerformWill() {
     step,
     error,
     busy,
+    completeWarning,
     consentItems: WILL_CONSENT_ITEMS,
     consents,
     allChecked,

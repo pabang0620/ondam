@@ -35,6 +35,18 @@ export function Modal({ isOpen, onClose, title, children }) {
     }
   }, [isOpen])
 
+  // FE-GMA-14: 열 때 포커스가 있던 요소를 기억했다가 닫힐 때(언마운트 포함) 되돌린다.
+  // 되돌리지 않으면 스크린리더·키보드 사용자는 문서 맨 앞으로 튕겨 나간다.
+  useEffect(() => {
+    if (!isOpen) return undefined
+    const previouslyFocused = document.activeElement
+    return () => {
+      if (previouslyFocused && typeof previouslyFocused.focus === 'function' && document.contains(previouslyFocused)) {
+        previouslyFocused.focus()
+      }
+    }
+  }, [isOpen])
+
   // 포커스 트랩 - 모달 열릴 때 첫 번째 포커스 가능 요소에 포커스
   useEffect(() => {
     if (!isOpen || !dialogRef.current) return
@@ -104,14 +116,14 @@ export function Modal({ isOpen, onClose, title, children }) {
         overflowX: 'hidden',
       }
 
+  // FE-GMA-14: 예전에는 aria-hidden="true"가 dialog까지 감싼 최상위 div에 있어 모달
+  // 내용 전체가 보조기기에서 숨겨졌다. aria-hidden은 장식용 배경 div에만 둔다.
   return (
-    <div
-      style={overlayStyle}
-      onClick={onClose}
-      aria-hidden="true"
-    >
-      {/* Overlay */}
+    <div style={overlayStyle}>
+      {/* Overlay - 클릭 시 닫기 (키보드 사용자는 ESC/닫기 버튼 사용) */}
       <div
+        aria-hidden="true"
+        onClick={onClose}
         style={{
           position: 'absolute',
           inset: 0,
@@ -126,7 +138,6 @@ export function Modal({ isOpen, onClose, title, children }) {
         aria-modal="true"
         aria-labelledby={title ? 'modal-title' : undefined}
         style={dialogStyle}
-        onClick={(e) => e.stopPropagation()}
       >
         {/* 모바일 handle bar */}
         {isMobile && (

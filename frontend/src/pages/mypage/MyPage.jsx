@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import {
   User,
   ShoppingBag,
@@ -7,7 +7,6 @@ import {
   CreditCard,
   Bell,
   ChevronRight,
-  Edit2,
 } from 'lucide-react'
 import { useMy } from './useMy.js'
 import { ROUTES } from '../../constants/routes.js'
@@ -70,7 +69,19 @@ const TABS = [
   { key: 'notifications', label: '알림설정', icon: Bell },
 ]
 
-function Toggle({ checked, onChange, id, label }) {
+// FE-GMA-12: 불러오기 실패를 빈 상태("내역이 없습니다")로 보이지 않게 한다.
+function RetryBox({ message, onRetry }) {
+  return (
+    <div className="my-error" role="alert" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)', alignItems: 'flex-start' }}>
+      <span>{message}</span>
+      <button type="button" className="my-retry-btn" onClick={onRetry}>
+        다시 시도
+      </button>
+    </div>
+  )
+}
+
+function Toggle({ checked, onChange, id, label, disabled = false }) {
   return (
     <label
       htmlFor={id}
@@ -86,17 +97,22 @@ function Toggle({ checked, onChange, id, label }) {
         {label}
       </span>
       <div style={{ position: 'relative', flexShrink: 0 }}>
+        {/* FE-GMA-15: 실제 input은 투명이라 키보드 포커스가 보이지 않았다 -
+            .my-toggle__input:focus-visible + .my-toggle__track 으로 트랙에 표시한다 */}
         <input
           id={id}
           type="checkbox"
           role="switch"
+          className="my-toggle__input"
           checked={checked}
+          disabled={disabled}
           onChange={(e) => onChange(e.target.checked)}
           aria-checked={checked}
           style={{ position: 'absolute', opacity: 0, width: 0, height: 0 }}
         />
         <div
           aria-hidden="true"
+          className="my-toggle__track"
           style={{
             width: 48,
             height: 28,
@@ -124,7 +140,8 @@ function Toggle({ checked, onChange, id, label }) {
   )
 }
 
-function OrdersTab({ orders }) {
+function OrdersTab({ orders, error, onRetry }) {
+  if (error) return <RetryBox message={error} onRetry={onRetry} />
   if (orders.length === 0) {
     return <p className="my-tab-empty">주문 내역이 없습니다.</p>
   }
@@ -155,7 +172,8 @@ function OrdersTab({ orders }) {
   )
 }
 
-function WillsTab({ wills }) {
+function WillsTab({ wills, error, onRetry }) {
+  if (error) return <RetryBox message={error} onRetry={onRetry} />
   if (wills.length === 0) {
     return <p className="my-tab-empty">영상 편지가 없습니다.</p>
   }
@@ -218,9 +236,9 @@ function SubscriptionTab() {
   )
 }
 
-function NotificationsTab({ settings, settingsError, onToggle, isUpdating }) {
+function NotificationsTab({ settings, settingsError, toggleError, onToggle, onRetry, isUpdating }) {
   if (settingsError) {
-    return <p className="my-error" role="alert">{settingsError}</p>
+    return <RetryBox message={settingsError} onRetry={onRetry} />
   }
 
   if (!settings) {
@@ -256,6 +274,10 @@ function NotificationsTab({ settings, settingsError, onToggle, isUpdating }) {
       }}
       aria-busy={isUpdating}
     >
+      {/* FE-GMA-7: 저장 실패 시 이전 값으로 되돌린 뒤 이유를 알린다 */}
+      {toggleError && (
+        <p className="my-error" role="alert">{toggleError}</p>
+      )}
       {NOTIFICATION_KEYS.map(({ key, label }) => (
         <Toggle
           key={key}
@@ -270,7 +292,6 @@ function NotificationsTab({ settings, settingsError, onToggle, isUpdating }) {
 }
 
 export default function MyPage() {
-  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('orders')
   const {
     user,
@@ -278,9 +299,11 @@ export default function MyPage() {
     wills,
     notificationSettings,
     isLoading,
-    error,
+    errors,
     settingsError,
+    toggleError,
     isSettingsUpdating,
+    refetch,
     fetchNotificationSettings,
     handleToggleNotification,
   } = useMy()
@@ -301,11 +324,10 @@ export default function MyPage() {
 
   return (
     <main className="my-page">
-      {error && (
-        <p role="alert" className="my-error">{error}</p>
-      )}
+      {errors.me && <RetryBox message={errors.me} onRetry={refetch} />}
 
-      {/* 프로필 카드 */}
+      {/* 프로필 카드 - FE-GMA-10(D7): 프로필 수정 화면이 없어 "수정" 버튼이 같은
+          마이페이지로만 이동했다. 동작하지 않는 버튼은 제거한다. */}
       <section className="my-profile" aria-label="내 프로필">
         <div className="my-profile__avatar">
           <User size={36} color="var(--color-primary)" aria-hidden="true" />
@@ -314,14 +336,6 @@ export default function MyPage() {
           <p className="my-profile__name">{user?.nickname || user?.email || '사용자'}</p>
           <p className="my-profile__email">{user?.email}</p>
         </div>
-        <button
-          onClick={() => navigate('/my/edit')}
-          className="my-profile__edit"
-          aria-label="프로필 수정"
-        >
-          <Edit2 size={18} aria-hidden="true" />
-          수정
-        </button>
       </section>
 
       {/* 탭 */}
@@ -348,14 +362,16 @@ export default function MyPage() {
         aria-label={TABS.find((t) => t.key === activeTab)?.label}
         className="my-tab-panel"
       >
-        {activeTab === 'orders' && <OrdersTab orders={photoOrders} />}
-        {activeTab === 'wills' && <WillsTab wills={wills} />}
+        {activeTab === 'orders' && <OrdersTab orders={photoOrders} error={errors.orders} onRetry={refetch} />}
+        {activeTab === 'wills' && <WillsTab wills={wills} error={errors.wills} onRetry={refetch} />}
         {activeTab === 'subscription' && <SubscriptionTab />}
         {activeTab === 'notifications' && (
           <NotificationsTab
             settings={notificationSettings}
             settingsError={settingsError}
+            toggleError={toggleError}
             onToggle={handleToggleNotification}
+            onRetry={fetchNotificationSettings}
             isUpdating={isSettingsUpdating}
           />
         )}
