@@ -71,7 +71,8 @@ function PhotoMockup({ domainColor, domainBg }) {
         style={{ padding: '14px 18px', borderBottom: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-alt)' }}
       >
         <Camera size={16} style={{ color: domainColor }} />
-        <span style={{ fontSize: 'var(--fs-caption)', fontWeight: 700, color: 'var(--color-text-secondary)' }}>
+        {/* FIX: bg-alt 헤더 바 위 텍스트 대비(AA) - text-secondary 4.1:1 → primary-soft 8.2:1 */}
+        <span style={{ fontSize: 'var(--fs-caption)', fontWeight: 700, color: 'var(--color-primary-soft)' }}>
           사진 보정 전후 비교
         </span>
       </div>
@@ -158,7 +159,8 @@ function WillMockup({ domainColor, domainBg }) {
             fontSize: 'var(--fs-caption)',
             fontWeight: 700,
             color: 'var(--color-surface)',
-            backgroundColor: 'rgba(0,0,0,0.45)',
+            // FIX: 0.45 → 0.7 (흰 글자 대비 약 3.9:1 → 7:1 이상)
+            backgroundColor: 'rgba(0,0,0,0.7)',
             padding: '2px 8px',
             borderRadius: 'var(--radius-pill)',
           }}
@@ -205,7 +207,7 @@ function PetMockup({ domainColor, domainBg }) {
         style={{ padding: '14px 18px', borderBottom: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-alt)' }}
       >
         <PawPrint size={16} style={{ color: domainColor }} />
-        <span style={{ fontSize: 'var(--fs-caption)', fontWeight: 700, color: 'var(--color-text-secondary)' }}>
+        <span style={{ fontSize: 'var(--fs-caption)', fontWeight: 700, color: 'var(--color-primary-soft)' }}>
           함께한 사진 아카이브
         </span>
       </div>
@@ -232,13 +234,14 @@ function PetMockup({ domainColor, domainBg }) {
           className="flex items-center gap-1.5 font-bold"
           style={{
             fontSize: 'var(--fs-caption)',
-            color: domainColor,
+            // FIX: 테라코타 글자/연한 테라코타 배경은 약 2.2:1 - 글자만 다크로
+            color: 'var(--color-text-primary)',
             backgroundColor: domainBg,
             padding: '6px 12px',
             borderRadius: 'var(--radius-pill)',
           }}
         >
-          <Sparkles size={14} />
+          <Sparkles size={16} style={{ color: domainColor }} />
           AI 초상화 3매 포함
         </span>
       </div>

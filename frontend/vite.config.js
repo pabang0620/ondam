@@ -1,11 +1,30 @@
+import { rm } from 'node:fs/promises'
+import { resolve } from 'node:path'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+
+// FIX: public/mockServiceWorker.js(MSW 개발용)가 프로덕션 dist에 그대로 복사되지
+// 않도록 빌드 직후 삭제한다. dev 서버에서는 public/에서 그대로 서빙된다.
+function excludeMockServiceWorker() {
+  let outDir = 'dist'
+  return {
+    name: 'exclude-mock-service-worker',
+    apply: 'build',
+    configResolved(config) {
+      outDir = resolve(config.root, config.build.outDir)
+    },
+    async closeBundle() {
+      await rm(resolve(outDir, 'mockServiceWorker.js'), { force: true })
+    },
+  }
+}
 
 export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    excludeMockServiceWorker(),
   ],
   server: {
     port: 5173,

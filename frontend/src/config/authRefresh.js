@@ -23,7 +23,10 @@ export function refreshAuth() {
       .post('/api/auth/refresh', {}, { withCredentials: true, timeout: 10000 })
       .then(({ data }) => {
         if (!data.success) {
-          throw new Error(data.message || 'refresh failed')
+          // 2xx인데 success:false면 서버가 세션을 거부한 것 - apiClient가 로그아웃 판정에 쓴다
+          const err = new Error(data.message || 'refresh failed')
+          err.isAuthRejected = true
+          throw err
         }
         const { accessToken, user } = data.data
         // FIX: DEV-28 - accessToken만 세팅하면 clearUser() 이후 refresh가 뒤늦게 성공하는

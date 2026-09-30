@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { ROUTES } from '../../constants/routes.js'
 
 // 전화 문의 번호는 하드코딩하지 않는다. 미설정 시 '고객센터' 항목은
-// 임시 링크(href="#")로 남긴다 - DEV-13 HomePage.jsx와 동일한 규약.
+// 링크 없는 텍스트로 표시한다.
 const CONTACT_PHONE = import.meta.env.VITE_CONTACT_PHONE
 
 export default function Footer() {
@@ -103,15 +103,29 @@ export default function Footer() {
                 고객 지원
               </span>
               {[
-                // FIX: DEV-13 - 법무 문서(이용약관·개인정보처리방침)는 게시 전이라
-                // 라우트 연결이 불가하다. "준비 중"으로 바꾸지 말고 현행(href="#")
-                // 유지, 문서 게시 시 실제 경로로 교체할 것.
-                { label: '이용약관', href: '#' },
-                { label: '개인정보처리방침', href: '#' },
+                // FIX: href="#"는 누르면 페이지 맨 위로 튀기만 하는 가짜 링크였다.
+                // 법무 문서(이용약관·개인정보처리방침)는 게시 전이라 라우트가 없으므로
+                // 링크가 아닌 텍스트로 표시한다. 문서 게시 시 href에 실제 경로를 넣으면
+                // 아래 map이 자동으로 링크로 렌더한다.
+                { label: '이용약관', href: null },
+                { label: '개인정보처리방침', href: null },
                 CONTACT_PHONE
                   ? { label: `고객센터 ${CONTACT_PHONE}`, href: `tel:${CONTACT_PHONE}` }
-                  : { label: '고객센터', href: '#' },
-              ].map(({ label, href }) => (
+                  : { label: '고객센터', href: null },
+              ].map(({ label, href }) => href === null ? (
+                <span
+                  key={label}
+                  style={{
+                    fontSize: 'var(--fs-body)',
+                    color: 'var(--color-text-secondary)',
+                    minHeight: 'var(--min-touch-target)',
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}
+                >
+                  {label}
+                </span>
+              ) : (
                 <a
                   key={label}
                   href={href}

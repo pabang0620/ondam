@@ -1,6 +1,10 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useJoin } from './useJoin.js'
+import { useJoin, PASSWORD_MAX_LENGTH } from './useJoin.js'
 import { ROUTES } from '../../constants/routes.js'
+import PasswordToggleButton from './PasswordToggleButton.jsx'
+
+const JOIN_ERROR_ID = 'join-error'
 
 function StepIndicator({ current, total }) {
   return (
@@ -8,7 +12,7 @@ function StepIndicator({ current, total }) {
       {Array.from({ length: total }, (_, i) => i + 1).map((n) => (
         <div key={n} className="flex items-center gap-2">
           <div
-            className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-base font-bold"
             style={{
               backgroundColor: n <= current ? 'var(--color-primary)' : 'var(--color-border)',
               color: n <= current ? 'var(--color-surface)' : 'var(--color-text-muted)',
@@ -34,7 +38,14 @@ function StepIndicator({ current, total }) {
   )
 }
 
-function InputField({ id, label, type = 'text', value, onChange, placeholder, disabled, autoComplete }) {
+// invalid: 이 칸이 오류 원인인지. hint: 입력칸 아래 항상 보이는 안내(규칙).
+// trailing: 입력칸 오른쪽 안에 놓일 요소(비밀번호 보기 토글 등).
+function InputField({
+  id, label, type = 'text', value, onChange, placeholder, disabled, autoComplete,
+  invalid = false, hint, maxLength, trailing,
+}) {
+  const hintId = hint ? `${id}-hint` : null
+  const describedBy = [hintId, invalid ? JOIN_ERROR_ID : null].filter(Boolean).join(' ') || undefined
   return (
     <div className="flex flex-col gap-2">
       <label
@@ -44,6 +55,7 @@ function InputField({ id, label, type = 'text', value, onChange, placeholder, di
       >
         {label}
       </label>
+      <div className="relative">
       <input
         id={id}
         type={type}
@@ -52,20 +64,30 @@ function InputField({ id, label, type = 'text', value, onChange, placeholder, di
         onChange={onChange}
         placeholder={placeholder}
         disabled={disabled}
+        maxLength={maxLength}
+        aria-invalid={invalid || undefined}
+        aria-describedby={describedBy}
         className="w-full outline-none"
         style={{
           height: 'var(--size-input-h)',
-          padding: '0 16px',
+          padding: trailing ? '0 64px 0 16px' : '0 16px',
           fontSize: 'var(--fs-body)',
-          border: '1px solid var(--color-border)',
+          border: `1px solid ${invalid ? 'var(--color-error)' : 'var(--color-border)'}`,
           borderRadius: '10px',
           backgroundColor: 'var(--color-surface)',
           color: 'var(--color-text-primary)',
           transition: 'border-color var(--transition-base)',
         }}
         onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--color-primary)' }}
-        onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--color-border)' }}
+        onBlur={(e) => { e.currentTarget.style.borderColor = invalid ? 'var(--color-error)' : 'var(--color-border)' }}
       />
+      {trailing}
+      </div>
+      {hint && (
+        <p id={hintId} style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)' }}>
+          {hint}
+        </p>
+      )}
     </div>
   )
 }
@@ -83,10 +105,12 @@ export default function JoinPage() {
     allChecked,
     isLoading,
     error,
+    errorField,
     handleNextStep,
     handleSubmit,
     consentItems,
   } = useJoin()
+  const [showPassword, setShowPassword] = useState(false)
 
   return (
     <div className="flex flex-col gap-7">
@@ -120,16 +144,27 @@ export default function JoinPage() {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="example@email.com"
             disabled={isLoading}
+            invalid={!!error && errorField === 'email'}
           />
           <InputField
             id="join-password"
             label="비밀번호"
-            type="password"
+            type={showPassword ? 'text' : 'password'}
             autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="8자 이상 입력해주세요"
             disabled={isLoading}
+            maxLength={PASSWORD_MAX_LENGTH}
+            invalid={!!error && errorField === 'password'}
+            hint={`8자 이상 ${PASSWORD_MAX_LENGTH}자 이하로 입력해 주세요.`}
+            trailing={
+              <PasswordToggleButton
+                visible={showPassword}
+                onToggle={() => setShowPassword((v) => !v)}
+                controls="join-password"
+              />
+            }
           />
           <InputField
             id="join-nickname"
@@ -140,10 +175,13 @@ export default function JoinPage() {
             onChange={(e) => setNickname(e.target.value)}
             placeholder="2자 이상 입력해주세요"
             disabled={isLoading}
+            invalid={!!error && errorField === 'nickname'}
+            hint="2자 이상 입력해 주세요."
           />
 
           {error && (
             <p
+              id={JOIN_ERROR_ID}
               role="alert"
               style={{
                 fontSize: 'var(--fs-body)',

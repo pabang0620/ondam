@@ -1,18 +1,23 @@
-import { Link, Navigate } from 'react-router-dom'
-import { useLogin } from './useLogin.js'
+import { useState } from 'react'
+import { Link, Navigate, useLocation } from 'react-router-dom'
+import { useLogin, getSafeRedirect } from './useLogin.js'
 import { ROUTES } from '../../constants/routes.js'
 import { useAuthStore } from '../../store/authStore.js'
+import PasswordToggleButton from './PasswordToggleButton.jsx'
 
 export default function LoginPage() {
   const { email, setEmail, password, setPassword, isLoading, error, handleSubmit } = useLogin()
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const isAuthInitialized = useAuthStore((s) => s.isAuthInitialized)
+  const location = useLocation()
+  const [showPassword, setShowPassword] = useState(false)
 
-  // FIX: DEV-27 - 이미 유효한 세션으로 /login에 들어오면 로그인 화면에 갇히지 않고 홈으로.
+  // FIX: DEV-27 - 이미 유효한 세션으로 /login에 들어오면 로그인 화면에 갇히지 않고
+  // 원래 가려던 화면(PrivateRoute가 넘긴 state.from, 없으면 홈)으로.
   // 초기화가 끝나기 전에는 아직 판정할 수 없으므로 로그인 폼을 그대로 보여준다
   // (초기화가 끝나 인증됨으로 밝혀지면 그때 아래에서 리다이렉트된다).
   if (isAuthInitialized && isAuthenticated) {
-    return <Navigate to={ROUTES.HOME} replace />
+    return <Navigate to={getSafeRedirect(location.state?.from)} replace />
   }
 
   return (
@@ -82,9 +87,10 @@ export default function LoginPage() {
           >
             비밀번호
           </label>
+          <div className="relative">
           <input
             id="password"
-            type="password"
+            type={showPassword ? 'text' : 'password'}
             autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -95,7 +101,7 @@ export default function LoginPage() {
             className="w-full outline-none"
             style={{
               height: 'var(--size-input-h)',
-              padding: '0 16px',
+              padding: '0 64px 0 16px',
               fontSize: 'var(--fs-body)',
               border: '1px solid var(--color-border)',
               borderRadius: '10px',
@@ -110,6 +116,12 @@ export default function LoginPage() {
               e.currentTarget.style.borderColor = 'var(--color-border)'
             }}
           />
+          <PasswordToggleButton
+            visible={showPassword}
+            onToggle={() => setShowPassword((v) => !v)}
+            controls="password"
+          />
+          </div>
         </div>
 
         {/* 에러 메시지 */}
@@ -196,7 +208,14 @@ export default function LoginPage() {
         <Link
           to={ROUTES.JOIN}
           className="font-semibold hover:underline"
-          style={{ color: 'var(--color-primary)' }}
+          style={{
+            // 인라인 링크 탭 높이 48px 확보(JoinPage의 로그인 링크와 동일)
+            color: 'var(--color-primary)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            minHeight: 'var(--min-touch-target)',
+            padding: '0 4px',
+          }}
         >
           회원가입
         </Link>

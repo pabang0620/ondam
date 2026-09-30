@@ -1,7 +1,8 @@
-import { Navigate } from 'react-router-dom'
+import { Navigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore.js'
 
 export default function PrivateRoute({ children }) {
+  const location = useLocation()
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const isAuthInitialized = useAuthStore((s) => s.isAuthInitialized)
 
@@ -22,6 +23,7 @@ export default function PrivateRoute({ children }) {
     )
   }
 
-  if (!isAuthenticated) return <Navigate to="/login" replace />
+  // 로그인 후 원래 가려던 화면으로 돌아올 수 있도록 현재 위치를 state로 넘긴다(useLogin 참고)
+  if (!isAuthenticated) return <Navigate to="/login" replace state={{ from: location }} />
   return children
 }

@@ -187,7 +187,8 @@
   --fs-h3: 18px;
   --fs-body-lg: 18px;
   --fs-body: 16px;
-  --fs-caption: 14px;
+  /* FIX: 어르신 UX 하한선(16px) - 캡션도 14px → 16px */
+  --fs-caption: 16px;
   --fs-button: 17px;
 
   /* 기존 변수명 호환 */
@@ -258,10 +259,12 @@
   }
 }
 
-/* 가로 스크롤 완전 차단 */
+/* 가로 스크롤 완전 차단 - hidden은 스크롤 컨테이너를 만들어 position: sticky를
+   깨뜨리므로 clip을 쓴다(미지원 구형 브라우저는 앞줄 hidden으로 폴백). */
 html,
 body {
   overflow-x: hidden;
+  overflow-x: clip;
   max-width: 100vw;
 }
 
@@ -304,9 +307,13 @@ a {
 }
 
 /* 접근성 - 포커스 아웃라인 유지 */
+/* FIX: 골드(#C9A24B) 단일 링은 밝은 배경 대비 약 2.3:1로 부족했다. 어두운 outline
+   (#1D1D1F, 밝은 배경 대비 15:1 이상) + 바깥 흰 링(어두운 배경 대비 15:1 이상)의
+   이중 링으로 어떤 배경에서도 3:1 이상을 보장한다. */
 :focus-visible {
-  outline: 2px solid var(--color-warm-accent);
+  outline: 3px solid #1D1D1F;
   outline-offset: 2px;
+  box-shadow: 0 0 0 7px #FFFFFF;
 }
 
 /* 모바일 폰트 최소 16px 보장 */

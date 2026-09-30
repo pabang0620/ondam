@@ -8,13 +8,14 @@ export default function MainLayout() {
       className="flex flex-col min-h-screen"
       style={{
         backgroundColor: 'var(--color-bg)',
-        overflowX: 'hidden',
+        // hidden은 스크롤 컨테이너를 만들어 하위 position: sticky를 깨뜨린다 - clip은 그렇지 않다
+        overflowX: 'clip',
       }}
     >
       <Header />
       <main
         className="flex-1 w-full"
-        style={{ overflowX: 'hidden' }}
+        style={{ overflowX: 'clip' }}
       >
         <Outlet />
       </main>

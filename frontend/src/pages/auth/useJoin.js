@@ -6,6 +6,8 @@ import { ROUTES } from '../../constants/routes.js'
 import { SIGNUP_CONSENT_ITEMS as CONSENT_ITEMS } from '../../components/consent/consentItems.js'
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+// bcrypt는 72바이트를 넘는 입력을 잘라 쓰므로 입력 자체를 72자로 제한한다
+export const PASSWORD_MAX_LENGTH = 72
 
 // 결정3(2026-08-22): 약관을 게시해도 동의가 선택이면 계약 편입이 다투어질 수
 // 있다는 법무 검토 결과로 terms를 필수 동의로 변경. validateStep2가
@@ -37,10 +39,16 @@ export function useJoin() {
   const setAuth = useAuthStore((s) => s.setAuth)
   const navigate = useNavigate()
 
+  // 어느 입력칸이 잘못됐는지(aria-invalid 표시용). 'email' | 'password' | 'nickname' | null
+  const [errorField, setErrorField] = useState(null)
+
   const validateStep1 = () => {
-    if (!EMAIL_REGEX.test(email)) return '유효한 이메일 주소를 입력해주세요.'
-    if (password.length < 8) return '비밀번호는 8자 이상이어야 합니다.'
-    if (nickname.trim().length < 2) return '닉네임은 2자 이상이어야 합니다.'
+    if (!EMAIL_REGEX.test(email)) return { field: 'email', message: '유효한 이메일 주소를 입력해주세요.' }
+    if (password.length < 8) return { field: 'password', message: '비밀번호는 8자 이상이어야 합니다.' }
+    if (password.length > PASSWORD_MAX_LENGTH) {
+      return { field: 'password', message: `비밀번호는 ${PASSWORD_MAX_LENGTH}자 이하여야 합니다.` }
+    }
+    if (nickname.trim().length < 2) return { field: 'nickname', message: '닉네임은 2자 이상이어야 합니다.' }
     return null
   }
 
@@ -54,9 +62,11 @@ export function useJoin() {
   const handleNextStep = (e) => {
     e.preventDefault()
     setError(null)
+    setErrorField(null)
     const err = validateStep1()
     if (err) {
-      setError(err)
+      setError(err.message)
+      setErrorField(err.field)
       return
     }
     setStep(2)
@@ -121,6 +131,7 @@ export function useJoin() {
     allChecked,
     isLoading,
     error,
+    errorField,
     handleNextStep,
     handleSubmit,
     consentItems: CONSENT_ITEMS,

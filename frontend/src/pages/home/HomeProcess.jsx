@@ -44,7 +44,10 @@ export default function HomeProcess() {
         </h2>
         <p
           className="text-center mb-12 sm:mb-16"
-          style={{ fontSize: 'var(--fs-body-lg)', color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)', wordBreak: 'keep-all' }}
+          style={{
+            // FIX: bg-alt(#E8E8ED) 위 --color-text-secondary(#6E6E73)는 약 4.1:1로 AA 미달.
+            // 이 섹션의 bg-alt 위 텍스트는 --color-primary-soft(#424245, 약 8.2:1)로 올린다.
+            fontSize: 'var(--fs-body-lg)', color: 'var(--color-primary-soft)', lineHeight: 'var(--lh-relaxed)', wordBreak: 'keep-all' }}
         >
           사진 한 장이면 시작할 수 있어요.
           <br />
@@ -205,7 +208,7 @@ export default function HomeProcess() {
                   </h3>
                   <p
                     className="leading-relaxed"
-                    style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', wordBreak: 'keep-all' }}
+                    style={{ fontSize: 'var(--fs-body)', color: 'var(--color-primary-soft)', wordBreak: 'keep-all' }}
                   >
                     {description}
                   </p>
@@ -217,7 +220,7 @@ export default function HomeProcess() {
 
         <p
           className="text-center mt-12 sm:mt-16"
-          style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-text-muted)', wordBreak: 'keep-all' }}
+          style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-primary-soft)', wordBreak: 'keep-all' }}
         >
           실제 제작 예시와 전후 비교는 준비 중입니다.
           <br />

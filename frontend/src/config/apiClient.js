@@ -55,6 +55,12 @@ apiClient.interceptors.request.use((config) => {
 // 이유로 401이 나더라도 side-effect가 있는 요청이 함부로 재시도되지 않는다.
 const PUBLIC_UNAUTH_PATH_PATTERNS = ['/gifts/perform/', '/will/watch/', '/will/release/']
 
+// refresh 실패가 "세션 무효"를 뜻하는지 판정한다(authRefresh.js의 isAuthRejected 참고)
+function isSessionRejected(refreshError) {
+  const status = refreshError?.response?.status
+  return status === 401 || status === 403 || refreshError?.isAuthRejected === true
+}
+
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -79,7 +85,12 @@ apiClient.interceptors.response.use(
         // 에러(error)를 그대로 전달한다 - refreshError로 치환하면 원 요청의 실제
         // 서버 메시지가 "리프레시 토큰이 없습니다" 같은 무관한 문구로 가려진다.
         console.error('[apiClient] 토큰 갱신 실패:', refreshError?.message)
-        useAuthStore.getState().clearUser()
+        // FIX: 네트워크 오류/타임아웃/5xx로 refresh가 실패한 것은 세션이 무효라는 뜻이
+        // 아니다. 이때 clearUser()하면 일시 장애만으로 사용자가 로그아웃된다. 서버가
+        // 세션을 명시적으로 거부한 경우(401/403, 또는 success:false 응답)에만 로그아웃한다.
+        if (isSessionRejected(refreshError)) {
+          useAuthStore.getState().clearUser()
+        }
         return Promise.reject(error)
       }
     }

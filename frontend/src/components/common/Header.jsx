@@ -12,8 +12,9 @@ const NAV_LINKS = [
   { to: ROUTES.GIFT_NEW, label: '선물하기' },
 ]
 
-// 스크롤이 이 값(px)을 넘으면 헤더가 나타난다
-const HEADER_SCROLL_THRESHOLD = 80
+// 헤더 높이(px) - 아래 h-16(64px)과 같은 값. fixed 헤더가 콘텐츠를 가리지 않도록
+// 같은 높이의 spacer를 문서 흐름에 둔다.
+const HEADER_HEIGHT = 64
 
 export default function Header() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
@@ -22,40 +23,15 @@ export default function Header() {
   const location = useLocation()
 
   const [drawerOpen, setDrawerOpen] = useState(false)
-  // 헤더 표시 여부 - 드로어 열림/닫힘과는 별개 상태(최상단에서는 숨김, 스크롤 시 노출)
-  // 홈이 아닌 페이지에서는 항상 true로 취급(일반 sticky 헤더, 숨김 로직 없음)
-  const [headerVisible, setHeaderVisible] = useState(false)
   const drawerRef = useRef(null)
   const hamburgerRef = useRef(null)
 
-  // 홈 화면에서만 "초기 숨김 + 스크롤 시 노출"되는 fixed 헤더를 적용한다.
-  // 그 외 페이지는 문서 흐름 안에서 항상 보이는 sticky 헤더를 유지해야 하므로
-  // 스크롤 위치에 따라 콘텐츠를 덮어버리는 fixed+숨김 로직을 아예 적용하지 않는다.
-  const isHome = location.pathname === ROUTES.HOME
-
-  // 스크롤 위치에 따라 헤더 표시 토글 - requestAnimationFrame으로 쓰로틀링 (홈 전용)
-  useEffect(() => {
-    if (!isHome) {
-      // 홈이 아니면 sticky 헤더가 항상 보여야 하므로 표시 상태를 고정하고
-      // 스크롤 리스너 자체를 등록하지 않는다(불필요한 리스너 방지).
-      setHeaderVisible(true)
-      return
-    }
-
-    setHeaderVisible(window.scrollY > HEADER_SCROLL_THRESHOLD)
-
-    let ticking = false
-    const handleScroll = () => {
-      if (ticking) return
-      ticking = true
-      window.requestAnimationFrame(() => {
-        setHeaderVisible(window.scrollY > HEADER_SCROLL_THRESHOLD)
-        ticking = false
-      })
-    }
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [isHome])
+  // FIX: 첫 화면 조작 요소 부재 - 예전 홈은 스크롤 80px 전까지 헤더를
+  // translateY(-100%)로 숨겨, 첫 화면에 로고·로그인·메뉴가 하나도 없었고 숨은
+  // 헤더 안 링크에도 Tab 포커스가 들어갔다. 이제 모든 페이지에서 헤더를 항상
+  // 보이게 한다(숨김 상태 자체가 없으므로 숨은 요소로 포커스가 갈 일도 없다).
+  // position은 fixed + spacer를 쓴다: MainLayout 래퍼의 overflow-x: hidden이
+  // 스크롤 컨테이너를 만들어 sticky가 동작하지 않기 때문이다.
 
   // 페이지 이동 시 drawer 닫기
   useEffect(() => {
@@ -145,7 +121,7 @@ export default function Header() {
     <>
       <header
         style={{
-          position: isHome ? 'fixed' : 'sticky',
+          position: 'fixed',
           top: 0,
           left: 0,
           right: 0,
@@ -153,12 +129,6 @@ export default function Header() {
           backgroundColor: 'var(--color-bg)',
           borderBottom: '1px solid var(--color-border)',
           paddingTop: 'env(safe-area-inset-top, 0px)',
-          // 홈: 스크롤 전 숨김 -> HEADER_SCROLL_THRESHOLD 초과 시 노출
-          // 그 외 페이지: 항상 제자리(translateY(0))인 일반 sticky 헤더
-          transform: isHome && !headerVisible ? 'translateY(-100%)' : 'translateY(0)',
-          transition: isHome ? 'transform 0.25s ease' : 'none',
-          // 홈에서 떠 있는 상태일 때만 그림자를 주고, 그 외에는 기존처럼 borderBottom만 사용
-          boxShadow: isHome && headerVisible ? '0 2px 8px rgba(42, 40, 38, 0.08)' : 'none',
         }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
@@ -350,6 +320,8 @@ export default function Header() {
           </div>
         </div>
       </header>
+      {/* fixed 헤더 높이만큼 문서 흐름을 밀어주는 spacer (body의 safe-area padding은 별도) */}
+      <div aria-hidden="true" style={{ height: HEADER_HEIGHT, flexShrink: 0 }} />
 
       {/* 모바일 Drawer - drawerOpen=false 시 DOM에서 완전 제거 (스크린리더 노출 방지) */}
       {drawerOpen && (

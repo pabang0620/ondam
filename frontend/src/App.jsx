@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom'
 import { useAuthStore } from './store/authStore.js'
 import BrandLoader from './components/common/BrandLoader.jsx'
 
@@ -135,7 +135,6 @@ export default function App() {
             <Route path={ROUTES.PET_PORTRAIT} element={<PetPortraitPage />} />
 
             <Route path={ROUTES.MY} element={<MyPage />} />
-            <Route path="/my/edit" element={<MyPage />} />
 
             {/* 선물하기 (SPEC-01 DEV-10) - 구매(자녀)는 인증 필요 */}
             <Route path={ROUTES.GIFT_NEW} element={<GiftNewPage />} />
@@ -182,6 +181,22 @@ export default function App() {
               >
                 <p style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 700 }}>404</p>
                 <p style={{ fontSize: 'var(--font-size-lg)' }}>페이지를 찾을 수 없습니다</p>
+                {/* FIX: 404에서 빠져나갈 조작 요소가 없었다 - 홈으로 가는 버튼(56px) */}
+                <Link
+                  to={ROUTES.HOME}
+                  className="flex items-center justify-center font-semibold"
+                  style={{
+                    minHeight: 'var(--size-button-h)',
+                    padding: '0 32px',
+                    marginTop: 'var(--spacing-md)',
+                    fontSize: 'var(--fs-button)',
+                    backgroundColor: 'var(--color-primary)',
+                    color: 'var(--color-text-on-dark)',
+                    borderRadius: 'var(--radius-pill)',
+                  }}
+                >
+                  홈으로 가기
+                </Link>
               </div>
             }
           />

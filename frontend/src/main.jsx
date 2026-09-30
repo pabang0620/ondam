@@ -10,8 +10,10 @@ import App from './App.jsx'
 // [DESIGN-PREVIEW] 서비스워커 등록/활성화가 지연되거나 끝나지 않는 경우
 // 앱 전체가 무한정 빈 화면으로 남는 것을 막기 위해 4초 타임아웃을 둔다.
 // worker.start()가 타임아웃되거나 reject되어도 렌더링은 항상 진행되어야 한다.
+// FIX: dev 서버에서 항상 MSW가 켜지면 실제 백엔드로 개발할 때도 요청이 목으로 가로채여
+// 혼란을 준다. VITE_USE_MSW=true를 명시했을 때만(디자인 미리보기용) 켠다.
 async function enableMocking() {
-  if (!import.meta.env.DEV) return
+  if (!(import.meta.env.DEV && import.meta.env.VITE_USE_MSW === 'true')) return
   try {
     const { worker } = await import('./mocks/browser.js')
     const MOCK_START_TIMEOUT_MS = 4000

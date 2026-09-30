@@ -1,4 +1,6 @@
+import { Link } from 'react-router-dom'
 import { CheckCircle2, Cloud, Sparkles } from 'lucide-react'
+import { ROUTES } from '../../constants/routes.js'
 
 /*
  * 히어로 비주얼 - Behance "FRESHCODE App Renewal" 레퍼런스의 구성(강한 배경 위
@@ -124,12 +126,13 @@ function PhoneMockup({ widthClass, translate, rotate, rotateX, rotateY, zIndex, 
               transform: 'translateX(-50%)',
               padding: '4px 10px',
               borderRadius: 'var(--radius-pill)',
-              backgroundColor: labelTone === 'before' ? 'rgba(0,0,0,0.6)' : 'var(--home-color-secondary)',
+              backgroundColor: labelTone === 'before' ? 'rgba(0,0,0,0.72)' : 'var(--home-color-secondary)',
               color: labelTone === 'before' ? '#FFFFFF' : 'var(--color-text-primary)',
-              fontSize: '11px',
+              // FIX: 11px → 16px(어르신 UX 하한선)
+              fontSize: 'var(--fs-body)',
             }}
           >
-            {LabelIcon ? <LabelIcon size={11} aria-hidden="true" /> : null}
+            {LabelIcon ? <LabelIcon size={16} aria-hidden="true" /> : null}
             {label}
           </div>
         </div>
@@ -241,7 +244,7 @@ export default function HomeHero() {
                 letterSpacing: '0.02em',
               }}
             >
-              <Sparkles size={14} aria-hidden="true" />
+              <Sparkles size={16} aria-hidden="true" />
               AI 기억 플랫폼
             </span>
 
@@ -277,6 +280,48 @@ export default function HomeHero() {
               <br className="hidden sm:block" />
               반려동물과의 순간을 오래 간직하세요.
             </p>
+
+            {/* FIX: 히어로 CTA 회귀 - ad1219c 리디자인에서 첫 화면의 주/부 CTA 2개가
+                빠져 첫 화면에서 바로 시작할 방법이 없었다. 베이지 톤에 맞춰 복원한다.
+                - 주 CTA: 다크(#1D1D1F) 배경 + 밝은 글자(#F5F5F7) → 약 16:1
+                - 부 CTA: 흰 배경 + 다크 글자(#1D1D1F) → 약 17:1, 세피아 테두리로 윤곽 확보
+                높이 --size-button-h(56px), 글자 --fs-button(17px). */}
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start items-center" style={{ marginTop: 32 }}>
+              <Link
+                to={ROUTES.PHOTO}
+                className="flex items-center justify-center font-bold transition-opacity hover:opacity-90"
+                style={{
+                  minHeight: 'var(--size-button-h)',
+                  width: '100%',
+                  maxWidth: '300px',
+                  padding: '0 28px',
+                  fontSize: 'var(--fs-button)',
+                  backgroundColor: 'var(--color-primary)',
+                  color: 'var(--color-text-on-dark)',
+                  borderRadius: 'var(--radius-pill)',
+                  boxShadow: '0 10px 24px rgba(120, 90, 50, 0.22)',
+                }}
+              >
+                사진 복원 시작 · 9,900원
+              </Link>
+              <Link
+                to={ROUTES.WILL}
+                className="flex items-center justify-center font-bold transition-opacity hover:opacity-90"
+                style={{
+                  minHeight: 'var(--size-button-h)',
+                  width: '100%',
+                  maxWidth: '300px',
+                  padding: '0 28px',
+                  fontSize: 'var(--fs-button)',
+                  backgroundColor: 'var(--home-color-secondary)',
+                  color: 'var(--color-text-primary)',
+                  borderRadius: 'var(--radius-pill)',
+                  border: '1.5px solid rgba(120, 90, 50, 0.35)',
+                }}
+              >
+                영상 편지 알아보기
+              </Link>
+            </div>
           </div>
 
           {/* 폰 목업 스테이지 - 모바일/태블릿: 아래(order-2), 데스크톱: 왼쪽
