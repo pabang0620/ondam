@@ -1,7 +1,7 @@
 import crypto from 'crypto'
 import { v4 as uuidv4 } from 'uuid'
 import * as repo from './willRepository.js'
-import { encryptString, decryptBuffer, encryptStringEnvelope, decryptStringEnvelope, KMS_KEY_ID_MISSING_CODE } from '../../utils/kms.js'
+import { encryptString, decryptBuffer, encryptStringEnvelope, decryptStringEnvelope, KMS_KEY_ID_MISSING_CODE, toKmsCipherBuffer } from '../../utils/kms.js'
 import { getPresignedUrl, getPresignedDownloadUrl, extractS3KeyFromUrl } from '../../utils/s3.js'
 import { voiceCloneQueue, videoGenerateQueue, notificationQueue } from '../../jobs/queue.js'
 import pool from '../../config/db.js'
@@ -350,10 +350,16 @@ export const createWill = async (
   if (String(sample.user_id) !== String(userId)) {
     throw Object.assign(new Error('음성 샘플 접근 권한이 없습니다'), { status: 403 })
   }
+  if (sample.clone_status === 'failed') {
+    throw Object.assign(
+      new Error('목소리 분석에 실패했습니다. 다시 녹음해 주세요.'),
+      { status: 400, code: 'VOICE_FAILED' },
+    )
+  }
   if (sample.clone_status !== 'ready') {
     throw Object.assign(
-      new Error('음성 클론이 아직 완료되지 않았습니다. clone_status가 ready일 때 영상 편지를 생성하세요.'),
-      { status: 400 },
+      new Error('목소리 준비가 아직 끝나지 않았습니다. 잠시 후 다시 시도해 주세요.'),
+      { status: 400, code: 'VOICE_NOT_READY' },
     )
   }
 
@@ -393,7 +399,8 @@ export const createWill = async (
     beneficiariesData,
   )
 
-  return { willId }
+  // 프론트 호환 - camelCase/snake_case 둘 다 제공
+  return { willId, will_id: willId }
 }
 
 /**
@@ -587,7 +594,7 @@ export const activateWill = async (userId, willId) => {
     // status 확정 - 'paid' → 'active'. 이 UPDATE 자체가 동시 요청에 대한 선점
     // (claim) 역할을 한다(위 함수 주석 참고).
     await conn.execute(
-      'UPDATE wills SET status = ?, updated_at = NOW() WHERE will_id = ?',
+      'UPDATE wills SET status = ?, updated_at = NOW() WHERE will_id = ? AND deleted_at IS NULL',
       ['active', willId],
     )
     await repo.addWillStatusLog({
@@ -632,7 +639,7 @@ export const activateWill = async (userId, willId) => {
     // "영영 처리되지 않는 유언장"이 된다. 아직 벤더 비용이 발생하지 않은 시점이므로
     // status를 'paid'로 되돌려 사용자가 안전하게 재시도할 수 있게 한다.
     await pool.execute(
-      "UPDATE wills SET status = 'paid', updated_at = NOW() WHERE will_id = ? AND status = 'active'",
+      "UPDATE wills SET status = 'paid', updated_at = NOW() WHERE will_id = ? AND status = 'active' AND deleted_at IS NULL",
       [willId],
     ).catch((compErr) => {
       console.error(
@@ -828,7 +835,8 @@ const issueWatchVideoUrl = async (beneficiary, will) => {
   await repo.recordWatch(beneficiary.beneficiary_id)
 
   // KMS 복호화 → S3 키 복원
-  const s3Key = await decryptBuffer(Buffer.from(will.result_video_s3_key_encrypted))
+  // 과거 videoWorker가 base64 문자열로 저장한 행도 복호화되도록 정규화한다
+  const s3Key = await decryptBuffer(toKmsCipherBuffer(will.result_video_s3_key_encrypted))
   const videoUrl = await getPresignedUrl(s3Key, WATCH_URL_EXPIRES)
 
   // SPEC-05 2절 4번(원본 다운로드 제공, 워터마크 없음) - 재생용과 동일한 s3Key·동일한

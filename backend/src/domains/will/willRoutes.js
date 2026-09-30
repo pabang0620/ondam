@@ -48,8 +48,8 @@ const watchLimiter = rateLimit({
 const uploadVoiceSampleSchema = z.object({
   body: z.object({
     s3Key: z.string().min(1, 'S3 키를 입력하세요'),
-    durationSec: z.coerce.number().positive().max(30, '음성 녹음은 30초 이하여야 합니다').optional(),
-    fileSize: z.coerce.number().positive().max(10 * 1024 * 1024, '음성 파일은 10MB 이하여야 합니다').optional(),
+    durationSec: z.coerce.number().min(10, '음성은 10초 이상 녹음해 주세요').max(300, '음성 녹음은 5분 이하여야 합니다').optional(),
+    fileSize: z.coerce.number().positive().max(30 * 1024 * 1024, '음성 파일은 30MB 이하여야 합니다').optional(),
   }),
 })
 

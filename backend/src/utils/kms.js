@@ -132,6 +132,26 @@ export const decryptString = async (encryptedValue, _kmsKeyId) => {
   return decryptBuffer(cipherBlob)
 }
 
+/**
+ * DB BLOB/VARBINARY에서 읽은 KMS 암호문을 decryptBuffer에 넘길 Buffer로 정규화한다.
+ * [버그 수정] videoWorker가 과거에 wills.result_video_s3_key_encrypted에 암호문 Buffer
+ * 대신 base64 문자열(ASCII 바이트)을 저장해, 읽는 쪽에서 그 ASCII 바이트를 그대로
+ * KMS Decrypt에 넘겨 복호화가 실패했다. 신규 데이터는 Buffer 원본으로 저장하고,
+ * 과거 데이터(내용이 순수 base64 ASCII)는 여기서 디코드해 호환한다. 실제 KMS
+ * 암호문은 첫 바이트가 0x01 등 비ASCII 제어 바이트라 base64 문자 집합과 겹치지 않는다.
+ * @param {Buffer|Uint8Array|string} value
+ * @returns {Buffer}
+ */
+const BASE64_ASCII_PATTERN = /^[A-Za-z0-9+/]+={0,2}$/
+
+export const toKmsCipherBuffer = (value) => {
+  const buf = Buffer.isBuffer(value) ? value : Buffer.from(value)
+  if (buf.length === 0 || buf.length % 4 !== 0) return buf
+  const ascii = buf.toString('latin1')
+  if (!BASE64_ASCII_PATTERN.test(ascii)) return buf
+  return Buffer.from(ascii, 'base64')
+}
+
 // ─── 봉투 암호화 (envelope encryption) ────────────────────────────────────────
 // AWS KMS의 Encrypt/Decrypt API(위 encryptString/decryptBuffer)는 평문 4,096바이트
 // 제한이 있다. 유언 텍스트는 zod에서 최대 5,000자를 허용하는데 한글은 UTF-8로

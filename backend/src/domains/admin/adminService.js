@@ -82,6 +82,13 @@ const RELEASE_EMAIL_SUBJECT = '리멤버미 - 소중한 분이 남긴 영상이 
 const buildReleaseMessage = (recipientName) =>
   `${recipientName ? recipientName + '님, ' : ''}소중한 분이 남긴 영상이 도착했습니다. 마음의 준비가 되실 때 열어보세요.`
 
+// [버그 수정] 공개 승인 알림에 열람 링크가 없어 유가족이 영상에 접근할 방법이 없었다.
+// 프론트 라우트 ROUTES.WILL_WATCH('/watch/:token')와 willService의 invite_token 기반
+// 열람 흐름(getWatchInfo → verifyWatchAccess)을 그대로 쓴다 - 연장 재발급 안내
+// (willService.requestWatchLinkExtension)와 같은 URL 형식.
+const buildWatchUrl = (inviteToken) =>
+  `${process.env.CLIENT_URL || 'http://localhost:5173'}/watch/${inviteToken}`
+
 // ─── 관리자 로그인 ────────────────────────────────────────────────────────────
 
 export const login = async (email, password) => {
@@ -327,6 +334,13 @@ export const approveRelease = async (adminId, requestId, { ipAddress, userAgent 
     const recipientEmail = beneficiary.email ?? beneficiary.beneficiary_email
     const recipientPhone = beneficiary.phone ?? beneficiary.beneficiary_phone
     const message = buildReleaseMessage(beneficiary.name)
+    // invite_token은 이메일/SMS 본문에만 싣는다(in-app 알림·로그에는 넣지 않음)
+    const watchUrl = beneficiary.invite_token ? buildWatchUrl(beneficiary.invite_token) : null
+    if (!watchUrl) {
+      console.error(
+        `[adminService] invite_token 없음 - 열람 링크 없이 발송 beneficiaryId=${beneficiary.beneficiary_id}`,
+      )
+    }
 
     try {
       if (recipientEmail) {
@@ -334,7 +348,7 @@ export const approveRelease = async (adminId, requestId, { ipAddress, userAgent 
           type: 'email',
           to: recipientEmail,
           subject: RELEASE_EMAIL_SUBJECT,
-          message,
+          message: watchUrl ? `${message}\n${watchUrl}` : message,
           beneficiaryId: beneficiary.beneficiary_id,
         })
       }
@@ -342,7 +356,7 @@ export const approveRelease = async (adminId, requestId, { ipAddress, userAgent 
         await notificationQueue.add('release_approved', {
           type: 'sms',
           to: recipientPhone,
-          message,
+          message: watchUrl ? `${message} ${watchUrl}` : message,
           beneficiaryId: beneficiary.beneficiary_id,
         })
       }

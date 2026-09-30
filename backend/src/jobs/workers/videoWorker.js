@@ -11,9 +11,11 @@ import { pollUntilComplete, assertAllowedHost } from '../../services/lipsync/pol
 import * as paymentService from '../../domains/payment/paymentService.js'
 import * as willRepository from '../../domains/will/willRepository.js'
 import { refundGiftFallback } from '../../domains/gift/giftShared.js'
+import { isLocalDevEnvironment } from '../../utils/env.js'
 
 const QUEUE_NAME = 'videoGenerate'
-const AI_MOCK = process.env.AI_MOCK === 'true'
+// mock은 로컬 개발(NODE_ENV=development)에서만 허용 - 스테이징 등에서 AI_MOCK이 켜져도 실제 경로로 간다
+const AI_MOCK = process.env.AI_MOCK === 'true' && isLocalDevEnvironment()
 
 // ─── DB 헬퍼 ─────────────────────────────────────────────────────────────────
 
@@ -223,7 +225,8 @@ const processVideoGenerate = async (jobData, bullmqJobId) => {
     const mockVideoKey = `wills/${userId}/${willId}/video_result_${Date.now()}.mp4`
     // mock: 실제 KMS 암호화 사용 - getWatchUrl의 decryptBuffer와 호환성 보장
     const { encrypted, kmsKeyId } = await encryptString(mockVideoKey)
-    resultVideoS3KeyEncrypted = encrypted.toString('base64')
+    // VARBINARY 컬럼이므로 암호문 Buffer 원본 그대로 저장 (base64 문자열 저장 시 복호화 실패)
+    resultVideoS3KeyEncrypted = encrypted
     resultVideoKmsKeyId = kmsKeyId
   } else {
     // 사진 S3 다운로드
@@ -309,7 +312,8 @@ const processVideoGenerate = async (jobData, bullmqJobId) => {
 
     // KMS로 S3 키 암호화
     const { encrypted, kmsKeyId } = await encryptString(videoS3Key)
-    resultVideoS3KeyEncrypted = encrypted.toString('base64')
+    // VARBINARY 컬럼이므로 암호문 Buffer 원본 그대로 저장 (base64 문자열 저장 시 복호화 실패)
+    resultVideoS3KeyEncrypted = encrypted
     resultVideoKmsKeyId = kmsKeyId
   }
 

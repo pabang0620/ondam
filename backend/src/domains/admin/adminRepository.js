@@ -24,7 +24,7 @@ export const findAdminById = async (adminId) => {
 
 export const updateLastLogin = async (adminId) => {
   await pool.query(
-    `UPDATE admin_users SET last_login_at = NOW() WHERE admin_id = ?`,
+    `UPDATE admin_users SET last_login_at = NOW() WHERE admin_id = ? AND deleted_at IS NULL`,
     [adminId],
   )
 }
@@ -190,7 +190,7 @@ export const updateReleaseRequest = async (
   values.push(requestId)
 
   await pool.query(
-    `UPDATE will_release_requests SET ${setClauses}, updated_at = NOW() WHERE request_id = ?`,
+    `UPDATE will_release_requests SET ${setClauses}, updated_at = NOW() WHERE request_id = ? AND deleted_at IS NULL`,
     values,
   )
 }
@@ -200,7 +200,7 @@ export const updateReleaseRequest = async (
 export const updateWillReleaseStatus = async (willId, releaseStatus) => {
   const releasedAt = releaseStatus === 'released' ? ', released_at = NOW()' : ''
   await pool.query(
-    `UPDATE wills SET release_status = ?, updated_at = NOW() ${releasedAt} WHERE will_id = ?`,
+    `UPDATE wills SET release_status = ?, updated_at = NOW() ${releasedAt} WHERE will_id = ? AND deleted_at IS NULL`,
     [releaseStatus, willId],
   )
 }
@@ -223,9 +223,10 @@ export const findBeneficiaryById = async (beneficiaryId) => {
 export const findWillBeneficiaries = async (willId) => {
   const [rows] = await pool.query(
     `SELECT wb.beneficiary_id, wb.name, wb.email AS beneficiary_email, wb.phone AS beneficiary_phone,
+            wb.invite_token,
             u.user_id, u.email, u.nickname, u.phone
      FROM will_beneficiaries wb
-     LEFT JOIN users u ON u.user_id = wb.user_id
+     LEFT JOIN users u ON u.user_id = wb.user_id AND u.deleted_at IS NULL
      WHERE wb.will_id = ? AND wb.deleted_at IS NULL`,
     [willId],
   )

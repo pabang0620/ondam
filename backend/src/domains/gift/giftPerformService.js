@@ -223,7 +223,7 @@ export const linkAccount = async (token, { mode, email, password, nickname, cons
   // 이미 다른 계정으로 연결된 선물에 다른 계정을 또 연결하려는 시도만 막는다
   // (같은 계정으로 재로그인/새로고침 재시도는 멱등하게 통과)
   if (gift.recipient_user_id && gift.recipient_user_id !== recipientUserId) {
-    throw Object.assign(new Error('이미 다른 계정과 연결된 선물입니다'), { status: 403 })
+    throw Object.assign(new Error('이미 다른 계정과 연결된 선물입니다'), { status: 403, code: 'GIFT_RECIPIENT_MISMATCH' })
   }
   if (!gift.recipient_user_id) {
     await giftRepository.updateRecipientUserId(gift.gift_id, recipientUserId)
@@ -291,7 +291,7 @@ export const attachPhotoOrder = async (recipientUserId, giftId, orderId) => {
   const gift = await giftRepository.findByGiftId(giftId)
   if (!gift) throw Object.assign(new Error('선물 주문을 찾을 수 없습니다'), { status: 404 })
   if (gift.recipient_user_id !== recipientUserId) {
-    throw Object.assign(new Error('접근 권한이 없습니다'), { status: 403 })
+    throw Object.assign(new Error('선물을 받은 분의 계정으로만 진행할 수 있어요'), { status: 403, code: 'GIFT_RECIPIENT_MISMATCH' })
   }
   if (gift.product_type !== 'photo') {
     throw Object.assign(new Error('사진관 선물이 아닙니다'), { status: 400 })
@@ -344,7 +344,7 @@ export const attachWillOrder = async (recipientUserId, giftId, willId) => {
   const gift = await giftRepository.findByGiftId(giftId)
   if (!gift) throw Object.assign(new Error('선물 주문을 찾을 수 없습니다'), { status: 404 })
   if (gift.recipient_user_id !== recipientUserId) {
-    throw Object.assign(new Error('접근 권한이 없습니다'), { status: 403 })
+    throw Object.assign(new Error('선물을 받은 분의 계정으로만 진행할 수 있어요'), { status: 403, code: 'GIFT_RECIPIENT_MISMATCH' })
   }
   if (gift.product_type !== 'will') {
     throw Object.assign(new Error('영상 편지 선물이 아닙니다'), { status: 400 })
@@ -402,7 +402,7 @@ export const completeGift = async (recipientUserId, giftId, { orderId, willId } 
   const gift = await giftRepository.findByGiftId(giftId)
   if (!gift) throw Object.assign(new Error('선물 주문을 찾을 수 없습니다'), { status: 404 })
   if (gift.recipient_user_id !== recipientUserId) {
-    throw Object.assign(new Error('접근 권한이 없습니다'), { status: 403 })
+    throw Object.assign(new Error('선물을 받은 분의 계정으로만 진행할 수 있어요'), { status: 403, code: 'GIFT_RECIPIENT_MISMATCH' })
   }
   if (gift.status === 'completed') {
     return { giftId, status: 'completed', idempotent: true }
