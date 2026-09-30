@@ -125,7 +125,7 @@ export const subscribe = async (userId, { plan, authKey, customerKey }) => {
 
   const planInfo = PLANS[plan]
   const amount = planInfo.price
-  const orderName = `리멤버미 ${planInfo.name} 정기구독`
+  const orderName = `온담 ${planInfo.name} 정기구독`
   const billingCycleDate = todayKST()
 
   // [B-1 수정] 정기결제(reserveBillingAttempt)와 동일하게 pending 로그를 먼저
@@ -580,7 +580,7 @@ export const retryPayment = async (userId, subscriptionId) => {
   const customerEmail = userRow?.email ?? ''
 
   const planInfo = PLANS[subscription.plan]
-  const orderName = `리멤버미 ${planInfo?.name ?? subscription.plan} 정기구독`
+  const orderName = `온담 ${planInfo?.name ?? subscription.plan} 정기구독`
 
   const result = await runBilling({
     subscriptionId,

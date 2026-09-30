@@ -107,7 +107,7 @@ export const resendLink = async (giverUserId, giftId) => {
     .add('gift_resend', {
       type: 'sms',
       to: gift.recipient_phone,
-      message: `[리멤버미] ${gift.recipient_name}님께 보내는 선물 링크가 다시 발송됐어요. ${link}`,
+      message: `[온담] ${gift.recipient_name}님께 보내는 선물 링크가 다시 발송됐어요. ${link}`,
     })
     .catch((e) => console.error('[giftService] resendLink SMS 큐 등록 실패:', giftId, e.message))
 
