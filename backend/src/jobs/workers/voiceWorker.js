@@ -7,9 +7,10 @@ import { decryptBuffer } from '../../utils/kms.js'
 import { downloadFromS3 } from '../../utils/s3.js'
 import { getIo } from '../../config/socket.js'
 import * as willRepository from '../../domains/will/willRepository.js'
+import { isLocalDevEnvironment } from '../../utils/env.js'
 
 const QUEUE_NAME = 'voiceClone'
-const AI_MOCK = process.env.AI_MOCK === 'true'
+const AI_MOCK = (process.env.AI_MOCK === 'true' && isLocalDevEnvironment())
 
 // ─── DB 헬퍼 ─────────────────────────────────────────────────────────────────
 

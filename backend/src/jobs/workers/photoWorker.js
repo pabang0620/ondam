@@ -9,9 +9,10 @@ import { buildResultSet } from '../../domains/photo/photoResultSet.js'
 import * as paymentService from '../../domains/payment/paymentService.js'
 import { refundGiftFallback } from '../../domains/gift/giftShared.js'
 import * as photoRepository from '../../domains/photo/photoRepository.js'
+import { isLocalDevEnvironment } from '../../utils/env.js'
 
 const QUEUE_NAME = 'photo'
-const AI_MOCK = process.env.AI_MOCK === 'true'
+const AI_MOCK = (process.env.AI_MOCK === 'true' && isLocalDevEnvironment())
 // 세트(4종) 결과물당 실패 시 자동 재시도 횟수 (SPEC-02 2절 "실패 항목은 재시도").
 // BullMQ 잡 레벨 attempts(queue.js defaultJobOptions, 현재 3)와는 별개다 - 잡 레벨
 // 재시도는 세트 전체를 처음부터 다시 돌려 이미 성공한 항목까지 낭비하므로, 항목

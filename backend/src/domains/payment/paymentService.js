@@ -12,6 +12,7 @@ import * as giftRepository from '../gift/giftRepository.js'
 import pool from '../../config/db.js'
 import { pick, pickAll } from '../../utils/dto.js'
 import { toSafeFailureMessage } from '../../utils/failureMessages.js'
+import { isLocalDevEnvironment } from '../../utils/env.js'
 
 // ─── 응답 화이트리스트 (결함2 수정 - 민감 필드 노출 방지) ───────────────────────
 // [보안 수정] payments 행을 그대로(스프레드 없이도 findPaymentById 등이 이미
@@ -261,6 +262,10 @@ export const confirmPayment = async (userId, { paymentKey, orderId, amount }) =>
     if (existingByKey.user_id !== userId) {
       throw Object.assign(new Error('접근 권한이 없습니다'), { status: 403 })
     }
+    // [결함2 수정] 이미 done인 결제 - 토스 호출 없이 현재 결과를 멱등 반환한다.
+    // _updateTargetStatus는 이제 결제 대기 상태(pending_payment/draft)에서만 전이하는
+    // 조건부 UPDATE라, 이미 처리 중/완료/공개된 대상은 절대 되돌리지 않는다(no-op).
+    // 웹훅 등으로 payment만 done이 되고 대상이 결제 대기로 남은 불일치만 치유된다.
     await _updateTargetStatus(existingByKey.target_type, existingByKey.target_id, existingByKey.payment_id)
     return { success: true, payment: toPaymentDto(existingByKey), idempotent: true }
   }
@@ -315,7 +320,7 @@ export const confirmPayment = async (userId, { paymentKey, orderId, amount }) =>
         // CLAIM_STALE_MS 이상 지난 선점은 크래시로 방치된 것으로 보고 재선점을 허용한다.
       }
 
-      if (process.env.PAYMENT_MOCK === 'true') {
+      if (process.env.PAYMENT_MOCK === 'true' && isLocalDevEnvironment()) {
         // PAYMENT_MOCK=true 환경에서는 토스 API 호출 생략하고 락을 쥔 채로 바로 완료
         // 처리한다(외부 호출이 없으므로 락을 오래 쥐는 문제가 없다).
         await conn1.execute(
@@ -360,6 +365,7 @@ export const confirmPayment = async (userId, { paymentKey, orderId, amount }) =>
   }
 
   if (claim.kind === 'done') {
+    // [결함2 수정] 위 빠른 경로와 동일 - 조건부 전이라 처리 중/완료 대상은 건드리지 않는다
     await _updateTargetStatus(claim.payment.target_type, claim.payment.target_id, claim.payment.payment_id)
     return { success: true, payment: toPaymentDto(claim.payment), idempotent: true }
   }
@@ -469,6 +475,54 @@ export const confirmPayment = async (userId, { paymentKey, orderId, amount }) =>
   return { success: true, payment: toPaymentDto(updatedPayment) }
 }
 
+const REFUND_NOT_ALLOWED_MESSAGE =
+  '이미 제작이 시작되었거나 완료된 주문은 직접 환불할 수 없습니다. 고객센터로 문의해 주세요.'
+const refundNotAllowed = () =>
+  Object.assign(new Error(REFUND_NOT_ALLOWED_MESSAGE), { status: 400, code: 'REFUND_NOT_ALLOWED' })
+
+// 선물 셀프 환불 허용 상태 - giftService.cancelGift의 REFUNDABLE_GIFT_STATUSES(D3)와 동일
+const SELF_REFUNDABLE_GIFT_STATUSES = ['link_sent', 'expired']
+
+/**
+ * [결함1 수정] 사용자 셀프 환불(cancelPayment) 허용 여부를 대상 테이블 기준으로 판정한다.
+ * 근거: docs/specs/SPEC-02-refund-failure.md 1절 표(:10-13)·"처리 착수" 정의(:15),
+ * 약관 제26조(TERMS_OF_SERVICE.draft.md:348 - 환불은 SPEC-02 규정에 따름).
+ *   - photo_order: 'paid'(결제 완료·startProcessing 전)만 허용. 'processing'은 BullMQ
+ *     투입 이후라 착수 전/후를 대상 상태만으로 구분할 수 없어 셀프 환불 대상에서 뺀다
+ *     (경계 사례는 SPEC-02 :16에 따라 관리자 재량 환불로 처리).
+ *   - will_order: 'paid'(activateWill 전)만 허용. active/released는 생성 착수·완료 후.
+ *   - subscription: SPEC-02 :13 "콘텐츠 미사용 시 당월 전액"은 사용 여부 판정이 필요하고
+ *     구독 해지와 묶여야 하므로 셀프 환불 불가(고객센터 처리).
+ *   - gift_order: cancelGift의 D3 가드와 동일(link_sent/expired + 제작 미연결).
+ * AI 실패 자동 환불(refundForAiFailure)은 이 함수를 거치지 않는다.
+ */
+const _assertSelfRefundable = async (targetType, targetId) => {
+  if (targetType === 'photo_order') {
+    const order = await photoRepository.findOrderById(targetId)
+    if (!order || order.status !== 'paid') throw refundNotAllowed()
+    return
+  }
+  if (targetType === 'will_order') {
+    const will = await willRepository.findWillById(targetId)
+    if (!will || will.status !== 'paid') throw refundNotAllowed()
+    return
+  }
+  if (targetType === 'gift_order') {
+    const gift = await giftRepository.findByGiftId(targetId)
+    if (
+      !gift ||
+      !SELF_REFUNDABLE_GIFT_STATUSES.includes(gift.status) ||
+      gift.photo_order_id ||
+      gift.will_id
+    ) {
+      throw refundNotAllowed()
+    }
+    return
+  }
+  // subscription 및 알 수 없는 유형은 셀프 환불 불가
+  throw refundNotAllowed()
+}
+
 /**
  * 결제 취소 (토스페이먼츠 cancel API 호출)
  *
@@ -487,7 +541,12 @@ export const cancelPayment = async (userId, paymentId, { cancelReason }) => {
     throw Object.assign(new Error('완료된 결제만 취소할 수 있습니다'), { status: 400 })
   }
 
-  if (process.env.PAYMENT_MOCK !== 'true') {
+  // [결함1 수정 - 셀프 환불 과다] 대상 상태를 확인하지 않아 결과물을 이미 받은 사진
+  // (completed), 생성·공개된 영상 편지(active/released), 구독 결제까지 전액 셀프 환불이
+  // 가능했다. 토스 호출 전에 대상 테이블을 직접 조회해 "처리 착수 전"만 허용한다.
+  await _assertSelfRefundable(payment.target_type, payment.target_id)
+
+  if (!(process.env.PAYMENT_MOCK === 'true' && isLocalDevEnvironment())) {
     // 토스페이먼츠 취소 API 호출
     let tossResponse
     try {
@@ -570,7 +629,7 @@ export const refundForAiFailure = async (targetType, targetId, { reason }) => {
 
   // [D4] confirmPayment/cancelPayment와 동일한 조건·동일한 방식의 PAYMENT_MOCK 분기.
   // **PAYMENT_MOCK=true는 로컬 전용이다 - 프로덕션에서 켜지면 절대 안 된다.**
-  if (process.env.PAYMENT_MOCK !== 'true') {
+  if (!(process.env.PAYMENT_MOCK === 'true' && isLocalDevEnvironment())) {
     // ── 토스페이먼츠 취소 API 호출 (cancelPayment와 동일한 엔드포인트 재사용) ──
     let tossResponse
     try {
@@ -752,18 +811,31 @@ export const handleWebhook = async (signature, rawBody, payload) => {
  * @param {string} paymentId - gift_order 분기에서 gift_orders.payment_id에 채워 넣을 값
  * @param {object} [conn] - 트랜잭션 커넥션 (없으면 pool 직접 사용)
  */
+// [결함2 수정 - confirm 재진입] 이전에는 WHERE절에 현재 상태 조건이 없어, 이미 결제 완료
+// 후 processing/completed(사진)·active/released(영상 편지)로 진행된 대상에 confirm이 다시
+// 들어오면(결제 성공 페이지 새로고침 → 멱등 경로) status가 'paid'로 되돌아갔다. 그러면
+// 성공 페이지가 이어서 호출하는 startProcessing/activateWill의 status==='paid' 게이트를
+// 다시 통과해 AI job이 재투입됐다. 이제 결제 대기 상태(shared/constants/enums.js:
+// PHOTO_ORDER_STATUS 'pending_payment', WILL_STATUS 'draft')에서만 전이하는 조건부
+// UPDATE로 바꾼다. 이미 전이된 대상이면 affectedRows=0 → 아무 것도 바꾸지 않는다.
+// 반환값: 실제로 전이가 일어났는지(boolean). gift_order는 attachPayment의 payment_id IS NULL
+// 가드가 동일한 역할을 이미 한다.
 const _updateTargetStatus = async (targetType, targetId, paymentId, conn) => {
   const executor = conn ?? pool
   if (targetType === 'photo_order') {
-    await executor.execute(
-      `UPDATE photo_orders SET status = 'paid', updated_at = NOW() WHERE order_id = ? AND deleted_at IS NULL`,
+    const [result] = await executor.execute(
+      `UPDATE photo_orders SET status = 'paid', updated_at = NOW()
+       WHERE order_id = ? AND status = 'pending_payment' AND deleted_at IS NULL`,
       [targetId],
     )
+    return result.affectedRows > 0
   } else if (targetType === 'will_order') {
-    await executor.execute(
-      `UPDATE wills SET status = 'paid', updated_at = NOW() WHERE will_id = ? AND deleted_at IS NULL`,
+    const [result] = await executor.execute(
+      `UPDATE wills SET status = 'paid', updated_at = NOW()
+       WHERE will_id = ? AND status = 'draft' AND deleted_at IS NULL`,
       [targetId],
     )
+    return result.affectedRows > 0
   } else if (targetType === 'gift_order') {
     const attached = await giftRepository.attachPayment(targetId, paymentId, executor)
     if (attached) {
@@ -781,7 +853,9 @@ const _updateTargetStatus = async (targetType, targetId, paymentId, conn) => {
         })
         .catch((e) => console.error('[paymentService] gift_order_logs 기록 실패:', targetId, e.message))
     }
+    return Boolean(attached)
   }
+  return false
 }
 
 /**

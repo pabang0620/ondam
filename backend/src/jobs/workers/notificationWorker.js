@@ -3,9 +3,18 @@ import nodemailer from 'nodemailer'
 import { randomUUID } from 'node:crypto'
 import redis from '../../config/redis.js'
 import pool from '../../config/db.js'
+import { isLocalDevEnvironment } from '../../utils/env.js'
 
 const QUEUE_NAME = 'notification'
-const AI_MOCK = process.env.AI_MOCK === 'true'
+const AI_MOCK = (process.env.AI_MOCK === 'true' && isLocalDevEnvironment())
+
+// mock 로그용 수신자 마스킹 - 이메일은 앞 2자 + ***, 전화는 뒤 4자리만 남긴다
+const maskRecipient = (to) => {
+  const value = String(to ?? '')
+  if (value.includes('@')) return `${value.slice(0, 2)}***`
+  const digits = value.replace(/\D/g, '')
+  return digits ? `***${digits.slice(-4)}` : '***'
+}
 
 // ─── SMS (Coolsms) ────────────────────────────────────────────────────────────
 
@@ -99,7 +108,7 @@ const dispatch = async (jobData) => {
 
   if (AI_MOCK) {
     console.log(
-      `[notificationWorker][MOCK] type=${type} to=${to} notificationId=${notificationId} userId=${userId} message="${message}"`
+      `[notificationWorker][MOCK] type=${type} to=${maskRecipient(to)} notificationId=${notificationId} userId=${userId} messageLength=${String(message ?? '').length}`
     )
     return
   }
