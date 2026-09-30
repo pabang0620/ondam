@@ -17,8 +17,8 @@ model: sonnet
 
 ### Step 1: 파일 목록 수집 (병렬)
 ```bash
-find /home/pabang/myapp/ondam/backend/src -name "*.js" | sort
-find /home/pabang/myapp/ondam/frontend/src -name "*.jsx" -o -name "*.js" | grep -v node_modules | sort
+find /home/lee/project/ondam/backend/src -name "*.js" | sort
+find /home/lee/project/ondam/frontend/src -name "*.jsx" -o -name "*.js" | grep -v node_modules | sort
 ```
 
 ### Step 2: 도메인별 병렬 검토 (각 Agent 1개)

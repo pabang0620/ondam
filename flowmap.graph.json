@@ -1,0 +1,6915 @@
+{
+  "project": {
+    "name": "ondam",
+    "root": "/home/lee/project/ondam",
+    "backend": "backend",
+    "frontend": "frontend",
+    "scannedAt": "2026-08-23"
+  },
+  "flows": [
+    {
+      "id": "f_pet",
+      "key": "pet",
+      "label": "pet",
+      "endpointIds": [
+        "ep_31",
+        "ep_32",
+        "ep_33",
+        "ep_34",
+        "ep_35",
+        "ep_36",
+        "ep_37",
+        "ep_38",
+        "ep_39",
+        "ep_40",
+        "ep_41",
+        "ep_42",
+        "ep_43"
+      ],
+      "tables": [
+        "ai_jobs",
+        "pet_media",
+        "pets",
+        "subscriptions"
+      ],
+      "pages": [
+        "pet"
+      ]
+    },
+    {
+      "id": "f_will",
+      "key": "will",
+      "label": "will",
+      "endpointIds": [
+        "ep_19",
+        "ep_20",
+        "ep_21",
+        "ep_22",
+        "ep_23",
+        "ep_24",
+        "ep_25",
+        "ep_26",
+        "ep_27",
+        "ep_28",
+        "ep_29",
+        "ep_30"
+      ],
+      "tables": [
+        "ai_jobs",
+        "audit_logs",
+        "user_consents",
+        "users",
+        "voice_samples",
+        "will_beneficiaries",
+        "will_release_requests",
+        "will_status_logs",
+        "wills"
+      ],
+      "pages": [
+        "mypage",
+        "will"
+      ]
+    },
+    {
+      "id": "f_gifts",
+      "key": "gifts",
+      "label": "gifts",
+      "endpointIds": [
+        "ep_84",
+        "ep_85",
+        "ep_86",
+        "ep_87",
+        "ep_88",
+        "ep_89",
+        "ep_90",
+        "ep_91",
+        "ep_92",
+        "ep_93",
+        "ep_94"
+      ],
+      "tables": [
+        "gift_order_logs",
+        "gift_orders",
+        "notifications",
+        "payments",
+        "photo_order_logs",
+        "photo_orders",
+        "will_status_logs",
+        "wills"
+      ],
+      "pages": [
+        "gift"
+      ]
+    },
+    {
+      "id": "f_auth",
+      "key": "auth",
+      "label": "인증",
+      "endpointIds": [
+        "ep_1",
+        "ep_2",
+        "ep_3",
+        "ep_4",
+        "ep_5",
+        "ep_6",
+        "ep_7"
+      ],
+      "tables": [
+        "refresh_tokens",
+        "user_consents",
+        "users"
+      ],
+      "pages": [
+        "auth",
+        "photo",
+        "will"
+      ]
+    },
+    {
+      "id": "f_photo",
+      "key": "photo",
+      "label": "photo",
+      "endpointIds": [
+        "ep_12",
+        "ep_13",
+        "ep_14",
+        "ep_15",
+        "ep_16",
+        "ep_17",
+        "ep_18"
+      ],
+      "tables": [
+        "ai_jobs",
+        "photo_files",
+        "photo_order_logs",
+        "photo_orders"
+      ],
+      "pages": [
+        "mypage",
+        "photo"
+      ]
+    },
+    {
+      "id": "f_subscriptions",
+      "key": "subscriptions",
+      "label": "subscriptions",
+      "endpointIds": [
+        "ep_50",
+        "ep_51",
+        "ep_52",
+        "ep_53",
+        "ep_54",
+        "ep_55",
+        "ep_56"
+      ],
+      "tables": [
+        "notifications",
+        "payments",
+        "subscription_payment_logs",
+        "subscriptions",
+        "users"
+      ],
+      "pages": [
+        "pet"
+      ]
+    },
+    {
+      "id": "f_notifications",
+      "key": "notifications",
+      "label": "알림",
+      "endpointIds": [
+        "ep_57",
+        "ep_58",
+        "ep_59",
+        "ep_60",
+        "ep_61",
+        "ep_62"
+      ],
+      "tables": [
+        "notifications",
+        "user_notification_settings"
+      ],
+      "pages": [
+        "mypage"
+      ]
+    },
+    {
+      "id": "f_admin_ad_spend",
+      "key": "admin/ad-spend",
+      "label": "관리자 · ad-spend",
+      "endpointIds": [
+        "ep_76",
+        "ep_77",
+        "ep_78",
+        "ep_79",
+        "ep_80",
+        "ep_81"
+      ],
+      "tables": [
+        "ad_spend",
+        "audit_logs",
+        "payments"
+      ],
+      "pages": []
+    },
+    {
+      "id": "f_payments",
+      "key": "payments",
+      "label": "결제",
+      "endpointIds": [
+        "ep_45",
+        "ep_46",
+        "ep_47",
+        "ep_48",
+        "ep_49"
+      ],
+      "tables": [
+        "gift_order_logs",
+        "gift_orders",
+        "payments",
+        "photo_orders",
+        "wills"
+      ],
+      "pages": [
+        "gift",
+        "photo",
+        "will"
+      ]
+    },
+    {
+      "id": "f_users",
+      "key": "users",
+      "label": "회원",
+      "endpointIds": [
+        "ep_8",
+        "ep_9",
+        "ep_10",
+        "ep_11"
+      ],
+      "tables": [
+        "users"
+      ],
+      "pages": [
+        "auth",
+        "gift",
+        "mypage",
+        "will"
+      ]
+    },
+    {
+      "id": "f_admin_releases",
+      "key": "admin/releases",
+      "label": "관리자 · releases",
+      "endpointIds": [
+        "ep_67",
+        "ep_68",
+        "ep_69",
+        "ep_70"
+      ],
+      "tables": [
+        "audit_logs",
+        "notifications",
+        "user_consents",
+        "users",
+        "will_beneficiaries",
+        "will_release_requests",
+        "wills"
+      ],
+      "pages": []
+    },
+    {
+      "id": "f_admin_auth",
+      "key": "admin/auth",
+      "label": "관리자 · 인증",
+      "endpointIds": [
+        "ep_63",
+        "ep_64",
+        "ep_65"
+      ],
+      "tables": [
+        "admin_users",
+        "audit_logs",
+        "refresh_tokens"
+      ],
+      "pages": []
+    },
+    {
+      "id": "f_uploads",
+      "key": "uploads",
+      "label": "uploads",
+      "endpointIds": [
+        "ep_82",
+        "ep_83"
+      ],
+      "tables": [],
+      "pages": [
+        "pet",
+        "photo",
+        "will"
+      ]
+    },
+    {
+      "id": "f_memorial",
+      "key": "memorial",
+      "label": "memorial",
+      "endpointIds": [
+        "ep_44"
+      ],
+      "tables": [
+        "pet_media",
+        "pets"
+      ],
+      "pages": [
+        "memorial"
+      ]
+    },
+    {
+      "id": "f_admin_dashboard",
+      "key": "admin/dashboard",
+      "label": "관리자 · 대시보드",
+      "endpointIds": [
+        "ep_66"
+      ],
+      "tables": [
+        "ai_jobs",
+        "photo_orders",
+        "users",
+        "will_release_requests"
+      ],
+      "pages": []
+    },
+    {
+      "id": "f_admin_will",
+      "key": "admin/will",
+      "label": "관리자 · will",
+      "endpointIds": [
+        "ep_71"
+      ],
+      "tables": [
+        "audit_logs",
+        "will_beneficiaries"
+      ],
+      "pages": []
+    },
+    {
+      "id": "f_admin_orders",
+      "key": "admin/orders",
+      "label": "관리자 · 주문",
+      "endpointIds": [
+        "ep_72"
+      ],
+      "tables": [],
+      "pages": []
+    },
+    {
+      "id": "f_admin_users",
+      "key": "admin/users",
+      "label": "관리자 · 회원",
+      "endpointIds": [
+        "ep_73"
+      ],
+      "tables": [],
+      "pages": []
+    },
+    {
+      "id": "f_admin_jobs",
+      "key": "admin/jobs",
+      "label": "관리자 · 채용",
+      "endpointIds": [
+        "ep_74"
+      ],
+      "tables": [],
+      "pages": []
+    },
+    {
+      "id": "f_admin_notifications",
+      "key": "admin/notifications",
+      "label": "관리자 · 알림",
+      "endpointIds": [
+        "ep_75"
+      ],
+      "tables": [],
+      "pages": []
+    },
+    {
+      "id": "f_health",
+      "key": "health",
+      "label": "health",
+      "endpointIds": [
+        "ep_95"
+      ],
+      "tables": [],
+      "pages": []
+    }
+  ],
+  "endpoints": [
+    {
+      "method": "POST",
+      "path": "/api/auth/register",
+      "src": "backend/src/domains/auth/authRoutes.js:87",
+      "auth": "authLimiter",
+      "handler": "register",
+      "schemaRef": "registerSchema",
+      "touches": [
+        {
+          "table": "users",
+          "ops": [
+            "SELECT",
+            "INSERT"
+          ]
+        },
+        {
+          "table": "user_consents",
+          "ops": [
+            "INSERT"
+          ]
+        },
+        {
+          "table": "refresh_tokens",
+          "ops": [
+            "INSERT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "auth"
+      ],
+      "confidence": "high",
+      "id": "ep_1",
+      "request": {
+        "from": "Zod 스키마 (registerSchema)",
+        "sample": {
+          "body": "샘플 내용입니다.",
+          "email": "user@example.com",
+          "password": "********"
+        }
+      },
+      "response": {
+        "from": "SQL 컬럼 (users)",
+        "sample": {
+          "success": true,
+          "data": [
+            {
+              "id": 1,
+              "user_id": 1,
+              "email": "user@example.com",
+              "phone": "010-1234-5678",
+              "nickname": "샘플 제목",
+              "profile_image_url": "https://example.com/path",
+              "role": "샘플값",
+              "kakao_id": 1,
+              "email_verified_at": "2026-08-22T09:00:00Z",
+              "phone_verified_at": "2026-08-22T09:00:00Z",
+              "is_active": true,
+              "deactivated_at": "2026-08-22T09:00:00Z",
+              "created_at": "2026-08-22T09:00:00Z",
+              "updated_at": "2026-08-22T09:00:00Z"
+            }
+          ]
+        }
+      },
+      "flowId": "f_auth"
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/login",
+      "src": "backend/src/domains/auth/authRoutes.js:88",
+      "auth": "authLimiter",
+      "handler": "login",
+      "schemaRef": "loginSchema",
+      "touches": [
+        {
+          "table": "users",
+          "ops": [
+            "SELECT"
+          ]
+        },
+        {
+          "table": "refresh_tokens",
+          "ops": [
+            "INSERT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "auth"
+      ],
+      "confidence": "high",
+      "id": "ep_2",
+      "request": {
+        "from": "Zod 스키마 (loginSchema)",
+        "sample": {
+          "body": "샘플 내용입니다.",
+          "email": "user@example.com",
+          "password": "********"
+        }
+      },
+      "response": {
+        "from": "SQL 컬럼 (users)",
+        "sample": {
+          "success": true,
+          "data": [
+            {
+              "id": 1,
+              "user_id": 1,
+              "email": "user@example.com",
+              "phone": "010-1234-5678",
+              "nickname": "샘플 제목",
+              "profile_image_url": "https://example.com/path",
+              "role": "샘플값",
+              "kakao_id": 1,
+              "email_verified_at": "2026-08-22T09:00:00Z",
+              "phone_verified_at": "2026-08-22T09:00:00Z",
+              "is_active": true,
+              "deactivated_at": "2026-08-22T09:00:00Z",
+              "created_at": "2026-08-22T09:00:00Z",
+              "updated_at": "2026-08-22T09:00:00Z"
+            }
+          ]
+        }
+      },
+      "flowId": "f_auth"
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/refresh",
+      "src": "backend/src/domains/auth/authRoutes.js:89",
+      "auth": null,
+      "handler": "refreshToken",
+      "schemaRef": null,
+      "touches": [
+        {
+          "table": "refresh_tokens",
+          "ops": [
+            "SELECT",
+            "UPDATE",
+            "INSERT"
+          ]
+        },
+        {
+          "table": "users",
+          "ops": [
+            "SELECT"
+          ]
+        }
+      ],
+      "calledBy": [],
+      "confidence": "high",
+      "id": "ep_3",
+      "request": {
+        "from": "미확인",
+        "sample": null
+      },
+      "response": {
+        "from": "SQL 컬럼 (refresh_tokens)",
+        "sample": {
+          "success": true,
+          "data": [
+            {
+              "id": 1,
+              "user_id": 1,
+              "expires_at": "2026-08-22T09:00:00Z",
+              "revoked_at": "2026-08-22T09:00:00Z",
+              "created_at": "2026-08-22T09:00:00Z"
+            }
+          ]
+        }
+      },
+      "flowId": "f_auth"
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/logout",
+      "src": "backend/src/domains/auth/authRoutes.js:90",
+      "auth": "requireAuth",
+      "handler": "logout",
+      "schemaRef": null,
+      "touches": [
+        {
+          "table": "refresh_tokens",
+          "ops": [
+            "UPDATE"
+          ]
+        }
+      ],
+      "calledBy": [],
+      "confidence": "high",
+      "id": "ep_4",
+      "request": {
+        "from": "미확인",
+        "sample": null
+      },
+      "response": {
+        "from": "SQL 컬럼 (refresh_tokens)",
+        "sample": {
+          "success": true,
+          "data": [
+            {
+              "id": 1,
+              "user_id": 1,
+              "expires_at": "2026-08-22T09:00:00Z",
+              "revoked_at": "2026-08-22T09:00:00Z",
+              "created_at": "2026-08-22T09:00:00Z"
+            }
+          ]
+        }
+      },
+      "flowId": "f_auth"
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/consents",
+      "src": "backend/src/domains/auth/authRoutes.js:91",
+      "auth": "requireAuth",
+      "handler": "saveConsents",
+      "schemaRef": "consentSchema",
+      "touches": [
+        {
+          "table": "user_consents",
+          "ops": [
+            "INSERT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "photo",
+        "will"
+      ],
+      "confidence": "high",
+      "id": "ep_5",
+      "request": {
+        "from": "Zod 스키마 (consentSchema)",
+        "sample": {
+          "body": "샘플 내용입니다.",
+          "consentType": "default",
+          "isAgreed": true
+        }
+      },
+      "response": {
+        "from": "SQL 컬럼 (user_consents)",
+        "sample": {
+          "success": true,
+          "data": [
+            {
+              "id": 1,
+              "consent_id": 1,
+              "user_id": 1,
+              "consent_type": "default",
+              "is_agreed": true,
+              "agreed_at": "2026-08-22T09:00:00Z",
+              "ip_address": "서울시 강남구 테헤란로 1",
+              "user_agent": "샘플값",
+              "created_at": "2026-08-22T09:00:00Z"
+            }
+          ]
+        }
+      },
+      "flowId": "f_auth"
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/kakao",
+      "src": "backend/src/domains/auth/authRoutes.js:94",
+      "auth": null,
+      "handler": "kakaoLogin",
+      "schemaRef": null,
+      "touches": [],
+      "calledBy": [],
+      "confidence": "medium",
+      "id": "ep_6",
+      "request": null,
+      "response": {
+        "from": "미확인",
+        "sample": null
+      },
+      "flowId": "f_auth"
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/kakao/callback",
+      "src": "backend/src/domains/auth/authRoutes.js:95",
+      "auth": null,
+      "handler": "kakaoCallback",
+      "schemaRef": null,
+      "touches": [
+        {
+          "table": "users",
+          "ops": [
+            "SELECT",
+            "INSERT"
+          ]
+        },
+        {
+          "table": "refresh_tokens",
+          "ops": [
+            "INSERT"
+          ]
+        }
+      ],
+      "calledBy": [],
+      "confidence": "high",
+      "id": "ep_7",
+      "request": null,
+      "response": {
+        "from": "SQL 컬럼 (users)",
+        "sample": {
+          "success": true,
+          "data": [
+            {
+              "id": 1,
+              "user_id": 1,
+              "email": "user@example.com",
+              "phone": "010-1234-5678",
+              "nickname": "샘플 제목",
+              "profile_image_url": "https://example.com/path",
+              "role": "샘플값",
+              "kakao_id": 1,
+              "email_verified_at": "2026-08-22T09:00:00Z",
+              "phone_verified_at": "2026-08-22T09:00:00Z",
+              "is_active": true,
+              "deactivated_at": "2026-08-22T09:00:00Z",
+              "created_at": "2026-08-22T09:00:00Z",
+              "updated_at": "2026-08-22T09:00:00Z"
+            }
+          ]
+        }
+      },
+      "flowId": "f_auth"
+    },
+    {
+      "method": "GET",
+      "path": "/api/users/me",
+      "src": "backend/src/domains/user/userRoutes.js:29",
+      "auth": null,
+      "handler": "getProfile",
+      "schemaRef": null,
+      "touches": [
+        {
+          "table": "users",
+          "ops": [
+            "SELECT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "auth",
+        "mypage"
+      ],
+      "confidence": "high",
+      "id": "ep_8",
+      "request": null,
+      "response": {
+        "from": "SQL 컬럼 (users)",
+        "sample": {
+          "success": true,
+          "data": [
+            {
+              "id": 1,
+              "user_id": 1,
+              "email": "user@example.com",
+              "phone": "010-1234-5678",
+              "nickname": "샘플 제목",
+              "profile_image_url": "https://example.com/path",
+              "role": "샘플값",
+              "kakao_id": 1,
+              "email_verified_at": "2026-08-22T09:00:00Z",
+              "phone_verified_at": "2026-08-22T09:00:00Z",
+              "is_active": true,
+              "deactivated_at": "2026-08-22T09:00:00Z",
+              "created_at": "2026-08-22T09:00:00Z",
+              "updated_at": "2026-08-22T09:00:00Z"
+            }
+          ]
+        }
+      },
+      "flowId": "f_users"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/users/me",
+      "src": "backend/src/domains/user/userRoutes.js:30",
+      "auth": null,
+      "handler": "updateProfile",
+      "schemaRef": "updateProfileSchema",
+      "touches": [],
+      "calledBy": [
+        "gift",
+        "mypage",
+        "will"
+      ],
+      "confidence": "medium",
+      "id": "ep_9",
+      "request": {
+        "from": "미확인",
+        "sample": null
+      },
+      "response": {
+        "from": "미확인",
+        "sample": null
+      },
+      "flowId": "f_users"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/users/me/password",
+      "src": "backend/src/domains/user/userRoutes.js:31",
+      "auth": null,
+      "handler": "changePassword",
+      "schemaRef": "changePasswordSchema",
+      "touches": [
+        {
+          "table": "users",
+          "ops": [
+            "SELECT",
+            "UPDATE"
+          ]
+        }
+      ],
+      "calledBy": [
+        "mypage"
+      ],
+      "confidence": "high",
+      "id": "ep_10",
+      "request": {
+        "from": "Zod 스키마 (changePasswordSchema)",
+        "sample": {
+          "body": "샘플 내용입니다.",
+          "currentPassword": "********",
+          "newPassword": "********"
+        }
+      },
+      "response": {
+        "from": "SQL 컬럼 (users)",
+        "sample": {
+          "success": true,
+          "data": [
+            {
+              "id": 1,
+              "user_id": 1,
+              "email": "user@example.com",
+              "phone": "010-1234-5678",
+              "nickname": "샘플 제목",
+              "profile_image_url": "https://example.com/path",
+              "role": "샘플값",
+              "kakao_id": 1,
+              "email_verified_at": "2026-08-22T09:00:00Z",
+              "phone_verified_at": "2026-08-22T09:00:00Z",
+              "is_active": true,
+              "deactivated_at": "2026-08-22T09:00:00Z",
+              "created_at": "2026-08-22T09:00:00Z",
+              "updated_at": "2026-08-22T09:00:00Z"
+            }
+          ]
+        }
+      },
+      "flowId": "f_users"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/users/me",
+      "src": "backend/src/domains/user/userRoutes.js:32",
+      "auth": null,
+      "handler": "withdraw",
+      "schemaRef": null,
+      "touches": [
+        {
+          "table": "users",
+          "ops": [
+            "SELECT",
+            "UPDATE"
+          ]
+        }
+      ],
+      "calledBy": [
+        "mypage"
+      ],
+      "confidence": "high",
+      "id": "ep_11",
+      "request": {
+        "from": "미확인",
+        "sample": null
+      },
+      "response": {
+        "from": "SQL 컬럼 (users)",
+        "sample": {
+          "success": true,
+          "data": [
+            {
+              "id": 1,
+              "user_id": 1,
+              "email": "user@example.com",
+              "phone": "010-1234-5678",
+              "nickname": "샘플 제목",
+              "profile_image_url": "https://example.com/path",
+              "role": "샘플값",
+              "kakao_id": 1,
+              "email_verified_at": "2026-08-22T09:00:00Z",
+              "phone_verified_at": "2026-08-22T09:00:00Z",
+              "is_active": true,
+              "deactivated_at": "2026-08-22T09:00:00Z",
+              "created_at": "2026-08-22T09:00:00Z",
+              "updated_at": "2026-08-22T09:00:00Z"
+            }
+          ]
+        }
+      },
+      "flowId": "f_users"
+    },
+    {
+      "method": "POST",
+      "path": "/api/photo/orders",
+      "src": "backend/src/domains/photo/photoRoutes.js:50",
+      "auth": null,
+      "handler": "createOrder",
+      "schemaRef": "createOrderSchema",
+      "touches": [],
+      "calledBy": [
+        "photo"
+      ],
+      "confidence": "medium",
+      "id": "ep_12",
+      "request": {
+        "from": "Zod 스키마 (createOrderSchema)",
+        "sample": {
+          "body": "샘플 내용입니다.",
+          "photoType": "https://example.com/image.jpg",
+          "sourceImageUrl": "https://example.com/path"
+        }
+      },
+      "response": {
+        "from": "미확인",
+        "sample": null
+      },
+      "flowId": "f_photo"
+    },
+    {
+      "method": "GET",
+      "path": "/api/photo/orders",
+      "src": "backend/src/domains/photo/photoRoutes.js:57",
+      "auth": null,
+      "handler": "getOrders",
+      "schemaRef": "listQuerySchema",
+      "touches": [
+        {
+          "table": "photo_orders",
+          "ops": [
+            "SELECT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "mypage",
+        "photo"
+      ],
+      "confidence": "high",
+      "id": "ep_13",
+      "request": null,
+      "response": {
+        "from": "SQL 컬럼 (photo_orders)",
+        "sample": {
+          "success": true,
+          "data": [
+            {
+              "id": 1,
+              "order_id": 1,
+              "user_id": 1,
+              "photo_type": "https://example.com/image.jpg",
+              "status": "active",
+              "NOT": "샘플값",
+              "price_krw": 10000,
+              "source_image_url": "https://example.com/path",
+              "fail_reason": "샘플값",
+              "completed_at": "2026-08-22T09:00:00Z",
+              "created_at": "2026-08-22T09:00:00Z",
+              "updated_at": "2026-08-22T09:00:00Z"
+            }
+          ]
+        }
+      },
+      "flowId": "f_photo"
+    },
+    {
+      "method": "GET",
+      "path": "/api/photo/orders/:orderId",
+      "src": "backend/src/domains/photo/photoRoutes.js:63",
+      "auth": null,
+      "handler": "getOrder",
+      "schemaRef": "orderParamSchema",
+      "touches": [
+        {
+          "table": "photo_orders",
+          "ops": [
+            "SELECT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "photo"
+      ],
+      "confidence": "high",
+      "id": "ep_14",
+      "request": null,
+      "response": {
+        "from": "SQL 컬럼 (photo_orders)",
+        "sample": {
+          "success": true,
+          "data": {
+            "id": 1,
+            "order_id": 1,
+            "user_id": 1,
+            "photo_type": "https://example.com/image.jpg",
+            "status": "active",
+            "NOT": "샘플값",
+            "price_krw": 10000,
+            "source_image_url": "https://example.com/path",
+            "fail_reason": "샘플값",
+            "completed_at": "2026-08-22T09:00:00Z",
+            "created_at": "2026-08-22T09:00:00Z",
+            "updated_at": "2026-08-22T09:00:00Z"
+          }
+        }
+      },
+      "flowId": "f_photo"
+    },
+    {
+      "method": "GET",
+      "path": "/api/photo/orders/:orderId/status",
+      "src": "backend/src/domains/photo/photoRoutes.js:69",
+      "auth": null,
+      "handler": "getJobStatus",
+      "schemaRef": "orderParamSchema",
+      "touches": [
+        {
+          "table": "photo_orders",
+          "ops": [
+            "SELECT"
+          ]
+        },
+        {
+          "table": "ai_jobs",
+          "ops": [
+            "SELECT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "photo"
+      ],
+      "confidence": "high",
+      "id": "ep_15",
+      "request": null,
+      "response": {
+        "from": "SQL 컬럼 (photo_orders)",
+        "sample": {
+          "success": true,
+          "data": {
+            "id": 1,
+            "order_id": 1,
+            "user_id": 1,
+            "photo_type": "https://example.com/image.jpg",
+            "status": "active",
+            "NOT": "샘플값",
+            "price_krw": 10000,
+            "source_image_url": "https://example.com/path",
+            "fail_reason": "샘플값",
+            "completed_at": "2026-08-22T09:00:00Z",
+            "created_at": "2026-08-22T09:00:00Z",
+            "updated_at": "2026-08-22T09:00:00Z"
+          }
+        }
+      },
+      "flowId": "f_photo"
+    },
+    {
+      "method": "GET",
+      "path": "/api/photo/orders/:orderId/result",
+      "src": "backend/src/domains/photo/photoRoutes.js:75",
+      "auth": null,
+      "handler": "getResult",
+      "schemaRef": "orderParamSchema",
+      "touches": [
+        {
+          "table": "photo_orders",
+          "ops": [
+            "SELECT"
+          ]
+        },
+        {
+          "table": "photo_files",
+          "ops": [
+            "SELECT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "photo"
+      ],
+      "confidence": "high",
+      "id": "ep_16",
+      "request": null,
+      "response": {
+        "from": "SQL 컬럼 (photo_orders)",
+        "sample": {
+          "success": true,
+          "data": {
+            "id": 1,
+            "order_id": 1,
+            "user_id": 1,
+            "photo_type": "https://example.com/image.jpg",
+            "status": "active",
+            "NOT": "샘플값",
+            "price_krw": 10000,
+            "source_image_url": "https://example.com/path",
+            "fail_reason": "샘플값",
+            "completed_at": "2026-08-22T09:00:00Z",
+            "created_at": "2026-08-22T09:00:00Z",
+            "updated_at": "2026-08-22T09:00:00Z"
+          }
+        }
+      },
+      "flowId": "f_photo"
+    },
+    {
+      "method": "POST",
+      "path": "/api/photo/orders/:orderId/retry",
+      "src": "backend/src/domains/photo/photoRoutes.js:81",
+      "auth": null,
+      "handler": "retryOrder",
+      "schemaRef": "orderParamSchema",
+      "touches": [
+        {
+          "table": "photo_orders",
+          "ops": [
+            "SELECT",
+            "UPDATE"
+          ]
+        },
+        {
+          "table": "photo_order_logs",
+          "ops": [
+            "INSERT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "photo"
+      ],
+      "confidence": "high",
+      "id": "ep_17",
+      "request": {
+        "from": "미확인",
+        "sample": null
+      },
+      "response": {
+        "from": "SQL 컬럼 (photo_orders)",
+        "sample": {
+          "success": true,
+          "data": {
+            "id": 1,
+            "order_id": 1,
+            "user_id": 1,
+            "photo_type": "https://example.com/image.jpg",
+            "status": "active",
+            "NOT": "샘플값",
+            "price_krw": 10000,
+            "source_image_url": "https://example.com/path",
+            "fail_reason": "샘플값",
+            "completed_at": "2026-08-22T09:00:00Z",
+            "created_at": "2026-08-22T09:00:00Z",
+            "updated_at": "2026-08-22T09:00:00Z"
+          }
+        }
+      },
+      "flowId": "f_photo"
+    },
+    {
+      "method": "POST",
+      "path": "/api/photo/orders/:orderId/start",
+      "src": "backend/src/domains/photo/photoRoutes.js:88",
+      "auth": null,
+      "handler": "startProcessing",
+      "schemaRef": "orderParamSchema",
+      "touches": [
+        {
+          "table": "photo_orders",
+          "ops": [
+            "SELECT",
+            "UPDATE"
+          ]
+        },
+        {
+          "table": "ai_jobs",
+          "ops": [
+            "INSERT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "photo"
+      ],
+      "confidence": "high",
+      "id": "ep_18",
+      "request": {
+        "from": "미확인",
+        "sample": null
+      },
+      "response": {
+        "from": "SQL 컬럼 (photo_orders)",
+        "sample": {
+          "success": true,
+          "data": {
+            "id": 1,
+            "order_id": 1,
+            "user_id": 1,
+            "photo_type": "https://example.com/image.jpg",
+            "status": "active",
+            "NOT": "샘플값",
+            "price_krw": 10000,
+            "source_image_url": "https://example.com/path",
+            "fail_reason": "샘플값",
+            "completed_at": "2026-08-22T09:00:00Z",
+            "created_at": "2026-08-22T09:00:00Z",
+            "updated_at": "2026-08-22T09:00:00Z"
+          }
+        }
+      },
+      "flowId": "f_photo"
+    },
+    {
+      "method": "POST",
+      "path": "/api/will/voice-samples",
+      "src": "backend/src/domains/will/willRoutes.js:141",
+      "auth": "requireAuth",
+      "handler": "uploadVoiceSample",
+      "schemaRef": "uploadVoiceSampleSchema",
+      "touches": [
+        {
+          "table": "user_consents",
+          "ops": [
+            "SELECT"
+          ]
+        },
+        {
+          "table": "voice_samples",
+          "ops": [
+            "INSERT"
+          ]
+        },
+        {
+          "table": "ai_jobs",
+          "ops": [
+            "INSERT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "will"
+      ],
+      "confidence": "high",
+      "id": "ep_19",
+      "request": {
+        "from": "미확인",
+        "sample": null
+      },
+      "response": {
+        "from": "SQL 컬럼 (user_consents)",
+        "sample": {
+          "success": true,
+          "data": [
+            {
+              "id": 1,
+              "consent_id": 1,
+              "user_id": 1,
+              "consent_type": "default",
+              "is_agreed": true,
+              "agreed_at": "2026-08-22T09:00:00Z",
+              "ip_address": "서울시 강남구 테헤란로 1",
+              "user_agent": "샘플값",
+              "created_at": "2026-08-22T09:00:00Z"
+            }
+          ]
+        }
+      },
+      "flowId": "f_will"
+    },
+    {
+      "method": "GET",
+      "path": "/api/will/voice-samples/:id/status",
+      "src": "backend/src/domains/will/willRoutes.js:149",
+      "auth": "requireAuth",
+      "handler": "getVoiceSampleStatus",
+      "schemaRef": "voiceSampleIdSchema",
+      "touches": [
+        {
+          "table": "voice_samples",
+          "ops": [
+            "SELECT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "will"
+      ],
+      "confidence": "high",
+      "id": "ep_20",
+      "request": null,
+      "response": {
+        "from": "SQL 컬럼 (voice_samples)",
+        "sample": {
+          "success": true,
+          "data": {
+            "id": 1,
+            "voice_sample_id": 1,
+            "user_id": 1,
+            "consent_id": 1,
+            "s3_key_encrypted": "<token>",
+            "kms_key_id": 1,
+            "elevenlabs_voice_id": 1,
+            "clone_status": "active",
+            "duration_sec": 1,
+            "file_size": 1,
+            "created_at": "2026-08-22T09:00:00Z",
+            "updated_at": "2026-08-22T09:00:00Z"
+          }
+        }
+      },
+      "flowId": "f_will"
+    },
+    {
+      "method": "POST",
+      "path": "/api/will/wills",
+      "src": "backend/src/domains/will/willRoutes.js:156",
+      "auth": "requireAuth",
+      "handler": "createWill",
+      "schemaRef": "createWillSchema",
+      "touches": [],
+      "calledBy": [
+        "will"
+      ],
+      "confidence": "medium",
+      "id": "ep_21",
+      "request": {
+        "from": "Zod 스키마 (createWillSchema)",
+        "sample": {
+          "body": "샘플 내용입니다.",
+          "voiceSampleId": "샘플값",
+          "title": "샘플 제목",
+          "contentText": "샘플 내용입니다.",
+          "releasePolicy": "샘플값",
+          "eventType": "default",
+          "beneficiaries": "샘플값",
+          "name": "샘플 제목",
+          "email": "user@example.com",
+          "phone": "010-1234-5678",
+          "relationship": "샘플값"
+        }
+      },
+      "response": {
+        "from": "미확인",
+        "sample": null
+      },
+      "flowId": "f_will"
+    },
+    {
+      "method": "GET",
+      "path": "/api/will/wills",
+      "src": "backend/src/domains/will/willRoutes.js:164",
+      "auth": "requireAuth",
+      "handler": "getWills",
+      "schemaRef": "willListSchema",
+      "touches": [
+        {
+          "table": "wills",
+          "ops": [
+            "SELECT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "mypage",
+        "will"
+      ],
+      "confidence": "high",
+      "id": "ep_22",
+      "request": null,
+      "response": {
+        "from": "SQL 컬럼 (wills)",
+        "sample": {
+          "success": true,
+          "data": [
+            {
+              "id": 1,
+              "will_id": 1,
+              "user_id": 1,
+              "voice_sample_id": 1,
+              "title": "샘플 제목",
+              "content_text_encrypted": "샘플 내용입니다.",
+              "content_text_kms_key_id": 1,
+              "content_text_enc_format": "샘플 내용입니다.",
+              "result_video_s3_key_encrypted": "<token>",
+              "result_video_kms_key_id": 1,
+              "result_video_duration_sec": 1,
+              "status": "active",
+              "release_policy": "샘플값",
+              "release_status": "active"
+            }
+          ]
+        }
+      },
+      "flowId": "f_will"
+    },
+    {
+      "method": "GET",
+      "path": "/api/will/wills/:willId",
+      "src": "backend/src/domains/will/willRoutes.js:171",
+      "auth": "requireAuth",
+      "handler": "getWill",
+      "schemaRef": "willIdParamSchema",
+      "touches": [
+        {
+          "table": "wills",
+          "ops": [
+            "SELECT"
+          ]
+        },
+        {
+          "table": "will_beneficiaries",
+          "ops": [
+            "SELECT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "will"
+      ],
+      "confidence": "high",
+      "id": "ep_23",
+      "request": null,
+      "response": {
+        "from": "SQL 컬럼 (wills)",
+        "sample": {
+          "success": true,
+          "data": {
+            "id": 1,
+            "will_id": 1,
+            "user_id": 1,
+            "voice_sample_id": 1,
+            "title": "샘플 제목",
+            "content_text_encrypted": "샘플 내용입니다.",
+            "content_text_kms_key_id": 1,
+            "content_text_enc_format": "샘플 내용입니다.",
+            "result_video_s3_key_encrypted": "<token>",
+            "result_video_kms_key_id": 1,
+            "result_video_duration_sec": 1,
+            "status": "active",
+            "release_policy": "샘플값",
+            "release_status": "active"
+          }
+        }
+      },
+      "flowId": "f_will"
+    },
+    {
+      "method": "POST",
+      "path": "/api/will/wills/:willId/activate",
+      "src": "backend/src/domains/will/willRoutes.js:178",
+      "auth": "requireAuth",
+      "handler": "activateWill",
+      "schemaRef": "willIdParamSchema",
+      "touches": [
+        {
+          "table": "wills",
+          "ops": [
+            "SELECT",
+            "UPDATE"
+          ]
+        },
+        {
+          "table": "voice_samples",
+          "ops": [
+            "SELECT"
+          ]
+        },
+        {
+          "table": "users",
+          "ops": [
+            "SELECT"
+          ]
+        },
+        {
+          "table": "will_beneficiaries",
+          "ops": [
+            "SELECT"
+          ]
+        },
+        {
+          "table": "user_consents",
+          "ops": [
+            "SELECT"
+          ]
+        },
+        {
+          "table": "will_status_logs",
+          "ops": [
+            "INSERT"
+          ]
+        },
+        {
+          "table": "ai_jobs",
+          "ops": [
+            "INSERT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "will"
+      ],
+      "confidence": "high",
+      "id": "ep_24",
+      "request": {
+        "from": "Zod 스키마 (willIdParamSchema)",
+        "sample": {
+          "params": "샘플값",
+          "willId": "샘플값"
+        }
+      },
+      "response": {
+        "from": "SQL 컬럼 (wills)",
+        "sample": {
+          "success": true,
+          "data": {
+            "id": 1,
+            "will_id": 1,
+            "user_id": 1,
+            "voice_sample_id": 1,
+            "title": "샘플 제목",
+            "content_text_encrypted": "샘플 내용입니다.",
+            "content_text_kms_key_id": 1,
+            "content_text_enc_format": "샘플 내용입니다.",
+            "result_video_s3_key_encrypted": "<token>",
+            "result_video_kms_key_id": 1,
+            "result_video_duration_sec": 1,
+            "status": "active",
+            "release_policy": "샘플값",
+            "release_status": "active"
+          }
+        }
+      },
+      "flowId": "f_will"
+    },
+    {
+      "method": "GET",
+      "path": "/api/will/wills/:willId/status",
+      "src": "backend/src/domains/will/willRoutes.js:186",
+      "auth": "requireAuth",
+      "handler": "getVideoStatus",
+      "schemaRef": "willIdParamSchema",
+      "touches": [
+        {
+          "table": "wills",
+          "ops": [
+            "SELECT"
+          ]
+        },
+        {
+          "table": "ai_jobs",
+          "ops": [
+            "SELECT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "will"
+      ],
+      "confidence": "high",
+      "id": "ep_25",
+      "request": null,
+      "response": {
+        "from": "SQL 컬럼 (wills)",
+        "sample": {
+          "success": true,
+          "data": {
+            "id": 1,
+            "will_id": 1,
+            "user_id": 1,
+            "voice_sample_id": 1,
+            "title": "샘플 제목",
+            "content_text_encrypted": "샘플 내용입니다.",
+            "content_text_kms_key_id": 1,
+            "content_text_enc_format": "샘플 내용입니다.",
+            "result_video_s3_key_encrypted": "<token>",
+            "result_video_kms_key_id": 1,
+            "result_video_duration_sec": 1,
+            "status": "active",
+            "release_policy": "샘플값",
+            "release_status": "active"
+          }
+        }
+      },
+      "flowId": "f_will"
+    },
+    {
+      "method": "POST",
+      "path": "/api/will/release/:token/upload",
+      "src": "backend/src/domains/will/willRoutes.js:198",
+      "auth": null,
+      "handler": "uploadReleaseDocument",
+      "schemaRef": "releaseTokenParamSchema",
+      "touches": [],
+      "calledBy": [
+        "will"
+      ],
+      "confidence": "medium",
+      "id": "ep_26",
+      "request": {
+        "from": "Zod 스키마 (releaseTokenParamSchema)",
+        "sample": {
+          "params": "샘플값",
+          "token": "<token>"
+        }
+      },
+      "response": {
+        "from": "미확인",
+        "sample": null
+      },
+      "flowId": "f_will"
+    },
+    {
+      "method": "POST",
+      "path": "/api/will/release/:token",
+      "src": "backend/src/domains/will/willRoutes.js:206",
+      "auth": null,
+      "handler": "requestRelease",
+      "schemaRef": "requestReleaseSchema",
+      "touches": [
+        {
+          "table": "will_beneficiaries",
+          "ops": [
+            "SELECT",
+            "UPDATE"
+          ]
+        },
+        {
+          "table": "wills",
+          "ops": [
+            "SELECT",
+            "UPDATE"
+          ]
+        },
+        {
+          "table": "will_release_requests",
+          "ops": [
+            "INSERT"
+          ]
+        },
+        {
+          "table": "users",
+          "ops": [
+            "SELECT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "will"
+      ],
+      "confidence": "high",
+      "id": "ep_27",
+      "request": {
+        "from": "Zod 스키마 (requestReleaseSchema)",
+        "sample": {
+          "params": "샘플값",
+          "token": "<token>",
+          "body": "샘플 내용입니다.",
+          "deathCertS3Key": "<token>",
+          "deathCertUrl": "https://example.com/path"
+        }
+      },
+      "response": {
+        "from": "SQL 컬럼 (will_beneficiaries)",
+        "sample": {
+          "success": true,
+          "data": {
+            "id": 1,
+            "beneficiary_id": 1,
+            "will_id": 1,
+            "user_id": 1,
+            "name": "샘플 제목",
+            "email": "user@example.com",
+            "phone": "010-1234-5678",
+            "relationship": "샘플값",
+            "invite_token": "<token>",
+            "verified_at": "2026-08-22T09:00:00Z",
+            "delivered_at": "2026-08-22T09:00:00Z",
+            "video_watched_at": "2026-08-22T09:00:00Z",
+            "watch_count": 10,
+            "token_expires_at": "2026-08-22T09:00:00Z"
+          }
+        }
+      },
+      "flowId": "f_will"
+    },
+    {
+      "method": "GET",
+      "path": "/api/will/watch/:token",
+      "src": "backend/src/domains/will/willRoutes.js:215",
+      "auth": null,
+      "handler": "getWatchInfo",
+      "schemaRef": "watchTokenSchema",
+      "touches": [],
+      "calledBy": [
+        "will"
+      ],
+      "confidence": "medium",
+      "id": "ep_28",
+      "request": null,
+      "response": {
+        "from": "미확인",
+        "sample": null
+      },
+      "flowId": "f_will"
+    },
+    {
+      "method": "POST",
+      "path": "/api/will/watch/:token/verify",
+      "src": "backend/src/domains/will/willRoutes.js:222",
+      "auth": "validate",
+      "handler": "verifyWatchAccess",
+      "schemaRef": "verifyWatchAccessSchema",
+      "touches": [
+        {
+          "table": "audit_logs",
+          "ops": [
+            "INSERT"
+          ]
+        },
+        {
+          "table": "will_beneficiaries",
+          "ops": [
+            "UPDATE"
+          ]
+        }
+      ],
+      "calledBy": [
+        "will"
+      ],
+      "confidence": "high",
+      "id": "ep_29",
+      "request": {
+        "from": "Zod 스키마 (verifyWatchAccessSchema)",
+        "sample": {
+          "params": "샘플값",
+          "token": "<token>",
+          "body": "샘플 내용입니다.",
+          "phoneLast4": "010-1234-5678"
+        }
+      },
+      "response": {
+        "from": "SQL 컬럼 (audit_logs)",
+        "sample": {
+          "success": true,
+          "data": {
+            "id": 1,
+            "log_id": 1,
+            "actor_id": 1,
+            "actor_type": "default",
+            "action": "샘플값",
+            "target_type": "default",
+            "target_id": 1,
+            "ip_address": "서울시 강남구 테헤란로 1",
+            "user_agent": "샘플값",
+            "detail": {},
+            "created_at": "2026-08-22T09:00:00Z"
+          }
+        }
+      },
+      "flowId": "f_will"
+    },
+    {
+      "method": "POST",
+      "path": "/api/will/watch/:token/extend",
+      "src": "backend/src/domains/will/willRoutes.js:230",
+      "auth": null,
+      "handler": "requestWatchLinkExtension",
+      "schemaRef": "watchTokenSchema",
+      "touches": [
+        {
+          "table": "will_beneficiaries",
+          "ops": [
+            "SELECT",
+            "UPDATE"
+          ]
+        },
+        {
+          "table": "wills",
+          "ops": [
+            "SELECT"
+          ]
+        },
+        {
+          "table": "audit_logs",
+          "ops": [
+            "INSERT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "will"
+      ],
+      "confidence": "high",
+      "id": "ep_30",
+      "request": {
+        "from": "미확인",
+        "sample": null
+      },
+      "response": {
+        "from": "SQL 컬럼 (will_beneficiaries)",
+        "sample": {
+          "success": true,
+          "data": {
+            "id": 1,
+            "beneficiary_id": 1,
+            "will_id": 1,
+            "user_id": 1,
+            "name": "샘플 제목",
+            "email": "user@example.com",
+            "phone": "010-1234-5678",
+            "relationship": "샘플값",
+            "invite_token": "<token>",
+            "verified_at": "2026-08-22T09:00:00Z",
+            "delivered_at": "2026-08-22T09:00:00Z",
+            "video_watched_at": "2026-08-22T09:00:00Z",
+            "watch_count": 10,
+            "token_expires_at": "2026-08-22T09:00:00Z"
+          }
+        }
+      },
+      "flowId": "f_will"
+    },
+    {
+      "method": "POST",
+      "path": "/api/pet",
+      "src": "backend/src/domains/pet/petRoutes.js:189",
+      "auth": null,
+      "handler": "createPet",
+      "schemaRef": "createPetSchema",
+      "touches": [],
+      "calledBy": [
+        "pet"
+      ],
+      "confidence": "medium",
+      "id": "ep_31",
+      "request": {
+        "from": "Zod 스키마 (createPetSchema)",
+        "sample": {
+          "body": "샘플 내용입니다.",
+          "name": "샘플 제목",
+          "breed": "샘플값",
+          "birthDate": "2026-08-22T09:00:00Z",
+          "deathDate": "2026-08-22T09:00:00Z"
+        }
+      },
+      "response": {
+        "from": "미확인",
+        "sample": null
+      },
+      "flowId": "f_pet"
+    },
+    {
+      "method": "GET",
+      "path": "/api/pet",
+      "src": "backend/src/domains/pet/petRoutes.js:190",
+      "auth": null,
+      "handler": "getPets",
+      "schemaRef": "paginationQuery",
+      "touches": [
+        {
+          "table": "pets",
+          "ops": [
+            "SELECT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "pet"
+      ],
+      "confidence": "high",
+      "id": "ep_32",
+      "request": null,
+      "response": {
+        "from": "SQL 컬럼 (pets)",
+        "sample": {
+          "success": true,
+          "data": [
+            {
+              "id": 1,
+              "pet_id": 1,
+              "user_id": 1,
+              "name": "샘플 제목",
+              "species": "샘플값",
+              "breed": "샘플값",
+              "birth_date": "2026-08-22T09:00:00Z",
+              "death_date": "2026-08-22T09:00:00Z",
+              "pet_status": "active",
+              "memorial_slug": "샘플 내용입니다.",
+              "memorial_access_code": "샘플 내용입니다.",
+              "is_public": true,
+              "profile_image_url": "https://example.com/path",
+              "created_at": "2026-08-22T09:00:00Z"
+            }
+          ]
+        }
+      },
+      "flowId": "f_pet"
+    },
+    {
+      "method": "GET",
+      "path": "/api/pet/:petId",
+      "src": "backend/src/domains/pet/petRoutes.js:191",
+      "auth": null,
+      "handler": "getPet",
+      "schemaRef": "petIdParam",
+      "touches": [
+        {
+          "table": "pets",
+          "ops": [
+            "SELECT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "pet"
+      ],
+      "confidence": "high",
+      "id": "ep_33",
+      "request": null,
+      "response": {
+        "from": "SQL 컬럼 (pets)",
+        "sample": {
+          "success": true,
+          "data": {
+            "id": 1,
+            "pet_id": 1,
+            "user_id": 1,
+            "name": "샘플 제목",
+            "species": "샘플값",
+            "breed": "샘플값",
+            "birth_date": "2026-08-22T09:00:00Z",
+            "death_date": "2026-08-22T09:00:00Z",
+            "pet_status": "active",
+            "memorial_slug": "샘플 내용입니다.",
+            "memorial_access_code": "샘플 내용입니다.",
+            "is_public": true,
+            "profile_image_url": "https://example.com/path",
+            "created_at": "2026-08-22T09:00:00Z"
+          }
+        }
+      },
+      "flowId": "f_pet"
+    },
+    {
+      "method": "GET",
+      "path": "/api/pet/:petId/memorial-code",
+      "src": "backend/src/domains/pet/petRoutes.js:192",
+      "auth": null,
+      "handler": "getMemorialAccessCode",
+      "schemaRef": "petIdParam",
+      "touches": [],
+      "calledBy": [
+        "pet"
+      ],
+      "confidence": "medium",
+      "id": "ep_34",
+      "request": null,
+      "response": {
+        "from": "미확인",
+        "sample": null
+      },
+      "flowId": "f_pet"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/pet/:petId",
+      "src": "backend/src/domains/pet/petRoutes.js:193",
+      "auth": null,
+      "handler": "updatePet",
+      "schemaRef": "updatePetSchema",
+      "touches": [],
+      "calledBy": [
+        "pet"
+      ],
+      "confidence": "medium",
+      "id": "ep_35",
+      "request": {
+        "from": "Zod 스키마 (updatePetSchema)",
+        "sample": {
+          "params": "샘플값",
+          "petId": "샘플값",
+          "body": "샘플 내용입니다.",
+          "name": "샘플 제목",
+          "breed": "샘플값",
+          "birthDate": "2026-08-22T09:00:00Z",
+          "deathDate": "2026-08-22T09:00:00Z",
+          "profileImageUrl": "https://example.com/path",
+          "isPublic": true
+        }
+      },
+      "response": {
+        "from": "미확인",
+        "sample": null
+      },
+      "flowId": "f_pet"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/pet/:petId/status",
+      "src": "backend/src/domains/pet/petRoutes.js:194",
+      "auth": null,
+      "handler": "updatePetStatus",
+      "schemaRef": "updateStatusSchema",
+      "touches": [],
+      "calledBy": [
+        "pet"
+      ],
+      "confidence": "medium",
+      "id": "ep_36",
+      "request": {
+        "from": "Zod 스키마 (updateStatusSchema)",
+        "sample": {
+          "params": "샘플값",
+          "petId": "샘플값",
+          "body": "샘플 내용입니다.",
+          "reason": "샘플값"
+        }
+      },
+      "response": {
+        "from": "미확인",
+        "sample": null
+      },
+      "flowId": "f_pet"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/pet/:petId",
+      "src": "backend/src/domains/pet/petRoutes.js:195",
+      "auth": null,
+      "handler": "deletePet",
+      "schemaRef": "petIdParam",
+      "touches": [
+        {
+          "table": "pets",
+          "ops": [
+            "UPDATE"
+          ]
+        }
+      ],
+      "calledBy": [
+        "pet"
+      ],
+      "confidence": "high",
+      "id": "ep_37",
+      "request": {
+        "from": "Zod 스키마 (petIdParam)",
+        "sample": {
+          "params": "샘플값",
+          "petId": "샘플값"
+        }
+      },
+      "response": {
+        "from": "SQL 컬럼 (pets)",
+        "sample": {
+          "success": true,
+          "data": {
+            "id": 1,
+            "pet_id": 1,
+            "user_id": 1,
+            "name": "샘플 제목",
+            "species": "샘플값",
+            "breed": "샘플값",
+            "birth_date": "2026-08-22T09:00:00Z",
+            "death_date": "2026-08-22T09:00:00Z",
+            "pet_status": "active",
+            "memorial_slug": "샘플 내용입니다.",
+            "memorial_access_code": "샘플 내용입니다.",
+            "is_public": true,
+            "profile_image_url": "https://example.com/path",
+            "created_at": "2026-08-22T09:00:00Z"
+          }
+        }
+      },
+      "flowId": "f_pet"
+    },
+    {
+      "method": "GET",
+      "path": "/api/pet/:petId/portrait/status",
+      "src": "backend/src/domains/pet/petRoutes.js:197",
+      "auth": null,
+      "handler": "getPortraitStatus",
+      "schemaRef": "petIdParam",
+      "touches": [
+        {
+          "table": "pets",
+          "ops": [
+            "SELECT"
+          ]
+        },
+        {
+          "table": "ai_jobs",
+          "ops": [
+            "SELECT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "pet"
+      ],
+      "confidence": "high",
+      "id": "ep_38",
+      "request": null,
+      "response": {
+        "from": "SQL 컬럼 (pets)",
+        "sample": {
+          "success": true,
+          "data": {
+            "id": 1,
+            "pet_id": 1,
+            "user_id": 1,
+            "name": "샘플 제목",
+            "species": "샘플값",
+            "breed": "샘플값",
+            "birth_date": "2026-08-22T09:00:00Z",
+            "death_date": "2026-08-22T09:00:00Z",
+            "pet_status": "active",
+            "memorial_slug": "샘플 내용입니다.",
+            "memorial_access_code": "샘플 내용입니다.",
+            "is_public": true,
+            "profile_image_url": "https://example.com/path",
+            "created_at": "2026-08-22T09:00:00Z"
+          }
+        }
+      },
+      "flowId": "f_pet"
+    },
+    {
+      "method": "GET",
+      "path": "/api/pet/:petId/portrait/quota",
+      "src": "backend/src/domains/pet/petRoutes.js:198",
+      "auth": null,
+      "handler": "getPortraitQuota",
+      "schemaRef": "petIdParam",
+      "touches": [
+        {
+          "table": "subscriptions",
+          "ops": [
+            "SELECT"
+          ]
+        },
+        {
+          "table": "ai_jobs",
+          "ops": [
+            "SELECT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "pet"
+      ],
+      "confidence": "high",
+      "id": "ep_39",
+      "request": null,
+      "response": {
+        "from": "SQL 컬럼 (subscriptions)",
+        "sample": {
+          "success": true,
+          "data": {
+            "id": 1,
+            "subscription_id": 1,
+            "user_id": 1,
+            "plan": "샘플값",
+            "sub_status": "active",
+            "toss_billing_key_encrypted": "<token>",
+            "billing_kms_key_id": 1,
+            "price_krw": 10000,
+            "next_billing_at": "2026-08-22T09:00:00Z",
+            "last_billed_at": "2026-08-22T09:00:00Z",
+            "canceled_at": "2026-08-22T09:00:00Z",
+            "cancel_reason": "샘플값",
+            "fail_count": 10,
+            "last_failed_at": "2026-08-22T09:00:00Z"
+          }
+        }
+      },
+      "flowId": "f_pet"
+    },
+    {
+      "method": "POST",
+      "path": "/api/pet/:petId/portrait",
+      "src": "backend/src/domains/pet/petRoutes.js:199",
+      "auth": null,
+      "handler": "requestPortrait",
+      "schemaRef": "requestPortraitSchema",
+      "touches": [
+        {
+          "table": "ai_jobs",
+          "ops": [
+            "INSERT"
+          ]
+        },
+        {
+          "table": "pet_media",
+          "ops": [
+            "SELECT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "pet"
+      ],
+      "confidence": "high",
+      "id": "ep_40",
+      "request": {
+        "from": "미확인",
+        "sample": null
+      },
+      "response": {
+        "from": "SQL 컬럼 (pet_media)",
+        "sample": {
+          "success": true,
+          "data": {
+            "id": 1,
+            "media_id": 1,
+            "pet_id": 1,
+            "media_type": "default",
+            "file_url": "https://example.com/path",
+            "s3_key": "<token>",
+            "thumbnail_s3_key": "https://example.com/image.jpg",
+            "thumbnail_url": "https://example.com/path",
+            "mime_type": "default",
+            "file_size": 1,
+            "width": 1,
+            "height": 1,
+            "duration_sec": 1,
+            "taken_at": "2026-08-22T09:00:00Z"
+          }
+        }
+      },
+      "flowId": "f_pet"
+    },
+    {
+      "method": "POST",
+      "path": "/api/pet/:petId/media",
+      "src": "backend/src/domains/pet/petRoutes.js:201",
+      "auth": null,
+      "handler": "addMedia",
+      "schemaRef": "addMediaSchema",
+      "touches": [
+        {
+          "table": "pet_media",
+          "ops": [
+            "INSERT",
+            "SELECT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "pet"
+      ],
+      "confidence": "high",
+      "id": "ep_41",
+      "request": {
+        "from": "미확인",
+        "sample": null
+      },
+      "response": {
+        "from": "SQL 컬럼 (pet_media)",
+        "sample": {
+          "success": true,
+          "data": {
+            "id": 1,
+            "media_id": 1,
+            "pet_id": 1,
+            "media_type": "default",
+            "file_url": "https://example.com/path",
+            "s3_key": "<token>",
+            "thumbnail_s3_key": "https://example.com/image.jpg",
+            "thumbnail_url": "https://example.com/path",
+            "mime_type": "default",
+            "file_size": 1,
+            "width": 1,
+            "height": 1,
+            "duration_sec": 1,
+            "taken_at": "2026-08-22T09:00:00Z"
+          }
+        }
+      },
+      "flowId": "f_pet"
+    },
+    {
+      "method": "GET",
+      "path": "/api/pet/:petId/media",
+      "src": "backend/src/domains/pet/petRoutes.js:202",
+      "auth": null,
+      "handler": "getMedia",
+      "schemaRef": "getMediaSchema",
+      "touches": [
+        {
+          "table": "pet_media",
+          "ops": [
+            "SELECT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "pet"
+      ],
+      "confidence": "high",
+      "id": "ep_42",
+      "request": null,
+      "response": {
+        "from": "SQL 컬럼 (pet_media)",
+        "sample": {
+          "success": true,
+          "data": {
+            "id": 1,
+            "media_id": 1,
+            "pet_id": 1,
+            "media_type": "default",
+            "file_url": "https://example.com/path",
+            "s3_key": "<token>",
+            "thumbnail_s3_key": "https://example.com/image.jpg",
+            "thumbnail_url": "https://example.com/path",
+            "mime_type": "default",
+            "file_size": 1,
+            "width": 1,
+            "height": 1,
+            "duration_sec": 1,
+            "taken_at": "2026-08-22T09:00:00Z"
+          }
+        }
+      },
+      "flowId": "f_pet"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/pet/:petId/media/:mediaId",
+      "src": "backend/src/domains/pet/petRoutes.js:203",
+      "auth": null,
+      "handler": "deleteMedia",
+      "schemaRef": "mediaIdParam",
+      "touches": [
+        {
+          "table": "pet_media",
+          "ops": [
+            "SELECT",
+            "UPDATE"
+          ]
+        }
+      ],
+      "calledBy": [
+        "pet"
+      ],
+      "confidence": "high",
+      "id": "ep_43",
+      "request": {
+        "from": "Zod 스키마 (mediaIdParam)",
+        "sample": {
+          "params": "샘플값",
+          "petId": "샘플값",
+          "mediaId": "샘플값"
+        }
+      },
+      "response": {
+        "from": "SQL 컬럼 (pet_media)",
+        "sample": {
+          "success": true,
+          "data": {
+            "id": 1,
+            "media_id": 1,
+            "pet_id": 1,
+            "media_type": "default",
+            "file_url": "https://example.com/path",
+            "s3_key": "<token>",
+            "thumbnail_s3_key": "https://example.com/image.jpg",
+            "thumbnail_url": "https://example.com/path",
+            "mime_type": "default",
+            "file_size": 1,
+            "width": 1,
+            "height": 1,
+            "duration_sec": 1,
+            "taken_at": "2026-08-22T09:00:00Z"
+          }
+        }
+      },
+      "flowId": "f_pet"
+    },
+    {
+      "method": "GET",
+      "path": "/api/memorial/:slug",
+      "src": "backend/src/domains/memorial/memorialRoutes.js:52",
+      "auth": "optionalAuth",
+      "handler": "getMemorialPage",
+      "schemaRef": "slugParamSchema",
+      "touches": [
+        {
+          "table": "pets",
+          "ops": [
+            "SELECT"
+          ]
+        },
+        {
+          "table": "pet_media",
+          "ops": [
+            "SELECT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "memorial"
+      ],
+      "confidence": "high",
+      "id": "ep_44",
+      "request": null,
+      "response": {
+        "from": "SQL 컬럼 (pets)",
+        "sample": {
+          "success": true,
+          "data": {
+            "id": 1,
+            "pet_id": 1,
+            "user_id": 1,
+            "name": "샘플 제목",
+            "species": "샘플값",
+            "breed": "샘플값",
+            "birth_date": "2026-08-22T09:00:00Z",
+            "death_date": "2026-08-22T09:00:00Z",
+            "pet_status": "active",
+            "memorial_slug": "샘플 내용입니다.",
+            "memorial_access_code": "샘플 내용입니다.",
+            "is_public": true,
+            "profile_image_url": "https://example.com/path",
+            "created_at": "2026-08-22T09:00:00Z"
+          }
+        }
+      },
+      "flowId": "f_memorial"
+    },
+    {
+      "method": "POST",
+      "path": "/api/payments/webhook",
+      "src": "backend/src/domains/payment/paymentRoutes.js:58",
+      "auth": null,
+      "handler": "handleWebhook",
+      "schemaRef": null,
+      "touches": [
+        {
+          "table": "photo_orders",
+          "ops": [
+            "UPDATE"
+          ]
+        },
+        {
+          "table": "wills",
+          "ops": [
+            "UPDATE"
+          ]
+        },
+        {
+          "table": "gift_orders",
+          "ops": [
+            "UPDATE",
+            "SELECT"
+          ]
+        },
+        {
+          "table": "payments",
+          "ops": [
+            "SELECT",
+            "UPDATE"
+          ]
+        },
+        {
+          "table": "gift_order_logs",
+          "ops": [
+            "INSERT"
+          ]
+        }
+      ],
+      "calledBy": [],
+      "confidence": "high",
+      "id": "ep_45",
+      "request": {
+        "from": "미확인",
+        "sample": null
+      },
+      "response": {
+        "from": "SQL 컬럼 (gift_orders)",
+        "sample": {
+          "success": true,
+          "data": [
+            {
+              "id": 1,
+              "gift_id": 1,
+              "giver_user_id": 1,
+              "product_type": "default",
+              "payment_id": 1,
+              "recipient_name": "샘플 제목",
+              "recipient_phone": "010-1234-5678",
+              "token_expires_at": "2026-08-22T09:00:00Z",
+              "status": "active",
+              "recipient_user_id": 1,
+              "photo_order_id": 1,
+              "will_id": 1,
+              "created_at": "2026-08-22T09:00:00Z",
+              "updated_at": "2026-08-22T09:00:00Z"
+            }
+          ]
+        }
+      },
+      "flowId": "f_payments"
+    },
+    {
+      "method": "POST",
+      "path": "/api/payments/prepare",
+      "src": "backend/src/domains/payment/paymentRoutes.js:61",
+      "auth": "requireAuth",
+      "handler": "preparePayment",
+      "schemaRef": "prepareSchema",
+      "touches": [
+        {
+          "table": "payments",
+          "ops": [
+            "SELECT",
+            "INSERT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "gift",
+        "photo",
+        "will"
+      ],
+      "confidence": "high",
+      "id": "ep_46",
+      "request": {
+        "from": "미확인",
+        "sample": null
+      },
+      "response": {
+        "from": "SQL 컬럼 (payments)",
+        "sample": {
+          "success": true,
+          "data": [
+            {
+              "id": 1,
+              "payment_id": 1,
+              "user_id": 1,
+              "target_type": "default",
+              "target_id": 1,
+              "toss_payment_key": "<token>",
+              "toss_order_id": 1,
+              "amount_krw": 10000,
+              "status": "active",
+              "paid_at": "2026-08-22T09:00:00Z",
+              "canceled_at": "2026-08-22T09:00:00Z",
+              "cancel_reason": "샘플값",
+              "fail_reason": "샘플값",
+              "created_at": "2026-08-22T09:00:00Z"
+            }
+          ]
+        }
+      },
+      "flowId": "f_payments"
+    },
+    {
+      "method": "POST",
+      "path": "/api/payments/confirm",
+      "src": "backend/src/domains/payment/paymentRoutes.js:62",
+      "auth": "requireAuth",
+      "handler": "confirmPayment",
+      "schemaRef": "confirmSchema",
+      "touches": [
+        {
+          "table": "payments",
+          "ops": [
+            "UPDATE",
+            "SELECT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "gift",
+        "photo",
+        "will"
+      ],
+      "confidence": "high",
+      "id": "ep_47",
+      "request": {
+        "from": "Zod 스키마 (confirmSchema)",
+        "sample": {
+          "body": "샘플 내용입니다.",
+          "paymentKey": "<token>",
+          "orderId": "샘플값",
+          "amount": 10000
+        }
+      },
+      "response": {
+        "from": "SQL 컬럼 (payments)",
+        "sample": {
+          "success": true,
+          "data": [
+            {
+              "id": 1,
+              "payment_id": 1,
+              "user_id": 1,
+              "target_type": "default",
+              "target_id": 1,
+              "toss_payment_key": "<token>",
+              "toss_order_id": 1,
+              "amount_krw": 10000,
+              "status": "active",
+              "paid_at": "2026-08-22T09:00:00Z",
+              "canceled_at": "2026-08-22T09:00:00Z",
+              "cancel_reason": "샘플값",
+              "fail_reason": "샘플값",
+              "created_at": "2026-08-22T09:00:00Z"
+            }
+          ]
+        }
+      },
+      "flowId": "f_payments"
+    },
+    {
+      "method": "GET",
+      "path": "/api/payments",
+      "src": "backend/src/domains/payment/paymentRoutes.js:63",
+      "auth": "requireAuth",
+      "handler": "getPayments",
+      "schemaRef": "listSchema",
+      "touches": [
+        {
+          "table": "payments",
+          "ops": [
+            "SELECT"
+          ]
+        }
+      ],
+      "calledBy": [],
+      "confidence": "high",
+      "id": "ep_48",
+      "request": null,
+      "response": {
+        "from": "SQL 컬럼 (payments)",
+        "sample": {
+          "success": true,
+          "data": [
+            {
+              "id": 1,
+              "payment_id": 1,
+              "user_id": 1,
+              "target_type": "default",
+              "target_id": 1,
+              "toss_payment_key": "<token>",
+              "toss_order_id": 1,
+              "amount_krw": 10000,
+              "status": "active",
+              "paid_at": "2026-08-22T09:00:00Z",
+              "canceled_at": "2026-08-22T09:00:00Z",
+              "cancel_reason": "샘플값",
+              "fail_reason": "샘플값",
+              "created_at": "2026-08-22T09:00:00Z"
+            }
+          ]
+        }
+      },
+      "flowId": "f_payments"
+    },
+    {
+      "method": "POST",
+      "path": "/api/payments/:paymentId/cancel",
+      "src": "backend/src/domains/payment/paymentRoutes.js:64",
+      "auth": "requireAuth",
+      "handler": "cancelPayment",
+      "schemaRef": "cancelSchema",
+      "touches": [
+        {
+          "table": "payments",
+          "ops": [
+            "SELECT",
+            "UPDATE"
+          ]
+        }
+      ],
+      "calledBy": [],
+      "confidence": "high",
+      "id": "ep_49",
+      "request": {
+        "from": "Zod 스키마 (cancelSchema)",
+        "sample": {
+          "params": "샘플값",
+          "subscriptionId": "샘플값"
+        }
+      },
+      "response": {
+        "from": "SQL 컬럼 (payments)",
+        "sample": {
+          "success": true,
+          "data": {
+            "id": 1,
+            "payment_id": 1,
+            "user_id": 1,
+            "target_type": "default",
+            "target_id": 1,
+            "toss_payment_key": "<token>",
+            "toss_order_id": 1,
+            "amount_krw": 10000,
+            "status": "active",
+            "paid_at": "2026-08-22T09:00:00Z",
+            "canceled_at": "2026-08-22T09:00:00Z",
+            "cancel_reason": "샘플값",
+            "fail_reason": "샘플값",
+            "created_at": "2026-08-22T09:00:00Z"
+          }
+        }
+      },
+      "flowId": "f_payments"
+    },
+    {
+      "method": "GET",
+      "path": "/api/subscriptions/plans",
+      "src": "backend/src/domains/subscription/subscriptionRoutes.js:90",
+      "auth": null,
+      "handler": "getPlans",
+      "schemaRef": null,
+      "touches": [],
+      "calledBy": [
+        "pet"
+      ],
+      "confidence": "medium",
+      "id": "ep_50",
+      "request": null,
+      "response": {
+        "from": "미확인",
+        "sample": null
+      },
+      "flowId": "f_subscriptions"
+    },
+    {
+      "method": "POST",
+      "path": "/api/subscriptions/billing-auth",
+      "src": "backend/src/domains/subscription/subscriptionRoutes.js:95",
+      "auth": "requireAuth + validate",
+      "handler": "billingAuth",
+      "schemaRef": "billingAuthSchema",
+      "touches": [],
+      "calledBy": [
+        "pet"
+      ],
+      "confidence": "medium",
+      "id": "ep_51",
+      "request": {
+        "from": "미확인",
+        "sample": null
+      },
+      "response": {
+        "from": "미확인",
+        "sample": null
+      },
+      "flowId": "f_subscriptions"
+    },
+    {
+      "method": "GET",
+      "path": "/api/subscriptions",
+      "src": "backend/src/domains/subscription/subscriptionRoutes.js:98",
+      "auth": "requireAuth",
+      "handler": "getSubscriptions",
+      "schemaRef": null,
+      "touches": [
+        {
+          "table": "subscriptions",
+          "ops": [
+            "SELECT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "pet"
+      ],
+      "confidence": "high",
+      "id": "ep_52",
+      "request": null,
+      "response": {
+        "from": "SQL 컬럼 (subscriptions)",
+        "sample": {
+          "success": true,
+          "data": [
+            {
+              "id": 1,
+              "subscription_id": 1,
+              "user_id": 1,
+              "plan": "샘플값",
+              "sub_status": "active",
+              "toss_billing_key_encrypted": "<token>",
+              "billing_kms_key_id": 1,
+              "price_krw": 10000,
+              "next_billing_at": "2026-08-22T09:00:00Z",
+              "last_billed_at": "2026-08-22T09:00:00Z",
+              "canceled_at": "2026-08-22T09:00:00Z",
+              "cancel_reason": "샘플값",
+              "fail_count": 10,
+              "last_failed_at": "2026-08-22T09:00:00Z"
+            }
+          ]
+        }
+      },
+      "flowId": "f_subscriptions"
+    },
+    {
+      "method": "POST",
+      "path": "/api/subscriptions",
+      "src": "backend/src/domains/subscription/subscriptionRoutes.js:101",
+      "auth": "requireAuth",
+      "handler": "subscribe",
+      "schemaRef": "subscribeSchema",
+      "touches": [
+        {
+          "table": "users",
+          "ops": [
+            "SELECT"
+          ]
+        },
+        {
+          "table": "payments",
+          "ops": [
+            "INSERT",
+            "SELECT"
+          ]
+        },
+        {
+          "table": "subscriptions",
+          "ops": [
+            "SELECT",
+            "UPDATE",
+            "INSERT"
+          ]
+        },
+        {
+          "table": "subscription_payment_logs",
+          "ops": [
+            "SELECT",
+            "INSERT",
+            "UPDATE"
+          ]
+        }
+      ],
+      "calledBy": [
+        "pet"
+      ],
+      "confidence": "high",
+      "id": "ep_53",
+      "request": {
+        "from": "Zod 스키마 (subscribeSchema)",
+        "sample": {
+          "body": "샘플 내용입니다.",
+          "plan": "샘플값",
+          "authKey": "<token>",
+          "customerKey": "<token>"
+        }
+      },
+      "response": {
+        "from": "SQL 컬럼 (users)",
+        "sample": {
+          "success": true,
+          "data": [
+            {
+              "id": 1,
+              "user_id": 1,
+              "email": "user@example.com",
+              "phone": "010-1234-5678",
+              "nickname": "샘플 제목",
+              "profile_image_url": "https://example.com/path",
+              "role": "샘플값",
+              "kakao_id": 1,
+              "email_verified_at": "2026-08-22T09:00:00Z",
+              "phone_verified_at": "2026-08-22T09:00:00Z",
+              "is_active": true,
+              "deactivated_at": "2026-08-22T09:00:00Z",
+              "created_at": "2026-08-22T09:00:00Z",
+              "updated_at": "2026-08-22T09:00:00Z"
+            }
+          ]
+        }
+      },
+      "flowId": "f_subscriptions"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/subscriptions/:subscriptionId",
+      "src": "backend/src/domains/subscription/subscriptionRoutes.js:104",
+      "auth": "requireAuth",
+      "handler": "cancelSubscription",
+      "schemaRef": "cancelSchema",
+      "touches": [],
+      "calledBy": [
+        "pet"
+      ],
+      "confidence": "medium",
+      "id": "ep_54",
+      "request": {
+        "from": "Zod 스키마 (cancelSchema)",
+        "sample": {
+          "params": "샘플값",
+          "subscriptionId": "샘플값"
+        }
+      },
+      "response": {
+        "from": "미확인",
+        "sample": null
+      },
+      "flowId": "f_subscriptions"
+    },
+    {
+      "method": "POST",
+      "path": "/api/subscriptions/:subscriptionId/retry-payment",
+      "src": "backend/src/domains/subscription/subscriptionRoutes.js:107",
+      "auth": "requireAuth",
+      "handler": "retryPayment",
+      "schemaRef": "subscriptionIdSchema",
+      "touches": [
+        {
+          "table": "users",
+          "ops": [
+            "SELECT"
+          ]
+        },
+        {
+          "table": "notifications",
+          "ops": [
+            "INSERT"
+          ]
+        },
+        {
+          "table": "subscriptions",
+          "ops": [
+            "SELECT"
+          ]
+        },
+        {
+          "table": "subscription_payment_logs",
+          "ops": [
+            "SELECT",
+            "INSERT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "pet"
+      ],
+      "confidence": "high",
+      "id": "ep_55",
+      "request": {
+        "from": "Zod 스키마 (subscriptionIdSchema)",
+        "sample": {
+          "params": "샘플값",
+          "subscriptionId": "샘플값"
+        }
+      },
+      "response": {
+        "from": "SQL 컬럼 (users)",
+        "sample": {
+          "success": true,
+          "data": {
+            "id": 1,
+            "user_id": 1,
+            "email": "user@example.com",
+            "phone": "010-1234-5678",
+            "nickname": "샘플 제목",
+            "profile_image_url": "https://example.com/path",
+            "role": "샘플값",
+            "kakao_id": 1,
+            "email_verified_at": "2026-08-22T09:00:00Z",
+            "phone_verified_at": "2026-08-22T09:00:00Z",
+            "is_active": true,
+            "deactivated_at": "2026-08-22T09:00:00Z",
+            "created_at": "2026-08-22T09:00:00Z",
+            "updated_at": "2026-08-22T09:00:00Z"
+          }
+        }
+      },
+      "flowId": "f_subscriptions"
+    },
+    {
+      "method": "GET",
+      "path": "/api/subscriptions/:subscriptionId/payment-logs",
+      "src": "backend/src/domains/subscription/subscriptionRoutes.js:110",
+      "auth": "requireAuth",
+      "handler": "getPaymentLogs",
+      "schemaRef": "paymentLogsQuerySchema",
+      "touches": [
+        {
+          "table": "subscriptions",
+          "ops": [
+            "SELECT"
+          ]
+        },
+        {
+          "table": "subscription_payment_logs",
+          "ops": [
+            "SELECT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "pet"
+      ],
+      "confidence": "high",
+      "id": "ep_56",
+      "request": null,
+      "response": {
+        "from": "SQL 컬럼 (subscriptions)",
+        "sample": {
+          "success": true,
+          "data": {
+            "id": 1,
+            "subscription_id": 1,
+            "user_id": 1,
+            "plan": "샘플값",
+            "sub_status": "active",
+            "toss_billing_key_encrypted": "<token>",
+            "billing_kms_key_id": 1,
+            "price_krw": 10000,
+            "next_billing_at": "2026-08-22T09:00:00Z",
+            "last_billed_at": "2026-08-22T09:00:00Z",
+            "canceled_at": "2026-08-22T09:00:00Z",
+            "cancel_reason": "샘플값",
+            "fail_count": 10,
+            "last_failed_at": "2026-08-22T09:00:00Z"
+          }
+        }
+      },
+      "flowId": "f_subscriptions"
+    },
+    {
+      "method": "GET",
+      "path": "/api/notifications/unread-count",
+      "src": "backend/src/domains/notification/notificationRoutes.js:62",
+      "auth": null,
+      "handler": "getUnreadCount",
+      "schemaRef": null,
+      "touches": [
+        {
+          "table": "notifications",
+          "ops": [
+            "SELECT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "mypage"
+      ],
+      "confidence": "high",
+      "id": "ep_57",
+      "request": null,
+      "response": {
+        "from": "SQL 컬럼 (notifications)",
+        "sample": {
+          "success": true,
+          "data": [
+            {
+              "id": 1,
+              "notification_id": 1,
+              "user_id": 1,
+              "notification_type": "default"
+            }
+          ]
+        }
+      },
+      "flowId": "f_notifications"
+    },
+    {
+      "method": "GET",
+      "path": "/api/notifications/settings",
+      "src": "backend/src/domains/notification/notificationRoutes.js:63",
+      "auth": null,
+      "handler": "getSettings",
+      "schemaRef": null,
+      "touches": [],
+      "calledBy": [
+        "mypage"
+      ],
+      "confidence": "medium",
+      "id": "ep_58",
+      "request": null,
+      "response": {
+        "from": "미확인",
+        "sample": null
+      },
+      "flowId": "f_notifications"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/notifications/settings",
+      "src": "backend/src/domains/notification/notificationRoutes.js:64",
+      "auth": null,
+      "handler": "updateSettings",
+      "schemaRef": "updateSettingsSchema",
+      "touches": [
+        {
+          "table": "user_notification_settings",
+          "ops": [
+            "INSERT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "mypage"
+      ],
+      "confidence": "high",
+      "id": "ep_59",
+      "request": {
+        "from": "Zod 스키마 (updateSettingsSchema)",
+        "sample": {
+          "pushEnabled": "샘플값",
+          "emailEnabled": "user@example.com",
+          "smsEnabled": "샘플값",
+          "notifyPhotoComplete": "https://example.com/image.jpg",
+          "notifyWillEvents": "샘플값",
+          "notifyPayment": "샘플값",
+          "notifySubscription": "샘플값",
+          "notifyPetMemorial": "샘플 내용입니다.",
+          "notifyAdminNotice": "샘플값"
+        }
+      },
+      "response": {
+        "from": "SQL 컬럼 (user_notification_settings)",
+        "sample": {
+          "success": true,
+          "data": [
+            {
+              "id": 1,
+              "user_id": 1,
+              "push_enabled": true,
+              "email_enabled": true,
+              "sms_enabled": true,
+              "notify_photo_complete": true,
+              "notify_will_events": true,
+              "notify_payment": true,
+              "notify_subscription": true,
+              "notify_pet_memorial": true,
+              "notify_admin_notice": true,
+              "created_at": "2026-08-22T09:00:00Z",
+              "updated_at": "2026-08-22T09:00:00Z"
+            }
+          ]
+        }
+      },
+      "flowId": "f_notifications"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/notifications/read-all",
+      "src": "backend/src/domains/notification/notificationRoutes.js:65",
+      "auth": null,
+      "handler": "markAllAsRead",
+      "schemaRef": null,
+      "touches": [],
+      "calledBy": [
+        "mypage"
+      ],
+      "confidence": "medium",
+      "id": "ep_60",
+      "request": {
+        "from": "미확인",
+        "sample": null
+      },
+      "response": {
+        "from": "미확인",
+        "sample": null
+      },
+      "flowId": "f_notifications"
+    },
+    {
+      "method": "GET",
+      "path": "/api/notifications",
+      "src": "backend/src/domains/notification/notificationRoutes.js:66",
+      "auth": null,
+      "handler": "getNotifications",
+      "schemaRef": "listQuerySchema",
+      "touches": [
+        {
+          "table": "notifications",
+          "ops": [
+            "SELECT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "mypage"
+      ],
+      "confidence": "high",
+      "id": "ep_61",
+      "request": null,
+      "response": {
+        "from": "SQL 컬럼 (notifications)",
+        "sample": {
+          "success": true,
+          "data": [
+            {
+              "id": 1,
+              "notification_id": 1,
+              "user_id": 1,
+              "notification_type": "default"
+            }
+          ]
+        }
+      },
+      "flowId": "f_notifications"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/notifications/:id/read",
+      "src": "backend/src/domains/notification/notificationRoutes.js:67",
+      "auth": null,
+      "handler": "markAsRead",
+      "schemaRef": "notificationIdParamSchema",
+      "touches": [],
+      "calledBy": [
+        "mypage"
+      ],
+      "confidence": "medium",
+      "id": "ep_62",
+      "request": {
+        "from": "Zod 스키마 (notificationIdParamSchema)",
+        "sample": {
+          "params": "샘플값",
+          "id": 1
+        }
+      },
+      "response": {
+        "from": "미확인",
+        "sample": null
+      },
+      "flowId": "f_notifications"
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/auth/login",
+      "src": "backend/src/domains/admin/adminRoutes.js:170",
+      "auth": "adminLoginLimiter",
+      "handler": "login",
+      "schemaRef": "loginSchema",
+      "touches": [
+        {
+          "table": "admin_users",
+          "ops": [
+            "SELECT",
+            "UPDATE"
+          ]
+        },
+        {
+          "table": "refresh_tokens",
+          "ops": [
+            "INSERT"
+          ]
+        },
+        {
+          "table": "audit_logs",
+          "ops": [
+            "INSERT"
+          ]
+        }
+      ],
+      "calledBy": [],
+      "confidence": "high",
+      "id": "ep_63",
+      "request": {
+        "from": "Zod 스키마 (loginSchema)",
+        "sample": {
+          "body": "샘플 내용입니다.",
+          "email": "user@example.com",
+          "password": "********"
+        }
+      },
+      "response": {
+        "from": "SQL 컬럼 (admin_users)",
+        "sample": {
+          "success": true,
+          "data": [
+            {
+              "id": 1,
+              "admin_id": 1,
+              "email": "user@example.com",
+              "name": "샘플 제목",
+              "admin_role": "샘플값",
+              "is_active": true,
+              "last_login_at": "2026-08-22T09:00:00Z",
+              "created_at": "2026-08-22T09:00:00Z",
+              "updated_at": "2026-08-22T09:00:00Z"
+            }
+          ]
+        }
+      },
+      "flowId": "f_admin_auth"
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/auth/refresh",
+      "src": "backend/src/domains/admin/adminRoutes.js:173",
+      "auth": "adminRefreshLimiter",
+      "handler": "refresh",
+      "schemaRef": null,
+      "touches": [
+        {
+          "table": "refresh_tokens",
+          "ops": [
+            "SELECT",
+            "UPDATE",
+            "INSERT"
+          ]
+        },
+        {
+          "table": "admin_users",
+          "ops": [
+            "SELECT"
+          ]
+        }
+      ],
+      "calledBy": [],
+      "confidence": "high",
+      "id": "ep_64",
+      "request": {
+        "from": "미확인",
+        "sample": null
+      },
+      "response": {
+        "from": "SQL 컬럼 (refresh_tokens)",
+        "sample": {
+          "success": true,
+          "data": [
+            {
+              "id": 1,
+              "user_id": 1,
+              "expires_at": "2026-08-22T09:00:00Z",
+              "revoked_at": "2026-08-22T09:00:00Z",
+              "created_at": "2026-08-22T09:00:00Z"
+            }
+          ]
+        }
+      },
+      "flowId": "f_admin_auth"
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/auth/logout",
+      "src": "backend/src/domains/admin/adminRoutes.js:176",
+      "auth": "requireAuth + requireAdmin",
+      "handler": "logout",
+      "schemaRef": null,
+      "touches": [
+        {
+          "table": "refresh_tokens",
+          "ops": [
+            "UPDATE"
+          ]
+        }
+      ],
+      "calledBy": [],
+      "confidence": "high",
+      "id": "ep_65",
+      "request": {
+        "from": "미확인",
+        "sample": null
+      },
+      "response": {
+        "from": "SQL 컬럼 (refresh_tokens)",
+        "sample": {
+          "success": true,
+          "data": [
+            {
+              "id": 1,
+              "user_id": 1,
+              "expires_at": "2026-08-22T09:00:00Z",
+              "revoked_at": "2026-08-22T09:00:00Z",
+              "created_at": "2026-08-22T09:00:00Z"
+            }
+          ]
+        }
+      },
+      "flowId": "f_admin_auth"
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/dashboard",
+      "src": "backend/src/domains/admin/adminRoutes.js:183",
+      "auth": "requireAuth + requireAdmin + adminApiLimiter",
+      "handler": "getDashboard",
+      "schemaRef": null,
+      "touches": [
+        {
+          "table": "users",
+          "ops": [
+            "SELECT"
+          ]
+        },
+        {
+          "table": "photo_orders",
+          "ops": [
+            "SELECT"
+          ]
+        },
+        {
+          "table": "will_release_requests",
+          "ops": [
+            "SELECT"
+          ]
+        },
+        {
+          "table": "ai_jobs",
+          "ops": [
+            "SELECT"
+          ]
+        }
+      ],
+      "calledBy": [],
+      "confidence": "high",
+      "id": "ep_66",
+      "request": null,
+      "response": {
+        "from": "SQL 컬럼 (users)",
+        "sample": {
+          "success": true,
+          "data": [
+            {
+              "id": 1,
+              "user_id": 1,
+              "email": "user@example.com",
+              "phone": "010-1234-5678",
+              "nickname": "샘플 제목",
+              "profile_image_url": "https://example.com/path",
+              "role": "샘플값",
+              "kakao_id": 1,
+              "email_verified_at": "2026-08-22T09:00:00Z",
+              "phone_verified_at": "2026-08-22T09:00:00Z",
+              "is_active": true,
+              "deactivated_at": "2026-08-22T09:00:00Z",
+              "created_at": "2026-08-22T09:00:00Z",
+              "updated_at": "2026-08-22T09:00:00Z"
+            }
+          ]
+        }
+      },
+      "flowId": "f_admin_dashboard"
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/releases",
+      "src": "backend/src/domains/admin/adminRoutes.js:194",
+      "auth": "requireAuth + requireAdmin + requireAdminRole + adminApiLimiter",
+      "handler": "getPendingReleases",
+      "schemaRef": "paginationSchema",
+      "touches": [
+        {
+          "table": "will_release_requests",
+          "ops": [
+            "SELECT"
+          ]
+        },
+        {
+          "table": "will_beneficiaries",
+          "ops": [
+            "SELECT"
+          ]
+        }
+      ],
+      "calledBy": [],
+      "confidence": "high",
+      "id": "ep_67",
+      "request": null,
+      "response": {
+        "from": "SQL 컬럼 (will_release_requests)",
+        "sample": {
+          "success": true,
+          "data": [
+            {
+              "id": 1,
+              "request_id": 1,
+              "will_id": 1,
+              "requested_by": "샘플값",
+              "beneficiary_id": 1,
+              "death_cert_s3_key": "<token>",
+              "death_cert_url": "https://example.com/path",
+              "req_status": "active",
+              "reviewed_by": "샘플값",
+              "reviewed_at": "2026-08-22T09:00:00Z",
+              "reject_reason": "샘플값",
+              "created_at": "2026-08-22T09:00:00Z",
+              "updated_at": "2026-08-22T09:00:00Z"
+            }
+          ]
+        }
+      },
+      "flowId": "f_admin_releases"
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/releases/:id/document-url",
+      "src": "backend/src/domains/admin/adminRoutes.js:204",
+      "auth": "requireAuth + requireAdmin + requireAdminRole + adminApiLimiter",
+      "handler": "getReleaseDocumentUrl",
+      "schemaRef": "releaseIdSchema",
+      "touches": [
+        {
+          "table": "will_release_requests",
+          "ops": [
+            "SELECT"
+          ]
+        },
+        {
+          "table": "audit_logs",
+          "ops": [
+            "INSERT"
+          ]
+        }
+      ],
+      "calledBy": [],
+      "confidence": "high",
+      "id": "ep_68",
+      "request": null,
+      "response": {
+        "from": "SQL 컬럼 (will_release_requests)",
+        "sample": {
+          "success": true,
+          "data": {
+            "id": 1,
+            "request_id": 1,
+            "will_id": 1,
+            "requested_by": "샘플값",
+            "beneficiary_id": 1,
+            "death_cert_s3_key": "<token>",
+            "death_cert_url": "https://example.com/path",
+            "req_status": "active",
+            "reviewed_by": "샘플값",
+            "reviewed_at": "2026-08-22T09:00:00Z",
+            "reject_reason": "샘플값",
+            "created_at": "2026-08-22T09:00:00Z",
+            "updated_at": "2026-08-22T09:00:00Z"
+          }
+        }
+      },
+      "flowId": "f_admin_releases"
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/releases/:id/approve",
+      "src": "backend/src/domains/admin/adminRoutes.js:214",
+      "auth": "requireAuth + requireAdmin + requireAdminRole + adminApiLimiter",
+      "handler": "approveRelease",
+      "schemaRef": "releaseIdSchema",
+      "touches": [
+        {
+          "table": "notifications",
+          "ops": [
+            "INSERT"
+          ]
+        },
+        {
+          "table": "will_release_requests",
+          "ops": [
+            "SELECT",
+            "UPDATE"
+          ]
+        },
+        {
+          "table": "wills",
+          "ops": [
+            "SELECT",
+            "UPDATE"
+          ]
+        },
+        {
+          "table": "user_consents",
+          "ops": [
+            "SELECT"
+          ]
+        },
+        {
+          "table": "will_beneficiaries",
+          "ops": [
+            "SELECT"
+          ]
+        },
+        {
+          "table": "users",
+          "ops": [
+            "SELECT"
+          ]
+        },
+        {
+          "table": "audit_logs",
+          "ops": [
+            "INSERT"
+          ]
+        }
+      ],
+      "calledBy": [],
+      "confidence": "high",
+      "id": "ep_69",
+      "request": {
+        "from": "Zod 스키마 (releaseIdSchema)",
+        "sample": {
+          "params": "샘플값",
+          "id": 1
+        }
+      },
+      "response": {
+        "from": "SQL 컬럼 (will_release_requests)",
+        "sample": {
+          "success": true,
+          "data": {
+            "id": 1,
+            "request_id": 1,
+            "will_id": 1,
+            "requested_by": "샘플값",
+            "beneficiary_id": 1,
+            "death_cert_s3_key": "<token>",
+            "death_cert_url": "https://example.com/path",
+            "req_status": "active",
+            "reviewed_by": "샘플값",
+            "reviewed_at": "2026-08-22T09:00:00Z",
+            "reject_reason": "샘플값",
+            "created_at": "2026-08-22T09:00:00Z",
+            "updated_at": "2026-08-22T09:00:00Z"
+          }
+        }
+      },
+      "flowId": "f_admin_releases"
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/releases/:id/reject",
+      "src": "backend/src/domains/admin/adminRoutes.js:224",
+      "auth": "requireAuth + requireAdmin + requireAdminRole + adminApiLimiter",
+      "handler": "rejectRelease",
+      "schemaRef": "rejectSchema",
+      "touches": [
+        {
+          "table": "will_release_requests",
+          "ops": [
+            "SELECT",
+            "UPDATE"
+          ]
+        },
+        {
+          "table": "wills",
+          "ops": [
+            "UPDATE"
+          ]
+        },
+        {
+          "table": "audit_logs",
+          "ops": [
+            "INSERT"
+          ]
+        }
+      ],
+      "calledBy": [],
+      "confidence": "high",
+      "id": "ep_70",
+      "request": {
+        "from": "Zod 스키마 (rejectSchema)",
+        "sample": {
+          "params": "샘플값",
+          "id": 1,
+          "body": "샘플 내용입니다.",
+          "rejectReason": "샘플값"
+        }
+      },
+      "response": {
+        "from": "SQL 컬럼 (will_release_requests)",
+        "sample": {
+          "success": true,
+          "data": {
+            "id": 1,
+            "request_id": 1,
+            "will_id": 1,
+            "requested_by": "샘플값",
+            "beneficiary_id": 1,
+            "death_cert_s3_key": "<token>",
+            "death_cert_url": "https://example.com/path",
+            "req_status": "active",
+            "reviewed_by": "샘플값",
+            "reviewed_at": "2026-08-22T09:00:00Z",
+            "reject_reason": "샘플값",
+            "created_at": "2026-08-22T09:00:00Z",
+            "updated_at": "2026-08-22T09:00:00Z"
+          }
+        }
+      },
+      "flowId": "f_admin_releases"
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/will/beneficiaries/:beneficiaryId/unlock",
+      "src": "backend/src/domains/admin/adminRoutes.js:236",
+      "auth": "requireAuth + requireAdmin + requireAdminRole + adminApiLimiter",
+      "handler": "unlockWillWatch",
+      "schemaRef": "beneficiaryIdParamSchema",
+      "touches": [
+        {
+          "table": "will_beneficiaries",
+          "ops": [
+            "SELECT"
+          ]
+        },
+        {
+          "table": "audit_logs",
+          "ops": [
+            "INSERT"
+          ]
+        }
+      ],
+      "calledBy": [],
+      "confidence": "high",
+      "id": "ep_71",
+      "request": {
+        "from": "Zod 스키마 (beneficiaryIdParamSchema)",
+        "sample": {
+          "params": "샘플값",
+          "beneficiaryId": "샘플값"
+        }
+      },
+      "response": {
+        "from": "SQL 컬럼 (will_beneficiaries)",
+        "sample": {
+          "success": true,
+          "data": {
+            "id": 1,
+            "beneficiary_id": 1,
+            "will_id": 1,
+            "user_id": 1,
+            "name": "샘플 제목",
+            "email": "user@example.com",
+            "phone": "010-1234-5678",
+            "relationship": "샘플값",
+            "invite_token": "<token>",
+            "verified_at": "2026-08-22T09:00:00Z",
+            "delivered_at": "2026-08-22T09:00:00Z",
+            "video_watched_at": "2026-08-22T09:00:00Z",
+            "watch_count": 10,
+            "token_expires_at": "2026-08-22T09:00:00Z"
+          }
+        }
+      },
+      "flowId": "f_admin_will"
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/orders",
+      "src": "backend/src/domains/admin/adminRoutes.js:246",
+      "auth": "requireAuth + requireAdmin + adminApiLimiter",
+      "handler": "getOrders",
+      "schemaRef": "ordersQuerySchema",
+      "touches": [],
+      "calledBy": [],
+      "confidence": "medium",
+      "id": "ep_72",
+      "request": null,
+      "response": {
+        "from": "미확인",
+        "sample": null
+      },
+      "flowId": "f_admin_orders"
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/users",
+      "src": "backend/src/domains/admin/adminRoutes.js:255",
+      "auth": "requireAuth + requireAdmin + adminApiLimiter",
+      "handler": "getUsers",
+      "schemaRef": "usersQuerySchema",
+      "touches": [],
+      "calledBy": [],
+      "confidence": "medium",
+      "id": "ep_73",
+      "request": null,
+      "response": {
+        "from": "미확인",
+        "sample": null
+      },
+      "flowId": "f_admin_users"
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/jobs/failed",
+      "src": "backend/src/domains/admin/adminRoutes.js:264",
+      "auth": "requireAuth + requireAdmin + adminApiLimiter",
+      "handler": "getFailedJobs",
+      "schemaRef": "paginationSchema",
+      "touches": [],
+      "calledBy": [],
+      "confidence": "medium",
+      "id": "ep_74",
+      "request": null,
+      "response": {
+        "from": "미확인",
+        "sample": null
+      },
+      "flowId": "f_admin_jobs"
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/notifications/failed",
+      "src": "backend/src/domains/admin/adminRoutes.js:276",
+      "auth": "requireAuth + requireAdmin + requireAdminRole + adminApiLimiter",
+      "handler": "getFailedNotifications",
+      "schemaRef": "paginationSchema",
+      "touches": [],
+      "calledBy": [],
+      "confidence": "medium",
+      "id": "ep_75",
+      "request": null,
+      "response": {
+        "from": "미확인",
+        "sample": null
+      },
+      "flowId": "f_admin_notifications"
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/ad-spend",
+      "src": "backend/src/domains/admin/adminRoutes.js:294",
+      "auth": "requireAuth + requireAdmin + requireAdminRole + adminApiLimiter",
+      "handler": "createAdSpend",
+      "schemaRef": "adSpendCreateSchema",
+      "touches": [],
+      "calledBy": [],
+      "confidence": "medium",
+      "id": "ep_76",
+      "request": {
+        "from": "Zod 스키마 (adSpendUpdateSchema)",
+        "sample": {
+          "params": "샘플값",
+          "id": 1
+        }
+      },
+      "response": {
+        "from": "미확인",
+        "sample": null
+      },
+      "flowId": "f_admin_ad_spend"
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/ad-spend",
+      "src": "backend/src/domains/admin/adminRoutes.js:304",
+      "auth": "requireAuth + requireAdmin + requireAdminRole + adminApiLimiter",
+      "handler": "getAdSpendList",
+      "schemaRef": "adSpendListQuerySchema",
+      "touches": [
+        {
+          "table": "ad_spend",
+          "ops": [
+            "SELECT"
+          ]
+        }
+      ],
+      "calledBy": [],
+      "confidence": "high",
+      "id": "ep_77",
+      "request": null,
+      "response": {
+        "from": "SQL 컬럼 (ad_spend)",
+        "sample": {
+          "success": true,
+          "data": [
+            {
+              "id": 1,
+              "ad_spend_id": 1,
+              "channel": "샘플값",
+              "period_start": "2026-08-22T09:00:00Z",
+              "period_end": "2026-08-22T09:00:00Z",
+              "spend_krw": 1,
+              "note": "샘플값",
+              "recorded_by": "샘플값",
+              "created_at": "2026-08-22T09:00:00Z",
+              "updated_at": "2026-08-22T09:00:00Z"
+            }
+          ]
+        }
+      },
+      "flowId": "f_admin_ad_spend"
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/ad-spend/recent-channels",
+      "src": "backend/src/domains/admin/adminRoutes.js:314",
+      "auth": "requireAuth + requireAdmin + requireAdminRole + adminApiLimiter",
+      "handler": "getRecentChannels",
+      "schemaRef": null,
+      "touches": [],
+      "calledBy": [],
+      "confidence": "medium",
+      "id": "ep_78",
+      "request": null,
+      "response": {
+        "from": "미확인",
+        "sample": null
+      },
+      "flowId": "f_admin_ad_spend"
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/ad-spend/cac",
+      "src": "backend/src/domains/admin/adminRoutes.js:323",
+      "auth": "requireAuth + requireAdmin + requireAdminRole + adminApiLimiter",
+      "handler": "getCac",
+      "schemaRef": "cacQuerySchema",
+      "touches": [
+        {
+          "table": "ad_spend",
+          "ops": [
+            "SELECT"
+          ]
+        },
+        {
+          "table": "payments",
+          "ops": [
+            "SELECT"
+          ]
+        }
+      ],
+      "calledBy": [],
+      "confidence": "high",
+      "id": "ep_79",
+      "request": null,
+      "response": {
+        "from": "SQL 컬럼 (ad_spend)",
+        "sample": {
+          "success": true,
+          "data": [
+            {
+              "id": 1,
+              "ad_spend_id": 1,
+              "channel": "샘플값",
+              "period_start": "2026-08-22T09:00:00Z",
+              "period_end": "2026-08-22T09:00:00Z",
+              "spend_krw": 1,
+              "note": "샘플값",
+              "recorded_by": "샘플값",
+              "created_at": "2026-08-22T09:00:00Z",
+              "updated_at": "2026-08-22T09:00:00Z"
+            }
+          ]
+        }
+      },
+      "flowId": "f_admin_ad_spend"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/ad-spend/:id",
+      "src": "backend/src/domains/admin/adminRoutes.js:333",
+      "auth": "requireAuth + requireAdmin + requireAdminRole + adminApiLimiter",
+      "handler": "updateAdSpend",
+      "schemaRef": "adSpendUpdateSchema",
+      "touches": [],
+      "calledBy": [],
+      "confidence": "medium",
+      "id": "ep_80",
+      "request": {
+        "from": "Zod 스키마 (adSpendUpdateSchema)",
+        "sample": {
+          "params": "샘플값",
+          "id": 1
+        }
+      },
+      "response": {
+        "from": "미확인",
+        "sample": null
+      },
+      "flowId": "f_admin_ad_spend"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/admin/ad-spend/:id",
+      "src": "backend/src/domains/admin/adminRoutes.js:343",
+      "auth": "requireAuth + requireAdmin + requireAdminRole + adminApiLimiter",
+      "handler": "deleteAdSpend",
+      "schemaRef": "adSpendIdSchema",
+      "touches": [
+        {
+          "table": "ad_spend",
+          "ops": [
+            "SELECT",
+            "UPDATE"
+          ]
+        },
+        {
+          "table": "audit_logs",
+          "ops": [
+            "INSERT"
+          ]
+        }
+      ],
+      "calledBy": [],
+      "confidence": "high",
+      "id": "ep_81",
+      "request": {
+        "from": "Zod 스키마 (adSpendIdSchema)",
+        "sample": {
+          "params": "샘플값",
+          "id": 1
+        }
+      },
+      "response": {
+        "from": "SQL 컬럼 (ad_spend)",
+        "sample": {
+          "success": true,
+          "data": {
+            "id": 1,
+            "ad_spend_id": 1,
+            "channel": "샘플값",
+            "period_start": "2026-08-22T09:00:00Z",
+            "period_end": "2026-08-22T09:00:00Z",
+            "spend_krw": 1,
+            "note": "샘플값",
+            "recorded_by": "샘플값",
+            "created_at": "2026-08-22T09:00:00Z",
+            "updated_at": "2026-08-22T09:00:00Z"
+          }
+        }
+      },
+      "flowId": "f_admin_ad_spend"
+    },
+    {
+      "method": "POST",
+      "path": "/api/uploads/photo",
+      "src": "backend/src/domains/common/uploadRoutes.js:20",
+      "auth": null,
+      "handler": "size",
+      "schemaRef": null,
+      "touches": [],
+      "calledBy": [
+        "pet",
+        "photo",
+        "will"
+      ],
+      "confidence": "medium",
+      "id": "ep_82",
+      "request": {
+        "from": "미확인",
+        "sample": null
+      },
+      "response": {
+        "from": "미확인",
+        "sample": null
+      },
+      "flowId": "f_uploads"
+    },
+    {
+      "method": "POST",
+      "path": "/api/uploads/audio",
+      "src": "backend/src/domains/common/uploadRoutes.js:41",
+      "auth": null,
+      "handler": "size",
+      "schemaRef": null,
+      "touches": [],
+      "calledBy": [
+        "will"
+      ],
+      "confidence": "medium",
+      "id": "ep_83",
+      "request": {
+        "from": "미확인",
+        "sample": null
+      },
+      "response": {
+        "from": "미확인",
+        "sample": null
+      },
+      "flowId": "f_uploads"
+    },
+    {
+      "method": "POST",
+      "path": "/api/gifts",
+      "src": "backend/src/domains/gift/giftRoutes.js:148",
+      "auth": "requireAuth",
+      "handler": "createGiftOrder",
+      "schemaRef": "createGiftSchema",
+      "touches": [
+        {
+          "table": "gift_orders",
+          "ops": [
+            "INSERT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "gift"
+      ],
+      "confidence": "high",
+      "id": "ep_84",
+      "request": {
+        "from": "미확인",
+        "sample": null
+      },
+      "response": {
+        "from": "SQL 컬럼 (gift_orders)",
+        "sample": {
+          "success": true,
+          "data": [
+            {
+              "id": 1,
+              "gift_id": 1,
+              "giver_user_id": 1,
+              "product_type": "default",
+              "payment_id": 1,
+              "recipient_name": "샘플 제목",
+              "recipient_phone": "010-1234-5678",
+              "token_expires_at": "2026-08-22T09:00:00Z",
+              "status": "active",
+              "recipient_user_id": 1,
+              "photo_order_id": 1,
+              "will_id": 1,
+              "created_at": "2026-08-22T09:00:00Z",
+              "updated_at": "2026-08-22T09:00:00Z"
+            }
+          ]
+        }
+      },
+      "flowId": "f_gifts"
+    },
+    {
+      "method": "GET",
+      "path": "/api/gifts/mine",
+      "src": "backend/src/domains/gift/giftRoutes.js:149",
+      "auth": "requireAuth",
+      "handler": "getMyGifts",
+      "schemaRef": "listSchema",
+      "touches": [
+        {
+          "table": "gift_orders",
+          "ops": [
+            "SELECT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "gift"
+      ],
+      "confidence": "high",
+      "id": "ep_85",
+      "request": null,
+      "response": {
+        "from": "SQL 컬럼 (gift_orders)",
+        "sample": {
+          "success": true,
+          "data": [
+            {
+              "id": 1,
+              "gift_id": 1,
+              "giver_user_id": 1,
+              "product_type": "default",
+              "payment_id": 1,
+              "recipient_name": "샘플 제목",
+              "recipient_phone": "010-1234-5678",
+              "token_expires_at": "2026-08-22T09:00:00Z",
+              "status": "active",
+              "recipient_user_id": 1,
+              "photo_order_id": 1,
+              "will_id": 1,
+              "created_at": "2026-08-22T09:00:00Z",
+              "updated_at": "2026-08-22T09:00:00Z"
+            }
+          ]
+        }
+      },
+      "flowId": "f_gifts"
+    },
+    {
+      "method": "POST",
+      "path": "/api/gifts/:giftId/resend",
+      "src": "backend/src/domains/gift/giftRoutes.js:150",
+      "auth": "requireAuth",
+      "handler": "resendLink",
+      "schemaRef": "giftIdParamSchema",
+      "touches": [
+        {
+          "table": "gift_orders",
+          "ops": [
+            "SELECT",
+            "UPDATE"
+          ]
+        },
+        {
+          "table": "gift_order_logs",
+          "ops": [
+            "INSERT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "gift"
+      ],
+      "confidence": "high",
+      "id": "ep_86",
+      "request": {
+        "from": "Zod 스키마 (giftIdParamSchema)",
+        "sample": {
+          "params": "샘플값",
+          "giftId": "샘플값"
+        }
+      },
+      "response": {
+        "from": "SQL 컬럼 (gift_orders)",
+        "sample": {
+          "success": true,
+          "data": {
+            "id": 1,
+            "gift_id": 1,
+            "giver_user_id": 1,
+            "product_type": "default",
+            "payment_id": 1,
+            "recipient_name": "샘플 제목",
+            "recipient_phone": "010-1234-5678",
+            "token_expires_at": "2026-08-22T09:00:00Z",
+            "status": "active",
+            "recipient_user_id": 1,
+            "photo_order_id": 1,
+            "will_id": 1,
+            "created_at": "2026-08-22T09:00:00Z",
+            "updated_at": "2026-08-22T09:00:00Z"
+          }
+        }
+      },
+      "flowId": "f_gifts"
+    },
+    {
+      "method": "POST",
+      "path": "/api/gifts/:giftId/cancel",
+      "src": "backend/src/domains/gift/giftRoutes.js:151",
+      "auth": "requireAuth",
+      "handler": "cancelGift",
+      "schemaRef": "cancelSchema",
+      "touches": [
+        {
+          "table": "gift_orders",
+          "ops": [
+            "SELECT"
+          ]
+        },
+        {
+          "table": "payments",
+          "ops": [
+            "SELECT"
+          ]
+        },
+        {
+          "table": "gift_order_logs",
+          "ops": [
+            "INSERT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "gift"
+      ],
+      "confidence": "high",
+      "id": "ep_87",
+      "request": {
+        "from": "Zod 스키마 (cancelSchema)",
+        "sample": {
+          "params": "샘플값",
+          "subscriptionId": "샘플값"
+        }
+      },
+      "response": {
+        "from": "SQL 컬럼 (gift_orders)",
+        "sample": {
+          "success": true,
+          "data": {
+            "id": 1,
+            "gift_id": 1,
+            "giver_user_id": 1,
+            "product_type": "default",
+            "payment_id": 1,
+            "recipient_name": "샘플 제목",
+            "recipient_phone": "010-1234-5678",
+            "token_expires_at": "2026-08-22T09:00:00Z",
+            "status": "active",
+            "recipient_user_id": 1,
+            "photo_order_id": 1,
+            "will_id": 1,
+            "created_at": "2026-08-22T09:00:00Z",
+            "updated_at": "2026-08-22T09:00:00Z"
+          }
+        }
+      },
+      "flowId": "f_gifts"
+    },
+    {
+      "method": "POST",
+      "path": "/api/gifts/:giftId/attach-photo-order",
+      "src": "backend/src/domains/gift/giftRoutes.js:152",
+      "auth": "requireAuth",
+      "handler": "attachPhotoOrder",
+      "schemaRef": "attachPhotoSchema",
+      "touches": [
+        {
+          "table": "gift_orders",
+          "ops": [
+            "SELECT",
+            "UPDATE"
+          ]
+        },
+        {
+          "table": "photo_orders",
+          "ops": [
+            "SELECT",
+            "UPDATE"
+          ]
+        },
+        {
+          "table": "photo_order_logs",
+          "ops": [
+            "INSERT"
+          ]
+        },
+        {
+          "table": "gift_order_logs",
+          "ops": [
+            "INSERT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "gift"
+      ],
+      "confidence": "high",
+      "id": "ep_88",
+      "request": {
+        "from": "Zod 스키마 (attachPhotoSchema)",
+        "sample": {
+          "params": "샘플값",
+          "giftId": "샘플값",
+          "body": "샘플 내용입니다.",
+          "orderId": "샘플값"
+        }
+      },
+      "response": {
+        "from": "SQL 컬럼 (gift_orders)",
+        "sample": {
+          "success": true,
+          "data": {
+            "id": 1,
+            "gift_id": 1,
+            "giver_user_id": 1,
+            "product_type": "default",
+            "payment_id": 1,
+            "recipient_name": "샘플 제목",
+            "recipient_phone": "010-1234-5678",
+            "token_expires_at": "2026-08-22T09:00:00Z",
+            "status": "active",
+            "recipient_user_id": 1,
+            "photo_order_id": 1,
+            "will_id": 1,
+            "created_at": "2026-08-22T09:00:00Z",
+            "updated_at": "2026-08-22T09:00:00Z"
+          }
+        }
+      },
+      "flowId": "f_gifts"
+    },
+    {
+      "method": "POST",
+      "path": "/api/gifts/:giftId/attach-will",
+      "src": "backend/src/domains/gift/giftRoutes.js:153",
+      "auth": "requireAuth",
+      "handler": "attachWillOrder",
+      "schemaRef": "attachWillSchema",
+      "touches": [
+        {
+          "table": "gift_orders",
+          "ops": [
+            "SELECT",
+            "UPDATE"
+          ]
+        },
+        {
+          "table": "wills",
+          "ops": [
+            "SELECT",
+            "UPDATE"
+          ]
+        },
+        {
+          "table": "will_status_logs",
+          "ops": [
+            "INSERT"
+          ]
+        },
+        {
+          "table": "gift_order_logs",
+          "ops": [
+            "INSERT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "gift"
+      ],
+      "confidence": "high",
+      "id": "ep_89",
+      "request": {
+        "from": "Zod 스키마 (attachWillSchema)",
+        "sample": {
+          "params": "샘플값",
+          "giftId": "샘플값",
+          "body": "샘플 내용입니다.",
+          "willId": "샘플값"
+        }
+      },
+      "response": {
+        "from": "SQL 컬럼 (gift_orders)",
+        "sample": {
+          "success": true,
+          "data": {
+            "id": 1,
+            "gift_id": 1,
+            "giver_user_id": 1,
+            "product_type": "default",
+            "payment_id": 1,
+            "recipient_name": "샘플 제목",
+            "recipient_phone": "010-1234-5678",
+            "token_expires_at": "2026-08-22T09:00:00Z",
+            "status": "active",
+            "recipient_user_id": 1,
+            "photo_order_id": 1,
+            "will_id": 1,
+            "created_at": "2026-08-22T09:00:00Z",
+            "updated_at": "2026-08-22T09:00:00Z"
+          }
+        }
+      },
+      "flowId": "f_gifts"
+    },
+    {
+      "method": "POST",
+      "path": "/api/gifts/:giftId/complete",
+      "src": "backend/src/domains/gift/giftRoutes.js:154",
+      "auth": "requireAuth",
+      "handler": "completeGift",
+      "schemaRef": "completeSchema",
+      "touches": [
+        {
+          "table": "gift_orders",
+          "ops": [
+            "SELECT",
+            "UPDATE"
+          ]
+        },
+        {
+          "table": "photo_orders",
+          "ops": [
+            "SELECT"
+          ]
+        },
+        {
+          "table": "wills",
+          "ops": [
+            "SELECT"
+          ]
+        },
+        {
+          "table": "gift_order_logs",
+          "ops": [
+            "INSERT"
+          ]
+        },
+        {
+          "table": "notifications",
+          "ops": [
+            "INSERT",
+            "SELECT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "gift"
+      ],
+      "confidence": "high",
+      "id": "ep_90",
+      "request": {
+        "from": "Zod 스키마 (completeSchema)",
+        "sample": {
+          "params": "샘플값",
+          "giftId": "샘플값",
+          "body": "샘플 내용입니다.",
+          "orderId": "샘플값",
+          "willId": "샘플값"
+        }
+      },
+      "response": {
+        "from": "SQL 컬럼 (gift_orders)",
+        "sample": {
+          "success": true,
+          "data": {
+            "id": 1,
+            "gift_id": 1,
+            "giver_user_id": 1,
+            "product_type": "default",
+            "payment_id": 1,
+            "recipient_name": "샘플 제목",
+            "recipient_phone": "010-1234-5678",
+            "token_expires_at": "2026-08-22T09:00:00Z",
+            "status": "active",
+            "recipient_user_id": 1,
+            "photo_order_id": 1,
+            "will_id": 1,
+            "created_at": "2026-08-22T09:00:00Z",
+            "updated_at": "2026-08-22T09:00:00Z"
+          }
+        }
+      },
+      "flowId": "f_gifts"
+    },
+    {
+      "method": "GET",
+      "path": "/api/gifts/perform/:token",
+      "src": "backend/src/domains/gift/giftRoutes.js:158",
+      "auth": null,
+      "handler": "getPerformInfo",
+      "schemaRef": "tokenParamSchema",
+      "touches": [
+        {
+          "table": "gift_orders",
+          "ops": [
+            "SELECT",
+            "UPDATE"
+          ]
+        },
+        {
+          "table": "gift_order_logs",
+          "ops": [
+            "INSERT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "gift"
+      ],
+      "confidence": "high",
+      "id": "ep_91",
+      "request": null,
+      "response": {
+        "from": "SQL 컬럼 (gift_orders)",
+        "sample": {
+          "success": true,
+          "data": {
+            "id": 1,
+            "gift_id": 1,
+            "giver_user_id": 1,
+            "product_type": "default",
+            "payment_id": 1,
+            "recipient_name": "샘플 제목",
+            "recipient_phone": "010-1234-5678",
+            "token_expires_at": "2026-08-22T09:00:00Z",
+            "status": "active",
+            "recipient_user_id": 1,
+            "photo_order_id": 1,
+            "will_id": 1,
+            "created_at": "2026-08-22T09:00:00Z",
+            "updated_at": "2026-08-22T09:00:00Z"
+          }
+        }
+      },
+      "flowId": "f_gifts"
+    },
+    {
+      "method": "POST",
+      "path": "/api/gifts/perform/:token/verify",
+      "src": "backend/src/domains/gift/giftRoutes.js:159",
+      "auth": "validate",
+      "handler": "verifyPerform",
+      "schemaRef": "verifyPerformSchema",
+      "touches": [
+        {
+          "table": "gift_orders",
+          "ops": [
+            "SELECT",
+            "UPDATE"
+          ]
+        },
+        {
+          "table": "gift_order_logs",
+          "ops": [
+            "INSERT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "gift"
+      ],
+      "confidence": "high",
+      "id": "ep_92",
+      "request": {
+        "from": "Zod 스키마 (verifyPerformSchema)",
+        "sample": {
+          "params": "샘플값",
+          "token": "<token>",
+          "body": "샘플 내용입니다.",
+          "phoneLast4": "010-1234-5678"
+        }
+      },
+      "response": {
+        "from": "SQL 컬럼 (gift_orders)",
+        "sample": {
+          "success": true,
+          "data": {
+            "id": 1,
+            "gift_id": 1,
+            "giver_user_id": 1,
+            "product_type": "default",
+            "payment_id": 1,
+            "recipient_name": "샘플 제목",
+            "recipient_phone": "010-1234-5678",
+            "token_expires_at": "2026-08-22T09:00:00Z",
+            "status": "active",
+            "recipient_user_id": 1,
+            "photo_order_id": 1,
+            "will_id": 1,
+            "created_at": "2026-08-22T09:00:00Z",
+            "updated_at": "2026-08-22T09:00:00Z"
+          }
+        }
+      },
+      "flowId": "f_gifts"
+    },
+    {
+      "method": "POST",
+      "path": "/api/gifts/perform/:token/account",
+      "src": "backend/src/domains/gift/giftRoutes.js:160",
+      "auth": null,
+      "handler": "linkAccount",
+      "schemaRef": "linkAccountSchema",
+      "touches": [
+        {
+          "table": "gift_orders",
+          "ops": [
+            "SELECT",
+            "UPDATE"
+          ]
+        },
+        {
+          "table": "gift_order_logs",
+          "ops": [
+            "INSERT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "gift"
+      ],
+      "confidence": "high",
+      "id": "ep_93",
+      "request": {
+        "from": "Zod 스키마 (linkAccountSchema)",
+        "sample": {
+          "params": "샘플값",
+          "token": "<token>",
+          "mode": "샘플값",
+          "email": "user@example.com",
+          "password": "********",
+          "nickname": "샘플 제목",
+          "consents": "샘플값"
+        }
+      },
+      "response": {
+        "from": "SQL 컬럼 (gift_orders)",
+        "sample": {
+          "success": true,
+          "data": {
+            "id": 1,
+            "gift_id": 1,
+            "giver_user_id": 1,
+            "product_type": "default",
+            "payment_id": 1,
+            "recipient_name": "샘플 제목",
+            "recipient_phone": "010-1234-5678",
+            "token_expires_at": "2026-08-22T09:00:00Z",
+            "status": "active",
+            "recipient_user_id": 1,
+            "photo_order_id": 1,
+            "will_id": 1,
+            "created_at": "2026-08-22T09:00:00Z",
+            "updated_at": "2026-08-22T09:00:00Z"
+          }
+        }
+      },
+      "flowId": "f_gifts"
+    },
+    {
+      "method": "POST",
+      "path": "/api/gifts/perform/:token/decline",
+      "src": "backend/src/domains/gift/giftRoutes.js:161",
+      "auth": null,
+      "handler": "declinePerform",
+      "schemaRef": "tokenParamSchema",
+      "touches": [
+        {
+          "table": "gift_orders",
+          "ops": [
+            "SELECT",
+            "UPDATE"
+          ]
+        },
+        {
+          "table": "gift_order_logs",
+          "ops": [
+            "INSERT"
+          ]
+        },
+        {
+          "table": "payments",
+          "ops": [
+            "UPDATE",
+            "SELECT"
+          ]
+        },
+        {
+          "table": "notifications",
+          "ops": [
+            "INSERT",
+            "SELECT"
+          ]
+        }
+      ],
+      "calledBy": [
+        "gift"
+      ],
+      "confidence": "high",
+      "id": "ep_94",
+      "request": {
+        "from": "Zod 스키마 (tokenParamSchema)",
+        "sample": {
+          "params": "샘플값",
+          "token": "<token>"
+        }
+      },
+      "response": {
+        "from": "SQL 컬럼 (gift_orders)",
+        "sample": {
+          "success": true,
+          "data": {
+            "id": 1,
+            "gift_id": 1,
+            "giver_user_id": 1,
+            "product_type": "default",
+            "payment_id": 1,
+            "recipient_name": "샘플 제목",
+            "recipient_phone": "010-1234-5678",
+            "token_expires_at": "2026-08-22T09:00:00Z",
+            "status": "active",
+            "recipient_user_id": 1,
+            "photo_order_id": 1,
+            "will_id": 1,
+            "created_at": "2026-08-22T09:00:00Z",
+            "updated_at": "2026-08-22T09:00:00Z"
+          }
+        }
+      },
+      "flowId": "f_gifts"
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "src": "backend/src/server.js:146",
+      "auth": null,
+      "handler": "message",
+      "schemaRef": null,
+      "touches": [],
+      "calledBy": [],
+      "confidence": "medium",
+      "id": "ep_95",
+      "request": null,
+      "response": {
+        "from": "미확인",
+        "sample": null
+      },
+      "flowId": "f_health"
+    }
+  ],
+  "pages": [
+    {
+      "id": "page_admin",
+      "label": "admin",
+      "files": [
+        "frontend/src/pages/admin/AdminPage.jsx",
+        "frontend/src/pages/admin/AdminReleasePage.jsx"
+      ]
+    },
+    {
+      "id": "page_auth",
+      "label": "auth",
+      "files": [
+        "frontend/src/pages/auth/KakaoCallbackPage.jsx",
+        "frontend/src/pages/auth/joinApi.js",
+        "frontend/src/pages/auth/loginApi.js"
+      ]
+    },
+    {
+      "id": "page_gift",
+      "label": "gift",
+      "files": [
+        "frontend/src/pages/gift/giftApi.js",
+        "frontend/src/pages/gift/useGiftPerformWill.js"
+      ]
+    },
+    {
+      "id": "page_memorial",
+      "label": "memorial",
+      "files": [
+        "frontend/src/pages/memorial/memorialApi.js"
+      ]
+    },
+    {
+      "id": "page_mypage",
+      "label": "mypage",
+      "files": [
+        "frontend/src/pages/mypage/mypageApi.js"
+      ]
+    },
+    {
+      "id": "page_pet",
+      "label": "pet",
+      "files": [
+        "frontend/src/pages/pet/petApi.js"
+      ]
+    },
+    {
+      "id": "page_photo",
+      "label": "photo",
+      "files": [
+        "frontend/src/pages/photo/photoApi.js"
+      ]
+    },
+    {
+      "id": "page_will",
+      "label": "will",
+      "files": [
+        "frontend/src/pages/will/WillVaultPage.jsx",
+        "frontend/src/pages/will/useWillPhoto.js",
+        "frontend/src/pages/will/useWillRecord.js",
+        "frontend/src/pages/will/willApi.js"
+      ]
+    }
+  ],
+  "tables": [
+    {
+      "name": "ad_spend",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT"
+        },
+        {
+          "name": "ad_spend_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "channel",
+          "type": "VARCHAR(50)"
+        },
+        {
+          "name": "period_start",
+          "type": "DATE"
+        },
+        {
+          "name": "period_end",
+          "type": "DATE"
+        },
+        {
+          "name": "spend_krw",
+          "type": "INT"
+        },
+        {
+          "name": "note",
+          "type": "VARCHAR(500)"
+        },
+        {
+          "name": "recorded_by",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "updated_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "deleted_at",
+          "type": "DATETIME"
+        }
+      ]
+    },
+    {
+      "name": "users",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT"
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "email",
+          "type": "VARCHAR(320)"
+        },
+        {
+          "name": "phone",
+          "type": "VARCHAR(20)"
+        },
+        {
+          "name": "nickname",
+          "type": "VARCHAR(50)"
+        },
+        {
+          "name": "profile_image_url",
+          "type": "VARCHAR(500)"
+        },
+        {
+          "name": "role",
+          "type": "ENUM('user'"
+        },
+        {
+          "name": "password_hash",
+          "type": "VARCHAR(255)"
+        },
+        {
+          "name": "kakao_id",
+          "type": "BIGINT"
+        },
+        {
+          "name": "email_verified_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "phone_verified_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "is_active",
+          "type": "TINYINT(1)"
+        },
+        {
+          "name": "deactivated_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "updated_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "deleted_at",
+          "type": "DATETIME"
+        }
+      ]
+    },
+    {
+      "name": "user_consents",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT"
+        },
+        {
+          "name": "consent_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "consent_type",
+          "type": "ENUM('privacy'"
+        },
+        {
+          "name": "is_agreed",
+          "type": "TINYINT(1)"
+        },
+        {
+          "name": "agreed_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "ip_address",
+          "type": "VARCHAR(45)"
+        },
+        {
+          "name": "user_agent",
+          "type": "VARCHAR(500)"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME"
+        }
+      ]
+    },
+    {
+      "name": "email_verifications",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT"
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "token",
+          "type": "CHAR(64)"
+        },
+        {
+          "name": "expires_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "verified_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME"
+        }
+      ]
+    },
+    {
+      "name": "phone_verifications",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT"
+        },
+        {
+          "name": "phone",
+          "type": "VARCHAR(20)"
+        },
+        {
+          "name": "code",
+          "type": "CHAR(6)"
+        },
+        {
+          "name": "expires_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "verified_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "attempt_cnt",
+          "type": "TINYINT"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME"
+        }
+      ]
+    },
+    {
+      "name": "password_reset_tokens",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT"
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "token",
+          "type": "CHAR(64)"
+        },
+        {
+          "name": "expires_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "used_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME"
+        }
+      ]
+    },
+    {
+      "name": "photo_orders",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT"
+        },
+        {
+          "name": "order_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "photo_type",
+          "type": "ENUM('funeral'"
+        },
+        {
+          "name": "status",
+          "type": "ENUM('pending_payment'"
+        },
+        {
+          "name": "NOT",
+          "type": "NULL"
+        },
+        {
+          "name": "price_krw",
+          "type": "INT"
+        },
+        {
+          "name": "source_image_url",
+          "type": "VARCHAR(500)"
+        },
+        {
+          "name": "fail_reason",
+          "type": "VARCHAR(500)"
+        },
+        {
+          "name": "completed_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "updated_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "deleted_at",
+          "type": "DATETIME"
+        }
+      ]
+    },
+    {
+      "name": "photo_order_logs",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT"
+        },
+        {
+          "name": "log_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "order_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "prev_status",
+          "type": "ENUM('pending_payment'"
+        },
+        {
+          "name": "next_status",
+          "type": "ENUM('pending_payment'"
+        },
+        {
+          "name": "changed_by",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "changed_by_type",
+          "type": "ENUM('user'"
+        },
+        {
+          "name": "reason",
+          "type": "VARCHAR(500)"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME"
+        }
+      ]
+    },
+    {
+      "name": "photo_files",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT"
+        },
+        {
+          "name": "file_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "order_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "kind",
+          "type": "ENUM('raw'"
+        },
+        {
+          "name": "variant",
+          "type": "VARCHAR(30)"
+        },
+        {
+          "name": "DB",
+          "type": "ENUM이"
+        },
+        {
+          "name": "file_url",
+          "type": "VARCHAR(500)"
+        },
+        {
+          "name": "s3_key",
+          "type": "VARCHAR(500)"
+        },
+        {
+          "name": "mime_type",
+          "type": "VARCHAR(100)"
+        },
+        {
+          "name": "file_size",
+          "type": "INT"
+        },
+        {
+          "name": "width",
+          "type": "INT"
+        },
+        {
+          "name": "height",
+          "type": "INT"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "deleted_at",
+          "type": "DATETIME"
+        }
+      ]
+    },
+    {
+      "name": "voice_samples",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT"
+        },
+        {
+          "name": "voice_sample_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "consent_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "s3_key_encrypted",
+          "type": "VARBINARY(512)"
+        },
+        {
+          "name": "kms_key_id",
+          "type": "VARCHAR(200)"
+        },
+        {
+          "name": "elevenlabs_voice_id",
+          "type": "VARCHAR(100)"
+        },
+        {
+          "name": "clone_status",
+          "type": "ENUM('pending'"
+        },
+        {
+          "name": "duration_sec",
+          "type": "INT"
+        },
+        {
+          "name": "file_size",
+          "type": "INT"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "updated_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "deleted_at",
+          "type": "DATETIME"
+        }
+      ]
+    },
+    {
+      "name": "wills",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT"
+        },
+        {
+          "name": "will_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "voice_sample_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "title",
+          "type": "VARCHAR(200)"
+        },
+        {
+          "name": "content_text_encrypted",
+          "type": "BLOB"
+        },
+        {
+          "name": "content_text_kms_key_id",
+          "type": "VARCHAR(200)"
+        },
+        {
+          "name": "content_text_enc_format",
+          "type": "VARCHAR(20)"
+        },
+        {
+          "name": "result_video_s3_key_encrypted",
+          "type": "VARBINARY(512)"
+        },
+        {
+          "name": "result_video_kms_key_id",
+          "type": "VARCHAR(200)"
+        },
+        {
+          "name": "result_video_duration_sec",
+          "type": "INT"
+        },
+        {
+          "name": "status",
+          "type": "ENUM('draft'"
+        },
+        {
+          "name": "release_policy",
+          "type": "ENUM('manual_admin'"
+        },
+        {
+          "name": "release_status",
+          "type": "ENUM('locked'"
+        },
+        {
+          "name": "released_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "event_type",
+          "type": "ENUM('death'"
+        },
+        {
+          "name": "price_krw",
+          "type": "INT"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "updated_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "deleted_at",
+          "type": "DATETIME"
+        }
+      ]
+    },
+    {
+      "name": "will_status_logs",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT"
+        },
+        {
+          "name": "log_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "will_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "prev_status",
+          "type": "ENUM('draft'"
+        },
+        {
+          "name": "next_status",
+          "type": "ENUM('draft'"
+        },
+        {
+          "name": "changed_by",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "changed_by_type",
+          "type": "ENUM('user'"
+        },
+        {
+          "name": "reason",
+          "type": "VARCHAR(500)"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME"
+        }
+      ]
+    },
+    {
+      "name": "will_beneficiaries",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT"
+        },
+        {
+          "name": "beneficiary_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "will_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(100)"
+        },
+        {
+          "name": "email",
+          "type": "VARCHAR(320)"
+        },
+        {
+          "name": "phone",
+          "type": "VARCHAR(20)"
+        },
+        {
+          "name": "relationship",
+          "type": "VARCHAR(50)"
+        },
+        {
+          "name": "invite_token",
+          "type": "CHAR(64)"
+        },
+        {
+          "name": "verified_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "delivered_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "video_watched_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "watch_count",
+          "type": "INT"
+        },
+        {
+          "name": "token_expires_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "updated_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "deleted_at",
+          "type": "DATETIME"
+        }
+      ]
+    },
+    {
+      "name": "will_release_requests",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT"
+        },
+        {
+          "name": "request_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "will_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "requested_by",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "beneficiary_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "death_cert_s3_key",
+          "type": "VARCHAR(500)"
+        },
+        {
+          "name": "death_cert_url",
+          "type": "VARCHAR(500)"
+        },
+        {
+          "name": "req_status",
+          "type": "ENUM('pending'"
+        },
+        {
+          "name": "reviewed_by",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "reviewed_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "reject_reason",
+          "type": "VARCHAR(500)"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "updated_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "deleted_at",
+          "type": "DATETIME"
+        }
+      ]
+    },
+    {
+      "name": "avatar_sessions",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT"
+        },
+        {
+          "name": "session_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "will_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "started_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "ended_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "duration_sec",
+          "type": "INT"
+        },
+        {
+          "name": "webrtc_session_id",
+          "type": "VARCHAR(200)"
+        },
+        {
+          "name": "did_session_id",
+          "type": "VARCHAR(200)"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "updated_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "deleted_at",
+          "type": "DATETIME"
+        }
+      ]
+    },
+    {
+      "name": "pets",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT"
+        },
+        {
+          "name": "pet_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(100)"
+        },
+        {
+          "name": "species",
+          "type": "ENUM('dog'"
+        },
+        {
+          "name": "breed",
+          "type": "VARCHAR(100)"
+        },
+        {
+          "name": "birth_date",
+          "type": "DATE"
+        },
+        {
+          "name": "death_date",
+          "type": "DATE"
+        },
+        {
+          "name": "pet_status",
+          "type": "ENUM('alive'"
+        },
+        {
+          "name": "memorial_slug",
+          "type": "VARCHAR(100)"
+        },
+        {
+          "name": "memorial_access_code",
+          "type": "VARCHAR(50)"
+        },
+        {
+          "name": "is_public",
+          "type": "TINYINT(1)"
+        },
+        {
+          "name": "profile_image_url",
+          "type": "VARCHAR(500)"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "updated_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "deleted_at",
+          "type": "DATETIME"
+        }
+      ]
+    },
+    {
+      "name": "pet_status_logs",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT"
+        },
+        {
+          "name": "log_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "pet_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "prev_status",
+          "type": "ENUM('alive'"
+        },
+        {
+          "name": "next_status",
+          "type": "ENUM('alive'"
+        },
+        {
+          "name": "changed_by",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "changed_by_type",
+          "type": "ENUM('user'"
+        },
+        {
+          "name": "reason",
+          "type": "VARCHAR(500)"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME"
+        }
+      ]
+    },
+    {
+      "name": "pet_media",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT"
+        },
+        {
+          "name": "media_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "pet_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "media_type",
+          "type": "ENUM('photo'"
+        },
+        {
+          "name": "file_url",
+          "type": "VARCHAR(500)"
+        },
+        {
+          "name": "s3_key",
+          "type": "VARCHAR(500)"
+        },
+        {
+          "name": "thumbnail_s3_key",
+          "type": "VARCHAR(500)"
+        },
+        {
+          "name": "thumbnail_url",
+          "type": "VARCHAR(500)"
+        },
+        {
+          "name": "mime_type",
+          "type": "VARCHAR(100)"
+        },
+        {
+          "name": "file_size",
+          "type": "INT"
+        },
+        {
+          "name": "width",
+          "type": "INT"
+        },
+        {
+          "name": "height",
+          "type": "INT"
+        },
+        {
+          "name": "duration_sec",
+          "type": "INT"
+        },
+        {
+          "name": "taken_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "sort_order",
+          "type": "INT"
+        },
+        {
+          "name": "caption",
+          "type": "VARCHAR(500)"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "deleted_at",
+          "type": "DATETIME"
+        }
+      ]
+    },
+    {
+      "name": "payments",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT"
+        },
+        {
+          "name": "payment_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "target_type",
+          "type": "ENUM('photo_order'"
+        },
+        {
+          "name": "target_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "toss_payment_key",
+          "type": "VARCHAR(200)"
+        },
+        {
+          "name": "toss_order_id",
+          "type": "VARCHAR(64)"
+        },
+        {
+          "name": "amount_krw",
+          "type": "INT"
+        },
+        {
+          "name": "status",
+          "type": "ENUM('ready'"
+        },
+        {
+          "name": "paid_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "canceled_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "cancel_reason",
+          "type": "VARCHAR(500)"
+        },
+        {
+          "name": "fail_reason",
+          "type": "VARCHAR(500)"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "updated_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "deleted_at",
+          "type": "DATETIME"
+        }
+      ]
+    },
+    {
+      "name": "subscriptions",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT"
+        },
+        {
+          "name": "subscription_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "plan",
+          "type": "ENUM('pet_archive'"
+        },
+        {
+          "name": "sub_status",
+          "type": "ENUM('active'"
+        },
+        {
+          "name": "toss_billing_key_encrypted",
+          "type": "VARBINARY(512)"
+        },
+        {
+          "name": "billing_kms_key_id",
+          "type": "VARCHAR(200)"
+        },
+        {
+          "name": "price_krw",
+          "type": "INT"
+        },
+        {
+          "name": "next_billing_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "last_billed_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "canceled_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "cancel_reason",
+          "type": "VARCHAR(500)"
+        },
+        {
+          "name": "fail_count",
+          "type": "TINYINT"
+        },
+        {
+          "name": "last_failed_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "grace_period_until",
+          "type": "DATETIME"
+        },
+        {
+          "name": "suspended_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "updated_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "deleted_at",
+          "type": "DATETIME"
+        }
+      ]
+    },
+    {
+      "name": "subscription_logs",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT"
+        },
+        {
+          "name": "log_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "subscription_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "prev_status",
+          "type": "ENUM('active'"
+        },
+        {
+          "name": "next_status",
+          "type": "ENUM('active'"
+        },
+        {
+          "name": "changed_by",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "changed_by_type",
+          "type": "ENUM('user'"
+        },
+        {
+          "name": "reason",
+          "type": "VARCHAR(500)"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME"
+        }
+      ]
+    },
+    {
+      "name": "subscription_payment_logs",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT"
+        },
+        {
+          "name": "log_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "subscription_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "billing_cycle_date",
+          "type": "DATE"
+        },
+        {
+          "name": "attempt_no",
+          "type": "TINYINT"
+        },
+        {
+          "name": "log_status",
+          "type": "ENUM('pending'"
+        },
+        {
+          "name": "attempt_type",
+          "type": "ENUM('initial'"
+        },
+        {
+          "name": "toss_payment_key",
+          "type": "VARCHAR(200)"
+        },
+        {
+          "name": "toss_order_id",
+          "type": "VARCHAR(64)"
+        },
+        {
+          "name": "amount_krw",
+          "type": "INT"
+        },
+        {
+          "name": "attempted_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "succeeded_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "failed_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "fail_code",
+          "type": "VARCHAR(50)"
+        },
+        {
+          "name": "fail_category",
+          "type": "ENUM('card_expired'"
+        },
+        {
+          "name": "fail_reason",
+          "type": "VARCHAR(500)"
+        },
+        {
+          "name": "next_retry_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME"
+        }
+      ]
+    },
+    {
+      "name": "ai_jobs",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT"
+        },
+        {
+          "name": "job_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "job_type",
+          "type": "ENUM('photo_enhance'"
+        },
+        {
+          "name": "job_status",
+          "type": "ENUM('queued'"
+        },
+        {
+          "name": "progress",
+          "type": "TINYINT"
+        },
+        {
+          "name": "bullmq_job_id",
+          "type": "VARCHAR(100)"
+        },
+        {
+          "name": "queue_name",
+          "type": "VARCHAR(100)"
+        },
+        {
+          "name": "target_type",
+          "type": "ENUM('photo_order'"
+        },
+        {
+          "name": "target_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "result_url",
+          "type": "VARCHAR(500)"
+        },
+        {
+          "name": "error_message",
+          "type": "VARCHAR(1000)"
+        },
+        {
+          "name": "retry_cnt",
+          "type": "TINYINT"
+        },
+        {
+          "name": "started_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "completed_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "updated_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "deleted_at",
+          "type": "DATETIME"
+        }
+      ]
+    },
+    {
+      "name": "gift_orders",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT"
+        },
+        {
+          "name": "gift_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "giver_user_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "product_type",
+          "type": "ENUM('photo'"
+        },
+        {
+          "name": "payment_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "recipient_name",
+          "type": "VARCHAR(100)"
+        },
+        {
+          "name": "recipient_phone",
+          "type": "VARCHAR(20)"
+        },
+        {
+          "name": "perform_token_hash",
+          "type": "CHAR(64)"
+        },
+        {
+          "name": "token_expires_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "status",
+          "type": "ENUM('paid'"
+        },
+        {
+          "name": "recipient_user_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "photo_order_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "will_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "updated_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "deleted_at",
+          "type": "DATETIME"
+        }
+      ]
+    },
+    {
+      "name": "gift_order_logs",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT"
+        },
+        {
+          "name": "log_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "gift_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "prev_status",
+          "type": "ENUM('paid'"
+        },
+        {
+          "name": "next_status",
+          "type": "ENUM('paid'"
+        },
+        {
+          "name": "changed_by",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "changed_by_type",
+          "type": "ENUM('user'"
+        },
+        {
+          "name": "reason",
+          "type": "VARCHAR(500)"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME"
+        }
+      ]
+    },
+    {
+      "name": "notifications",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT"
+        },
+        {
+          "name": "notification_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "notification_type",
+          "type": "ENUM("
+        }
+      ]
+    },
+    {
+      "name": "user_notification_settings",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT"
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "push_enabled",
+          "type": "TINYINT(1)"
+        },
+        {
+          "name": "email_enabled",
+          "type": "TINYINT(1)"
+        },
+        {
+          "name": "sms_enabled",
+          "type": "TINYINT(1)"
+        },
+        {
+          "name": "notify_photo_complete",
+          "type": "TINYINT(1)"
+        },
+        {
+          "name": "notify_will_events",
+          "type": "TINYINT(1)"
+        },
+        {
+          "name": "notify_payment",
+          "type": "TINYINT(1)"
+        },
+        {
+          "name": "notify_subscription",
+          "type": "TINYINT(1)"
+        },
+        {
+          "name": "notify_pet_memorial",
+          "type": "TINYINT(1)"
+        },
+        {
+          "name": "notify_admin_notice",
+          "type": "TINYINT(1)"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "updated_at",
+          "type": "DATETIME"
+        }
+      ]
+    },
+    {
+      "name": "admin_users",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT"
+        },
+        {
+          "name": "admin_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "email",
+          "type": "VARCHAR(320)"
+        },
+        {
+          "name": "password_hash",
+          "type": "VARCHAR(255)"
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(100)"
+        },
+        {
+          "name": "admin_role",
+          "type": "ENUM('super'"
+        },
+        {
+          "name": "is_active",
+          "type": "TINYINT(1)"
+        },
+        {
+          "name": "last_login_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "updated_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "deleted_at",
+          "type": "DATETIME"
+        }
+      ]
+    },
+    {
+      "name": "audit_logs",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT"
+        },
+        {
+          "name": "log_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "actor_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "actor_type",
+          "type": "ENUM('user'"
+        },
+        {
+          "name": "action",
+          "type": "VARCHAR(100)"
+        },
+        {
+          "name": "target_type",
+          "type": "VARCHAR(100)"
+        },
+        {
+          "name": "target_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "ip_address",
+          "type": "VARCHAR(45)"
+        },
+        {
+          "name": "user_agent",
+          "type": "VARCHAR(500)"
+        },
+        {
+          "name": "detail",
+          "type": "JSON"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME"
+        }
+      ]
+    },
+    {
+      "name": "refresh_tokens",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT"
+        },
+        {
+          "name": "token_hash",
+          "type": "VARCHAR(64)"
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR(36)"
+        },
+        {
+          "name": "expires_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "revoked_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME"
+        }
+      ]
+    }
+  ],
+  "findings": {
+    "orphan": [
+      {
+        "label": "POST /api/auth/refresh",
+        "src": "backend/src/domains/auth/authRoutes.js:89"
+      },
+      {
+        "label": "POST /api/auth/logout",
+        "src": "backend/src/domains/auth/authRoutes.js:90"
+      },
+      {
+        "label": "GET /api/auth/kakao",
+        "src": "backend/src/domains/auth/authRoutes.js:94"
+      },
+      {
+        "label": "GET /api/auth/kakao/callback",
+        "src": "backend/src/domains/auth/authRoutes.js:95"
+      },
+      {
+        "label": "POST /api/payments/webhook",
+        "src": "backend/src/domains/payment/paymentRoutes.js:58"
+      },
+      {
+        "label": "GET /api/payments",
+        "src": "backend/src/domains/payment/paymentRoutes.js:63"
+      },
+      {
+        "label": "POST /api/payments/:paymentId/cancel",
+        "src": "backend/src/domains/payment/paymentRoutes.js:64"
+      },
+      {
+        "label": "POST /api/admin/auth/login",
+        "src": "backend/src/domains/admin/adminRoutes.js:170"
+      },
+      {
+        "label": "POST /api/admin/auth/refresh",
+        "src": "backend/src/domains/admin/adminRoutes.js:173"
+      },
+      {
+        "label": "POST /api/admin/auth/logout",
+        "src": "backend/src/domains/admin/adminRoutes.js:176"
+      },
+      {
+        "label": "GET /api/admin/dashboard",
+        "src": "backend/src/domains/admin/adminRoutes.js:183"
+      },
+      {
+        "label": "GET /api/admin/releases",
+        "src": "backend/src/domains/admin/adminRoutes.js:194"
+      },
+      {
+        "label": "GET /api/admin/releases/:id/document-url",
+        "src": "backend/src/domains/admin/adminRoutes.js:204"
+      },
+      {
+        "label": "POST /api/admin/releases/:id/approve",
+        "src": "backend/src/domains/admin/adminRoutes.js:214"
+      },
+      {
+        "label": "POST /api/admin/releases/:id/reject",
+        "src": "backend/src/domains/admin/adminRoutes.js:224"
+      },
+      {
+        "label": "POST /api/admin/will/beneficiaries/:beneficiaryId/unlock",
+        "src": "backend/src/domains/admin/adminRoutes.js:236"
+      },
+      {
+        "label": "GET /api/admin/orders",
+        "src": "backend/src/domains/admin/adminRoutes.js:246"
+      },
+      {
+        "label": "GET /api/admin/users",
+        "src": "backend/src/domains/admin/adminRoutes.js:255"
+      },
+      {
+        "label": "GET /api/admin/jobs/failed",
+        "src": "backend/src/domains/admin/adminRoutes.js:264"
+      },
+      {
+        "label": "GET /api/admin/notifications/failed",
+        "src": "backend/src/domains/admin/adminRoutes.js:276"
+      },
+      {
+        "label": "POST /api/admin/ad-spend",
+        "src": "backend/src/domains/admin/adminRoutes.js:294"
+      },
+      {
+        "label": "GET /api/admin/ad-spend",
+        "src": "backend/src/domains/admin/adminRoutes.js:304"
+      },
+      {
+        "label": "GET /api/admin/ad-spend/recent-channels",
+        "src": "backend/src/domains/admin/adminRoutes.js:314"
+      },
+      {
+        "label": "GET /api/admin/ad-spend/cac",
+        "src": "backend/src/domains/admin/adminRoutes.js:323"
+      },
+      {
+        "label": "PUT /api/admin/ad-spend/:id",
+        "src": "backend/src/domains/admin/adminRoutes.js:333"
+      },
+      {
+        "label": "DELETE /api/admin/ad-spend/:id",
+        "src": "backend/src/domains/admin/adminRoutes.js:343"
+      },
+      {
+        "label": "GET /api/health",
+        "src": "backend/src/server.js:146"
+      }
+    ],
+    "noAuth": [
+      {
+        "label": "GET /api/users/me",
+        "src": "backend/src/domains/user/userRoutes.js:29"
+      },
+      {
+        "label": "PUT /api/users/me",
+        "src": "backend/src/domains/user/userRoutes.js:30"
+      },
+      {
+        "label": "PUT /api/users/me/password",
+        "src": "backend/src/domains/user/userRoutes.js:31"
+      },
+      {
+        "label": "DELETE /api/users/me",
+        "src": "backend/src/domains/user/userRoutes.js:32"
+      },
+      {
+        "label": "POST /api/photo/orders",
+        "src": "backend/src/domains/photo/photoRoutes.js:50"
+      },
+      {
+        "label": "GET /api/photo/orders",
+        "src": "backend/src/domains/photo/photoRoutes.js:57"
+      },
+      {
+        "label": "GET /api/photo/orders/:orderId",
+        "src": "backend/src/domains/photo/photoRoutes.js:63"
+      },
+      {
+        "label": "GET /api/photo/orders/:orderId/status",
+        "src": "backend/src/domains/photo/photoRoutes.js:69"
+      },
+      {
+        "label": "GET /api/photo/orders/:orderId/result",
+        "src": "backend/src/domains/photo/photoRoutes.js:75"
+      },
+      {
+        "label": "POST /api/photo/orders/:orderId/retry",
+        "src": "backend/src/domains/photo/photoRoutes.js:81"
+      },
+      {
+        "label": "POST /api/photo/orders/:orderId/start",
+        "src": "backend/src/domains/photo/photoRoutes.js:88"
+      },
+      {
+        "label": "POST /api/will/release/:token/upload",
+        "src": "backend/src/domains/will/willRoutes.js:198"
+      },
+      {
+        "label": "POST /api/will/release/:token",
+        "src": "backend/src/domains/will/willRoutes.js:206"
+      },
+      {
+        "label": "GET /api/will/watch/:token",
+        "src": "backend/src/domains/will/willRoutes.js:215"
+      },
+      {
+        "label": "POST /api/will/watch/:token/extend",
+        "src": "backend/src/domains/will/willRoutes.js:230"
+      },
+      {
+        "label": "POST /api/pet",
+        "src": "backend/src/domains/pet/petRoutes.js:189"
+      },
+      {
+        "label": "GET /api/pet",
+        "src": "backend/src/domains/pet/petRoutes.js:190"
+      },
+      {
+        "label": "GET /api/pet/:petId",
+        "src": "backend/src/domains/pet/petRoutes.js:191"
+      },
+      {
+        "label": "GET /api/pet/:petId/memorial-code",
+        "src": "backend/src/domains/pet/petRoutes.js:192"
+      },
+      {
+        "label": "PUT /api/pet/:petId",
+        "src": "backend/src/domains/pet/petRoutes.js:193"
+      },
+      {
+        "label": "PATCH /api/pet/:petId/status",
+        "src": "backend/src/domains/pet/petRoutes.js:194"
+      },
+      {
+        "label": "DELETE /api/pet/:petId",
+        "src": "backend/src/domains/pet/petRoutes.js:195"
+      },
+      {
+        "label": "GET /api/pet/:petId/portrait/status",
+        "src": "backend/src/domains/pet/petRoutes.js:197"
+      },
+      {
+        "label": "GET /api/pet/:petId/portrait/quota",
+        "src": "backend/src/domains/pet/petRoutes.js:198"
+      },
+      {
+        "label": "POST /api/pet/:petId/portrait",
+        "src": "backend/src/domains/pet/petRoutes.js:199"
+      },
+      {
+        "label": "POST /api/pet/:petId/media",
+        "src": "backend/src/domains/pet/petRoutes.js:201"
+      },
+      {
+        "label": "GET /api/pet/:petId/media",
+        "src": "backend/src/domains/pet/petRoutes.js:202"
+      },
+      {
+        "label": "DELETE /api/pet/:petId/media/:mediaId",
+        "src": "backend/src/domains/pet/petRoutes.js:203"
+      },
+      {
+        "label": "POST /api/payments/webhook",
+        "src": "backend/src/domains/payment/paymentRoutes.js:58"
+      },
+      {
+        "label": "GET /api/subscriptions/plans",
+        "src": "backend/src/domains/subscription/subscriptionRoutes.js:90"
+      },
+      {
+        "label": "GET /api/notifications/unread-count",
+        "src": "backend/src/domains/notification/notificationRoutes.js:62"
+      },
+      {
+        "label": "GET /api/notifications/settings",
+        "src": "backend/src/domains/notification/notificationRoutes.js:63"
+      },
+      {
+        "label": "PUT /api/notifications/settings",
+        "src": "backend/src/domains/notification/notificationRoutes.js:64"
+      },
+      {
+        "label": "PUT /api/notifications/read-all",
+        "src": "backend/src/domains/notification/notificationRoutes.js:65"
+      },
+      {
+        "label": "GET /api/notifications",
+        "src": "backend/src/domains/notification/notificationRoutes.js:66"
+      },
+      {
+        "label": "PUT /api/notifications/:id/read",
+        "src": "backend/src/domains/notification/notificationRoutes.js:67"
+      },
+      {
+        "label": "POST /api/uploads/photo",
+        "src": "backend/src/domains/common/uploadRoutes.js:20"
+      },
+      {
+        "label": "POST /api/uploads/audio",
+        "src": "backend/src/domains/common/uploadRoutes.js:41"
+      },
+      {
+        "label": "GET /api/gifts/perform/:token",
+        "src": "backend/src/domains/gift/giftRoutes.js:158"
+      },
+      {
+        "label": "POST /api/gifts/perform/:token/account",
+        "src": "backend/src/domains/gift/giftRoutes.js:160"
+      },
+      {
+        "label": "POST /api/gifts/perform/:token/decline",
+        "src": "backend/src/domains/gift/giftRoutes.js:161"
+      }
+    ],
+    "duplicate": [
+      {
+        "label": "POST · users, refresh_tokens",
+        "items": [
+          {
+            "label": "/api/auth/login",
+            "src": "backend/src/domains/auth/authRoutes.js:88"
+          },
+          {
+            "label": "/api/auth/refresh",
+            "src": "backend/src/domains/auth/authRoutes.js:89"
+          }
+        ]
+      },
+      {
+        "label": "POST · refresh_tokens",
+        "items": [
+          {
+            "label": "/api/auth/logout",
+            "src": "backend/src/domains/auth/authRoutes.js:90"
+          },
+          {
+            "label": "/api/admin/auth/logout",
+            "src": "backend/src/domains/admin/adminRoutes.js:176"
+          }
+        ]
+      },
+      {
+        "label": "GET · photo_orders",
+        "items": [
+          {
+            "label": "/api/photo/orders",
+            "src": "backend/src/domains/photo/photoRoutes.js:57"
+          },
+          {
+            "label": "/api/photo/orders/:orderId",
+            "src": "backend/src/domains/photo/photoRoutes.js:63"
+          }
+        ]
+      },
+      {
+        "label": "POST · audit_logs, will_beneficiaries",
+        "items": [
+          {
+            "label": "/api/will/watch/:token/verify",
+            "src": "backend/src/domains/will/willRoutes.js:222"
+          },
+          {
+            "label": "/api/admin/will/beneficiaries/:beneficiaryId/unlock",
+            "src": "backend/src/domains/admin/adminRoutes.js:236"
+          }
+        ]
+      },
+      {
+        "label": "GET · pets",
+        "items": [
+          {
+            "label": "/api/pet",
+            "src": "backend/src/domains/pet/petRoutes.js:190"
+          },
+          {
+            "label": "/api/pet/:petId",
+            "src": "backend/src/domains/pet/petRoutes.js:191"
+          }
+        ]
+      },
+      {
+        "label": "POST · payments",
+        "items": [
+          {
+            "label": "/api/payments/prepare",
+            "src": "backend/src/domains/payment/paymentRoutes.js:61"
+          },
+          {
+            "label": "/api/payments/confirm",
+            "src": "backend/src/domains/payment/paymentRoutes.js:62"
+          },
+          {
+            "label": "/api/payments/:paymentId/cancel",
+            "src": "backend/src/domains/payment/paymentRoutes.js:64"
+          }
+        ]
+      },
+      {
+        "label": "GET · notifications",
+        "items": [
+          {
+            "label": "/api/notifications/unread-count",
+            "src": "backend/src/domains/notification/notificationRoutes.js:62"
+          },
+          {
+            "label": "/api/notifications",
+            "src": "backend/src/domains/notification/notificationRoutes.js:66"
+          }
+        ]
+      },
+      {
+        "label": "POST · gift_orders, gift_order_logs",
+        "items": [
+          {
+            "label": "/api/gifts/:giftId/resend",
+            "src": "backend/src/domains/gift/giftRoutes.js:150"
+          },
+          {
+            "label": "/api/gifts/perform/:token/verify",
+            "src": "backend/src/domains/gift/giftRoutes.js:159"
+          },
+          {
+            "label": "/api/gifts/perform/:token/account",
+            "src": "backend/src/domains/gift/giftRoutes.js:160"
+          }
+        ]
+      }
+    ],
+    "unusedTables": [
+      {
+        "label": "email_verifications",
+        "src": ""
+      },
+      {
+        "label": "phone_verifications",
+        "src": ""
+      },
+      {
+        "label": "password_reset_tokens",
+        "src": ""
+      },
+      {
+        "label": "avatar_sessions",
+        "src": ""
+      },
+      {
+        "label": "pet_status_logs",
+        "src": ""
+      },
+      {
+        "label": "subscription_logs",
+        "src": ""
+      }
+    ]
+  },
+  "unresolved": []
+}

@@ -1,6 +1,6 @@
 process.env.TZ = 'Asia/Seoul'
 import 'dotenv/config'
-import { validateEnv } from './config/validateEnv.js'
+import { validateEnv } from './utils/env.js'
 validateEnv()
 
 import { createServer } from 'http'
@@ -147,6 +147,17 @@ app.get('/api/health', (req, res) => {
   res.json({ success: true, message: '리멤버미 서버 정상 동작 중' })
 })
 
+// 404 핸들러 (모든 라우트 뒤, 에러 핸들러 앞)
+app.use((req, res, next) => {
+  if (!res.headersSent) {
+    return res.status(404).json({
+      success: false,
+      message: '요청하신 리소스를 찾을 수 없습니다',
+    })
+  }
+  next()
+})
+
 // multer 에러 핸들러 (글로벌 에러 핸들러 앞에 등록)
 const MULTER_ERROR_MESSAGES = {
   LIMIT_FILE_SIZE: '파일 크기가 허용 한도를 초과했습니다',
@@ -166,7 +177,27 @@ app.use((err, req, res, next) => {
 
 // 글로벌 에러 핸들러
 app.use((err, req, res, _next) => {
+  if (res.headersSent) {
+    return _next(err)
+  }
+
   console.error('[unhandled error]', err)
+
+  // JSON 파싱 오류
+  if (err instanceof SyntaxError && err.type === 'entity.parse.failed') {
+    return res.status(400).json({
+      success: false,
+      message: '잘못된 요청 형식입니다',
+    })
+  }
+
+  // 요청 크기 초과
+  if (err.type === 'entity.too.large') {
+    return res.status(413).json({
+      success: false,
+      message: '요청 크기가 허용 한도를 초과했습니다',
+    })
+  }
 
   // mysql2 중복 키 에러 → 409
   if (err.code === 'ER_DUP_ENTRY') {
@@ -194,6 +225,7 @@ app.use((err, req, res, _next) => {
 
   const status = err.status || 500
   const isDev = process.env.NODE_ENV === 'development'
+  const is4xx = Number.isInteger(status) && status >= 400 && status < 500
 
   // [결함3 - 정보 노출 방어 강화] 이전에는 "NODE_ENV==='development'가 아니면
   // 5xx 메시지를 가린다"는 단일 문자열 비교 하나에 프로덕션 전체가 걸려 있었다 -
@@ -214,10 +246,11 @@ app.use((err, req, res, _next) => {
   // message 필드 강화로 한정한다).
   // 4xx는 의도적으로 던진 사용자 메시지(Object.assign(new Error(...), { status })이므로
   // 그대로 전달한다.
-  const clientMessage =
-    status >= 500
-      ? toSafeFailureMessage(err.message) ?? '서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.'
-      : err.message || '서버 오류가 발생했습니다'
+  const clientMessage = is4xx
+    ? (err.message || '서버 오류가 발생했습니다')
+    : (status >= 500
+        ? (toSafeFailureMessage(err.message) ?? '서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.')
+        : (err.message || '서버 오류가 발생했습니다'))
 
   res.status(status).json({
     success: false,

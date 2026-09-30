@@ -14,12 +14,6 @@
   },
   "jest": {
     "transform": {},
-    "extensionsToTreatAsEsm": [
-      ".js"
-    ],
-    "setupFiles": [
-      "./tests/setup.js"
-    ],
     "testEnvironment": "node"
   },
   "dependencies": {

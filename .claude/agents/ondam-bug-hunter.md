@@ -25,8 +25,8 @@ model: sonnet
 
 ### Step 0: 파일 목록 수집
 ```bash
-find /home/pabang/myapp/ondam/backend/src -name "*.js" | grep -v node_modules | sort
-find /home/pabang/myapp/ondam/frontend/src -name "*.jsx" -o -name "*.js" | grep -v node_modules | sort
+find /home/lee/project/ondam/backend/src -name "*.js" | grep -v node_modules | sort
+find /home/lee/project/ondam/frontend/src -name "*.jsx" -o -name "*.js" | grep -v node_modules | sort
 ```
 
 ### Step 1: 7개 영역 병렬 탐지

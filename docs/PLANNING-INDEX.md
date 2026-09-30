@@ -52,9 +52,10 @@ docs/
 │                                  발견 경위별 분류(정적 / curl / 브라우저)가 핵심
 │
 ├── guidelines/
+│   ├── LOCAL_SETUP                로컬 개발 환경 셋업 (WSL MySQL/Redis 설치·기동·문제해결)
 │   ├── DEVELOPMENT_GUIDELINES     재발 방지 규약 G1~G15 (G12~G15는 실기동 검증 도출)
 │   ├── TEST_STRATEGY              테스트 전략 (레벨별 역할·시나리오·구축 순서)
-│   ├── OPERATIONS                 인프라·배포·모니터링·장애 플레이북
+│   ├── OPERATIONS                 인프라·배포·모니터링·장애 플레이북 (운영 배포용 - 로컬 개발은 LOCAL_SETUP)
 │   ├── CS_PLAYBOOK                CS 채널·응대 스크립트·검수 SLA·FAQ
 │   └── LAUNCH_CHECKLIST           출시 당일 확인 목록
 │

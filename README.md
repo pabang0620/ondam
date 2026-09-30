@@ -36,47 +36,32 @@ AI 기억사진관 - AI로 기억을 간직하는 통합 플랫폼
 
 ## 개발 환경 설정
 
-### 1. 환경변수 설정
+빠른 요약만 적는다. WSL MySQL/Redis 설치·기동, `.env` 상세 항목, 관리자 계정 시드,
+벤더 키 부재 시 동작, 문제 해결은 **[docs/guidelines/LOCAL_SETUP.md](docs/guidelines/LOCAL_SETUP.md)**
+를 본다 - 처음 셋업하는 경우 이 문서부터 읽을 것.
 
 ```bash
+# 1. 의존성 설치
+cd backend && npm install
+cd ../frontend && npm install
+
+# 2. 환경변수 설정 (백엔드 + 프론트엔드 둘 다 필요)
 cp backend/.env.example backend/.env
-# .env 파일을 열어 값 입력
-```
+cp frontend/.env.example frontend/.env
+# 두 .env 파일을 열어 값 입력 - 필수 항목은 LOCAL_SETUP.md 5절 참고
 
-### 2. DB 생성
-
-```bash
-mysql -u root -p -e "CREATE DATABASE ondam CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-# 스키마 설계 후:
+# 3. MySQL(8.4)·Redis 기동 후 스키마 적용 (최초 1회)
+#    - ondam_schema.sql이 통합 정본이다. docs/migrations/의 개별 SQL은
+#      전부 이 파일에 이미 반영돼 있으므로 신규 셋업에서는 실행하지 않는다.
 mysql -u root -p ondam < ondam_schema.sql
-```
 
-### 3. Redis 실행 (BullMQ 필수)
+# 4. 관리자 계정 시드 (스키마 직후 DB는 사용자 0명)
+cd backend && npm run seed:admin
 
-```bash
-redis-server
-# 또는 Docker
-docker run -d -p 6379:6379 redis
-```
-
-### 4. 의존성 설치
-
-```bash
-cd frontend && npm install
-cd ../backend && npm install
-```
-
-### 5. 개발 서버 실행
-
-```bash
-# 백엔드 (포트 4000)
-cd backend && npm run dev
-
-# 프론트엔드 (포트 5173)
-cd frontend && npm run dev
-
-# BullMQ 워커 (AI 처리 테스트 시)
-cd backend && npm run workers
+# 5. 개발 서버 실행 (각각 별도 터미널)
+cd backend && npm run dev       # API 서버, 포트 4000
+cd backend && npm run workers   # BullMQ 워커 (AI 처리 큐)
+cd frontend && npm run dev      # 프론트엔드, 포트 5173
 ```
 
 ## 프로젝트 구조

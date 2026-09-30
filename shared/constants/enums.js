@@ -189,3 +189,37 @@ export const ADMIN_ROLE = ['super', 'manager', 'reviewer']
 
 // audit_logs 전용 - 'anonymous'는 인증 전 행위(로그인 실패 등), actor_id NULL과 짝을 이룸
 export const ACTOR_TYPE = ['user', 'admin', 'system', 'anonymous']
+
+// --------------------------------------------------------------------------
+// VALUES 배열 export (상수 배열로 참조하기 위해 - Zod 스키마 등에서 사용)
+// --------------------------------------------------------------------------
+
+export const USER_ROLE_VALUES = USER_ROLE
+export const CONSENT_TYPE_VALUES = CONSENT_TYPE
+export const PHOTO_ORDER_STATUS_VALUES = PHOTO_ORDER_STATUS
+export const PHOTO_TYPE_VALUES = PHOTO_TYPE
+export const PHOTO_FILE_KIND_VALUES = PHOTO_FILE_KIND
+export const VOICE_CLONE_STATUS_VALUES = VOICE_CLONE_STATUS
+export const WILL_STATUS_VALUES = WILL_STATUS
+export const WILL_RELEASE_POLICY_VALUES = WILL_RELEASE_POLICY
+export const WILL_RELEASE_STATUS_VALUES = WILL_RELEASE_STATUS
+export const WILL_RELEASE_REQ_STATUS_VALUES = WILL_RELEASE_REQ_STATUS
+export const WILL_EVENT_TYPE_VALUES = WILL_EVENT_TYPE
+export const PET_SPECIES_VALUES = PET_SPECIES
+export const PET_STATUS_VALUES = PET_STATUS
+export const PET_MEDIA_TYPE_VALUES = PET_MEDIA_TYPE
+export const PAYMENT_TARGET_TYPE_VALUES = PAYMENT_TARGET_TYPE
+export const PAYMENT_STATUS_VALUES = PAYMENT_STATUS
+export const SUBSCRIPTION_PLAN_VALUES = SUBSCRIPTION_PLAN
+export const SUBSCRIPTION_STATUS_VALUES = SUBSCRIPTION_STATUS
+export const AI_JOB_TYPE_VALUES = AI_JOB_TYPE
+export const AI_JOB_STATUS_VALUES = AI_JOB_STATUS
+export const AI_JOB_TARGET_TYPE_VALUES = AI_JOB_TARGET_TYPE
+export const GIFT_PRODUCT_TYPE_VALUES = GIFT_PRODUCT_TYPE
+export const GIFT_STATUS_VALUES = GIFT_STATUS
+export const NOTIFICATION_TYPE_VALUES = NOTIFICATION_TYPE
+export const NOTIFICATION_TARGET_TYPE_VALUES = NOTIFICATION_TARGET_TYPE
+export const CHANGED_BY_TYPE_VALUES = CHANGED_BY_TYPE
+export const ADMIN_ROLE_VALUES = ADMIN_ROLE
+export const ACTOR_TYPE_VALUES = ACTOR_TYPE
+

@@ -29,7 +29,7 @@ model: sonnet
 
 ## 신규 기능 작업 순서
 
-1. **기존 코드 파악**: 관련 도메인 파일 Read + DB 스키마 확인 (`/home/pabang/myapp/ondam/ondam_schema.sql`)
+1. **기존 코드 파악**: 관련 도메인 파일 Read + DB 스키마 확인 (`/home/lee/project/ondam/ondam_schema.sql`)
 2. **설계 결정**:
    - 새 DB 테이블 필요 시 → 마이그레이션 SQL 파일 먼저 작성, 사용자에게 검토 요청 후 계속 진행
    - 기존 테이블 활용 가능 시 → 바로 코드 작성 진행
@@ -491,7 +491,7 @@ router.use('/search', searchRoutes)
 
 ```bash
 # 백엔드 서버 기동 확인
-cd /home/pabang/myapp/ondam/backend && node src/server.js &
+cd /home/lee/project/ondam/backend && node src/server.js &
 # 또는 PM2 재시작
 pm2 reload ecosystem.config.js
 ```

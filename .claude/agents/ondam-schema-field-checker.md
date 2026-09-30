@@ -45,16 +45,16 @@ DB 실제 테이블 컬럼명 (ondam_schema.sql)
 
 ```bash
 # DB 스키마 전체 읽기
-cat /home/pabang/myapp/ondam/ondam_schema.sql
+cat /home/lee/project/ondam/ondam_schema.sql
 
 # Zod 스키마 파일 목록
-find /home/pabang/myapp/ondam/backend/src -name "*Validation.js" -o -name "*validation.js" | sort
+find /home/lee/project/ondam/backend/src -name "*Validation.js" -o -name "*validation.js" | sort
 
 # Repository 파일 목록
-find /home/pabang/myapp/ondam/backend/src -name "*Repository.js" -o -name "*repository.js" | sort
+find /home/lee/project/ondam/backend/src -name "*Repository.js" -o -name "*repository.js" | sort
 
 # 프론트엔드 API 호출 파일 목록
-find /home/pabang/myapp/ondam/frontend/src -name "*Api.js" -o -name "*api.js" | sort
+find /home/lee/project/ondam/frontend/src -name "*Api.js" -o -name "*api.js" | sort
 ```
 
 ---
