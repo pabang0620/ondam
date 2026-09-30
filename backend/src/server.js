@@ -26,7 +26,8 @@ import notificationRoutes from './domains/notification/notificationRoutes.js'
 import adminRoutes from './domains/admin/adminRoutes.js'
 import uploadRoutes from './domains/common/uploadRoutes.js'
 import giftRoutes from './domains/gift/giftRoutes.js'
-import './queues/billingWorker.js'
+import billingWorker from './queues/billingWorker.js'
+import pool from './config/db.js'
 // [결함 수정 - DEV-33] notificationWorker는 워커 전용 프로세스(jobs/index.js)에서만
 // 띄운다. 이전에는 여기서도 직접 import해 같은 Redis 큐를 서버·워커 두 프로세스가
 // 동시에 polling했다 - BullMQ 락 덕에 중복 처리는 안 되지만, 재시도 로그가 두
@@ -73,6 +74,9 @@ io.use((socket, next) => {
   if (!token) return next(new Error('인증 토큰이 없습니다'))
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] })
+    // 사용자 토큰만 허용한다 - 관리자 토큰(adminId)은 userId가 없어 `user:undefined`
+    // 룸에 섞여 들어갔다.
+    if (!decoded.userId || decoded.adminId) return next(new Error('유효하지 않은 토큰입니다'))
     socket.userId = decoded.userId
     next()
   } catch {
@@ -114,7 +118,9 @@ app.use(cookieParser())
 // URL 설계는 유지하되, morgan 기본 :url 토큰이 req.originalUrl(쿼리스트링 포함)을 그대로
 // 로그에 남기므로 accessCode 값만 여기서 마스킹한다 - 브라우저 히스토리·Referer 헤더는
 // 서버 코드로 제어할 수 없는 클라이언트 영역이라 이 조치의 대상이 아니다.
-morgan.token('url', (req) => (req.originalUrl || req.url).replace(/([?&]accessCode=)[^&]*/i, '$1[REDACTED]'))
+// accessCode 외에 OAuth code/state, 토큰류 쿼리도 함께 가리고, 같은 키가 여러 번 와도 모두 가린다(g).
+morgan.token('url', (req) => (req.originalUrl || req.url)
+  .replace(/([?&](?:accessCode|code|state|token|access_token|refresh_token)=)[^&]*/gi, '$1[REDACTED]'))
 if (process.env.NODE_ENV !== 'test') {
   app.use(morgan('dev'))
 }
@@ -181,7 +187,17 @@ app.use((err, req, res, _next) => {
     return _next(err)
   }
 
-  console.error('[unhandled error]', err)
+  // err 객체를 통째로 찍지 않는다 - body-parser 오류는 err.body에 원문 요청 본문
+  // (비밀번호 등)을 달고 오므로 필요한 필드만 기록한다.
+  console.error('[unhandled error]', {
+    name: err.name,
+    code: err.code,
+    status: err.status,
+    type: err.type,
+    message: err.message,
+    path: req.originalUrl?.split('?')[0],
+    ...(!(err.status >= 400 && err.status < 500) && { stack: err.stack }),
+  })
 
   // JSON 파싱 오류
   if (err instanceof SyntaxError && err.type === 'entity.parse.failed') {
@@ -223,9 +239,11 @@ app.use((err, req, res, _next) => {
     })
   }
 
-  const status = err.status || 500
+  // 범위를 벗어난 status(200, 600, 문자열 등)는 500으로 정규화한다
+  const rawStatus = err.status ?? err.statusCode
+  const status = Number.isInteger(rawStatus) && rawStatus >= 400 && rawStatus < 600 ? rawStatus : 500
   const isDev = process.env.NODE_ENV === 'development'
-  const is4xx = Number.isInteger(status) && status >= 400 && status < 500
+  const is4xx = status >= 400 && status < 500
 
   // [결함3 - 정보 노출 방어 강화] 이전에는 "NODE_ENV==='development'가 아니면
   // 5xx 메시지를 가린다"는 단일 문자열 비교 하나에 프로덕션 전체가 걸려 있었다 -
@@ -247,14 +265,15 @@ app.use((err, req, res, _next) => {
   // 4xx는 의도적으로 던진 사용자 메시지(Object.assign(new Error(...), { status })이므로
   // 그대로 전달한다.
   const clientMessage = is4xx
-    ? (err.message || '서버 오류가 발생했습니다')
-    : (status >= 500
-        ? (toSafeFailureMessage(err.message) ?? '서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.')
-        : (err.message || '서버 오류가 발생했습니다'))
+    ? (err.message || '요청을 처리할 수 없습니다')
+    : (toSafeFailureMessage(err.message) ?? '서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.')
 
   res.status(status).json({
     success: false,
     message: clientMessage,
+    // 의도적으로 던진 4xx의 기계 판독용 코드(예: VOICE_NOT_READY)만 전달한다 - 프론트가
+    // 메시지 문자열 대신 code로 분기하게 한다(G12). mysql2 등 내부 코드는 5xx라 제외된다.
+    ...(is4xx && typeof err.code === 'string' && /^[A-Z][A-Z0-9_]+$/.test(err.code) && { code: err.code }),
     ...(isDev && status === 500 && { stack: err.stack }),
   })
 })
@@ -271,6 +290,42 @@ httpServer.listen(PORT, () => {
   registerBillingScanDueScheduler().catch((err) => {
     console.error('[server] scan-due 스케줄러 등록 실패:', err.message)
   })
+})
+
+// ─── graceful shutdown ────────────────────────────────────────────────────────
+// 이 프로세스는 자동결제 워커(billingWorker)도 돌린다. SIGTERM에 바로 죽으면 토스
+// 승인은 났는데 DB 반영 전인 job이 끊길 수 있으므로, 새 요청 수신을 멈추고 진행 중
+// job이 끝나길 기다린 뒤 풀을 닫는다. 정해진 시간 안에 안 끝나면 강제 종료한다.
+const SHUTDOWN_TIMEOUT_MS = 25_000
+let isShuttingDown = false
+
+const shutdown = async (signal, exitCode = 0) => {
+  if (isShuttingDown) return
+  isShuttingDown = true
+  console.log(`[server] ${signal} 수신 - 종료 절차 시작`)
+  const forceTimer = setTimeout(() => {
+    console.error('[server] 종료 시간 초과 - 강제 종료')
+    process.exit(1)
+  }, SHUTDOWN_TIMEOUT_MS)
+  forceTimer.unref()
+
+  try {
+    await new Promise((resolve) => httpServer.close(() => resolve()))
+    await new Promise((resolve) => io.close(() => resolve()))
+    await billingWorker.close()
+    await pool.end()
+  } catch (err) {
+    console.error('[server] 종료 중 오류:', err?.message)
+    exitCode = exitCode || 1
+  }
+  process.exit(exitCode)
+}
+
+process.on('SIGTERM', () => shutdown('SIGTERM'))
+process.on('SIGINT', () => shutdown('SIGINT'))
+process.on('unhandledRejection', (reason) => {
+  console.error('[server] unhandledRejection:', reason instanceof Error ? reason.message : reason)
+  shutdown('unhandledRejection', 1)
 })
 
 export default app

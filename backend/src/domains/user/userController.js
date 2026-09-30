@@ -1,5 +1,6 @@
 import * as userService from './userService.js'
 import { success } from '../../utils/response.js'
+import { RT_COOKIE, RT_COOKIE_PATH } from '../auth/authController.js'
 
 /**
  * GET /api/users/me
@@ -49,6 +50,8 @@ export const changePassword = async (req, res, next) => {
 export const withdraw = async (req, res, next) => {
   try {
     await userService.withdraw(req.user.userId)
+    // [AUTH-7] 설정 시와 같은 path로 refresh token 쿠키 제거
+    res.clearCookie(RT_COOKIE, { path: RT_COOKIE_PATH })
     return success(res, null, '회원 탈퇴가 완료되었습니다')
   } catch (err) {
     next(err)

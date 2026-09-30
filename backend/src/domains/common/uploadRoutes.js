@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import rateLimit from 'express-rate-limit'
 import { requireAuth } from '../../middleware/auth.js'
 import {
   uploadSingleImage,
@@ -9,8 +10,20 @@ import { success, error } from '../../utils/response.js'
 
 const router = Router()
 
+// [AUTH-11] S3 저장 비용·남용 방지 - 사용자 단위 제한. requireAuth 뒤에 두므로
+// req.user가 항상 존재한다 (다른 도메인 limiter와 같은 keyGenerator 패턴)
+const uploadLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000, // 10분
+  max: 60,                   // 10분 내 최대 60회
+  keyGenerator: (req) => req.user?.userId ?? req.ip,
+  message: { success: false, message: '업로드 요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+})
+
 // 모든 업로드 라우트 인증 필수
 router.use(requireAuth)
+router.use(uploadLimiter)
 
 /**
  * POST /api/uploads/photo

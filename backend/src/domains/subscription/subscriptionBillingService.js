@@ -256,7 +256,7 @@ export const reserveBillingAttempt = async ({
  * >}
  *   null이면 신선한(fresh) pending이 진행 중이라 이번 시도를 건너뛰어야 함을 의미
  */
-export const reserveInitialBillingAttempt = async ({ userId, plan, amount, billingCycleDate }) => {
+export const reserveInitialBillingAttempt = async ({ userId, plan: _plan, amount, billingCycleDate }) => {
   const existing = await subscriptionPaymentLogRepository.findInitialTodayLog(userId, billingCycleDate, amount)
   if (existing) {
     if (existing.log_status === 'pending') {

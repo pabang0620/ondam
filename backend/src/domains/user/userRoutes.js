@@ -18,8 +18,17 @@ const updateProfileSchema = z.object({
 // 비밀번호 변경 스키마
 const changePasswordSchema = z.object({
   body: z.object({
-    currentPassword: z.string().min(1, '현재 비밀번호를 입력해주세요'),
-    newPassword: z.string().min(8, '새 비밀번호는 8자 이상이어야 합니다'),
+    // 가입·로그인 스키마(authRoutes.js)와 동일하게 trim + 72자 상한(bcrypt 72바이트 절단 방지)
+    currentPassword: z
+      .string()
+      .trim()
+      .min(1, '현재 비밀번호를 입력해주세요')
+      .max(1024, '비밀번호가 너무 깁니다'),
+    newPassword: z
+      .string()
+      .trim()
+      .min(8, '새 비밀번호는 8자 이상이어야 합니다')
+      .max(72, '새 비밀번호는 72자 이하여야 합니다'),
   }),
 })
 

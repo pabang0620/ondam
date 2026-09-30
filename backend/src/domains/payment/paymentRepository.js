@@ -7,7 +7,7 @@ import { toSafeLimit, toSafeOffset } from '../../utils/pagination.js'
  * 생성 시점에는 toss_order_id 를 임시 식별자로 사용하며, payment_id(UUID) 를 toss_payment_key 초기값으로 활용해 UNIQUE 제약 준수
  */
 export const createPayment = async ({ paymentId, userId, targetType, targetId, tossOrderId, amountKrw }) => {
-  const [result] = await pool.execute(
+  await pool.execute(
     `INSERT INTO payments
        (payment_id, user_id, target_type, target_id, toss_payment_key,
         toss_order_id, amount_krw, status)

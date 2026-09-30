@@ -124,14 +124,17 @@ export const saveRefreshToken = async ({ tokenHash, userId, expiresAt }) => {
 /**
  * Refresh token 취소 (revoke)
  * @param {string} tokenHash
+ * @returns {Promise<number>} affectedRows - 0이면 이미 다른 요청이 먼저 revoke한 것
+ *   (authService.refresh가 회전 경쟁 판별에 사용)
  */
 export const revokeRefreshToken = async (tokenHash) => {
-  await pool.query(
+  const [result] = await pool.query(
     `UPDATE refresh_tokens
      SET revoked_at = NOW()
      WHERE token_hash = ? AND revoked_at IS NULL`,
     [tokenHash]
   )
+  return result.affectedRows
 }
 
 /**

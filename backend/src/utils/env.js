@@ -82,8 +82,12 @@ export const validateEnv = () => {
     process.exit(1)
   }
   if (jwtSecret.length < 32 || jwtRefreshSecret.length < 32) {
-    console.error('[env] JWT_SECRET과 JWT_REFRESH_SECRET은 각각 32자 이상이어야 합니다')
-    process.exit(1)
+    // 운영에서는 기동 거부, 로컬 개발·테스트에서는 경고만 한다(기존 로컬 .env 호환)
+    if (currentEnv === 'production') {
+      console.error('[env] JWT_SECRET과 JWT_REFRESH_SECRET은 각각 32자 이상이어야 합니다')
+      process.exit(1)
+    }
+    console.warn('[env] JWT 시크릿이 32자 미만입니다 - 운영 배포 전 교체하세요')
   }
 
   const warnMissing = WARNING_ONLY.filter((key) => !process.env[key])

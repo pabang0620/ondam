@@ -30,6 +30,10 @@ const REFRESH_REUSE_GRACE_MS = 10 * 1000
 // 기존 게이트가 이미 담당한다(중복 검사 방지).
 export const REQUIRED_ACCOUNT_CONSENT_TYPES = ['privacy', 'terms']
 
+// login()에서 사용자가 없을 때 비교용으로만 쓰는 더미 해시 (register와 같은 cost 12).
+// 모듈 로드 시 1회 동기 생성 - 어떤 실제 비밀번호와도 대응하지 않는다.
+const DUMMY_PASSWORD_HASH = bcrypt.hashSync(crypto.randomBytes(16).toString('hex'), 12)
+
 /**
  * Refresh token 문자열을 SHA-256으로 해시
  * @param {string} token
@@ -86,6 +90,15 @@ export const register = async ({
   // 다른 클라이언트 등)에서는 terms 없이도 가입이 그대로 통과한다. 이 결함 계열
   // (동의 검증을 프론트에만 의존)이 이번 작업 전체의 핵심 주제이므로 서버에도
   // 동일하게 적용한다.
+  // [AUTH-5] 같은 type이 여러 번 오면 아래 필수 검사(find = 첫 항목)와 저장
+  // (Map dedupe = 마지막 항목)의 기준이 어긋나, "첫 항목 privacy:true, 마지막 항목
+  // privacy:false"로 필수 검사를 통과한 뒤 비동의로 저장될 수 있다. 모호한 요청은
+  // 해석하지 않고 400으로 거부한다.
+  const consentTypes = consents.map((c) => c.type)
+  if (new Set(consentTypes).size !== consentTypes.length) {
+    throw Object.assign(new Error('동의 항목에 중복된 유형이 있습니다'), { status: 400 })
+  }
+
   const missingRequired = REQUIRED_ACCOUNT_CONSENT_TYPES.find((type) => {
     const found = consents.find((c) => c.type === type)
     return !found || !found.isAgreed
@@ -109,14 +122,15 @@ export const register = async ({
   // 마이그레이션 2026-08-21b가 DB ENUM에 이 두 값을 추가할 예정이라 앱 코드(SSOT)가
   // 먼저 갱신된 상태다(G1). 이 필터는 그 SSOT 기준으로만 거르므로, b 미적용 DB에서는
   // 여전히 INSERT 시 MySQL 1265(ER_TRUNCATED_WRONG_VALUE_FOR_FIELD)가 날 수 있다.
-  // 이 오류는 아래 트랜잭션 내부에서 "필수 동의가 아닌 항목"에 한해 개별적으로
-  // 흡수한다 - 마이그레이션 적용 여부와 무관하게 가입 자체는 항상 성공해야 한다.
+  // [AUTH-4 주석 정정] 이 오류는 아래 트랜잭션에서 "필수 동의가 아닌 항목"(marketing)
+  // 에 한해서만 흡수된다. terms는 REGISTER_HARD_FAIL_CONSENT_TYPES(필수)이므로 b 미적용
+  // DB에서는 terms INSERT 실패로 트랜잭션이 롤백되어 가입이 실패(500)한다 - "마이그레이션
+  // 적용 여부와 무관하게 항상 성공"하지 않는다. 운영 DB의 b 적용 여부는 코드에서 확인
+  // 불가하므로 배포 전 별도 확인이 필요하다.
   const persistableConsents = consents.filter((c) => CONSENT_TYPE.includes(c.type))
 
-  // 같은 type이 배열에 중복되면 user_consents.uq_consents_user_type UNIQUE 위반으로
-  // ER_DUP_ENTRY가 나고, 이를 구분 없이 처리하면 멀쩡한 이메일도 "이미 사용 중"으로
-  // 오판될 수 있다. 저장 전 type 기준 중복을 제거해 애초에 그 충돌을 만들지 않는다
-  // (나중 값이 우선 - 체크박스 최신 상태를 반영).
+  // 요청 내 type 중복은 위(AUTH-5)에서 이미 400으로 거부하므로 이 dedupe는 사실상
+  // no-op이다. 방어적으로만 유지한다.
   const dedupedConsents = Array.from(
     new Map(persistableConsents.map((c) => [c.type, c])).values()
   )
@@ -230,13 +244,11 @@ export const register = async ({
  */
 export const login = async ({ email, password }) => {
   const user = await authRepository.findByEmail(email)
-  if (!user) {
-    throw Object.assign(new Error('이메일 또는 비밀번호가 올바르지 않습니다'), { status: 401 })
-  }
 
-  // 소프트삭제 계정 차단
-  // (findByEmail 쿼리에서 deleted_at IS NULL 이미 필터링되나, 방어적으로 재확인)
-  if (!user.password_hash) {
+  // 미존재 이메일·소셜 전용 계정(password_hash 없음)에서도 bcrypt 비교를 동일하게
+  // 수행해 응답 시간 차이로 가입 여부가 드러나지 않게 한다 (타이밍 기반 계정 열거 방지)
+  if (!user || !user.password_hash) {
+    await bcrypt.compare(password, DUMMY_PASSWORD_HASH)
     throw Object.assign(new Error('이메일 또는 비밀번호가 올바르지 않습니다'), { status: 401 })
   }
 
@@ -292,40 +304,7 @@ export const refresh = async (refreshToken) => {
   }
 
   if (stored.revoked_at) {
-    // [결함3 수정] adminService.refresh()와 동일한 회전 경쟁 유예 처리 - 다중 탭 동시
-    // 마운트 시 같은 rt 쿠키로 refresh가 여러 번 나가면, 먼저 도착한 요청이 토큰을
-    // 회전(revoke)시킨 직후 늦게 도착한 요청은 "이미 사용된" 토큰을 들게 된다. 토큰
-    // 값만 보면 실제 탈취 재사용과 구분이 안 되므로, 아주 짧은 유예 시간(GRACE_MS)
-    // 안의 재사용이면서 이 사용자의 활성(active) refresh token이 실제로 존재할
-    // 때만 "경쟁으로 인한 재사용"으로 관용 처리한다. 유예를 벗어났거나 활성 토큰이
-    // 없으면 진짜 탈취 재사용 가능성으로 간주해 하드 401을 던지고, 이 사용자의 모든
-    // 활성 세션을 revoke한다(재사용 탐지 방어를 무력화하지 않기 위한 피해 확산
-    // 차단 - 회전만으로는 "이미 도난된 다른 활성 토큰"을 막지 못하기 때문).
-    const revokedAgoMs = Date.now() - new Date(stored.revoked_at).getTime()
-    if (revokedAgoMs >= 0 && revokedAgoMs <= REFRESH_REUSE_GRACE_MS) {
-      const activeToken = await authRepository.findActiveRefreshToken(stored.user_id)
-      if (activeToken) {
-        const activeUser = await authRepository.findByUserId(stored.user_id)
-        if (activeUser && activeUser.is_active) {
-          // 새 accessToken만 발급하고 refreshToken은 null로 돌려준다 - 컨트롤러가
-          // 이를 보고 rt 쿠키를 다시 심지 않는다(먼저 도착한 탭이 이미 심어둔 최신
-          // 쿠키를 그대로 유지해야 한다).
-          return {
-            accessToken: signAccessToken({ userId: activeUser.user_id, role: activeUser.role }),
-            refreshToken: null,
-            user: {
-              userId: activeUser.user_id,
-              email: activeUser.email,
-              nickname: activeUser.nickname,
-              role: activeUser.role,
-            },
-          }
-        }
-      }
-    }
-
-    await authRepository.revokeAllRefreshTokens(stored.user_id)
-    throw Object.assign(new Error('이미 사용된 리프레시 토큰입니다'), { status: 401 })
+    return handleRevokedRefreshReuse(stored)
   }
 
   if (new Date(stored.expires_at) < new Date()) {
@@ -342,7 +321,15 @@ export const refresh = async (refreshToken) => {
   }
 
   // 기존 토큰 취소 (rotation)
-  await authRepository.revokeRefreshToken(tokenHash)
+  // [AUTH-9] 위의 findRefreshToken(SELECT)과 이 UPDATE 사이에 같은 토큰으로 온 다른
+  // 요청이 먼저 revoke했다면 affectedRows가 0이다. 이때 그대로 새 토큰을 발급하면
+  // 한 refresh token에서 두 개의 활성 토큰이 갈라진다. revoked_at을 다시 읽어 위와
+  // 동일한 재사용 탐지 분기로 보낸다.
+  const revokedCount = await authRepository.revokeRefreshToken(tokenHash)
+  if (revokedCount === 0) {
+    const latest = await authRepository.findRefreshToken(tokenHash)
+    return handleRevokedRefreshReuse(latest ?? stored)
+  }
 
   // 새 토큰 발급
   const newAccessToken = signAccessToken({ userId: user.user_id, role: user.role })
@@ -364,6 +351,47 @@ export const refresh = async (refreshToken) => {
       role: user.role,
     },
   }
+}
+
+/**
+ * 이미 revoke된 refresh token이 다시 제시됐을 때의 처리 (refresh() 전용)
+ * @param {{ user_id: string, revoked_at: Date|string|null }} stored
+ */
+const handleRevokedRefreshReuse = async (stored) => {
+  // [결함3 수정] adminService.refresh()와 동일한 회전 경쟁 유예 처리 - 다중 탭 동시
+  // 마운트 시 같은 rt 쿠키로 refresh가 여러 번 나가면, 먼저 도착한 요청이 토큰을
+  // 회전(revoke)시킨 직후 늦게 도착한 요청은 "이미 사용된" 토큰을 들게 된다. 토큰
+  // 값만 보면 실제 탈취 재사용과 구분이 안 되므로, 아주 짧은 유예 시간(GRACE_MS)
+  // 안의 재사용이면서 이 사용자의 활성(active) refresh token이 실제로 존재할
+  // 때만 "경쟁으로 인한 재사용"으로 관용 처리한다. 유예를 벗어났거나 활성 토큰이
+  // 없으면 진짜 탈취 재사용 가능성으로 간주해 하드 401을 던지고, 이 사용자의 모든
+  // 활성 세션을 revoke한다(재사용 탐지 방어를 무력화하지 않기 위한 피해 확산
+  // 차단 - 회전만으로는 "이미 도난된 다른 활성 토큰"을 막지 못하기 때문).
+  const revokedAgoMs = Date.now() - new Date(stored.revoked_at).getTime()
+  if (revokedAgoMs >= 0 && revokedAgoMs <= REFRESH_REUSE_GRACE_MS) {
+    const activeToken = await authRepository.findActiveRefreshToken(stored.user_id)
+    if (activeToken) {
+      const activeUser = await authRepository.findByUserId(stored.user_id)
+      if (activeUser && activeUser.is_active) {
+        // 새 accessToken만 발급하고 refreshToken은 null로 돌려준다 - 컨트롤러가
+        // 이를 보고 rt 쿠키를 다시 심지 않는다(먼저 도착한 탭이 이미 심어둔 최신
+        // 쿠키를 그대로 유지해야 한다).
+        return {
+          accessToken: signAccessToken({ userId: activeUser.user_id, role: activeUser.role }),
+          refreshToken: null,
+          user: {
+            userId: activeUser.user_id,
+            email: activeUser.email,
+            nickname: activeUser.nickname,
+            role: activeUser.role,
+          },
+        }
+      }
+    }
+  }
+
+  await authRepository.revokeAllRefreshTokens(stored.user_id)
+  throw Object.assign(new Error('이미 사용된 리프레시 토큰입니다'), { status: 401 })
 }
 
 // [보안 수정 - 2026-08-23] 초상권·음성권·AI 생성물·사후공개 동의는 photo/will

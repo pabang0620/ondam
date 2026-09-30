@@ -37,3 +37,7 @@ backend/coverage/
 
 # 업로드 임시 파일
 backend/uploads/
+
+# 자동 생성 산출물
+flowmap.graph.json
+flowmap.html

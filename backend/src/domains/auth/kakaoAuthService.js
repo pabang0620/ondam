@@ -19,6 +19,13 @@ const REFRESH_TOKEN_EXPIRES_MS = 30 * 24 * 60 * 60 * 1000 // 30일
 
 export const KAKAO_STATE_COOKIE = 'kakao_oauth_state'
 
+// 콜백 실패 사유 구분용 구조적 마커(err.code) - 컨트롤러가 메시지가 아닌 이 값으로
+// 리다이렉트 쿼리를 결정한다 (G12)
+export const KAKAO_ERROR_CODE = {
+  EMAIL_EXISTS: 'KAKAO_EMAIL_EXISTS',
+  ACCOUNT_INACTIVE: 'KAKAO_ACCOUNT_INACTIVE',
+}
+
 export const KAKAO_STATE_COOKIE_OPTIONS = {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
@@ -147,7 +154,29 @@ export const handleKakaoCallback = async (code) => {
   // 4. 없으면 신규 가입
   if (!user) {
     const userId = uuidv4()
-    user = await authRepository.createKakaoUser({ userId, kakaoId, email, nickname })
+    try {
+      user = await authRepository.createKakaoUser({ userId, kakaoId, email, nickname })
+    } catch (err) {
+      if (err.code !== 'ER_DUP_ENTRY') throw err
+      // 같은 카카오 계정의 동시 콜백이 먼저 가입시킨 경우(kakao_id UNIQUE)면 그 사용자로 진행
+      user = await authRepository.findByKakaoId(kakaoId)
+      if (!user) {
+        // kakao_id가 아니라면 users.email UNIQUE 충돌 - 같은 이메일의 일반 계정이 이미 있다
+        throw Object.assign(new Error('이미 같은 이메일로 가입된 계정이 있습니다'), {
+          status: 409,
+          code: KAKAO_ERROR_CODE.EMAIL_EXISTS,
+        })
+      }
+    }
+  }
+
+  // 4-1. 비활성 계정 차단 (AUTH-1) - 일반 로그인(authService.login)과 동일 기준.
+  // 토큰을 발급하지 않고, 컨트롤러가 code를 보고 토큰 없는 콜백으로 리다이렉트한다.
+  if (!user.is_active) {
+    throw Object.assign(new Error('비활성화된 계정입니다'), {
+      status: 403,
+      code: KAKAO_ERROR_CODE.ACCOUNT_INACTIVE,
+    })
   }
 
   // 5. JWT 발급
