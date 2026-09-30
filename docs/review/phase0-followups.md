@@ -264,6 +264,43 @@ KPI 8개 중 6개는 서버 DB만으로 산출 가능해 급하지 않다(`strat
 
 ---
 
+# 2026-09-30 상용화 품질 라운드 후속 (I절)
+
+> 근거: `review/2026-09-30-commercial-readiness-round.md`. 위 절의 상태 변경도 여기 적는다
+> (원문은 고치지 않는다).
+
+## 기존 항목 상태 변경
+
+- **E-4 해소**: 선물 사진·영상 폴링이 failed/refunded/알 수 없는 상태에서 멈춘다. 연속 조회 실패도 상한을 두고 멈춘다.
+- **C-6 확인**: `preparePayment`가 기존 ready 결제를 재사용한다(이미 반영돼 있었음).
+
+## I. 이번 라운드 잔여
+
+### I-1. 검증 공백 - **다음 착수 1순위**
+- 로컬 DB·Redis로 이번 변경 경로 API 스모크: 결제 confirm 재호출·셀프 환불 거부, 탈퇴 409, refresh 회전, 카카오 콜백 redirect(코드 경로만), 영상 열람 복호화(로컬 KMS 폴백).
+- 자동 테스트 부재: `backend/tests/`가 없고 `server.js`가 import 즉시 listen해 supertest로 app만 가져올 수 없다. app/listen 분리가 선행이다. frontend에는 lint·test 스크립트가 없다.
+- 이번 diff(`ad1219c..f864e40`) 행동 중심 코드 리뷰가 중단됐다. 특히 `middleware/auth.js`의 `req.baseUrl` 기반 관리자 토큰 허용, `toKmsCipherBuffer`의 base64 오판 가능성, refresh 실패 분기를 다시 본다.
+
+### I-2. 백엔드
+- 사후공개 승인 시 `token_expires_at`을 설정하는 곳이 없다 → 새 열람 링크가 만료되지 않는다(정책은 released_at + 90일).
+- `videoWorker`의 AI_MOCK 경로가 실제 KMS `encryptString`을 호출해 KMS_KEY_ID가 비면 로컬에서 실패한다.
+- 워커 프로세스에서 `getIo()`가 null이라 사진·음성·영상 진행률 소켓 이벤트가 전부 유실된다. redis adapter/emitter가 필요하다(신규 의존성 → 결정 필요). 프론트는 폴링으로 동작하므로 기능은 유지된다.
+- 구독 결제 경로 사용자 이메일 조회 3곳(`subscriptionService.js:196·577`, `billingWorker.js:140`)에 `deleted_at IS NULL`이 없다. 탈퇴는 활성 구독이 있으면 막히므로(D6) 실영향은 낮다.
+- 비밀번호 상한 72는 글자 수 기준이다. 한글이 섞이면 72바이트를 넘어 bcrypt 절단이 남는다.
+- 탈퇴 시 구독 확인과 soft delete가 한 트랜잭션이 아니다.
+- 사진 주문은 큐 투입 시점에 processing이 되어 SPEC-02 "대기열 = 착수 전"을 구분할 수 없다. 셀프 환불에서 processing을 뺐다 → SPEC-02 문구 또는 상태 설계 정합 필요.
+- 선물 완료 전이를 워커로 옮기기(D4) - 지금은 화면 폴링 성공 시에만 completed가 된다.
+- `kms.js`·`s3.js` 오류 분류가 `err.message` 문자열에 의존한다(G12).
+
+### I-3. 프론트
+- 구독 해지 문구(D3): 실제로는 즉시 혜택이 끝나는데 "기간 끝까지 이용"으로 안내한다.
+- 카카오 신규 가입 필수 동의 미수집(D5) - 흐름 설계 필요.
+- 사진 결과 다운로드는 presigned URL에 `ResponseContentDisposition: attachment`를 붙여야 근본 해결된다(지금은 안내 문구로 완화).
+- 미사용 코드: `HomeLatestCarousel.jsx/.css`, `assets/images/home-latest/*.jpg` 5개, `assets/logo*.svg` 3개. 디자인 작업 의도 확인 후 정리.
+- 푸터 약관·개인정보처리방침·고객센터는 페이지가 없어 텍스트로 바꿨다. 법무 초안 확정 후 페이지 필요.
+
+---
+
 ## 관리 규칙
 
 - 이 문서의 항목을 착수할 때는 `strategy/06-dev-backlog.md`에 DEV 번호로 등재하고 여기서 제거한다.

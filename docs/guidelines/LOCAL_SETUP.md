@@ -1,6 +1,6 @@
 # 로컬 개발 환경 셋업 (WSL 기준)
 
-> 최종 갱신: 2026-08-23. 이 문서는 실제로 WSL(Ubuntu 26.04)에 처음부터 설치·기동해 검증한
+> 최종 갱신: 2026-09-30(환경변수 검증 규칙·`VITE_USE_MSW` 추가). 최초 작성 2026-08-23. 이 문서는 실제로 WSL(Ubuntu 26.04)에 처음부터 설치·기동해 검증한
 > 절차다. 이 문서만 보고 클론 → 설치 → DB 적용 → 서버 기동 → 로그인까지 끝까지 갈 수 있어야
 > 한다. 막히면 맨 아래 "문제 해결"부터 본다.
 >
@@ -138,6 +138,13 @@ cp backend/.env.example backend/.env
 AWS/Gemini/ElevenLabs/토스 등 벤더 키는 **비워 둬도 서버는 뜬다**(경고 로그만 찍힌다).
 해당 기능을 쓸 때의 동작은 6절을 본다.
 
+기동 시 검증 규칙(`backend/src/utils/env.js`, 2026-09-30):
+
+- `NODE_ENV`는 `development`/`production`/`test` 중 하나여야 한다(없으면 기동 거부). 로컬은 `development`.
+- `JWT_SECRET`과 `JWT_REFRESH_SECRET`이 같으면 기동 거부. 32자 미만은 로컬에서는 경고, production에서는 거부.
+- `PAYMENT_MOCK`/`AI_MOCK`은 `NODE_ENV=development`일 때만 동작한다. production에서 `true`면 기동 거부.
+- 린트: `cd backend && npm run lint`(0 errors 유지).
+
 ### 5-2. 프론트엔드
 
 `frontend/.env`는 **이 저장소에 아직 만들어져 있지 않다.** `frontend/.env.example`은
@@ -152,6 +159,7 @@ cp frontend/.env.example frontend/.env
 | `VITE_API_URL` | 비워 둔다(같은 origin의 Vite 프록시를 타므로 로컬에서는 불필요) |
 | `VITE_TOSS_CLIENT_KEY` | 비워 두면 결제 버튼에서 명확한 에러가 난다(무한 로딩 아님). 실제 결제 플로우를 테스트하려면 토스 테스트용 클라이언트 키(`test_ck_...`)를 발급받아 채운다 |
 | `VITE_CONTACT_PHONE` | 비워 둬도 무방(관련 UI가 대체 문구로 렌더링됨) |
+| `VITE_USE_MSW` | 비워 두면 실백엔드(`:4000`)를 쓴다. 백엔드 없이 화면만 볼 때(디자인 미리보기) `true`. 2026-09-30부터 개발 모드라도 이 값이 `true`일 때만 MSW가 켜진다 - 이전에는 항상 켜져 실백엔드 응답을 가로챘다 |
 
 ## 6. 관리자 계정 시드
 

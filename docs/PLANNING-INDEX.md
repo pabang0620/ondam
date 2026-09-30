@@ -44,12 +44,13 @@ docs/
 │   ├── PRIVACY_POLICY.draft       개인정보처리방침
 │   └── REFUND_POLICY.draft        환불·청약철회 규정
 │
-├── review/                        코드 감사 (2026-08-21~23)
+├── review/                        코드 감사 (2026-08-21~09-30)
 │   ├── 2026-08-21-full-audit      5개 에이전트 종합 정적 감사
 │   ├── remediation-plan           DEV-22~29 실행 플랜
-│   ├── phase0-followups           후속 태스크. A~D절(08-22 정적) + E~H절(08-23 실기동)
-│   └── 2026-08-23-verification-record  ★ 실기동 검증 라운드 기록.
-│                                  발견 경위별 분류(정적 / curl / 브라우저)가 핵심
+│   ├── phase0-followups           후속 태스크. A~D절(08-22 정적) + E~H절(08-23 실기동) + I절(09-30)
+│   ├── 2026-08-23-verification-record  실기동 검증 라운드 기록.
+│   │                              발견 경위별 분류(정적 / curl / 브라우저)가 핵심
+│   └── 2026-09-30-commercial-readiness-round  ★ 상용화 품질 라운드(결정 D1~D8, 커밋별 수정 내역)
 │
 ├── guidelines/
 │   ├── LOCAL_SETUP                로컬 개발 환경 셋업 (WSL MySQL/Redis 설치·기동·문제해결)
@@ -72,9 +73,16 @@ docs/
 └── (참고) AI_STACK_RESEARCH, LIPSYNC_TEST_GUIDE, screenshots/
 ```
 
-## 2. 현재 상태와 우선순위 (2026-08-23)
+## 2. 현재 상태와 우선순위 (2026-09-30 갱신)
 
-### 지금 어디에 있나
+### 2026-09-30 라운드 요약
+
+- **개발 브랜치는 `claude`**(홈 애플 스토어 스타일 리디자인 `a762078`·`ad1219c` 이후). 브랜드명은 **온담**으로 프론트·백엔드 통일했다.
+- 정적 검토 약 140건 중 실사용 차단·자금·보안 결함을 우선 수정했다. 대표: 영상 편지 구매 전건 실패(`willId` 필드 불일치), 유가족 영상 열람 불가(암호문 인코딩 불일치), 셀프 환불 과다, 결제 확인 재호출 시 AI 재투입, 운영 mock 차단 장치 부재, 선물 링크 타계정 오염, 홈 CTA 회귀. 상세: `review/2026-09-30-commercial-readiness-round.md`
+- 검증: backend lint 0 errors(처음 통과), frontend build 성공, MSW 브라우저 확인. **DB 연동 스모크와 자동 테스트는 이번에 돌리지 않았다**(`phase0-followups.md` I-1이 다음 1순위)
+- MSW는 이제 `frontend/.env`에 `VITE_USE_MSW=true`를 넣을 때만 켜진다(기본은 실백엔드)
+
+### 2026-08-23 시점 상태 (원문)
 
 - **전제가 바뀌었다: 로컬 실환경이 생겼다.** WSL에 MySQL 8.4 + Redis를 구축하고 `ondam_schema.sql`을 적용(30테이블 에러 0건)한 뒤 **처음으로 애플리케이션을 실제 기동**했다. 마이그레이션 4세트는 전부 스키마 파일에 통합돼 있어 신규 DB는 `ondam_schema.sql` 1회 실행이면 최종 상태다(`docs/migrations/`는 이력용).
 - **검증 방식이 3종으로 늘었다**: 정적 분석 + 실제 API 호출(curl) 전 도메인 스모크 + 브라우저 렌더링 확인. **세 가지가 서로를 대체하지 못한다**는 것이 이번 라운드의 결론이다 - 최악의 결함들이 전부 curl 200이었다. 상세: `review/2026-08-23-verification-record.md` 3절
