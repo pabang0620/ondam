@@ -86,9 +86,13 @@ export function useWillEvent() {
         beneficiaries: [],
       }
       const { data } = await willApi.createWill(payload)
-      // FIX: 결함1 전수 점검 - 실제 응답 필드는 will_id다 (useWillPreview.js와 동일)
-      const willId = data.data?.will_id
-      navigate(`/will/payment?willId=${willId}`)
+      // 백엔드 계약: data는 { willId, will_id } (useWillPreview.js와 동일)
+      const willId = data?.data?.willId ?? data?.data?.will_id
+      if (!willId) {
+        setSubmitError('영상 정보를 받지 못했습니다. 잠시 후 다시 시도해 주세요.')
+        return
+      }
+      navigate(`/will/payment?willId=${encodeURIComponent(willId)}`)
     } catch (err) {
       // FIX: DEV-24 - 생성 실패를 가짜 will_id로 위장해 결제 단계로 진행시키지 않는다
       setSubmitError(err?.response?.data?.message ?? '이벤트 영상 생성에 실패했습니다. 잠시 후 다시 시도해 주세요.')

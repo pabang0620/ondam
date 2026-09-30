@@ -1,28 +1,26 @@
-import { AlertCircle, Mic, Video, Lock } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { AlertCircle, Clock3, Hourglass, Video } from 'lucide-react'
 import { useWillProcessing } from './useWillProcessing.js'
+import { ROUTES } from '../../constants/routes.js'
 import './WillProcessingPage.css'
 
+// 서버 jobStatus: queued(대기) → running(생성 중) → completed
 const STAGES = [
-  { key: 'voice', icon: Mic, label: '음성 복제 중' },
-  { key: 'video', icon: Video, label: '영상 생성 중' },
-  { key: 'encrypt', icon: Lock, label: '암호화 보관 중' },
+  { key: 'queued', icon: Hourglass, label: '준비 중' },
+  { key: 'running', icon: Video, label: '영상 만드는 중' },
 ]
 
 function getStageIndex(jobStatus) {
-  if (jobStatus === 'voice_cloning') return 0
-  if (jobStatus === 'video_generating') return 1
-  if (jobStatus === 'encrypting' || jobStatus === 'completed') return 2
+  if (jobStatus === 'running' || jobStatus === 'completed') return 1
   return 0
 }
 
 export default function WillProcessingPage() {
-  const { jobStatus, progress, pollError } = useWillProcessing()
+  const { jobStatus, progress, pollError, checkError, retryCheck } = useWillProcessing()
   const activeStage = getStageIndex(jobStatus)
 
-  // FIX: 결함3 - pollError가 있으면(생성 실패 또는 상태 확인 실패) 폴링은 이미
-  // 멈춘 상태다(useWillProcessing.js). 그런데도 스피너와 "완료되면 자동으로
-  // 보관함으로 이동합니다 / 페이지를 닫아도 처리는 계속됩니다" 안내가 그대로
-  // 남아있으면, 실제로는 멈췄는데 여전히 처리 중인 것처럼 보이는 혼란을 준다.
+  // FIX: 결함3 - pollError(생성 실패)면 폴링은 이미 멈춘 상태다. 처리 중 안내를
+  // 남겨두면 멈췄는데도 계속 처리 중인 것처럼 보이므로 실패 화면만 보여준다.
   if (pollError) {
     return (
       <div className="will-proc-page">
@@ -34,6 +32,32 @@ export default function WillProcessingPage() {
           <h1 className="will-proc__title">영상 편지를 만들지 못했습니다</h1>
 
           <p className="will-proc__error" role="alert">{pollError}</p>
+        </div>
+      </div>
+    )
+  }
+
+  // 상태 조회가 연속 실패했거나 알 수 없는 상태 - 생성 실패와 구분해 안내
+  if (checkError) {
+    return (
+      <div className="will-proc-page">
+        <div className="will-proc__content">
+          <div className="will-proc__spinner-wrap" aria-hidden="true">
+            <Clock3 size={48} color="var(--color-warm-accent)" />
+          </div>
+
+          <h1 className="will-proc__title">상태 확인이 잠시 안 됩니다</h1>
+
+          <p className="will-proc__note" role="status">{checkError}</p>
+
+          <div className="will-proc__actions">
+            <button type="button" className="will-proc__retry" onClick={retryCheck}>
+              다시 확인
+            </button>
+            <Link to={ROUTES.WILL_VAULT} className="will-proc__vault-link">
+              보관함으로 가기
+            </Link>
+          </div>
         </div>
       </div>
     )
@@ -75,7 +99,8 @@ export default function WillProcessingPage() {
               aria-valuenow={progress}
               aria-valuemin={0}
               aria-valuemax={100}
-              aria-label={`처리 진행률 ${progress}%`}
+              aria-valuetext={`${progress}% 진행됨`}
+              aria-label="처리 진행률"
             >
               <div className="will-proc__progress-fill" style={{ width: `${progress}%` }} />
             </div>
@@ -83,7 +108,7 @@ export default function WillProcessingPage() {
           </div>
         )}
 
-        <p className="will-proc__note" aria-live="polite">
+        <p className="will-proc__note">
           완료되면 자동으로 보관함으로 이동합니다.
           <br />
           이 페이지를 닫아도 처리는 계속됩니다.

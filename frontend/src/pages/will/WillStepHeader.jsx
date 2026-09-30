@@ -27,10 +27,19 @@ export default function WillStepHeader({ currentStep, title }) {
         <span className="will-step-header__step">
           {currentStep} / {TOTAL_STEPS}
         </span>
-        <span className="will-step-header__title">{title}</span>
+        {/* 각 단계 화면의 대표 제목 - 스크린리더 제목 탐색용 h1 (시각 스타일은 기존 유지) */}
+        <h1 className="will-step-header__title">{title}</h1>
       </div>
 
-      <div className="will-step-header__progress" role="progressbar" aria-valuenow={currentStep} aria-valuemin={1} aria-valuemax={TOTAL_STEPS}>
+      <div
+        className="will-step-header__progress"
+        role="progressbar"
+        aria-label="작성 단계"
+        aria-valuenow={currentStep}
+        aria-valuemin={1}
+        aria-valuemax={TOTAL_STEPS}
+        aria-valuetext={`전체 ${TOTAL_STEPS}단계 중 ${currentStep}단계 - ${title}`}
+      >
         {Array.from({ length: TOTAL_STEPS }, (_, i) => (
           <div
             key={i}

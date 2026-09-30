@@ -33,7 +33,7 @@ export default function WillRecordPage() {
             <li>가족에게 하실 말씀은 다음 단계(영상 편지 내용)에서 텍스트로 작성해 주세요</li>
             <li>AI가 이 목소리로 작성하신 내용을 읽어드립니다</li>
             <li>어떤 말씀을 하셔도 됩니다 - AI가 목소리 패턴만 학습합니다</li>
-            <li>조용한 장소에서 1~5분 분량을 권장합니다</li>
+            <li>조용한 장소에서 10초~5분 분량으로 녹음해 주세요 (5분이 되면 자동으로 멈춥니다)</li>
             <li>마이크와 15cm 이내 거리를 유지해 주세요</li>
           </ul>
         </div>
@@ -63,11 +63,7 @@ export default function WillRecordPage() {
 
           {/* 타이머 */}
           {(isRecording || recordedBlob) && (
-            <div
-              className={`will-record__timer ${isRecording ? 'is-active' : ''}`}
-              aria-live="polite"
-              aria-atomic="true"
-            >
+            <div className={`will-record__timer ${isRecording ? 'is-active' : ''}`}>
               {formattedDuration}
             </div>
           )}

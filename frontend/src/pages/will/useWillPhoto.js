@@ -5,6 +5,20 @@ import apiClient from '../../config/apiClient.js'
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp']
+const MAX_PHOTO_BYTES = 20 * 1024 * 1024 // 20MB
+
+// 업로드 전 사전 검사 - 통과하면 null, 아니면 안내 문구
+function validatePhoto(file) {
+  const name = file.name?.toLowerCase() ?? ''
+  const ext = name.includes('.') ? name.slice(name.lastIndexOf('.')) : ''
+  if (!ALLOWED_TYPES.includes(file.type) || !ALLOWED_EXTENSIONS.includes(ext)) {
+    return 'JPG, PNG, WEBP 형식의 사진만 업로드 가능합니다.'
+  }
+  if (file.size > MAX_PHOTO_BYTES) {
+    return '사진 용량이 너무 큽니다. 20MB 이하 사진을 선택해 주세요.'
+  }
+  return null
+}
 
 export function useWillPhoto() {
   const navigate = useNavigate()
@@ -18,28 +32,7 @@ export function useWillPhoto() {
     }
   }, [previewUrl])
 
-  const handleFileSelect = useCallback((file) => {
-    if (!file) return
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      setUploadError('JPG, PNG, WEBP 형식의 사진만 업로드 가능합니다')
-      return
-    }
-    const ext = file.name.toLowerCase().slice(file.name.lastIndexOf('.'))
-    if (!ALLOWED_EXTENSIONS.includes(ext)) {
-      setUploadError('JPG, PNG, WEBP 형식의 사진만 업로드 가능합니다')
-      return
-    }
-    setUploadError(null)
-    const objectUrl = URL.createObjectURL(file)
-    setPreviewUrl(objectUrl)
-  }, [])
-
   const handleFileUpload = useCallback(async (file) => {
-    if (!file) return
-    if (!ALLOWED_TYPES.includes(file.type)) return
-    const ext = file.name.toLowerCase().slice(file.name.lastIndexOf('.'))
-    if (!ALLOWED_EXTENSIONS.includes(ext)) return
-
     setIsUploading(true)
     setUploadError(null)
 
@@ -68,18 +61,25 @@ export function useWillPhoto() {
   const handleChange = useCallback(
     async (e) => {
       const file = e.target.files?.[0]
+      // 같은 파일을 다시 골라도 onChange가 발생하도록 초기화
+      e.target.value = ''
       if (!file) return
-      handleFileSelect(file)
+      const error = validatePhoto(file)
+      if (error) {
+        setUploadError(error)
+        return
+      }
+      setUploadError(null)
+      setPreviewUrl(URL.createObjectURL(file))
       await handleFileUpload(file)
     },
-    [handleFileSelect, handleFileUpload],
+    [handleFileUpload],
   )
 
   const clearPhoto = useCallback(() => {
-    if (previewUrl) URL.revokeObjectURL(previewUrl)
     setPreviewUrl(null)
     setUploadError(null)
-  }, [previewUrl])
+  }, [])
 
   return {
     previewUrl,

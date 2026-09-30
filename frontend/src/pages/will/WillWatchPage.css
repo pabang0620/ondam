@@ -196,7 +196,7 @@
 }
 
 .will-watch__verify-hint {
-  font-size: var(--fs-caption);
+  font-size: var(--fs-body);
   color: rgba(245, 239, 230, 0.5);
   margin-top: var(--spacing-sm);
 }
@@ -257,7 +257,7 @@
   background-color: rgba(245, 239, 230, 0.07);
   border-radius: var(--radius-sm);
   padding: var(--spacing-sm) var(--spacing-md);
-  font-size: var(--fs-caption);
+  font-size: var(--fs-body);
   color: rgba(245, 239, 230, 0.55);
   line-height: var(--lh-relaxed);
 }
@@ -284,4 +284,15 @@
   }
 
   /* 비디오는 항상 풀너비 16:9 - 이미 width:100% + aspect-ratio 적용됨 */
+}
+
+/* 영상 로드 실패 안내 */
+.will-watch__video-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-xl) var(--spacing-md);
+  text-align: center;
+  color: var(--color-text-on-dark);
 }

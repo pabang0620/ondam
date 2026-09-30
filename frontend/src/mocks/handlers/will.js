@@ -73,7 +73,8 @@ export const handlers = [
   http.post('/api/will/wills', () => {
     return HttpResponse.json({
       success: true,
-      data: { will_id: 'mock-will-0099' },
+      // 백엔드 계약: createWill 응답 data는 { willId, will_id } 둘 다 담는다
+      data: { willId: 'mock-will-0099', will_id: 'mock-will-0099' },
     })
   }),
 

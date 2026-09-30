@@ -69,7 +69,7 @@
 }
 
 .will-photo__drop-hint {
-  font-size: var(--fs-caption);
+  font-size: var(--fs-body);
   color: var(--color-text-muted);
 }
 
@@ -95,9 +95,9 @@
   position: absolute;
   top: var(--spacing-sm);
   right: var(--spacing-sm);
-  width: 36px;
-  height: 36px;
-  min-height: unset;
+  width: var(--min-touch-target);
+  height: var(--min-touch-target);
+  min-height: var(--min-touch-target);
   border-radius: var(--radius-pill);
   background-color: rgba(42, 40, 38, 0.65);
   color: var(--color-text-on-dark);

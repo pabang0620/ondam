@@ -129,7 +129,7 @@
 
 .will-event__char-count {
   align-self: flex-end;
-  font-size: var(--fs-caption);
+  font-size: var(--fs-body);
   color: var(--color-text-muted);
 }
 

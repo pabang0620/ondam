@@ -210,7 +210,7 @@
 }
 
 .will-vault__card-date {
-  font-size: var(--fs-caption);
+  font-size: var(--fs-body);
   color: var(--color-text-muted);
 }
 
@@ -219,7 +219,7 @@
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  font-size: var(--fs-caption);
+  font-size: var(--fs-body);
   font-weight: 600;
   padding: 2px 8px;
   border-radius: var(--radius-pill);

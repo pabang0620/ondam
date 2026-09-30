@@ -33,7 +33,7 @@ export default function WillPhotoPage() {
           >
             <ImagePlus size={48} aria-hidden="true" />
             <span className="will-photo__drop-label">사진을 선택해 주세요</span>
-            <span className="will-photo__drop-hint">JPG, PNG, WEBP 지원</span>
+            <span className="will-photo__drop-hint">JPG, PNG, WEBP 지원 (20MB 이하)</span>
           </button>
         ) : (
           <div className="will-photo__preview-wrap">
@@ -59,7 +59,7 @@ export default function WillPhotoPage() {
         <input
           ref={inputRef}
           type="file"
-          accept="image/*"
+          accept="image/jpeg,image/png,image/webp"
           className="will-photo__file-input"
           onChange={handleChange}
           aria-label="사진 파일 선택"

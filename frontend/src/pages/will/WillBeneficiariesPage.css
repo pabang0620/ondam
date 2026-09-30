@@ -49,15 +49,23 @@
 }
 
 .will-ben__card-meta {
-  font-size: var(--fs-caption);
+  font-size: var(--fs-body);
   color: var(--color-text-secondary);
 }
 
-.will-ben__card-msg {
-  font-size: var(--fs-caption);
-  color: var(--color-text-muted);
-  font-style: italic;
-  margin-top: var(--spacing-xs);
+.will-ben__field-hint {
+  font-size: var(--fs-body);
+  color: var(--color-text-secondary);
+  line-height: var(--lh-relaxed);
+}
+.will-ben__field-error {
+  font-size: var(--fs-body);
+  color: var(--color-error);
+  font-weight: 600;
+  line-height: var(--lh-relaxed);
+}
+.will-ben__input[aria-invalid="true"] {
+  border-color: var(--color-error);
 }
 
 .will-ben__card-remove {
@@ -240,8 +248,7 @@
     grid-template-columns: repeat(2, 1fr);
   }
 
-  /* 메시지 textarea와 완료 버튼은 전체 너비 */
-  .will-ben__form .will-ben__field:nth-last-child(2),
+  /* 완료 버튼은 전체 너비 */
   .will-ben__form .will-ben__add-btn {
     grid-column: 1 / -1;
   }

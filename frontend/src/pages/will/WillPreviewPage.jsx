@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useWillPreview } from './useWillPreview.js'
 import { Users, Mic, Image, AlertCircle } from 'lucide-react'
 import WillStepHeader from './WillStepHeader.jsx'
@@ -14,6 +15,7 @@ export default function WillPreviewPage() {
     setContentText,
     isSubmitting,
     submitError,
+    submitErrorCode,
     handleSubmit,
   } = useWillPreview()
 
@@ -89,8 +91,14 @@ export default function WillPreviewPage() {
         {submitError && (
           <div id="preview-error" className="will-preview__error" role="alert">
             <AlertCircle size={18} aria-hidden="true" />
-            {submitError}
+            <span>{submitError}</span>
           </div>
+        )}
+
+        {submitErrorCode === 'VOICE_FAILED' && (
+          <Link to="/will/record" className="will-preview__rerecord">
+            다시 녹음하기
+          </Link>
         )}
 
         <button

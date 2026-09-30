@@ -169,7 +169,7 @@
   border-radius: var(--radius-sm);
   padding: 0 var(--spacing-md);
   min-height: var(--min-touch-target);
-  font-size: var(--fs-caption);
+  font-size: var(--fs-body);
   color: var(--color-text-secondary);
   cursor: pointer;
   align-self: flex-start;
@@ -234,7 +234,7 @@
   align-items: center;
   gap: var(--spacing-md);
   color: var(--color-text-secondary);
-  font-size: var(--fs-caption);
+  font-size: var(--fs-body);
 }
 .will-record__divider::before,
 .will-record__divider::after {
@@ -247,7 +247,7 @@
 /* 파일 업로드 힌트 텍스트 */
 .will-record__file-upload-hint {
   text-align: center;
-  font-size: var(--fs-caption);
+  font-size: var(--fs-body);
   color: var(--color-text-secondary);
 }
 
@@ -292,10 +292,10 @@
     padding: 32px 0;
   }
 
-  /* 녹음 버튼: 모바일 100~120px 사이 유지 */
+  /* 녹음 버튼: 어르신 UX CTA 규칙 - 모바일도 120px 유지 */
   .will-record__btn {
-    width: 108px;
-    height: 108px;
+    width: 120px;
+    height: 120px;
   }
 
   /* 타이머 폰트 모바일 조정 */

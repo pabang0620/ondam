@@ -5,10 +5,18 @@ import './WillBeneficiariesPage.css'
 
 const RELATIONSHIP_OPTIONS = ['배우자', '자녀', '부모', '형제/자매', '친척', '친구', '기타']
 
+// 필드별 aria-describedby 값 (힌트 + 오류 id를 공백으로 연결)
+function describedBy(...ids) {
+  const joined = ids.filter(Boolean).join(' ')
+  return joined || undefined
+}
+
 export default function WillBeneficiariesPage() {
   const {
     beneficiaries,
     form,
+    errors,
+    canAdd,
     isAdding,
     setIsAdding,
     updateForm,
@@ -36,11 +44,8 @@ export default function WillBeneficiariesPage() {
                 <div className="will-ben__card-info">
                   <span className="will-ben__card-name">{b.name}</span>
                   <span className="will-ben__card-meta">
-                    {b.relationship} · {b.phone}
+                    {[b.relationship, b.phone].filter(Boolean).join(' · ')}
                   </span>
-                  {b.message && (
-                    <span className="will-ben__card-msg">&ldquo;{b.message}&rdquo;</span>
-                  )}
                 </div>
                 <button
                   type="button"
@@ -81,7 +86,12 @@ export default function WillBeneficiariesPage() {
                 autoComplete="name"
                 required
                 aria-required="true"
+                aria-invalid={errors.name ? 'true' : 'false'}
+                aria-describedby={describedBy(errors.name && 'ben-name-error')}
               />
+              {errors.name && (
+                <p id="ben-name-error" className="will-ben__field-error">{errors.name}</p>
+              )}
             </div>
 
             <div className="will-ben__field">
@@ -96,14 +106,20 @@ export default function WillBeneficiariesPage() {
                 autoComplete="email"
                 required
                 aria-required="true"
+                aria-invalid={errors.email ? 'true' : 'false'}
+                aria-describedby={describedBy(errors.email && 'ben-email-error')}
               />
+              {errors.email && (
+                <p id="ben-email-error" className="will-ben__field-error">{errors.email}</p>
+              )}
             </div>
 
             <div className="will-ben__field">
-              <label className="will-ben__label" htmlFor="ben-phone">연락처 *</label>
+              <label className="will-ben__label" htmlFor="ben-phone">휴대폰 번호 *</label>
               <input
                 id="ben-phone"
                 type="tel"
+                inputMode="tel"
                 className="will-ben__input"
                 value={form.phone}
                 onChange={(e) => updateForm('phone', e.target.value)}
@@ -111,41 +127,44 @@ export default function WillBeneficiariesPage() {
                 autoComplete="tel"
                 required
                 aria-required="true"
+                aria-invalid={errors.phone ? 'true' : 'false'}
+                aria-describedby={describedBy('ben-phone-hint', errors.phone && 'ben-phone-error')}
               />
+              <p id="ben-phone-hint" className="will-ben__field-hint">
+                열람 시 본인확인(뒤 4자리)에 사용됩니다
+              </p>
+              {errors.phone && (
+                <p id="ben-phone-error" className="will-ben__field-error">{errors.phone}</p>
+              )}
             </div>
 
             <div className="will-ben__field">
-              <label className="will-ben__label" htmlFor="ben-rel">관계</label>
+              <label className="will-ben__label" htmlFor="ben-rel">관계 *</label>
               <select
                 id="ben-rel"
                 className="will-ben__input"
                 value={form.relationship}
                 onChange={(e) => updateForm('relationship', e.target.value)}
+                required
+                aria-required="true"
+                aria-invalid={errors.relationship ? 'true' : 'false'}
+                aria-describedby={describedBy(errors.relationship && 'ben-rel-error')}
               >
                 <option value="">선택</option>
                 {RELATIONSHIP_OPTIONS.map((r) => (
                   <option key={r} value={r}>{r}</option>
                 ))}
               </select>
-            </div>
-
-            <div className="will-ben__field">
-              <label className="will-ben__label" htmlFor="ben-msg">개인 메시지</label>
-              <textarea
-                id="ben-msg"
-                className="will-ben__textarea"
-                value={form.message}
-                onChange={(e) => updateForm('message', e.target.value)}
-                placeholder="이 분께만 전하고 싶은 말을 적어주세요."
-                rows={3}
-              />
+              {errors.relationship && (
+                <p id="ben-rel-error" className="will-ben__field-error">{errors.relationship}</p>
+              )}
             </div>
 
             <button
               type="button"
               className="will-ben__add-btn"
               onClick={addBeneficiary}
-              disabled={!form.name.trim() || !form.email.trim() || !form.phone.trim()}
+              disabled={!canAdd}
             >
               추가 완료
             </button>

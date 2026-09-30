@@ -83,6 +83,9 @@ function LockedStep({ verifyError }) {
       <p className="will-watch__error-desc">
         {verifyError ?? '본인 확인 시도 횟수를 초과했습니다.'}
       </p>
+      <p className="will-watch__error-desc">
+        24시간 뒤 다시 시도할 수 있습니다.
+      </p>
       {CONTACT_PHONE ? (
         <p className="will-watch__error-desc">
           고객센터(<a href={`tel:${CONTACT_PHONE}`} className="will-watch__contact-link">{CONTACT_PHONE}</a>)로
@@ -165,6 +168,46 @@ function PrepareStep({ willTitle, onStart }) {
       <button type="button" className="will-watch__prepare-button" onClick={onStart}>
         영상 열어보기
       </button>
+    </div>
+  )
+}
+
+/* 영상 재생 - 로드 실패(네트워크·코덱) 시 안내와 다시 시도 버튼을 보여준다.
+   key를 바꿔 <video>를 새로 만들어 다시 불러온다. */
+function VideoPlayer({ videoUrl }) {
+  const [hasError, setHasError] = useState(false)
+  const [reloadKey, setReloadKey] = useState(0)
+
+  const retry = () => {
+    setHasError(false)
+    setReloadKey((k) => k + 1)
+  }
+
+  return (
+    <div className="will-watch__video-wrap">
+      {hasError ? (
+        <div className="will-watch__video-error" role="alert">
+          <AlertCircle size={32} aria-hidden="true" />
+          <p className="will-watch__error-desc">
+            영상을 불러오지 못했습니다. 인터넷 연결을 확인한 뒤 다시 시도해 주세요.
+          </p>
+          <button type="button" className="will-watch__prepare-button" onClick={retry}>
+            다시 시도
+          </button>
+        </div>
+      ) : (
+        <video
+          key={reloadKey}
+          className="will-watch__video"
+          controls
+          src={videoUrl}
+          aria-label="영상 편지"
+          preload="metadata"
+          onError={() => setHasError(true)}
+        >
+          이 브라우저에서는 영상 재생이 지원되지 않습니다.
+        </video>
+      )}
     </div>
   )
 }
@@ -268,17 +311,7 @@ export default function WillWatchPage() {
         </div>
 
         {/* 비디오 */}
-        <div className="will-watch__video-wrap">
-          <video
-            className="will-watch__video"
-            controls
-            src={willData.videoUrl}
-            aria-label="영상 편지"
-            preload="metadata"
-          >
-            이 브라우저에서는 영상 재생이 지원되지 않습니다.
-          </video>
-        </div>
+        <VideoPlayer videoUrl={willData.videoUrl} />
 
         {/* 영상 저장(다운로드) - SPEC-05 2절 4번. 링크가 만료돼도 유족이 영상을
             잃지 않도록 원본을 그대로 내려받게 한다(워터마크 없음). */}

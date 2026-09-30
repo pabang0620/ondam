@@ -36,14 +36,16 @@
 }
 
 .will-step-header__step {
-  font-size: var(--fs-caption);
+  font-size: var(--fs-body);
   color: var(--color-text-muted);
 }
 
 .will-step-header__title {
+  margin: 0;
   font-family: var(--font-serif);
   font-size: var(--fs-body);
   font-weight: 700;
+  line-height: 1.4;
   color: var(--color-will);
   letter-spacing: var(--ls-heading-ko);
 }
@@ -84,7 +86,7 @@
   }
 
   .will-step-header__title {
-    font-size: var(--fs-caption);
+    font-size: var(--fs-body);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -92,7 +94,7 @@
   }
 
   .will-step-header__step {
-    font-size: 11px;
+    font-size: var(--fs-body);
   }
 
   /* 도트 컨테이너 - 최소 너비 보장, 가로 스크롤 없음 */

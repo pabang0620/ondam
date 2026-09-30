@@ -1,12 +1,14 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { willApi } from './willApi.js'
+import { readWillJson } from './willStorage.js'
 
 export function useWillPreview() {
   const navigate = useNavigate()
 
-  const consents = JSON.parse(localStorage.getItem('will_consents') || '{}')
-  const beneficiaries = JSON.parse(localStorage.getItem('will_beneficiaries') || '[]')
+  const consents = readWillJson('will_consents', {})
+  const storedBeneficiaries = readWillJson('will_beneficiaries', [])
+  const beneficiaries = Array.isArray(storedBeneficiaries) ? storedBeneficiaries : []
   const audioS3Key = localStorage.getItem('will_audio_s3key') || ''
   const voiceSampleId = localStorage.getItem('will_voice_sample_id') || ''
   const photoS3Key = localStorage.getItem('will_photo_s3key') || ''
@@ -37,8 +39,11 @@ export function useWillPreview() {
   const [contentText, setContentText] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState(null)
+  // 서버 오류 code - VOICE_NOT_READY(대기 안내) / VOICE_FAILED(재녹음 안내) 분기용
+  const [submitErrorCode, setSubmitErrorCode] = useState(null)
 
   const handleSubmit = useCallback(async () => {
+    setSubmitErrorCode(null)
     if (!voiceSampleId) {
       setSubmitError('음성 샘플이 준비되지 않았습니다. 이전 단계(녹음)로 돌아가세요.')
       return
@@ -65,16 +70,26 @@ export function useWillPreview() {
       }
 
       const { data } = await willApi.createWill(payload)
-      // FIX: 결함1 전수 점검 - willService.toWillDto는 WILL_PUBLIC_FIELDS(pick)
-      // 화이트리스트를 거쳐 snake_case 그대로 응답한다(will_id, camelCase 변환 없음).
-      // willId/id 둘 다 실제로는 존재하지 않는 필드라 항상 undefined였고, 결제
-      // 페이지가 /will/payment?willId=undefined로 이동해 결제가 전건 실패했다.
-      const willId = data.data?.will_id
+      // 백엔드 계약: createWill 응답 data는 { willId, will_id } 둘 다 담는다.
+      // 어느 쪽도 없으면 willId=undefined로 결제 페이지에 가지 않도록 여기서 멈춘다.
+      const willId = data?.data?.willId ?? data?.data?.will_id
+      if (!willId) {
+        setSubmitError('영상 편지 정보를 받지 못했습니다. 잠시 후 다시 시도해 주세요.')
+        return
+      }
       localStorage.setItem('will_current_id', willId)
-      navigate(`/will/payment?willId=${willId}`)
+      navigate(`/will/payment?willId=${encodeURIComponent(willId)}`)
     } catch (err) {
       // FIX: DEV-24 - 생성 실패를 가짜 will_id로 위장해 결제 단계로 진행시키지 않는다
-      setSubmitError(err?.response?.data?.message ?? '영상 편지 생성에 실패했습니다. 잠시 후 다시 시도해 주세요.')
+      const code = err?.response?.data?.code ?? null
+      setSubmitErrorCode(code)
+      if (code === 'VOICE_NOT_READY') {
+        setSubmitError('목소리를 아직 준비하고 있습니다. 잠시 뒤 다시 "제작 시작" 버튼을 눌러 주세요.')
+      } else if (code === 'VOICE_FAILED') {
+        setSubmitError('녹음된 목소리를 처리하지 못했습니다. 번거로우시겠지만 다시 녹음해 주세요.')
+      } else {
+        setSubmitError(err?.response?.data?.message ?? '영상 편지 생성에 실패했습니다. 잠시 후 다시 시도해 주세요.')
+      }
     } finally {
       setIsSubmitting(false)
     }
@@ -92,6 +107,7 @@ export function useWillPreview() {
     setContentText,
     isSubmitting,
     submitError,
+    submitErrorCode,
     handleSubmit,
   }
 }

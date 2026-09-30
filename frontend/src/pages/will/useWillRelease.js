@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useParams } from 'react-router-dom'
 import { willApi } from './willApi.js'
+import { getSafeErrorMessage } from '../../lib/safeErrorMessage.js'
 
 // 백엔드 uploadDeathCertificate 제한과 동일 - 사용자가 서버 응답을 기다리지 않고
 // 바로 안내받을 수 있도록 프론트에서도 선검증한다 (서버가 최종 판정, 여기는 보조)
@@ -74,7 +75,15 @@ export function useWillRelease() {
       // 감정적으로 취약한 사용자가 보는 화면이라 서버의 기술적 메시지를 그대로 노출하지 않고,
       // 상태 코드별로 다음 행동을 알 수 있는 안내 문구로 바꾼다.
       const status = err?.response?.status
-      if (status === 404) {
+      if (status === 400 || status === 403) {
+        // 서류 형식·권한 문제는 서버가 준 구체적 사유를 보여줘야 다음 행동을 알 수 있다
+        // (안전 필터로 벤더 원문·내부 정보가 섞인 문구는 대체 문구로 바꾼다)
+        setSubmitError(getSafeErrorMessage(
+          err,
+          '제출하신 서류를 확인할 수 없습니다. 서류를 다시 확인해 주세요.',
+          'will-release',
+        ))
+      } else if (status === 404) {
         setSubmitError('링크가 유효하지 않습니다. 문자나 카카오톡으로 받으신 링크를 다시 확인해 주세요.')
       } else if (status === 409) {
         setSubmitError('이미 접수되었거나 처리된 요청입니다. 문의사항은 고객센터로 연락해 주세요.')

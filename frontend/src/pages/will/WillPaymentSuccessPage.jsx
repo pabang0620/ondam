@@ -5,6 +5,7 @@ import { Button } from '../../components/common/Button.jsx'
 import { willApi } from './willApi.js'
 import { getSafeErrorMessage } from '../../lib/safeErrorMessage.js'
 import { ROUTES } from '../../constants/routes.js'
+import { clearWillDraft } from './willStorage.js'
 
 // 결함4: activateWill이 던지는 400 메시지("프로필 사진이 없습니다..." 등)는 사용자가
 // 바로 행동할 수 있는 구체적 사유다 - 이 사유를 버리고 "문제가 발생했습니다"로
@@ -17,6 +18,30 @@ const START_FAILED_FALLBACK = '영상 생성을 시작하는 중 문제가 발�
 //
 // G3: 결제 성공 여부는 오직 서버 confirm 응답으로만 판정한다. 이 페이지는 URL 쿼리를
 // 받았다는 사실 자체를 성공으로 취급하지 않는다.
+// 이미 영상 생성이 시작됐거나 공개된 상태 - activateWill을 다시 부를 필요가 없다
+const STARTED_STATUSES = ['active', 'released']
+
+// activateWill 호출 후 이동할 경로를 돌려준다. 400이면 will 상태를 조회해
+// 이미 active/released인 경우(중복 호출·새로고침)는 정상 진행으로 본다.
+async function startGeneration(willId) {
+  try {
+    await willApi.activateWill(willId)
+    return `/will/processing/${willId}`
+  } catch (activateErr) {
+    if (activateErr?.response?.status !== 400) throw activateErr
+    let status = null
+    try {
+      const { data } = await willApi.getWill(willId)
+      status = data?.data?.status ?? null
+    } catch {
+      throw activateErr
+    }
+    if (status === 'released') return ROUTES.WILL_VAULT
+    if (STARTED_STATUSES.includes(status)) return `/will/processing/${willId}`
+    throw activateErr
+  }
+}
+
 function CenterMessage({ children }) {
   return (
     <main
@@ -74,6 +99,8 @@ export default function WillPaymentSuccessPage() {
       .confirmPayment({ paymentKey, orderId: tossOrderId, amount: Number(amount) })
       .then(async (res) => {
         sessionStorage.removeItem('pendingWillId')
+        // 결제가 확정됐으니 작성 단계 임시 데이터(will_*)를 정리한다
+        clearWillDraft()
         // FIX: HIGH-5 - target_id(서버 확정값)를 1순위, sessionStorage를 폴백으로 쓴다.
         const resolvedWillId = res.data?.data?.payment?.target_id ?? pendingWillIdFromStorage
         if (!resolvedWillId) {
@@ -82,9 +109,15 @@ export default function WillPaymentSuccessPage() {
           return
         }
         setWillId(resolvedWillId)
-        try {
-          await willApi.activateWill(resolvedWillId)
+        // 이미 완료된 결제(idempotent)면 activateWill도 이미 호출된 상태 - 다시 부르면
+        // 400이 나므로 건너뛰고 처리 화면으로 바로 이동한다(처리 화면이 상태를 판단).
+        if (res.data?.data?.idempotent === true) {
           navigate(`/will/processing/${resolvedWillId}`, { replace: true })
+          return
+        }
+        try {
+          const nextPath = await startGeneration(resolvedWillId)
+          navigate(nextPath, { replace: true })
         } catch (activateErr) {
           // 결제는 이미 완료됐다 - 영상 생성 시작 요청만 실패한 것이므로 결제 실패로
           // 보여주면 안 된다(이미 청구된 금액을 취소된 것처럼 오해하게 만든다).
@@ -117,8 +150,8 @@ export default function WillPaymentSuccessPage() {
     if (!willId) return
     setState('processing')
     try {
-      await willApi.activateWill(willId)
-      navigate(`/will/processing/${willId}`, { replace: true })
+      const nextPath = await startGeneration(willId)
+      navigate(nextPath, { replace: true })
     } catch (activateErr) {
       setStartFailedMessage(getSafeErrorMessage(activateErr, START_FAILED_FALLBACK, 'will-activate-retry'))
       setState('start-failed')

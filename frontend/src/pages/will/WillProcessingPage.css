@@ -145,7 +145,7 @@
 
 /* 안내 */
 .will-proc__note {
-  font-size: var(--fs-caption);
+  font-size: var(--fs-body);
   color: rgba(245, 239, 230, 0.6);
   line-height: var(--lh-relaxed);
 }
@@ -170,4 +170,38 @@
   .will-proc__progress-wrap {
     max-width: 100%;
   }
+}
+
+/* 상태 확인 실패 - 다시 확인 / 보관함 */
+.will-proc__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  width: 100%;
+}
+
+.will-proc__retry,
+.will-proc__vault-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: var(--size-button-h);
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-button);
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.will-proc__retry {
+  background-color: var(--color-will);
+  color: var(--color-text-on-dark);
+  border: none;
+}
+
+.will-proc__vault-link {
+  background-color: var(--color-surface);
+  color: var(--color-will);
+  border: 2px solid var(--color-will);
 }

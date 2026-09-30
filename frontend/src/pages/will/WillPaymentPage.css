@@ -61,7 +61,7 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-xs);
-  font-size: var(--fs-caption);
+  font-size: var(--fs-body);
   color: var(--color-text-secondary);
 }
 
@@ -112,7 +112,7 @@
   background-color: var(--color-surface-warm);
   border-radius: var(--radius-sm);
   padding: var(--spacing-sm) var(--spacing-md);
-  font-size: var(--fs-caption);
+  font-size: var(--fs-body);
   color: var(--color-text-secondary);
   line-height: 1.5;
 }
@@ -201,7 +201,7 @@
   align-items: center;
   justify-content: center;
   gap: var(--spacing-xs);
-  font-size: var(--fs-caption);
+  font-size: var(--fs-body);
   color: var(--color-text-muted);
   text-align: center;
 }

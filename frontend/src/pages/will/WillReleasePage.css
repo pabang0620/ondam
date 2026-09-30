@@ -68,7 +68,7 @@
 }
 
 .will-release__label-hint {
-  font-size: var(--fs-caption);
+  font-size: var(--fs-body);
   color: var(--color-text-muted);
   line-height: 1.5;
 }
@@ -101,7 +101,7 @@
 }
 
 .will-release__drop-hint {
-  font-size: var(--fs-caption);
+  font-size: var(--fs-body);
   color: var(--color-text-muted);
 }
 
@@ -142,7 +142,7 @@
 }
 
 .will-release__file-size {
-  font-size: var(--fs-caption);
+  font-size: var(--fs-body);
   color: var(--color-text-muted);
   white-space: nowrap;
 }
@@ -152,7 +152,7 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   color: var(--color-text-secondary);
-  font-size: var(--fs-caption);
+  font-size: var(--fs-body);
   padding: 0 var(--spacing-md);
   min-height: var(--min-touch-target);
   cursor: pointer;
@@ -199,7 +199,7 @@
 }
 
 .will-release__notice-desc {
-  font-size: var(--fs-caption);
+  font-size: var(--fs-body);
   color: var(--color-text-secondary);
   line-height: var(--lh-relaxed);
 }
