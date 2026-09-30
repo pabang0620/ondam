@@ -54,7 +54,7 @@ function StatusBadge({ status }) {
         display: 'inline-block',
         padding: '2px 12px',
         borderRadius: 'var(--radius-pill)',
-        fontSize: 'var(--fs-caption)',
+        fontSize: 'var(--fs-body)',
         fontWeight: 700,
         ...config.badgeStyle,
       }}
@@ -101,7 +101,7 @@ export default function SubscriptionStatusCard({ subscription, onCancel, onRetry
           {planName}
         </p>
         {planPrice && (
-          <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-text-secondary)', marginTop: 2 }}>
+          <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', marginTop: 2 }}>
             월 {planPrice.toLocaleString()}원
           </p>
         )}

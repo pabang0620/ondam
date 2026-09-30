@@ -34,28 +34,49 @@ const inputStyle = {
 // 없거나 0이면 false)이며, 사용자가 명시적으로 체크해야만 공개로 전환된다(안전 기본값
 // - SPEC-03, 마이그레이션 b README 3절과 동일한 원칙). 공개로 켜면 접근 코드 없이도
 // 누구나 볼 수 있다는 점을 쉬운 말로 안내한다(어르신 UX).
-export default function MemorialSettingsSection({ pet, currentAccessCode, isSaving, saveError, onSave }) {
+export default function MemorialSettingsSection({
+  pet,
+  currentAccessCode,
+  accessCodeStatus = 'ready',
+  onRetryAccessCode,
+  isSaving,
+  saveError,
+  onSave,
+}) {
+  // FIX: 조회 실패(error)·조회 중(loading)은 "미설정"이 아니다 - 새 코드를 제안하지 않는다.
+  // 정상 조회 결과가 null일 때만 제안 코드를 채우고 "아직 저장 전"을 표시한다.
+  const isCodeUnknown = accessCodeStatus === 'error' || accessCodeStatus === 'loading'
+  const isUnsavedSuggestion = accessCodeStatus === 'ready' && !currentAccessCode
   const [slug, setSlug] = useState(pet.memorial_slug || pet.pet_id)
-  const [code, setCode] = useState(currentAccessCode || generateAccessCode())
+  const [code, setCode] = useState(
+    currentAccessCode || (isCodeUnknown ? '' : generateAccessCode()),
+  )
   const [isPublic, setIsPublic] = useState(Boolean(pet.is_public))
-  const [savedCode, setSavedCode] = useState(null)
+  // FIX: 이미 저장된 코드가 있으면 처음부터 가족에게 보낼 링크를 보여준다
+  const [savedCode, setSavedCode] = useState(currentAccessCode || null)
+  // FIX: 링크는 입력 중인 값이 아니라 서버에 저장된 주소 기준(저장 성공 시 갱신)
+  const [savedSlug, setSavedSlug] = useState(pet.memorial_slug || null)
+  const [justSaved, setJustSaved] = useState(false)
   const [copied, setCopied] = useState(false)
 
   const trimmedCode = code.trim()
-  const canSave = slug.trim().length >= 3 && trimmedCode.length >= 6
+  const canSave = !isCodeUnknown && slug.trim().length >= 3 && trimmedCode.length >= 6
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!canSave || isSaving) return
-    const ok = await onSave({ memorialSlug: slug.trim(), memorialAccessCode: trimmedCode, isPublic })
+    const nextSlug = slug.trim()
+    const ok = await onSave({ memorialSlug: nextSlug, memorialAccessCode: trimmedCode, isPublic })
     if (ok) {
       setSavedCode(trimmedCode)
+      setSavedSlug(nextSlug)
+      setJustSaved(true)
       setCopied(false)
     }
   }
 
-  const memorialLink = savedCode
-    ? `${window.location.origin}/memorial/${slug.trim()}?accessCode=${encodeURIComponent(savedCode)}`
+  const memorialLink = savedCode && savedSlug
+    ? `${window.location.origin}/memorial/${savedSlug}?accessCode=${encodeURIComponent(savedCode)}`
     : null
 
   const handleCopy = async () => {
@@ -188,6 +209,45 @@ export default function MemorialSettingsSection({ pet, currentAccessCode, isSavi
           </p>
         </div>
 
+        {accessCodeStatus === 'loading' && (
+          <p role="status" style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)' }}>
+            지금 설정된 코드를 확인하고 있어요...
+          </p>
+        )}
+        {accessCodeStatus === 'error' && (
+          <div role="alert" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
+            <p className="pet-detail-memorial-error">
+              지금 설정된 코드를 불러오지 못했어요. 가족에게 알려준 코드가 바뀌지 않도록 지금은
+              저장할 수 없어요. 아래 버튼을 눌러 다시 확인해 주세요.
+            </p>
+            {onRetryAccessCode && (
+              <button
+                type="button"
+                onClick={onRetryAccessCode}
+                style={{
+                  alignSelf: 'flex-start',
+                  minHeight: 'var(--min-touch-target)',
+                  padding: '0 var(--spacing-md)',
+                  background: 'var(--color-surface)',
+                  color: 'var(--color-primary)',
+                  border: '1.5px solid var(--color-primary)',
+                  borderRadius: 'var(--radius-pill)',
+                  fontSize: 'var(--fs-body)',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                코드 다시 확인하기
+              </button>
+            )}
+          </div>
+        )}
+        {isUnsavedSuggestion && !justSaved && (
+          <p style={{ fontSize: 'var(--fs-body)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
+            아직 저장 전이에요. 위 코드로 괜찮으시면 아래 &quot;저장하기&quot;를 눌러 주세요.
+          </p>
+        )}
+
         {saveError && <p className="pet-detail-memorial-error" role="alert">{saveError}</p>}
 
         <button
@@ -226,7 +286,7 @@ export default function MemorialSettingsSection({ pet, currentAccessCode, isSavi
           }}
         >
           <p style={{ fontSize: 'var(--fs-body)', fontWeight: 700, color: 'var(--color-primary)' }}>
-            저장했어요! 아래 링크를 가족에게 전달해 주세요.
+            {justSaved ? '저장했어요! 아래 링크를 가족에게 전달해 주세요.' : '가족에게 전달할 링크예요.'}
           </p>
           <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-primary)', wordBreak: 'break-all' }}>
             {memorialLink}

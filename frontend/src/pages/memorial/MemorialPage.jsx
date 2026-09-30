@@ -21,18 +21,22 @@ export default function MemorialPage() {
   const [searchParams] = useSearchParams()
   // FIX: DEV-30 - 링크에 ?accessCode=가 실려 오면 그 값으로 바로 조회한다.
   const initialAccessCode = searchParams.get('accessCode') || ''
-  const { pet, media, isLoading, error, retryWithAccessCode } = useMemorial(slug, initialAccessCode)
+  const { pet, media, isLoading, isRetrying, error, retryWithAccessCode } = useMemorial(slug, initialAccessCode)
 
   const [codeInput, setCodeInput] = useState('')
-  const [isRetrying, setIsRetrying] = useState(false)
+  const [emptyCodeError, setEmptyCodeError] = useState(false)
 
   const handleCodeSubmit = async (e) => {
     e.preventDefault()
+    if (isRetrying) return
     const code = codeInput.trim()
-    if (!code || isRetrying) return
-    setIsRetrying(true)
+    // FIX: 빈 입력은 아무 반응 없이 무시하지 않고 안내한다
+    if (!code) {
+      setEmptyCodeError(true)
+      return
+    }
+    setEmptyCodeError(false)
     await retryWithAccessCode(code)
-    setIsRetrying(false)
   }
 
   if (isLoading) {
@@ -63,7 +67,17 @@ export default function MemorialPage() {
               id="memorial-access-code"
               type="text"
               value={codeInput}
-              onChange={(e) => setCodeInput(e.target.value)}
+              onChange={(e) => {
+                setCodeInput(e.target.value)
+                if (emptyCodeError) setEmptyCodeError(false)
+              }}
+              // 코드는 대소문자·철자 그대로 비교되므로 자동 대문자/교정을 끈다
+              autoCapitalize="off"
+              autoCorrect="off"
+              spellCheck={false}
+              autoComplete="off"
+              aria-invalid={emptyCodeError}
+              aria-describedby={emptyCodeError ? 'memorial-access-code-empty' : undefined}
               style={{
                 minHeight: 'var(--size-input-h)',
                 fontSize: 'var(--fs-body)',
@@ -74,6 +88,11 @@ export default function MemorialPage() {
                 color: 'var(--color-text-primary)',
               }}
             />
+            {emptyCodeError && (
+              <p id="memorial-access-code-empty" role="alert" style={{ fontSize: 'var(--fs-body)', color: 'var(--color-error)' }}>
+                접근 코드를 입력한 뒤 &quot;확인하기&quot;를 눌러 주세요.
+              </p>
+            )}
             <button
               type="submit"
               disabled={isRetrying}

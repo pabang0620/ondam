@@ -35,7 +35,6 @@ export default function PetPortraitPage() {
       <button
         type="button"
         onClick={() => navigate(`/pet/${petId}`)}
-        aria-label="반려동물 정보 페이지로"
         style={{
           display: 'inline-flex',
           alignItems: 'center',
@@ -89,13 +88,13 @@ export default function PetPortraitPage() {
           </p>
           {quota.isSubscribed && quota.remaining === 0 && quota.resetsAt && (
             <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)' }}>
-              {new Date(quota.resetsAt).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}에 다시 3장이 채워져요.
+              {new Date(quota.resetsAt).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}에 다시 {quota.limit}장이 채워져요.
             </p>
           )}
           {!quota.isSubscribed && quota.remaining === 0 && (
             <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)' }}>
               무료 체험을 이미 사용하셨습니다. 구독하시면 매달 3장의 AI 초상화를 만들 수 있어요.{' '}
-              <Link to={ROUTES.PET_SUBSCRIPTION} style={{ color: 'var(--color-pet)', fontWeight: 700 }}>
+              <Link to={ROUTES.PET_SUBSCRIPTION} style={{ color: 'var(--color-primary)', fontWeight: 700, textDecoration: 'underline' }}>
                 구독 안내 보기
               </Link>
             </p>
@@ -140,7 +139,7 @@ export default function PetPortraitPage() {
           <button
             onClick={() => navigate(`/pet/${petId}`)}
             style={{
-              background: 'var(--color-pet)',
+              background: '#9E5A3F',
               color: 'var(--color-surface)',
               border: 'none',
               borderRadius: 'var(--radius-pill)',
@@ -198,7 +197,7 @@ export default function PetPortraitPage() {
                       aria-hidden="true"
                     />
                     <p style={{ fontWeight: 700, fontSize: 'var(--fs-body)', color: 'var(--color-primary)' }}>{style.label}</p>
-                    <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
+                    <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
                       {style.desc}
                     </p>
                   </button>
@@ -281,7 +280,7 @@ export default function PetPortraitPage() {
                 role="radiogroup"
                 aria-label="초상화 기준 사진"
               >
-                {media.filter((m) => m.media_type === 'photo').map((item) => {
+                {media.filter((m) => m.media_type === 'photo').map((item, index) => {
                   const isSelected = selectedMediaId === item.media_id
                   return (
                     <button
@@ -303,7 +302,7 @@ export default function PetPortraitPage() {
                     >
                       <img
                         src={item.file_url}
-                        alt={item.caption || '선택 가능한 사진'}
+                        alt={item.caption ? `${index + 1}번째 사진: ${item.caption}` : `${index + 1}번째 사진`}
                         loading="lazy"
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                         onError={(e) => { e.target.onerror = null; e.target.style.display = 'none' }}
@@ -314,7 +313,7 @@ export default function PetPortraitPage() {
                             position: 'absolute',
                             top: 4,
                             right: 4,
-                            background: 'var(--color-pet)',
+                            background: '#9E5A3F',
                             borderRadius: '50%',
                             width: 22,
                             height: 22,
@@ -347,7 +346,7 @@ export default function PetPortraitPage() {
             disabled={!canGenerate}
             aria-busy={isGenerating}
             style={{
-              background: canGenerate ? 'var(--color-pet)' : 'var(--color-text-muted)',
+              background: canGenerate ? '#9E5A3F' : 'var(--color-text-muted)',
               color: 'var(--color-surface)',
               border: 'none',
               borderRadius: 'var(--radius-pill)',

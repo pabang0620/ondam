@@ -31,6 +31,10 @@ export function usePetNew() {
     const next = {}
     if (!form.name.trim()) next.name = '이름을 입력해 주세요.'
     if (!form.species) next.species = '종류를 선택해 주세요.'
+    // FIX: 무지개다리 날짜가 생년월일보다 앞설 수 없다 (YYYY-MM-DD 문자열은 사전순 비교 가능)
+    if (form.birthDate && form.deathDate && form.deathDate < form.birthDate) {
+      next.deathDate = '무지개다리 날짜는 생년월일보다 뒤여야 해요. 날짜를 다시 확인해 주세요.'
+    }
     return next
   }
 

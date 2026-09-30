@@ -86,7 +86,7 @@
 }
 
 .memorial-header__breed {
-  font-size: var(--fs-caption);
+  font-size: var(--fs-body);
   color: rgba(245, 239, 230, 0.70);
 }
 
@@ -120,8 +120,8 @@
 
 /* 날짜 라벨 — 골드 캡션 */
 .memorial-dates__label {
-  font-size: var(--fs-caption);
-  color: var(--color-warm-accent);
+  font-size: var(--fs-body);
+  color: #8A6A1F; /* 대비 5.05:1 */
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;

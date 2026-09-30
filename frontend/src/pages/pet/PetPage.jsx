@@ -69,7 +69,8 @@ function PlanCard({ plan, onSelect }) {
         <button
           className={`pet-plan-card__btn${plan.highlight ? ' pet-plan-card__btn--primary' : ''}`}
           onClick={() => onSelect(plan.key)}
-          aria-label={`${plan.label} 플랜 선택`}
+          // 음성 입력("구독하기 누르기")이 동작하도록 보이는 글자를 이름 앞에 포함한다(WCAG 2.5.3)
+          aria-label={`구독하기 - ${plan.label} 플랜`}
         >
           구독하기
         </button>

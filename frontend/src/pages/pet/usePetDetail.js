@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { petApi } from './petApi.js'
 
+export const ALLOWED_PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+const MAX_PHOTO_BYTES = 20 * 1024 * 1024
+
 export function usePetDetail(petId) {
   const [pet, setPet] = useState(null)
   const [media, setMedia] = useState([])
@@ -19,15 +22,25 @@ export function usePetDetail(petId) {
   // 별도 조회해서 보관한다. 조회 실패(예: 아직 코드 미설정)는 페이지 전체를 깨뜨리지
   // 않도록 조용히 null로 둔다(MemorialSettingsSection이 null이면 새 코드를 제안한다).
   const [memorialAccessCode, setMemorialAccessCode] = useState(null)
+  // FIX: 조회 실패를 null(미설정)로 삼키면 설정 화면이 새 코드를 제안하고, 그대로 저장하면
+  // 가족에게 이미 알려준 기존 코드가 덮어써진다. 'idle' | 'loading' | 'ready' | 'error'로
+  // 구분해 실패 시엔 저장을 막는다. 정상 응답의 null만 "미설정"이다.
+  const [memorialAccessCodeStatus, setMemorialAccessCodeStatus] = useState('idle')
 
   const fetchMemorialAccessCode = useCallback(async (signal) => {
     if (!petId) return
+    setMemorialAccessCodeStatus('loading')
     try {
       const res = await petApi.getMemorialAccessCode(petId, signal)
-      if (res.data.success) setMemorialAccessCode(res.data.data?.memorialAccessCode ?? null)
+      if (!res.data.success) {
+        setMemorialAccessCodeStatus('error')
+        return
+      }
+      setMemorialAccessCode(res.data.data?.memorialAccessCode ?? null)
+      setMemorialAccessCodeStatus('ready')
     } catch (err) {
       if (err.name === 'CanceledError') return
-      setMemorialAccessCode(null)
+      setMemorialAccessCodeStatus('error')
     }
   }, [petId])
 
@@ -70,6 +83,15 @@ export function usePetDetail(petId) {
 
   const handleMediaUpload = async (file) => {
     if (!file) return
+    // FIX: 서버가 받지 않는 형식/크기는 업로드 전에 쉬운 말로 알려준다
+    if (!ALLOWED_PHOTO_TYPES.includes(file.type)) {
+      setUploadError('JPG, PNG, WEBP 사진만 올릴 수 있어요. 다른 사진을 골라 주세요.')
+      return
+    }
+    if (file.size > MAX_PHOTO_BYTES) {
+      setUploadError('사진이 너무 커요. 20MB 이하의 사진을 골라 주세요.')
+      return
+    }
     setIsUploading(true)
     setUploadError(null)
     try {
@@ -158,6 +180,8 @@ export function usePetDetail(petId) {
     isSavingMemorial,
     memorialSaveError,
     memorialAccessCode,
+    memorialAccessCodeStatus,
+    refetchMemorialAccessCode: fetchMemorialAccessCode,
     handleMediaUpload,
     handleStatusChange,
     handleUpdateMemorialSettings,

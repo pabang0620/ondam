@@ -42,6 +42,8 @@ export default function PetDetailPage() {
     isSavingMemorial,
     memorialSaveError,
     memorialAccessCode,
+    memorialAccessCodeStatus,
+    refetchMemorialAccessCode,
     handleMediaUpload,
     handleStatusChange,
     handleUpdateMemorialSettings,
@@ -159,7 +161,7 @@ export default function PetDetailPage() {
             {pet.pet_status === 'deceased' && (
               <span
                 style={{
-                  fontSize: 'var(--fs-caption)',
+                  fontSize: 'var(--fs-body)',
                   background: 'rgba(42, 58, 82, 0.10)',
                   color: 'var(--color-memorial)',
                   padding: '2px 10px',
@@ -176,7 +178,7 @@ export default function PetDetailPage() {
             {pet.breed ? ` · ${pet.breed}` : ''}
           </p>
           {pet.birth_date && (
-            <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-text-muted)' }}>
+            <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-muted)' }}>
               {formatDate(pet.birth_date)}
               {pet.death_date ? ` ~ ${formatDate(pet.death_date)}` : ''}
             </p>
@@ -220,8 +222,12 @@ export default function PetDetailPage() {
       {/* 추모 페이지 접근 코드 설정 (deceased) - DEV-30 */}
       {pet.pet_status === 'deceased' && (
         <MemorialSettingsSection
+          // 코드 조회가 끝나면(ready/error) 새로 마운트해 초기값을 조회 결과로 다시 잡는다
+          key={memorialAccessCodeStatus}
           pet={pet}
           currentAccessCode={memorialAccessCode}
+          accessCodeStatus={memorialAccessCodeStatus}
+          onRetryAccessCode={() => refetchMemorialAccessCode()}
           isSaving={isSavingMemorial}
           saveError={memorialSaveError}
           onSave={handleUpdateMemorialSettings}
@@ -256,7 +262,7 @@ export default function PetDetailPage() {
                 borderRadius: 'var(--radius-pill)',
                 padding: '0 var(--spacing-md)',
                 minHeight: 'var(--min-touch-target)',
-                fontSize: 'var(--fs-caption)',
+                fontSize: 'var(--fs-body)',
                 fontWeight: 600,
                 cursor: 'pointer',
                 transition: 'background var(--transition-base)',
@@ -276,13 +282,13 @@ export default function PetDetailPage() {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 'var(--spacing-xs)',
-                background: 'var(--color-pet)',
+                background: '#9E5A3F',
                 color: 'var(--color-surface)',
                 border: 'none',
                 borderRadius: 'var(--radius-pill)',
                 padding: '0 var(--spacing-md)',
                 minHeight: 'var(--min-touch-target)',
-                fontSize: 'var(--fs-caption)',
+                fontSize: 'var(--fs-body)',
                 fontWeight: 600,
                 cursor: isUploading ? 'not-allowed' : 'pointer',
                 opacity: isUploading ? 0.7 : 1,
@@ -298,7 +304,7 @@ export default function PetDetailPage() {
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/*"
+          accept="image/jpeg,image/png,image/webp"
           onChange={handleFileChange}
           style={{ display: 'none' }}
           aria-hidden="true"
@@ -381,7 +387,7 @@ export default function PetDetailPage() {
             <AlertTriangle size={18} color="var(--color-text-muted)" style={{ flexShrink: 0, marginTop: 2 }} aria-hidden="true" />
             <div>
               <p style={{ fontSize: 'var(--fs-body)', fontWeight: 700, marginBottom: 4, color: 'var(--color-primary)' }}>무지개다리 등록</p>
-              <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
+              <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
                 {pet.name}가 무지개다리를 건넜다면 등록해 주세요.
                 추모 페이지가 생성됩니다.
               </p>

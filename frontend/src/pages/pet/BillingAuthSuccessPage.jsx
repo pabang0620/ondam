@@ -73,7 +73,7 @@ export default function BillingAuthSuccessPage() {
         gap: '24px',
       }}
     >
-      <p role="status" aria-live="polite" style={{ color: 'var(--color-warm-accent)', fontSize: 'var(--fs-h3)', fontWeight: 700 }}>
+      <p role="status" aria-live="polite" style={{ color: '#8A6A1F', fontSize: 'var(--fs-h3)', fontWeight: 700 }}>
         결제 결과를 확인하고 있어요
       </p>
       <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>

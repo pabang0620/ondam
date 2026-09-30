@@ -47,9 +47,9 @@ function PlanCard({ plan, isCurrent, isProcessing, isRedirecting, onSubscribe })
             top: -12,
             left: '50%',
             transform: 'translateX(-50%)',
-            background: 'var(--color-warm-accent)',
+            background: '#8A6A1F',
             color: 'var(--color-surface)',
-            fontSize: 'var(--fs-caption)',
+            fontSize: 'var(--fs-body)',
             fontWeight: 700,
             padding: '2px 14px',
             borderRadius: 'var(--radius-pill)',
@@ -72,9 +72,9 @@ function PlanCard({ plan, isCurrent, isProcessing, isRedirecting, onSubscribe })
             top: -12,
             left: '50%',
             transform: 'translateX(-50%)',
-            background: 'var(--color-pet)',
+            background: '#9E5A3F',
             color: 'var(--color-surface)',
-            fontSize: 'var(--fs-caption)',
+            fontSize: 'var(--fs-body)',
             fontWeight: 700,
             padding: '2px 14px',
             borderRadius: 'var(--radius-pill)',
@@ -103,9 +103,10 @@ function PlanCard({ plan, isCurrent, isProcessing, isRedirecting, onSubscribe })
           onClick={() => onSubscribe(plan.key)}
           disabled={isDisabled}
           style={{
-            background: plan.highlight ? 'var(--color-pet)' : 'var(--color-surface)',
+            // 흰 글자 대비 5.26:1 (--color-pet은 3.27:1로 AA 미달)
+            background: plan.highlight ? '#9E5A3F' : 'var(--color-surface)',
             color: plan.highlight ? 'var(--color-surface)' : 'var(--color-primary)',
-            border: `1.5px solid ${plan.highlight ? 'var(--color-pet)' : 'var(--color-primary)'}`,
+            border: `1.5px solid ${plan.highlight ? '#9E5A3F' : 'var(--color-primary)'}`,
             borderRadius: 'var(--radius-pill)',
             minHeight: 'var(--size-button-h)',
             fontSize: 'var(--fs-button)',
@@ -242,8 +243,8 @@ export default function PetSubscriptionPage() {
           aria-live="polite"
           style={{
             background: 'var(--color-surface-warm)',
-            color: 'var(--color-warm-accent)',
-            border: '1px solid var(--color-warm-accent)',
+            color: '#8A6A1F',
+            border: '1px solid #8A6A1F',
             borderRadius: 'var(--radius-sm)',
             padding: 'var(--spacing-md)',
             fontSize: 'var(--fs-body)',
@@ -314,7 +315,7 @@ export default function PetSubscriptionPage() {
           border: '1px solid var(--color-border)',
           borderRadius: 'var(--radius-card)',
           padding: '20px 24px',
-          fontSize: 'var(--fs-caption)',
+          fontSize: 'var(--fs-body)',
           color: 'var(--color-text-secondary)',
           lineHeight: 1.7,
         }}

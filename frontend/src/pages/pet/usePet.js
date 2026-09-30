@@ -3,7 +3,8 @@ import { petApi } from './petApi.js'
 
 export function usePet() {
   const [pets, setPets] = useState([])
-  const [isLoading, setIsLoading] = useState(false)
+  // FIX: 초기값 false면 첫 페인트에 빈 목록 화면이 한 프레임 깜빡인다
+  const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
 
   // FIX: 결함4 - signal이 petApi.getPets()에 전달되지 않아 AbortController.abort()가

@@ -2,8 +2,30 @@ import { useEffect, useRef, useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { Loader2, AlertCircle, Clock3 } from 'lucide-react'
 import { Button } from '../../components/common/Button.jsx'
-import { confirmPayment, startProcessing } from './photoApi.js'
+import { confirmPayment, startProcessing, getPhotoOrderStatus } from './photoApi.js'
 import { getSafeErrorMessage } from '../../lib/safeErrorMessage.js'
+import { ROUTES } from '../../constants/routes.js'
+
+// FIX: 멱등 confirm(이미 완료된 결제) 뒤 start를 다시 부르면 400이 난다. 400이면 주문
+// 상태를 조회해 이미 처리 중/완료인 경우 해당 화면으로 보낸다. 이동했으면 true.
+async function redirectIfAlreadyStarted(orderId, startErr, navigate) {
+  if (startErr?.response?.status !== 400) return false
+  try {
+    const { data } = await getPhotoOrderStatus(orderId)
+    const status = data?.data?.status
+    if (status === 'processing') {
+      navigate(`/photo/processing/${orderId}`, { replace: true })
+      return true
+    }
+    if (status === 'completed') {
+      navigate(`/photo/result/${orderId}`, { replace: true })
+      return true
+    }
+  } catch {
+    // 상태 조회 실패 - 원래 start 실패 안내를 그대로 보여준다
+  }
+  return false
+}
 
 // 결함4 - startProcessing이 던지는 400 메시지("초상권 처리 동의가 필요합니다" 등)는
 // 사용자가 바로 행동할 수 있는 구체적 사유다. 이를 버리고 "문제가 발생했습니다"로만
@@ -81,10 +103,16 @@ export default function PhotoPaymentSuccessPage() {
           return
         }
         setPhotoOrderId(resolvedOrderId)
+        // FIX: 이미 완료된 결제(멱등 응답)면 처리도 이미 시작됐다 - start를 다시 부르지 않는다
+        if (res.data?.data?.idempotent === true) {
+          navigate(`/photo/processing/${resolvedOrderId}`, { replace: true })
+          return
+        }
         try {
           await startProcessing(resolvedOrderId)
           navigate(`/photo/processing/${resolvedOrderId}`, { replace: true })
         } catch (startErr) {
+          if (await redirectIfAlreadyStarted(resolvedOrderId, startErr, navigate)) return
           // 결제는 이미 완료됐다 - 처리 시작 요청만 실패한 것이므로 결제 실패로
           // 보여주면 안 된다(이미 청구된 금액을 취소된 것처럼 오해하게 만든다).
           // FIX: 결함4 - 서버가 준 구체적 사유를 버리지 않는다(안전 필터 통과분만).
@@ -119,6 +147,7 @@ export default function PhotoPaymentSuccessPage() {
       await startProcessing(photoOrderId)
       navigate(`/photo/processing/${photoOrderId}`, { replace: true })
     } catch (startErr) {
+      if (await redirectIfAlreadyStarted(photoOrderId, startErr, navigate)) return
       setStartFailedMessage(getSafeErrorMessage(startErr, START_FAILED_FALLBACK, 'photo-start-processing-retry'))
       setState('start-failed')
     }
@@ -138,7 +167,7 @@ export default function PhotoPaymentSuccessPage() {
   if (state === 'uncertain') {
     return (
       <CenterMessage>
-        <Clock3 size={40} color="var(--color-warm-accent)" aria-hidden="true" />
+        <Clock3 size={40} color="#8A6A1F" aria-hidden="true" />
         <p role="status" aria-live="polite" style={{ fontSize: 'var(--fs-h3)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
           결제 결과를 확인하고 있어요
         </p>
@@ -147,7 +176,7 @@ export default function PhotoPaymentSuccessPage() {
           있으니, 잠시 후 주문 내역에서 결제 상태를 다시 확인해 주세요.
           지금 다시 결제를 시도하면 이중으로 청구될 수 있으니 주의해 주세요.
         </p>
-        <Button onClick={() => navigate('/photo')} fullWidth>주문 내역으로 이동</Button>
+        <Button onClick={() => navigate(ROUTES.MY)} fullWidth>주문 내역으로 이동</Button>
       </CenterMessage>
     )
   }
@@ -155,7 +184,7 @@ export default function PhotoPaymentSuccessPage() {
   if (state === 'no-target') {
     return (
       <CenterMessage>
-        <AlertCircle size={40} color="var(--color-warm-accent)" aria-hidden="true" />
+        <AlertCircle size={40} color="#8A6A1F" aria-hidden="true" />
         <p style={{ fontSize: 'var(--fs-h3)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
           결제는 완료됐어요
         </p>
@@ -163,7 +192,7 @@ export default function PhotoPaymentSuccessPage() {
           다만 처리할 주문을 자동으로 찾지 못했습니다. 주문 내역에서 결제 상태를
           확인해 주세요.
         </p>
-        <Button onClick={() => navigate('/photo')} fullWidth>주문 내역으로 이동</Button>
+        <Button onClick={() => navigate(ROUTES.MY)} fullWidth>주문 내역으로 이동</Button>
       </CenterMessage>
     )
   }
@@ -171,7 +200,7 @@ export default function PhotoPaymentSuccessPage() {
   if (state === 'start-failed') {
     return (
       <CenterMessage>
-        <AlertCircle size={40} color="var(--color-warm-accent)" aria-hidden="true" />
+        <AlertCircle size={40} color="#8A6A1F" aria-hidden="true" />
         <p style={{ fontSize: 'var(--fs-h3)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
           결제는 완료됐어요
         </p>

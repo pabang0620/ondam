@@ -39,8 +39,16 @@ const inputStyle = (hasError) => ({
 })
 
 const errorStyle = {
-  fontSize: 'var(--fs-caption)',
+  fontSize: 'var(--fs-body)',
   color: 'var(--color-error)',
+}
+
+// FIX: toISOString()은 UTC 기준이라 한국 시간 자정~오전 9시엔 어제 날짜가 된다 - 로컬 날짜로 만든다
+function getLocalToday() {
+  const d = new Date()
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  return `${d.getFullYear()}-${mm}-${dd}`
 }
 
 function FieldError({ id, message }) {
@@ -51,6 +59,7 @@ function FieldError({ id, message }) {
 export default function PetNewPage() {
   const navigate = useNavigate()
   const { form, errors, isSubmitting, submitError, handleChange, handleSubmit } = usePetNew()
+  const today = getLocalToday()
 
   return (
     <main
@@ -66,7 +75,8 @@ export default function PetNewPage() {
       {/* 뒤로가기 */}
       <button
         type="button"
-        onClick={() => navigate(-1)}
+        // FIX: 외부 링크로 바로 들어온 경우 navigate(-1)은 사이트 밖으로 나간다
+        onClick={() => navigate('/pet')}
         style={{
           display: 'inline-flex',
           alignItems: 'center',
@@ -81,7 +91,7 @@ export default function PetNewPage() {
           minHeight: 'var(--min-touch-target)',
           alignSelf: 'flex-start',
         }}
-        aria-label="이전 페이지로"
+        aria-label="뒤로 - 반려동물 목록으로"
       >
         <ChevronLeft size={20} aria-hidden="true" />
         뒤로
@@ -165,7 +175,7 @@ export default function PetNewPage() {
             value={form.birthDate}
             onChange={(e) => handleChange('birthDate', e.target.value)}
             style={inputStyle(false)}
-            max={new Date().toISOString().split('T')[0]}
+            max={today}
           />
         </div>
 
@@ -177,12 +187,16 @@ export default function PetNewPage() {
             type="date"
             value={form.deathDate}
             onChange={(e) => handleChange('deathDate', e.target.value)}
-            style={inputStyle(false)}
-            max={new Date().toISOString().split('T')[0]}
+            style={inputStyle(!!errors.deathDate)}
+            min={form.birthDate || undefined}
+            max={today}
+            aria-invalid={!!errors.deathDate}
+            aria-describedby={errors.deathDate ? 'death-help death-error' : 'death-help'}
           />
-          <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-text-muted)' }}>
+          <span id="death-help" style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-muted)' }}>
             이미 무지개다리를 건넌 경우에만 입력해 주세요.
           </span>
+          <FieldError id="death-error" message={errors.deathDate} />
         </div>
 
         {/* 제출 에러 */}
@@ -198,7 +212,8 @@ export default function PetNewPage() {
           disabled={isSubmitting}
           aria-busy={isSubmitting}
           style={{
-            background: isSubmitting ? 'var(--color-text-muted)' : 'var(--color-pet)',
+            // 흰 글자 대비 5.26:1 (--color-pet은 3.27:1로 AA 미달)
+            background: isSubmitting ? 'var(--color-text-muted)' : '#9E5A3F',
             color: 'var(--color-surface)',
             border: 'none',
             borderRadius: 'var(--radius-pill)',
