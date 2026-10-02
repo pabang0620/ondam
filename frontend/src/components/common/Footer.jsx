@@ -21,7 +21,7 @@ export default function Footer() {
           <div className="flex flex-col gap-3">
             <span
               style={{
-                fontWeight: 800,
+                fontWeight: 700,
                 fontSize: 22,
                 letterSpacing: 'var(--ls-heading-ko)',
                 color: 'var(--color-text-primary)',

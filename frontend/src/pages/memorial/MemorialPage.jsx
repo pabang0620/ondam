@@ -135,7 +135,7 @@ export default function MemorialPage() {
         </div>
 
         <div className="memorial-header__message">
-          <Heart size={20} color="var(--color-warm-accent-soft)" aria-hidden="true" />
+          <Heart size={20} color="var(--color-accent-brand-light)" aria-hidden="true" />
           <p>영원히 기억할게요</p>
         </div>
       </header>

@@ -27,7 +27,7 @@ function PlanCard({ plan, isCurrent, isProcessing, isRedirecting, onSubscribe })
       style={{
         background: isCurrent || plan.highlight ? 'var(--color-pet-soft)' : 'var(--color-surface)',
         border: `${isCurrent ? '2px' : '1px'} solid ${
-          isCurrent ? 'var(--color-warm-accent)' :
+          isCurrent ? 'var(--color-accent-brand-text)' :
           plan.highlight ? 'var(--color-pet)' :
           'var(--color-border-strong)'
         }`,
@@ -47,10 +47,10 @@ function PlanCard({ plan, isCurrent, isProcessing, isRedirecting, onSubscribe })
             top: -12,
             left: '50%',
             transform: 'translateX(-50%)',
-            background: 'var(--color-warm-accent)',
+            background: 'var(--color-accent-brand-text)',
             color: 'var(--color-surface)',
             fontSize: 'var(--fs-caption)',
-            fontWeight: 700,
+            fontWeight: 600,
             padding: '2px 14px',
             borderRadius: 'var(--radius-pill)',
             whiteSpace: 'nowrap',
@@ -75,7 +75,7 @@ function PlanCard({ plan, isCurrent, isProcessing, isRedirecting, onSubscribe })
             background: 'var(--color-pet)',
             color: 'var(--color-surface)',
             fontSize: 'var(--fs-caption)',
-            fontWeight: 700,
+            fontWeight: 600,
             padding: '2px 14px',
             borderRadius: 'var(--radius-pill)',
             whiteSpace: 'nowrap',
@@ -86,8 +86,8 @@ function PlanCard({ plan, isCurrent, isProcessing, isRedirecting, onSubscribe })
       )}
 
       <div>
-        <p style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 700, color: 'var(--color-primary)' }}>{plan.name}</p>
-        <p style={{ fontSize: 'var(--fs-h2)', fontWeight: 800, color: 'var(--color-primary)', marginTop: 4 }}>
+        <p style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 600, color: 'var(--color-primary)' }}>{plan.name}</p>
+        <p style={{ fontSize: 'var(--fs-h2)', fontWeight: 700, color: 'var(--color-primary)', marginTop: 4 }}>
           {plan.price.toLocaleString()}원/월
         </p>
       </div>
@@ -193,7 +193,7 @@ export default function PetSubscriptionPage() {
       </button>
 
       <div>
-        <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 800, color: 'var(--color-primary)', letterSpacing: 'var(--ls-heading-ko)' }}>
+        <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 700, color: 'var(--color-primary)', letterSpacing: 'var(--ls-heading-ko)' }}>
           구독 플랜
         </h1>
         <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', marginTop: 'var(--spacing-sm)' }}>
@@ -242,8 +242,8 @@ export default function PetSubscriptionPage() {
           aria-live="polite"
           style={{
             background: 'var(--color-surface-warm)',
-            color: 'var(--color-warm-accent)',
-            border: '1px solid var(--color-warm-accent)',
+            color: 'var(--color-accent-brand-text)',
+            border: '1px solid var(--color-accent-brand)',
             borderRadius: 'var(--radius-sm)',
             padding: 'var(--spacing-md)',
             fontSize: 'var(--fs-body)',
@@ -284,7 +284,7 @@ export default function PetSubscriptionPage() {
       {!isLoading && otherPlans.length > 0 && (
         <>
           {hasActiveSubscription && (
-            <h2 style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
+            <h2 style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 600, color: 'var(--color-text-primary)' }}>
               다른 플랜으로 변경
             </h2>
           )}
@@ -319,7 +319,7 @@ export default function PetSubscriptionPage() {
           lineHeight: 1.7,
         }}
       >
-        <p style={{ fontWeight: 700, marginBottom: 'var(--spacing-sm)', fontSize: 'var(--fs-body)', color: 'var(--color-primary)' }}>유의사항</p>
+        <p style={{ fontWeight: 600, marginBottom: 'var(--spacing-sm)', fontSize: 'var(--fs-body)', color: 'var(--color-primary)' }}>유의사항</p>
         <ul style={{ listStyle: 'disc', paddingLeft: 'var(--spacing-lg)', display: 'flex', flexDirection: 'column', gap: 4 }}>
           <li>구독은 매월 자동 결제됩니다.</li>
           <li>해지 시 당월 이용 기간은 유지됩니다.</li>

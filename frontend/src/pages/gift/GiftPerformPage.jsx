@@ -67,7 +67,7 @@ function VerifyStep({ verifyError, isVerifying, onSubmit }) {
 function LockedStep({ verifyError }) {
   return (
     <div role="alert" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--spacing-md)', textAlign: 'center' }}>
-      <Lock size={48} color="var(--color-warm-accent)" aria-hidden="true" />
+      <Lock size={48} color="var(--color-accent-brand)" aria-hidden="true" />
       <p style={{ fontSize: 'var(--fs-h3)', fontWeight: 700, color: 'var(--color-text-primary)' }}>잠시 확인이 필요합니다</p>
       <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>
         {verifyError ?? '본인 확인 시도 횟수를 초과했습니다.'}
@@ -75,7 +75,7 @@ function LockedStep({ verifyError }) {
       {CONTACT_PHONE ? (
         <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>
           고객센터(
-          <a href={`tel:${CONTACT_PHONE}`} style={{ color: 'var(--color-primary)', fontWeight: 700, textDecoration: 'underline' }}>
+          <a href={`tel:${CONTACT_PHONE}`} style={{ color: 'var(--color-primary)', fontWeight: 600, textDecoration: 'underline' }}>
             {CONTACT_PHONE}
           </a>
           )로 연락 주시면 바로 도와드리겠습니다.
@@ -93,7 +93,7 @@ function IntroStep({ info, onNext, onDecline }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--spacing-lg)', textAlign: 'center' }}>
       <Gift size={44} color="var(--color-primary)" aria-hidden="true" />
-      <p style={{ fontSize: 'var(--fs-h2)', fontWeight: 800, color: 'var(--color-text-primary)', letterSpacing: 'var(--ls-heading-ko)' }}>
+      <p style={{ fontSize: 'var(--fs-h2)', fontWeight: 700, color: 'var(--color-text-primary)', letterSpacing: 'var(--ls-heading-ko)' }}>
         {info?.giverNickname ? `${info.giverNickname}님이 선물을 보냈어요` : '선물이 도착했어요'}
       </p>
       <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>

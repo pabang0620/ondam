@@ -64,7 +64,7 @@
 
 .will-photo__drop-label {
   font-size: var(--fs-body-lg);
-  font-weight: 700;
+  font-weight: 600;
   color: var(--color-text-primary);
 }
 

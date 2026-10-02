@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
 import { petApi } from './petApi.js'
 
-export function usePet() {
+// 주의: refetch 는 fetchPets(signal) 형태다. onClick={refetch} 로 넘기면 이벤트가 signal 로 들어가므로 () => refetch() 로 호출할 것.
+export function usePet({ enabled = true } = {}) {
   const [pets, setPets] = useState([])
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(enabled)
   const [error, setError] = useState(null)
 
   // FIX: 결함4 - signal이 petApi.getPets()에 전달되지 않아 AbortController.abort()가
@@ -25,10 +26,14 @@ export function usePet() {
   }, [])
 
   useEffect(() => {
+    if (!enabled) {
+      setIsLoading(false)
+      return
+    }
     const ac = new AbortController()
     fetchPets(ac.signal)
     return () => ac.abort()
-  }, [fetchPets])
+  }, [fetchPets, enabled])
 
   return { pets, isLoading, error, refetch: fetchPets }
 }

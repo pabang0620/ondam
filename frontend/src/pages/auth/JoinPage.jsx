@@ -234,7 +234,7 @@ export default function JoinPage() {
                 >
                   {item.label}
                   {item.required && (
-                    <span style={{ color: 'var(--color-error)', fontWeight: 700 }} aria-label="필수">
+                    <span style={{ color: 'var(--color-error)', fontWeight: 600 }} aria-label="필수">
                       *
                     </span>
                   )}

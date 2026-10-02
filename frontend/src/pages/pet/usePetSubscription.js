@@ -1,9 +1,25 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { petApi } from './petApi.js'
+import { isSubscriptionLive } from './subscriptionLabels.js'
 import { getTossPayments } from '../../lib/tossPayments.js'
 import { useAuthStore } from '../../store/authStore.js'
 
-export function usePetSubscription() {
+// 해지되지 않은 첫 항목(isSubscriptionLive 재사용), 없으면 첫 항목.
+function pickSubscription(list) {
+  if (!Array.isArray(list)) return null
+  return list.find(isSubscriptionLive) ?? list[0] ?? null
+}
+
+// 옵션(모두 선택, 기본값은 기존 동작)
+// - refreshAfterAction (true): 해지/재결제 성공 후 훅이 직접 목록을 재조회한다.
+//   부모가 따로 재조회하는 대시보드는 false 로 두어 GET /subscriptions 중복을 막는다.
+// - skipInitialFetch (false): 마운트 시 플랜/구독 조회를 생략한다(대시보드 인라인 카드용).
+// - initialSubscription (null): 조회를 생략할 때 해지 직후 로컬 표시에 쓰는 초기 구독.
+export function usePetSubscription({
+  refreshAfterAction = true,
+  skipInitialFetch = false,
+  initialSubscription = null,
+} = {}) {
   const user = useAuthStore((s) => s.user)
 
   // FIX: ep-006 - 렌더마다 새로 만들어지는 `{ current: false }` 리터럴은 ref가
@@ -12,7 +28,7 @@ export function usePetSubscription() {
   const cancelPendingRef = useRef(false)
 
   const [plans, setPlans] = useState([])
-  const [currentSubscription, setCurrentSubscription] = useState(null)
+  const [currentSubscription, setCurrentSubscription] = useState(initialSubscription)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
   const [isProcessing, setIsProcessing] = useState(false)
@@ -34,7 +50,7 @@ export function usePetSubscription() {
         petApi.getMySubscription(signal),
       ])
       if (plansRes.data.success) setPlans(plansRes.data.data ?? [])
-      if (subRes.data.success) setCurrentSubscription(subRes.data.data?.[0] ?? null)
+      if (subRes.data.success) setCurrentSubscription(pickSubscription(subRes.data.data))
     } catch (err) {
       if (err.name === 'CanceledError') return
       // FIX: DEV-24 - 구독 조회 실패를 가짜 구독으로 위장하지 않는다
@@ -44,10 +60,24 @@ export function usePetSubscription() {
     }
   }, [])
 
+  // 성공 후 재조회용 컨트롤러. 언마운트 시 함께 abort 한다.
+  const refreshAcRef = useRef(null)
+
   useEffect(() => {
     const ac = new AbortController()
-    fetchData(ac.signal)
-    return () => ac.abort()
+    if (!skipInitialFetch) fetchData(ac.signal)
+    return () => {
+      ac.abort()
+      refreshAcRef.current?.abort()
+    }
+  }, [fetchData, skipInitialFetch])
+
+  // 서버 목록을 정본으로 다시 조회한다 (스텁 응답으로 상태를 덮어쓰지 않기 위함).
+  const refreshFromServer = useCallback(() => {
+    refreshAcRef.current?.abort()
+    const ac = new AbortController()
+    refreshAcRef.current = ac
+    return fetchData(ac.signal)
   }, [fetchData])
 
   const handleSubscribe = async (planKey) => {
@@ -93,8 +123,8 @@ export function usePetSubscription() {
         return
       }
       if (res.data.success) {
-        setCurrentSubscription(res.data.data)
         setSuccessMessage('재결제가 완료되었습니다.')
+        if (refreshAfterAction) await refreshFromServer()
       }
     } catch (err) {
       // FIX: DEV-24 - 재결제 실패를 성공으로 위장하지 않는다
@@ -120,6 +150,7 @@ export function usePetSubscription() {
       )
       setIsCancelModalOpen(false)
       setSuccessMessage('구독이 해지되었습니다.')
+      if (refreshAfterAction) await refreshFromServer()
     } catch (err) {
       // FIX: DEV-24 - 해지 API 실패를 로컬에서만 성공 처리하지 않는다 (정기결제가 실제로는 계속돼 환불 분쟁으로 이어짐)
       setActionError(err?.response?.data?.message ?? '구독 해지에 실패했습니다. 잠시 후 다시 시도해 주세요.')

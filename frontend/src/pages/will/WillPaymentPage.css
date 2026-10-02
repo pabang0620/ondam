@@ -46,7 +46,7 @@
 
 .will-payment__item-name {
   font-size: var(--fs-body);
-  font-weight: 700;
+  font-weight: 600;
   color: var(--color-text-primary);
 }
 
@@ -66,7 +66,7 @@
 }
 
 .will-payment__item-desc li svg {
-  color: var(--color-warm-accent);
+  color: var(--color-accent-brand);
   flex-shrink: 0;
 }
 
@@ -92,7 +92,7 @@
 
 .will-payment__total-label {
   font-size: var(--fs-body-lg);
-  font-weight: 700;
+  font-weight: 600;
   color: var(--color-text-primary);
 }
 
@@ -151,7 +151,7 @@
   background-color: var(--color-will);
   color: var(--color-text-on-dark);
   font-size: var(--fs-button);
-  font-weight: 800;
+  font-weight: 700;
   height: var(--size-button-h);
   min-height: var(--size-button-h);
   border: none;

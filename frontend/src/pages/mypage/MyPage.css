@@ -72,7 +72,7 @@
 .my-profile__name {
   /* 모바일에서 긴 닉네임 넘침 방지 */
   font-size: var(--fs-body);
-  font-weight: 700;
+  font-weight: 600;
   color: var(--color-text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -167,7 +167,7 @@
 
 .my-tab-btn--active {
   color: var(--color-primary);
-  border-bottom-color: var(--color-warm-accent);
+  border-bottom-color: var(--color-accent-brand);
 }
 
 .my-tab-btn:hover:not(.my-tab-btn--active) {
@@ -253,6 +253,6 @@
 
 .my-list-item__badge {
   font-size: var(--fs-caption);
-  font-weight: 700;
+  font-weight: 600;
   flex-shrink: 0;
 }

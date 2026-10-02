@@ -33,7 +33,7 @@ function GiftPaymentPage() {
       }}
     >
       <header>
-        <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 800, color: 'var(--color-primary)', marginBottom: 'var(--spacing-sm)', letterSpacing: 'var(--ls-heading-ko)' }}>
+        <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 700, color: 'var(--color-primary)', marginBottom: 'var(--spacing-sm)', letterSpacing: 'var(--ls-heading-ko)' }}>
           선물 결제
         </h1>
         <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>
@@ -52,10 +52,10 @@ function GiftPaymentPage() {
           gap: 'var(--spacing-md)',
         }}
       >
-        <p style={{ fontWeight: 700, fontSize: 'var(--fs-body-lg)', color: 'var(--color-text-primary)' }}>주문 요약</p>
+        <p style={{ fontWeight: 600, fontSize: 'var(--fs-body-lg)', color: 'var(--color-text-primary)' }}>주문 요약</p>
         <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 'var(--spacing-md)', borderTop: '2px solid var(--color-border-strong)' }}>
-          <span style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 700, color: 'var(--color-text-primary)' }}>결제 금액</span>
-          <span style={{ fontSize: 22, fontWeight: 800, color: 'var(--color-primary)' }}>{priceLabel}</span>
+          <span style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 600, color: 'var(--color-text-primary)' }}>결제 금액</span>
+          <span style={{ fontSize: 22, fontWeight: 700, color: 'var(--color-primary)' }}>{priceLabel}</span>
         </div>
       </section>
 

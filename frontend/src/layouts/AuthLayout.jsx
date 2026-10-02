@@ -21,7 +21,7 @@ export default function AuthLayout() {
       >
         <span
           style={{
-            fontWeight: 800,
+            fontWeight: 700,
             fontSize: 'var(--fs-h1)',
             letterSpacing: 'var(--ls-heading-ko)',
             color: 'var(--color-text-primary)',

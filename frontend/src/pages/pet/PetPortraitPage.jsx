@@ -56,7 +56,7 @@ export default function PetPortraitPage() {
       </button>
 
       <div>
-        <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 800, color: 'var(--color-primary)', letterSpacing: 'var(--ls-heading-ko)' }}>
+        <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 700, color: 'var(--color-primary)', letterSpacing: 'var(--ls-heading-ko)' }}>
           AI 초상화 만들기
         </h1>
         <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', marginTop: 'var(--spacing-sm)' }}>
@@ -82,7 +82,7 @@ export default function PetPortraitPage() {
             gap: 'var(--spacing-sm)',
           }}
         >
-          <p style={{ fontSize: 'var(--fs-body)', fontWeight: 700, color: 'var(--color-primary)' }}>
+          <p style={{ fontSize: 'var(--fs-body)', fontWeight: 600, color: 'var(--color-primary)' }}>
             {quota.isSubscribed
               ? `이번 달 남은 AI 초상화: ${quota.remaining}장 (총 ${quota.limit}장)`
               : `무료 체험 AI 초상화: ${quota.remaining}장 남음`}
@@ -95,7 +95,7 @@ export default function PetPortraitPage() {
           {!quota.isSubscribed && quota.remaining === 0 && (
             <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)' }}>
               무료 체험을 이미 사용하셨습니다. 구독하시면 매달 3장의 AI 초상화를 만들 수 있어요.{' '}
-              <Link to={ROUTES.PET_SUBSCRIPTION} style={{ color: 'var(--color-pet)', fontWeight: 700 }}>
+              <Link to={ROUTES.PET} style={{ color: 'var(--color-pet)', fontWeight: 600 }}>
                 구독 안내 보기
               </Link>
             </p>
@@ -161,7 +161,7 @@ export default function PetPortraitPage() {
         <>
           {/* AI 초상화 스타일 선택: 카드 그리드, 선택 시 border 2px var(--color-pet) */}
           <section>
-            <h2 style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 700, marginBottom: 'var(--spacing-md)', color: 'var(--color-primary)' }}>
+            <h2 style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 600, marginBottom: 'var(--spacing-md)', color: 'var(--color-primary)' }}>
               스타일 선택
             </h2>
             <div
@@ -197,7 +197,7 @@ export default function PetPortraitPage() {
                       color={isSelected ? 'var(--color-pet)' : 'var(--color-text-muted)'}
                       aria-hidden="true"
                     />
-                    <p style={{ fontWeight: 700, fontSize: 'var(--fs-body)', color: 'var(--color-primary)' }}>{style.label}</p>
+                    <p style={{ fontWeight: 600, fontSize: 'var(--fs-body)', color: 'var(--color-primary)' }}>{style.label}</p>
                     <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
                       {style.desc}
                     </p>
@@ -209,7 +209,7 @@ export default function PetPortraitPage() {
 
           {/* 사진 선택 */}
           <section>
-            <h2 style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 700, marginBottom: 'var(--spacing-md)', color: 'var(--color-primary)' }}>
+            <h2 style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 600, marginBottom: 'var(--spacing-md)', color: 'var(--color-primary)' }}>
               사진 선택
             </h2>
 

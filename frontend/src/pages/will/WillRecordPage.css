@@ -98,7 +98,7 @@
   background-color: var(--color-success);
   color: var(--color-surface);
   font-size: var(--fs-body);
-  font-weight: 700;
+  font-weight: 600;
   padding: var(--spacing-sm) var(--spacing-xl);
   border-radius: var(--radius-pill);
   min-height: var(--min-touch-target);
@@ -107,7 +107,7 @@
 /* 타이머 */
 .will-record__timer {
   font-size: 40px;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--color-text-primary);
   font-variant-numeric: tabular-nums;
   letter-spacing: 2px;
@@ -151,7 +151,7 @@
 
 .will-record__preview-label {
   font-size: var(--fs-body);
-  font-weight: 700;
+  font-weight: 600;
   color: var(--color-text-primary);
 }
 
@@ -177,7 +177,7 @@
 }
 
 .will-record__retry:hover {
-  background-color: var(--color-bg);
+  background-color: var(--color-bg-subtle);
 }
 
 /* 에러 */
@@ -275,7 +275,7 @@
 
 /* 안내 강조 행 */
 .will-record__flow-highlight {
-  font-weight: 700;
+  font-weight: 600;
   color: var(--color-will);
   font-size: var(--fs-body);
   margin-bottom: var(--spacing-xs);

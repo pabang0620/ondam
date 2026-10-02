@@ -55,7 +55,7 @@ function ResultSetCard({ file, index, onDownload }) {
       <p
         style={{
           fontSize: 'var(--fs-body)',
-          fontWeight: 700,
+          fontWeight: 600,
           color: 'var(--color-text-primary)',
           textAlign: 'center',
         }}
@@ -178,7 +178,7 @@ function PhotoResultPage() {
       }}
     >
       <header>
-        <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 800, color: 'var(--color-photo)', marginBottom: 'var(--spacing-sm)', letterSpacing: 'var(--ls-heading-ko)' }}>
+        <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 700, color: 'var(--color-photo)', marginBottom: 'var(--spacing-sm)', letterSpacing: 'var(--ls-heading-ko)' }}>
           처리 완료
         </h1>
         <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>
@@ -212,7 +212,7 @@ function PhotoResultPage() {
 
       {/* Before / After */}
       <section aria-label="원본과 보정본 비교">
-        <h2 style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 700, marginBottom: 20, color: 'var(--color-text-primary)' }}>
+        <h2 style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 600, marginBottom: 20, color: 'var(--color-text-primary)' }}>
           Before / After
         </h2>
         <div className="photo-result__before-after">
@@ -263,7 +263,7 @@ function PhotoResultPage() {
       {/* 결과물 세트 - SPEC-08 3절: 세트 4종 개별 다운로드 + 전체 저장 */}
       {enhancedFiles.length > 0 && (
         <section aria-label="결과물 세트">
-          <h2 style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 700, marginBottom: 20, color: 'var(--color-text-primary)' }}>
+          <h2 style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 600, marginBottom: 20, color: 'var(--color-text-primary)' }}>
             결과물 세트 ({enhancedFiles.length}장)
           </h2>
           <div

@@ -59,7 +59,7 @@ export default function KakaoCallbackPage() {
           height: 44,
           borderRadius: '50%',
           border: '3px solid var(--color-border)',
-          borderTopColor: 'var(--color-warm-accent)',
+          borderTopColor: 'var(--color-accent-brand)',
           animation: 'ondam-spin 0.9s linear infinite',
         }}
       />

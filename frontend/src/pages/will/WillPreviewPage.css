@@ -86,7 +86,7 @@
 
 .will-preview__label {
   font-size: var(--fs-body);
-  font-weight: 700;
+  font-weight: 600;
   color: var(--color-text-primary);
   display: flex;
   align-items: center;

@@ -1,157 +1,133 @@
 import { Link } from 'react-router-dom'
-import { Camera } from 'lucide-react'
 import { ROUTES } from '../../constants/routes.js'
 
 /*
- * 최종 CTA - 랜딩페이지 하단(푸터 직전)에 흔히 쓰이는 "최종 CTA 카드" 패턴.
- * 배경색만 있던 텍스트 중앙정렬 섹션을, 큰 둥근 카드로 바꿔 시각적 임팩트를 준다.
+ * 최종 CTA - 랜딩페이지 하단(푸터 직전) 섹션.
  *
- * 배경(2026-09 "바랜 종이" 리디자인): 이 카드가 HomeHero.jsx와 공유하던
- * var(--home-color-primary)(밝은 하늘색)를 이 파일 범위에서만 따뜻한 베이지
- * 그라디언트로 직접 교체했다. HomeProcess.jsx/HomeServices.jsx/HomeTrust.jsx는
- * 흰 배경 위 아이콘·텍스트 색으로 이 토큰을 그대로 참조하므로, 토큰 자체
- * (HomePage.jsx)는 절대 건드리지 않고 CTA_BEIGE_BG처럼 이 파일에 로컬로 리터럴
- * 값을 정의한다(HomeHero.jsx도 동일한 톤을 자체 파일에 별도로 정의).
- *   - CTA_BEIGE_BG: linear-gradient(135deg, #EFE6D3 0%, #E3D5B8 100%)
- * 대비 실측(WCAG 상대휘도 공식, 배경 두 톤 중 더 어두운 #E3D5B8 기준 = worst case,
- * HomeHero.jsx 상단 주석과 동일 배경 값이라 동일 결과):
- *   - 헤드라인(h2): var(--color-text-primary) #1D1D1F → 대비 약 11.60:1
- *     (밝은 쪽 #EFE6D3 기준으로는 약 13.57:1). AA 본문 기준(4.5:1) 여유 있게 통과.
- *   - 서브텍스트(p): rgba(29,29,31,0.8)를 배경과 합성한 실효색(#45423e) 기준 대비
- *     약 6.89:1(밝은 쪽 기준 약 7.69:1). AA 통과.
- * 카드 자체에 세피아 톤 그림자를 줘 배경(--color-bg-alt, 거의 흰색) 위에서
- * 입체적으로 떠 보이게 하고, 모서리에 반투명 블롭 2개 + 헤드라인 위 아이콘 배지로
- * 장식 깊이감을 더한다. 블롭은 하늘색 반투명 대신 홈 3차 강조색인
- * var(--home-color-accent)(테라코타 #C55647) 계열의 아주 옅은 반투명으로 바꿔
- * "바랜 종이 + 세피아" 느낌을 강화했다(아이콘·텍스트 색으로 쓰는 게 아니라 배경
- * 장식 전용이라 --home-color-primary 토큰과 무관, 공유 토큰 규칙에 영향 없음).
- * 흰 배경 CTA 버튼은 베이지 배경 위에서 대비가 낮아(백/베이지 약 1.2~1.5:1)
- * 테두리를 더 또렷하게, 그림자도 세피아 톤으로 바꿔 배경과 확실히 분리되도록
- * 보강했다. 카피와 라우트는 기존 그대로 유지한다.
+ * 섹션 전체(풀블리드)에 위→아래(180deg) 그라디언트 배경을 직접 적용한다.
+ * 카드 특유의 background/border-radius/box-shadow는 사용하지 않는다.
+ *
+ * 배경: 피치→살구→코랄 핑크 그라디언트. 바닥에 보라/라벤더 기운이 남지 않도록
+ * 모든 스톱을 따뜻한 색상환(hue 약 12~25도, 파랑 성분 < 초록 성분) 안에 둔다.
+ * 기존 #FBDCE3(hue 약 346도, 파랑 > 초록)과 #DDE0F7(라벤더)은 보라처럼 보일 수
+ * 있어 제거했다. 홈 공유 토큰(--home-color-primary)과 무관하게 이 파일에
+ * 로컬 리터럴 값으로 정의한다(HomePage.jsx 토큰은 건드리지 않는다).
+ *   - CTA_SECTION_GRADIENT: 기준 색 #FDE6D8 / #FDD9CB / #FBCDC0 (0% / 55% / 100%),
+ *     각 스톱 알파 0.35
+ * 대비 실측(WCAG 상대휘도 공식, 3개 스톱 각각. 알파 0.35 배경을 --color-bg
+ * #FFFFFF 위에 합성한 실효색 #FEF6F1 / #FEF2ED / #FEEEE9 기준):
+ *   - 헤드라인(h2): var(--color-text-primary) #333336 →
+ *     11.82:1 / 11.46:1 / 11.12:1(가장 어두운 스톱, worst case)
+ *   - 서브텍스트(p): rgba(51,51,54,0.88)를 합성 배경과 다시 합성한 실효색 →
+ *     8.22:1 / 8.02:1 / 7.83:1(worst case)
+ *   모든 스톱이 AA 본문 기준(4.5:1)을 크게 웃돈다.
+ * 장식 블롭은 딥 코랄 로즈 계열(--home-color-accent #E23E57 기반)이다. 버튼에는
+ * box-shadow를 쓰지 않는다. 카피와 라우트는 기존 그대로 유지한다.
  */
 
-// 하단 CTA 카드 전용 "바랜 종이" 베이지 배경. 홈 공유 토큰(--home-color-primary)은
-// 다른 섹션(흰 배경 위 아이콘·텍스트)에서 그대로 쓰이므로 절대 변경하지 않고,
-// 이 파일 범위에서만 리터럴 값으로 배경을 정의한다(HomeHero.jsx와 동일한 톤을
-// 각자 파일에 독립적으로 정의 - 의도적 중복, 공유 토큰화하지 않는다).
-const CTA_BEIGE_BG = 'linear-gradient(135deg, #EFE6D3 0%, #E3D5B8 100%)'
+// 하단 CTA 섹션 전용 파스텔 그라디언트(top → bottom). 홈 공유 토큰
+// (--home-color-primary)은 다른 섹션에서 그대로 쓰이므로 변경하지 않고, 이 파일
+// 범위에서만 리터럴 값으로 정의한다(의도적 중복, 공유 토큰화하지 않는다).
+// 세 스톱 모두 알파 0.35(rgba)으로 뒤의 --color-bg(#FFFFFF)가 비치게 했다.
+const CTA_SECTION_GRADIENT =
+  'linear-gradient(180deg, rgba(253,230,216,0.35) 0%, rgba(253,217,203,0.35) 55%, rgba(251,205,192,0.35) 100%)'
+
+// 하단 CTA 버튼 그라디언트: 로고 토큰과 같은 색 stop, 방향만 180deg(위→아래).
+// 출처: global.css:182 --color-brand-gradient (135deg #F5A052 0%, #E23E57 100%).
+// 토큰은 135deg로 고정이라 방향만 바꿀 수 없어 이 파일에 상수로 정의한다.
+// 위쪽 #F5A052(오렌지), 아래쪽 #E23E57(코랄). 색 값은 토큰과 동일하게 유지할 것.
+// 그라디언트는 backgroundColor가 아니라 반드시 background(단축)로 지정해야 유효하다.
+const CTA_BUTTON_GRADIENT = 'linear-gradient(180deg, #F5A052 0%, #E23E57 100%)'
+
+// 버튼 글자색: 사용자 요청에 따라 흰 글자(#FFFFFF) 사용. WCAG AA(4.5:1) 미달이며
+// 의도된 선택이다: 시작 #F5A052 2.093:1 / 끝 #E23E57 4.150:1.
+// 대비 보완용 배경 어둡게 하기·textShadow·boxShadow는 사용자 요청으로 적용하지 않는다.
 
 export default function HomeBottomCta() {
   return (
     <section
-      className="w-full"
+      className="relative w-full overflow-hidden text-center"
       style={{
-        backgroundColor: 'var(--color-bg-alt)',
-        padding: 'clamp(48px, 8vw, 96px) 16px',
+        background: CTA_SECTION_GRADIENT,
+        padding: 'clamp(64px, 10vw, 120px) 16px',
       }}
     >
-      <div className="max-w-6xl mx-auto">
-        <div
-          className="relative overflow-hidden text-center"
+      {/* 장식용 원형 블롭 2개 - 섹션 좌상단/우하단에 걸쳐 반투명 원을 배치해
+          그라디언트 배경에 은은한 입체감을 준다. 홈 4차 강조색인
+          var(--home-color-accent)(레퍼런스 코랄 #E23E57)의 아주 옅은 반투명으로
+          대체해 딥 코랄 로즈 톤을 강화했다(순수 배경 장식이라 대비 기준
+          미적용). 클릭/포커스에 방해되지 않도록 항상 pointer-events: none +
+          aria-hidden 처리. */}
+      <div
+        aria-hidden="true"
+        className="absolute rounded-full"
+        style={{
+          top: 'clamp(-140px, -12vw, -100px)',
+          left: 'clamp(-120px, -10vw, -80px)',
+          width: 'clamp(220px, 26vw, 320px)',
+          height: 'clamp(220px, 26vw, 320px)',
+          backgroundColor: 'rgba(226, 62, 87, 0.14)',
+          pointerEvents: 'none',
+        }}
+      />
+      <div
+        aria-hidden="true"
+        className="absolute rounded-full"
+        style={{
+          bottom: 'clamp(-160px, -14vw, -110px)',
+          right: 'clamp(-100px, -9vw, -60px)',
+          width: 'clamp(260px, 30vw, 380px)',
+          height: 'clamp(260px, 30vw, 380px)',
+          backgroundColor: 'rgba(226, 62, 87, 0.10)',
+          pointerEvents: 'none',
+        }}
+      />
+
+      <div className="relative max-w-6xl mx-auto">
+        <h2
+          className="font-semibold mb-5 sm:mb-6"
           style={{
-            borderRadius: 'clamp(24px, 4vw, 32px)',
-            background: CTA_BEIGE_BG,
-            padding: 'clamp(48px, 8vw, 80px) clamp(24px, 6vw, 56px)',
-            // 그림자 색을 하늘색 틴트에서 베이지 배경에 어울리는 세피아/브라운 톤으로
-            // 교체해 "바랜 종이" 카드가 떠 보이는 느낌을 유지했다.
-            boxShadow: '0 30px 60px rgba(120, 90, 50, 0.22), 0 10px 24px rgba(120, 90, 50, 0.14)',
+            fontSize: 'clamp(28px, 4.8vw, 40px)',
+            fontWeight: 600,
+            color: 'var(--color-text-primary)',
+            letterSpacing: 'var(--ls-heading-ko)',
+            wordBreak: 'keep-all',
           }}
         >
-          {/* 장식용 원형 블롭 2개 - 카드 좌상단/우하단에 걸쳐 반투명 원을 배치해
-              단색 배경에 은은한 입체감을 준다. 배경이 베이지로 바뀌며 하늘색 반투명은
-              어울리지 않으므로, 홈 3차 강조색인 var(--home-color-accent)(테라코타
-              #C55647)의 아주 옅은 반투명으로 대체해 "바랜 종이 + 세피아" 톤을
-              강화했다. 클릭/포커스에 방해되지 않도록 항상 pointer-events: none +
-              aria-hidden 처리. */}
-          <div
-            aria-hidden="true"
-            className="absolute rounded-full"
+          사진 한 장으로 시작해보세요
+        </h2>
+        <p
+          style={{
+            fontSize: 'clamp(18px, 2.2vw, 20px)',
+            color: 'rgba(51,51,54,0.88)',
+            maxWidth: 'min(720px, 100%)',
+            margin: '0 auto 44px',
+            lineHeight: 'var(--lh-relaxed)',
+            wordBreak: 'keep-all',
+          }}
+        >
+          9,900원이면 복원부터 결과물 4종까지 받아보실 수 있어요.
+        </p>
+        <div className="flex justify-center">
+          {/* 오렌지→코랄 위→아래 그라디언트 버튼 + 흰 글자(AA 미달, 사용자 요청.
+              상단 주석 참고). hover는 opacity 방식을 유지한다. */}
+          <Link
+            to={ROUTES.PHOTO}
+            className="flex items-center justify-center font-semibold transition-opacity hover:opacity-90"
             style={{
-              top: 'clamp(-140px, -12vw, -100px)',
-              left: 'clamp(-120px, -10vw, -80px)',
-              width: 'clamp(220px, 26vw, 320px)',
-              height: 'clamp(220px, 26vw, 320px)',
-              backgroundColor: 'rgba(197, 86, 71, 0.14)',
-              pointerEvents: 'none',
-            }}
-          />
-          <div
-            aria-hidden="true"
-            className="absolute rounded-full"
-            style={{
-              bottom: 'clamp(-160px, -14vw, -110px)',
-              right: 'clamp(-100px, -9vw, -60px)',
-              width: 'clamp(260px, 30vw, 380px)',
-              height: 'clamp(260px, 30vw, 380px)',
-              backgroundColor: 'rgba(197, 86, 71, 0.10)',
-              pointerEvents: 'none',
-            }}
-          />
-
-          {/* 헤드라인 위 아이콘 배지 - 베이지 배경 위에서 또렷하게 보이도록 크림에
-              가까운 흰색 원(불투명도를 살짝 높임) + 어두운 텍스트 톤 아이콘 조합을
-              사용한다. */}
-          <div
-            aria-hidden="true"
-            className="relative inline-flex items-center justify-center mb-6 sm:mb-7"
-            style={{
-              width: 'clamp(72px, 8vw, 88px)',
-              height: 'clamp(72px, 8vw, 88px)',
-              borderRadius: '50%',
-              backgroundColor: 'rgba(255, 255, 255, 0.62)',
+              height: 'clamp(56px, 5vw, 60px)',
+              width: '100%',
+              maxWidth: '360px',
+              padding: '0 48px',
+              fontSize: 'clamp(17px, 1.8vw, 19px)',
+              background: CTA_BUTTON_GRADIENT,
+              color: '#FFFFFF',
+              borderRadius: 'var(--radius-pill)',
+              border: 'none',
             }}
           >
-            <Camera size={44} strokeWidth={1.75} color="var(--color-text-primary)" />
-          </div>
-
-          <h2
-            className="relative font-bold mb-5 sm:mb-6"
-            style={{
-              fontSize: 'clamp(24px, 4.2vw, 36px)',
-              fontWeight: 700,
-              color: 'var(--color-text-primary)',
-              letterSpacing: 'var(--ls-heading-ko)',
-              wordBreak: 'keep-all',
-            }}
-          >
-            사진 한 장으로 시작해보세요
-          </h2>
-          <p
-            className="relative"
-            style={{
-              fontSize: 'var(--fs-body-lg)',
-              color: 'rgba(29,29,31,0.8)',
-              maxWidth: '440px',
-              margin: '0 auto 44px',
-              lineHeight: 'var(--lh-relaxed)',
-              wordBreak: 'keep-all',
-            }}
-          >
-            9,900원이면 복원부터 결과물 4종까지 받아보실 수 있어요.
-          </p>
-          <div className="relative flex justify-center">
-            {/* 카드 배경이 베이지로 바뀌며 흰 버튼과의 명도 대비가 낮아지므로(흰 vs
-                베이지 약 1.2~1.5:1), 테두리를 더 또렷한 세피아 톤으로, 그림자도
-                같은 계열로 바꿔 배경과 확실히 분리되도록 보강했다. */}
-            <Link
-              to={ROUTES.PHOTO}
-              className="flex items-center justify-center font-bold transition-opacity hover:opacity-90"
-              style={{
-                height: 'clamp(56px, 5vw, 60px)',
-                width: '100%',
-                maxWidth: '360px',
-                padding: '0 48px',
-                fontSize: 'clamp(17px, 1.8vw, 19px)',
-                backgroundColor: 'var(--home-color-secondary)',
-                color: 'var(--color-text-primary)',
-                borderRadius: 'var(--radius-pill)',
-                border: '1.5px solid rgba(120, 90, 50, 0.28)',
-                boxShadow: '0 14px 30px rgba(120, 90, 50, 0.30), 0 6px 14px rgba(120, 90, 50, 0.18)',
-              }}
-            >
-              9,900원으로 시작하기
-            </Link>
-          </div>
+            시작하기
+          </Link>
         </div>
       </div>
     </section>

@@ -1,0 +1,44 @@
+/* 구독 유의사항 (SubscriptionNotice) */
+.pet-notice__list {
+  margin: 0;
+  padding-left: var(--spacing-lg);
+  list-style: disc;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  font-size: var(--fs-body);
+  font-weight: 400;
+  color: var(--color-text-secondary);
+}
+
+.pet-notice__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  min-height: var(--min-touch-target);
+  list-style: none;
+  cursor: pointer;
+  font-size: var(--fs-body);
+  font-weight: 400;
+  color: var(--color-text-secondary);
+}
+
+.pet-notice__summary::-webkit-details-marker {
+  display: none;
+}
+
+.pet-notice__chevron {
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.pet-notice[open] .pet-notice__chevron {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pet-notice__chevron {
+    transition: none;
+  }
+}

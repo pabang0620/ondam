@@ -82,7 +82,7 @@ export default function MemorialSettingsSection({ pet, currentAccessCode, isSavi
       aria-label="추모 페이지 접근 코드 설정"
     >
       <div>
-        <p style={{ fontSize: 'var(--fs-body)', fontWeight: 700, marginBottom: 4, color: 'var(--color-primary)' }}>
+        <p style={{ fontSize: 'var(--fs-body)', fontWeight: 600, marginBottom: 4, color: 'var(--color-primary)' }}>
           추모 페이지 접근 코드
         </p>
         <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
@@ -113,7 +113,7 @@ export default function MemorialSettingsSection({ pet, currentAccessCode, isSavi
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             <label
               htmlFor="memorial-is-public"
-              style={{ fontSize: 'var(--fs-body)', fontWeight: 700, color: 'var(--color-text-primary)', cursor: 'pointer' }}
+              style={{ fontSize: 'var(--fs-body)', fontWeight: 600, color: 'var(--color-text-primary)', cursor: 'pointer' }}
             >
               추모 페이지 공개하기
             </label>

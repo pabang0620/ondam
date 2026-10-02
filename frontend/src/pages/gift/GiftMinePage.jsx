@@ -9,7 +9,7 @@ function GiftMinePage() {
   return (
     <main style={{ maxWidth: 560, margin: '0 auto', padding: '32px var(--spacing-md) 48px', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-lg)' }}>
       <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 800, color: 'var(--color-primary)', letterSpacing: 'var(--ls-heading-ko)' }}>
+        <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 700, color: 'var(--color-primary)', letterSpacing: 'var(--ls-heading-ko)' }}>
           내가 보낸 선물
         </h1>
         <Link
@@ -66,13 +66,13 @@ function GiftMinePage() {
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontWeight: 700, fontSize: 'var(--fs-body-lg)', color: 'var(--color-text-primary)' }}>
+                  <span style={{ fontWeight: 600, fontSize: 'var(--fs-body-lg)', color: 'var(--color-text-primary)' }}>
                     {gift.product_type === 'photo' ? 'AI 사진관 세트' : '마지막 영상 편지'}
                   </span>
                   <span
                     style={{
                       fontSize: 'var(--fs-caption)',
-                      fontWeight: 700,
+                      fontWeight: 600,
                       padding: '4px 10px',
                       borderRadius: 999,
                       background: 'var(--color-surface-warm)',

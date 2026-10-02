@@ -89,6 +89,42 @@
   font-display: swap;
 }
 
+/*
+ * GMarketSans 웹폰트 - jsDelivr CDN 임베딩. 헤더 로고 워드마크("ondam") 전용.
+ * 300(Light)/500(Medium)/700(Bold) 세 굵기만 제공된다.
+ */
+@font-face {
+    font-family: 'GMarketSans';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansLight.woff') format('woff');
+    font-weight: 300;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'GMarketSans';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansMedium.woff') format('woff');
+    font-weight: 500;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'GMarketSans';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansBold.woff') format('woff');
+    font-weight: 700;
+    font-display: swap;
+}
+
+/*
+ * Joseon100Years(조선100년체) 웹폰트 - jsDelivr CDN 임베딩. "온담의 약속"
+ * 섹션(HomeTrust.jsx) 헤드라인 전용 한글 디스플레이 서체.
+ */
+@font-face {
+    font-family: 'Joseon100Years';
+    src: url('https://gcore.jsdelivr.net/gh/projectnoonnu/noonfonts_2206-02@1.0/ChosunCentennial.woff2') format('woff2');
+    font-weight: normal;
+    font-display: swap;
+}
+
 /* 온담 디자인 토큰 - Apple 스토어 톤(중립 그레이스케일 + 절제된 포인트 컬러) */
 :root {
   /* 반응형 브레이크포인트 */
@@ -96,10 +132,27 @@
   --breakpoint-md: 768px;
 
   /* Base - Apple 스타일 중립 그레이 베이스 (크림톤 → 뉴트럴 그레이) */
-  --color-bg: #F5F5F7;
+  --color-bg: #FFFFFF;
+  /* 구 --color-bg 회색(#F5F5F7). 컴포넌트 채움/구분용 */
+  --color-bg-subtle: #F5F5F7;
   --color-bg-alt: #E8E8ED;
   --color-surface: #FFFFFF;
   --color-surface-warm: #FBFBFD;
+  /* 랜딩 Hero 배너 공통 회색(photo/pet/will). 흰 페이지 위 구분용(흰색 대비 1.22:1), 어두운 글자 13.78:1 */
+  --color-hero-gray: #E8E8ED;
+  /* 랜딩 Hero 배너 파스텔 토큰(photo/pet/will/gift). 흰 페이지 위 명도비 1.1~1.2:1,
+     --color-primary 글자 대비 14:1 이상. 브랜드 토큰(--color-accent-brand*)과 무관 */
+  /* 사진관: 푸른 회색 (흰색 대비 1.116:1) */
+  --color-hero-blue-gray: #EEF3F9;
+  /* 반려동물: 복숭아 (흰색 대비 1.160:1) */
+  --color-hero-peach: #FDEBDD;
+  /* 영상편지: 로즈 (흰색 대비 1.207:1) */
+  --color-hero-rose: #FCE4E8;
+  /* 선물하기: 중립 라벤더 그레이 (흰색 대비 1.157:1) */
+  --color-hero-gift: #EEEEF2;
+  /* 선물하기 배너 전용 연한 노랑. 흰색(다음 섹션) 대비 1.29:1로 구분,
+     --color-primary(#1D1D1F) 글자 대비 13.1:1(AA 4.5:1 이상) */
+  --color-gift-banner: #FFE08A;
 
   /* Brand - Apple 근접 블랙 + 머스터드 골드(포인트 컬러는 최소한으로만 사용) */
   --color-primary: #1D1D1F;
@@ -107,12 +160,43 @@
   --color-warm-accent: #C9A24B;
   --color-warm-accent-soft: #E6CB8E;
 
+  /* 브랜드 그라데이션(--color-brand-gradient, 오렌지→코랄) 계열 단색 액센트.
+     기존 --color-warm-accent(머스터드 골드)를 대체하는 신규 브랜드 톤 - 관리자
+     페이지(AdminOrdersPage/AdminPage/AdminReleasePage) 3곳은 계속 구 토큰을 쓰므로
+     위 --color-warm-accent 값 자체는 바꾸지 않는다.
+     대비 규칙(WCAG, 2026-09 실측):
+     - --color-accent-brand(#E23E57, 코랄 원색): 밝은 배경(흰색/surface 계열) 위
+       비텍스트 전용(아이콘·보더·스피너·프로그레스). 흰색 대비 4.150:1로 텍스트
+       4.5:1 미달 - 텍스트에 사용 금지.
+     - --color-accent-brand-text(#96253F, 다크 코랄): 밝은 배경 위 텍스트/흰 텍스트
+       얹는 채움 배경. 흰색 대비 7.975:1.
+     - --color-accent-brand-light(#F5A052, 오렌지): 어두운 배경(네이비/차콜/다크
+       베이지 등) 위 텍스트·아이콘·보더, 또는 어두운 텍스트를 얹는 채움 버튼.
+       흰 배경에서는 대비 2.093:1로 사용 금지 - 반드시 어두운 배경 전용.
+     - --color-accent-brand-soft(#FDEBDF): 옅은 배경 틴트 전용.
+     금지 조합: 밝은 배경에 -light 사용 금지, 어두운 배경에 -text/-brand 사용 금지. */
+  --color-accent-brand: #E23E57;
+  --color-accent-brand-text: #96253F;
+  --color-accent-brand-light: #F5A052;
+  --color-accent-brand-soft: #FDEBDF;
+
   /* 브랜드 워드마크 전용 색상 - 온담 로고 텍스트에만 사용. 도메인별 accent(--color-photo
      /will/pet/memorial)나 --color-primary(중립 다크)와는 별개로, 헤더/로고에 쓰이는
      사이트 전역 브랜드 하늘색(sky blue)이다. 홈페이지 섹션 색상(--home-color-*,
-     HomePage.jsx에서 해당 페이지 범위로만 스코프됨)의 --home-color-primary와 값은
-     같지만 용도가 다르므로 별도 토큰으로 둔다(두 토큰은 항상 동기화 유지). */
+     HomePage.jsx에서 해당 페이지 범위로만 스코프됨)의 --home-color-primary는
+     2026-09 리컬러로 딥 코랄 로즈(#A8324A)로 바뀌어 이제 이 토큰과 값이 다르다.
+     정정: 애초에 용도가 완전히 별개(전역 로고 워드마크 vs 홈 스코프 섹션 컬러)이므로
+     두 토큰을 동기화할 필요가 없다 - 값이 우연히 같았던 적이 있어도 각자 독립적으로
+     관리한다. 로고 자체는 이미 별도 신규 토큰 --color-brand-gradient(아래)로
+     그라디언트 처리되어 있으니 이 토큰과 혼동하지 않는다. */
   --color-brand: #0278B2;
+
+  /* 로고 전용 그라디언트 - 사용자가 지목한 핀터레스트 레퍼런스(오렌지→코랄 3D
+     캐릭터 랜딩)의 주색 그라디언트를 헤더 "ondam" 워드마크에만 적용한다.
+     HomeHero.jsx의 DecorativeCircle과 동일한 값을 재사용한다(톤 일관성 유지).
+     기존 --color-brand(단색 하늘색)는 다른 곳에서 참조될 수 있으므로 값을
+     덮어쓰지 않고 별도 토큰으로 분리했다. */
+  --color-brand-gradient: linear-gradient(135deg, #F5A052 0%, #E23E57 100%);
 
   /* Apple 스타일 링크/정보 강조색 - 절제된 강조에만 사용(본문 전반 색상은 흑백 위주 유지) */
   --color-link: #0071E3;
@@ -128,13 +212,15 @@
   --color-photo: #2A2826;        /* 사진관: 차콜 */
   --color-pet: #C77B5C;          /* 반려동물: 테라코타 */
   --color-pet-soft: #E8C8AE;
+  --color-photo-soft: #4A4642;   /* 사진관 보조: 웜 차콜 - 히어로 그라데이션 종점 */
 
   /* Text - Apple 뉴트럴 그레이 스케일 (본문 대비는 WCAG AA 이상 유지) */
-  --color-text-primary: #1D1D1F;
+  --color-text-primary: #333336;
   --color-text-secondary: #6E6E73;
   --color-text-muted: #6B6B70;
   --color-text-on-dark: #F5F5F7;
   --color-border: #D2D2D7;
+  --color-border-light: #E5E5EA;
   --color-border-strong: #B8B8BD;
 
   /* Semantic */
@@ -231,10 +317,30 @@
   --size-touch-min: 48px;
   --size-button-h: 56px;
   --size-input-h: 56px;
+  /* 공용 Header(components/common/Header.jsx)의 실제 높이(h-16=64px)와 반드시
+     일치시킨다. Header가 position: fixed로 문서 흐름에서 빠지면서, 이 값을
+     MainLayout의 <main> 상단 패딩(다른 모든 페이지의 기존 배치 보존)과
+     HomePage의 음수 마진(히어로만 헤더 아래로 겹치도록 되돌리기) 양쪽에서
+     공유 기준으로 사용한다. */
+  --header-height: 64px;
 
   /* Transition */
   --transition-fast: 0.15s ease;
   --transition-base: 0.2s ease;
+
+  /* 기능 소개 카드 아이콘 선 색 팔레트(배경 없이 흰 카드 위에 직접 놓임).
+     같은 아이콘은 페이지가 달라도 같은 tone. 채도를 낮춘 회색빛 톤, 흰색(#FFF) 대비 모두 4.5:1 이상. */
+  --icon-color-amber: #776340;
+  --icon-color-rose: #805261;
+  --icon-color-teal: #3F6966;
+  --icon-color-navy: #4D6280;
+  --icon-color-orange: #835E49;
+  --icon-color-sky: #456373;
+  --icon-color-red: #855351;
+  --icon-color-indigo: #5C5F84;
+  --icon-color-green: #476651;
+  --icon-color-slate: #515A67;
+  --icon-color-violet: #705C84;
 
   /* Shadow - 카드류 절제된 입체감 (rgba 값은 --color-text-primary와 동일 톤) */
   --shadow-card: 0 12px 32px rgba(29, 29, 31, 0.07);
@@ -258,16 +364,27 @@
   }
 }
 
-/* 가로 스크롤 완전 차단 */
-html,
-body {
+/*
+ * 가로 스크롤 완전 차단.
+ * html에는 overflow-x: hidden을 그대로 유지한다 - 뷰포트(초기 컨테이닝 블록)로
+ * 전파되는 특수 케이스라 스크롤 컨테이너 승격 문제가 발생하지 않는다.
+ * body는 overflow-x: clip으로 변경한다 - overflow-x: hidden + overflow-y(기본값
+ * visible) 조합이면 브라우저가 overflow-y를 auto로 강제 승격시켜 body가 스크롤
+ * 컨테이너가 되고, 그 안의 position: sticky 자식은 "가장 가까운 스크롤 컨테이너"인
+ * body 기준으로 고정되는데 body 자체는 실제로 스크롤하지 않아(내용에 맞춰 높이만
+ * 커짐) sticky가 항상 오프셋 0으로 깨진다. clip은 가로 넘침을 잘라내는 목적은
+ * 동일하게 유지하면서 스크롤 컨테이너를 만들지 않는다.
+ */
+html {
   overflow-x: hidden;
   max-width: 100vw;
-}
-
-html {
   font-size: var(--font-size-base);
   -webkit-text-size-adjust: 100%;
+}
+
+body {
+  overflow-x: clip;
+  max-width: 100vw;
 }
 
 body {
@@ -357,3 +474,50 @@ textarea {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* 기능 카드 아이콘 tone: data-icon-tone 속성 → 페이지 CSS가 읽는 아이콘 색 변수 */
+[data-icon-tone='amber'] {
+  --icon-tone-fg: var(--icon-color-amber);
+}
+
+[data-icon-tone='rose'] {
+  --icon-tone-fg: var(--icon-color-rose);
+}
+
+[data-icon-tone='teal'] {
+  --icon-tone-fg: var(--icon-color-teal);
+}
+
+[data-icon-tone='navy'] {
+  --icon-tone-fg: var(--icon-color-navy);
+}
+
+[data-icon-tone='orange'] {
+  --icon-tone-fg: var(--icon-color-orange);
+}
+
+[data-icon-tone='sky'] {
+  --icon-tone-fg: var(--icon-color-sky);
+}
+
+[data-icon-tone='red'] {
+  --icon-tone-fg: var(--icon-color-red);
+}
+
+[data-icon-tone='indigo'] {
+  --icon-tone-fg: var(--icon-color-indigo);
+}
+
+[data-icon-tone='green'] {
+  --icon-tone-fg: var(--icon-color-green);
+}
+
+[data-icon-tone='slate'] {
+  --icon-tone-fg: var(--icon-color-slate);
+}
+
+[data-icon-tone='violet'] {
+  --icon-tone-fg: var(--icon-color-violet);
+}
+
+

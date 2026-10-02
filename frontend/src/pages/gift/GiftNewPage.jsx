@@ -1,5 +1,7 @@
-import { Gift, Camera, Video, Loader2 } from 'lucide-react'
+import { useRef } from 'react'
+import { Camera, Video, Loader2 } from 'lucide-react'
 import useGiftNew from './useGiftNew.js'
+import './GiftNewPage.css'
 
 const PRODUCTS = [
   {
@@ -18,7 +20,17 @@ const PRODUCTS = [
   },
 ]
 
+// 움직임 줄이기 설정을 존중한다. matchMedia 미지원 환경은 즉시 이동('auto')
+function getScrollBehavior() {
+  const reduce =
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  return reduce ? 'auto' : 'smooth'
+}
+
 function GiftNewPage() {
+  const formRef = useRef(null)
   const {
     productType,
     setProductType,
@@ -32,165 +44,119 @@ function GiftNewPage() {
     handleSubmit,
   } = useGiftNew()
 
+  // 배너 버튼: 아래 주문 폼 섹션(항상 렌더됨)으로 스크롤하고 포커스도 옮긴다
+  const handleStart = () => {
+    const target = formRef.current
+    if (!target) return
+    target.scrollIntoView({ behavior: getScrollBehavior(), block: 'start' })
+    target.focus({ preventScroll: true })
+  }
+
   return (
-    <main
-      style={{
-        maxWidth: 480,
-        margin: '0 auto',
-        padding: '32px var(--spacing-md) 48px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 'var(--spacing-xl)',
-      }}
-    >
-      <header>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 'var(--spacing-sm)' }}>
-          <Gift size={28} color="var(--color-primary)" aria-hidden="true" />
-          <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 800, color: 'var(--color-primary)', letterSpacing: 'var(--ls-heading-ko)' }}>
-            선물하기
-          </h1>
-        </div>
-        <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>
-          부모님께 온담 서비스를 선물해 드리세요. 결제는 지금 하시고, 사진 올리기·녹음은
-          부모님이 편하실 때 링크로 직접 하시면 돼요.
-        </p>
-      </header>
-
-      <section>
-        <p style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 700, marginBottom: 'var(--spacing-md)', color: 'var(--color-text-primary)' }}>
-          1. 선물할 상품을 선택해 주세요
-        </p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
-          {PRODUCTS.map(({ type, label, price, desc, icon: Icon }) => {
-            const isSelected = productType === type
-            return (
-              <button
-                key={type}
-                type="button"
-                onClick={() => setProductType(type)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: 'var(--spacing-md)',
-                  textAlign: 'left',
-                  padding: '20px',
-                  minHeight: 'var(--min-touch-target)',
-                  borderRadius: 'var(--radius-card)',
-                  border: `2px solid ${isSelected ? 'var(--color-primary)' : 'var(--color-border)'}`,
-                  background: isSelected ? 'var(--color-surface-warm)' : 'var(--color-surface)',
-                  cursor: 'pointer',
-                  transition: 'border-color var(--transition-base), background-color var(--transition-base)',
-                }}
-              >
-                <Icon size={28} color="var(--color-primary)" aria-hidden="true" />
-                <span style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <span style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
-                    {label} · {price}
-                  </span>
-                  <span style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>
-                    {desc}
-                  </span>
-                </span>
-              </button>
-            )
-          })}
+    <div className="gift-new-page">
+      {/* Hero - 버튼을 누르면 바로 아래 주문 폼으로 스크롤 */}
+      <section className="gift-hero">
+        <div className="gift-hero__inner">
+          <h1 className="gift-hero__title">소중한 분께 온담을 선물하세요</h1>
+          <p className="gift-hero__sub">
+            결제는 지금, 사진과 녹음은 받는 분이 편하실 때 링크로 해요
+          </p>
+          <button type="button" className="gift-hero__cta" onClick={handleStart}>
+            선물 시작하기
+          </button>
         </div>
       </section>
 
-      <section>
-        <p style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 700, marginBottom: 'var(--spacing-md)', color: 'var(--color-text-primary)' }}>
-          2. 받는 분 정보를 입력해 주세요
-        </p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label htmlFor="recipientName" style={{ fontSize: 'var(--fs-body)', fontWeight: 600, color: 'var(--color-text-primary)' }}>
-              받는 분 이름
-            </label>
-            <input
-              id="recipientName"
-              type="text"
-              value={recipientName}
-              onChange={(e) => setRecipientName(e.target.value)}
-              placeholder="예: 김리멤버"
-              style={{
-                height: 'var(--size-input-h)',
-                minHeight: 'var(--min-touch-target)',
-                padding: '0 16px',
-                fontSize: 'var(--fs-body)',
-                border: '1px solid var(--color-border)',
-                borderRadius: 10,
-                background: 'var(--color-surface)',
-              }}
-            />
+      {/* 주문 폼 (outer = 전체 너비 배경 / inner = 600px). 배너 버튼의 스크롤·포커스 대상 */}
+      <section className="gift-form" ref={formRef} tabIndex={-1}>
+        <div className="gift-form__inner">
+          <div className="gift-form__steps">
+            <section>
+              <h2 className="gift-form__step-title">
+                <span className="gift-form__step-badge">1</span>
+                <span>선물할 상품을 선택해 주세요</span>
+              </h2>
+              <div className="gift-product-list">
+                {PRODUCTS.map(({ type, label, price, desc, icon: Icon }) => {
+                  const isSelected = productType === type
+                  return (
+                    <button
+                      key={type}
+                      type="button"
+                      aria-pressed={isSelected}
+                      onClick={() => setProductType(type)}
+                      className={`gift-product-card${isSelected ? ' is-selected' : ''}`}
+                    >
+                      <span className="gift-product-card__body">
+                        <span className="gift-product-card__label">{label} · {price}</span>
+                        <span className="gift-product-card__desc">{desc}</span>
+                      </span>
+                      <Icon className="gift-product-card__icon" size={28} aria-hidden="true" />
+                    </button>
+                  )
+                })}
+              </div>
+            </section>
+  
+            <section>
+              <h2 className="gift-form__step-title">
+                <span className="gift-form__step-badge">2</span>
+                <span>받는 분 정보를 입력해 주세요</span>
+              </h2>
+              <div className="gift-field-list">
+                <div className="gift-field">
+                  <label htmlFor="recipientName" className="gift-field__label">받는 분 이름</label>
+                  <input
+                    id="recipientName"
+                    type="text"
+                    className="gift-field__input"
+                    value={recipientName}
+                    onChange={(e) => setRecipientName(e.target.value)}
+                    placeholder="예: 김리멤버"
+                  />
+                </div>
+                <div className="gift-field">
+                  <label htmlFor="recipientPhone" className="gift-field__label">받는 분 휴대폰 번호</label>
+                  <input
+                    id="recipientPhone"
+                    type="tel"
+                    inputMode="numeric"
+                    className="gift-field__input"
+                    value={recipientPhone}
+                    onChange={(e) => setRecipientPhone(e.target.value)}
+                    placeholder="010-1234-5678"
+                    aria-describedby="recipientPhone-hint"
+                  />
+                  <p id="recipientPhone-hint" className="gift-field__hint">
+                    링크를 열 때 본인 확인(뒤 4자리)에 사용돼요. 실제 문자 발송은 되지 않으니
+                    링크는 직접 전달해 주세요.
+                  </p>
+                </div>
+              </div>
+            </section>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label htmlFor="recipientPhone" style={{ fontSize: 'var(--fs-body)', fontWeight: 600, color: 'var(--color-text-primary)' }}>
-              받는 분 휴대폰 번호
-            </label>
-            <input
-              id="recipientPhone"
-              type="tel"
-              inputMode="numeric"
-              value={recipientPhone}
-              onChange={(e) => setRecipientPhone(e.target.value)}
-              placeholder="010-1234-5678"
-              style={{
-                height: 'var(--size-input-h)',
-                minHeight: 'var(--min-touch-target)',
-                padding: '0 16px',
-                fontSize: 'var(--fs-body)',
-                border: '1px solid var(--color-border)',
-                borderRadius: 10,
-                background: 'var(--color-surface)',
-              }}
-            />
-            <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-text-muted)' }}>
-              링크를 열 때 본인 확인(뒤 4자리)에 사용돼요. 실제 문자 발송은 되지 않으니
-              링크는 직접 전달해 주세요.
-            </p>
-          </div>
+
+          {error && <p role="alert" className="gift-error">{error}</p>}
+
+          <button
+            onClick={handleSubmit}
+            disabled={!canSubmit}
+            aria-disabled={!canSubmit}
+            aria-busy={isSubmitting}
+            className="gift-submit"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 size={20} className="gift-submit__spinner" aria-hidden="true" />
+                처리 중...
+              </>
+            ) : (
+              '다음: 결제'
+            )}
+          </button>
         </div>
       </section>
-
-      {error && (
-        <p role="alert" style={{ color: 'var(--color-error)', fontSize: 'var(--fs-body)', background: 'var(--color-error-light)', border: '1px solid var(--color-error)', borderRadius: 'var(--radius-sm)', padding: 'var(--spacing-md)' }}>
-          {error}
-        </p>
-      )}
-
-      <button
-        onClick={handleSubmit}
-        disabled={!canSubmit}
-        aria-disabled={!canSubmit}
-        aria-busy={isSubmitting}
-        style={{
-          width: '100%',
-          height: 'var(--size-button-h)',
-          minHeight: 'var(--min-touch-target)',
-          background: canSubmit ? 'var(--color-primary)' : 'var(--color-border)',
-          color: canSubmit ? 'var(--color-text-on-dark)' : 'var(--color-text-muted)',
-          border: 'none',
-          borderRadius: 'var(--radius-pill)',
-          fontSize: 'var(--fs-button)',
-          fontWeight: 700,
-          cursor: canSubmit ? 'pointer' : 'not-allowed',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 'var(--spacing-sm)',
-        }}
-      >
-        {isSubmitting ? (
-          <>
-            <Loader2 size={20} style={{ animation: 'spin 1s linear infinite' }} />
-            처리 중...
-          </>
-        ) : (
-          '다음: 결제'
-        )}
-      </button>
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-    </main>
+    </div>
   )
 }
 

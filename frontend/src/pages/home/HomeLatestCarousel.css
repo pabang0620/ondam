@@ -21,13 +21,14 @@
   text-align: center;
   font-family: var(--font-brand);
   font-size: clamp(24px, 4vw, 34px);
-  font-weight: 700;
+  font-weight: 500;
   letter-spacing: var(--ls-heading-ko);
   word-break: keep-all;
   margin-bottom: 48px;
 }
 
 .home-latest__heading-bold {
+  font-weight: 500; /* StrongArmy는 500/700만 있어 <strong> 기본(bolder→700)을 500으로 고정 */
   color: var(--color-text-primary);
 }
 
@@ -117,13 +118,13 @@
 /* 어르신 UX: 애플 원본은 작은 캡션(약 13px)이지만 --fs-body(16px)로 확대 */
 .home-latest__eyebrow {
   font-size: var(--fs-body);
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.01em;
 }
 
 .home-latest__name {
   font-size: clamp(var(--fs-h3), 2vw, 22px);
-  font-weight: 800;
+  font-weight: 600;
   line-height: 1.25;
   letter-spacing: var(--ls-heading-ko);
 }
@@ -144,7 +145,7 @@
 
 .home-latest__price-value {
   font-size: var(--fs-body);
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .home-latest__price-note {
@@ -263,7 +264,7 @@
   gap: 6px;
   margin-top: 16px;
   font-size: var(--fs-button);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .home-latest__nav-btn {

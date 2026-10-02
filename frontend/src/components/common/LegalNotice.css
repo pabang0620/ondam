@@ -41,9 +41,14 @@
 }
 
 .legal-notice--dark .legal-notice__icon {
-  color: var(--color-warm-accent);
+  color: var(--color-accent-brand-light);
 }
 
 .legal-notice--dark .legal-notice__text {
   color: var(--color-text-on-dark);
+}
+
+/* splitSentences: 문장 단위 줄바꿈. 문장 내부는 keep-all 로 자연스럽게 흐름 */
+.legal-notice__sentence {
+  display: block;
 }

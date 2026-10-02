@@ -1,0 +1,115 @@
+/*
+ * 홈 '온담의 서비스' 좌측 목업 장식 애니메이션.
+ * - transform/opacity 만 애니메이션한다(레이아웃 속성 금지).
+ * - 기본(정적) 상태는 기존과 동일. 애니메이션은 .is-animating(화면에 보이고
+ *   활성 슬라이드일 때 useAnimateInView 가 부여) 아래에서만 정의된다.
+ */
+
+/* ---- AI 사진관: 보정 후 카드 광택 스윕 + 아이콘 맥동 ---- */
+.ondam-photo-after {
+  position: relative;
+  overflow: hidden;
+}
+
+.ondam-photo-after::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, var(--color-surface) 50%, transparent 70%);
+  opacity: 0;
+  transform: translateX(-100%);
+  pointer-events: none;
+}
+
+.ondam-mock--photo.is-animating .ondam-photo-after::after {
+  animation: ondam-photo-sweep 3.6s ease-in-out infinite;
+}
+
+@keyframes ondam-photo-sweep {
+  0% { transform: translateX(-100%); opacity: 0; }
+  15% { opacity: 0.55; }
+  60% { transform: translateX(100%); opacity: 0.55; }
+  61%, 100% { transform: translateX(100%); opacity: 0; }
+}
+
+/* ---- 공통: 아이콘 은은한 맥동 ---- */
+.ondam-mock.is-animating .ondam-pulse {
+  animation: ondam-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes ondam-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.12); opacity: 0.75; }
+}
+
+/* ---- 영상 편지: 녹음 파형(scaleY) + 진행 바(scaleX) + 재생 버튼 맥동 ---- */
+.ondam-wave-bar {
+  display: block;
+  transform-origin: center;
+}
+
+.ondam-mock--will.is-animating .ondam-wave-bar {
+  animation: ondam-wave var(--bar-dur, 1.4s) ease-in-out var(--bar-delay, 0s) infinite;
+  will-change: transform;
+}
+
+@keyframes ondam-wave {
+  0%, 100% { transform: scaleY(0.45); }
+  50% { transform: scaleY(1.1); }
+}
+
+.ondam-will-track {
+  height: 4px;
+  margin-top: 14px;
+  border-radius: var(--radius-pill);
+  background-color: var(--color-border-light);
+  overflow: hidden;
+}
+
+.ondam-will-fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  opacity: 0.6;
+  transform-origin: left center;
+}
+
+.ondam-mock--will.is-animating .ondam-will-fill {
+  animation: ondam-record-progress 4s linear infinite;
+}
+
+@keyframes ondam-record-progress {
+  0% { transform: scaleX(0); }
+  90%, 100% { transform: scaleX(1); }
+}
+
+.ondam-mock--will.is-animating .ondam-will-play {
+  animation: ondam-play-pulse 2.6s ease-in-out infinite;
+}
+
+@keyframes ondam-play-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+
+/* ---- 반려동물 아카이브: 사진 칸 순차 떠오름 ---- */
+.ondam-mock--pet.is-animating .ondam-pet-cell {
+  animation: ondam-cell-rise 4.2s ease-in-out var(--cell-delay, 0s) infinite;
+}
+
+@keyframes ondam-cell-rise {
+  0%, 100% { transform: translateY(6px); opacity: 0.45; }
+  25%, 75% { transform: translateY(0); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ondam-mock .ondam-wave-bar,
+  .ondam-mock .ondam-will-fill,
+  .ondam-mock .ondam-will-play,
+  .ondam-mock .ondam-pet-cell,
+  .ondam-mock .ondam-pulse,
+  .ondam-mock .ondam-photo-after::after {
+    animation: none !important;
+  }
+}

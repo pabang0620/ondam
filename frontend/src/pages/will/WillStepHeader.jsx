@@ -14,29 +14,31 @@ export default function WillStepHeader({ currentStep, title }) {
 
   return (
     <header className="will-step-header">
-      <button
-        type="button"
-        className="will-step-header__back"
-        onClick={() => navigate(-1)}
-        aria-label="이전으로"
-      >
-        <ChevronLeft size={24} aria-hidden="true" />
-      </button>
+      <div className="will-step-header__inner">
+        <button
+          type="button"
+          className="will-step-header__back"
+          onClick={() => navigate(-1)}
+          aria-label="이전으로"
+        >
+          <ChevronLeft size={24} aria-hidden="true" />
+        </button>
 
-      <div className="will-step-header__info">
-        <span className="will-step-header__step">
-          {currentStep} / {TOTAL_STEPS}
-        </span>
-        <span className="will-step-header__title">{title}</span>
-      </div>
+        <div className="will-step-header__info">
+          <span className="will-step-header__step">
+            {currentStep} / {TOTAL_STEPS}
+          </span>
+          <span className="will-step-header__title">{title}</span>
+        </div>
 
-      <div className="will-step-header__progress" role="progressbar" aria-valuenow={currentStep} aria-valuemin={1} aria-valuemax={TOTAL_STEPS}>
-        {Array.from({ length: TOTAL_STEPS }, (_, i) => (
-          <div
-            key={i}
-            className={`will-step-header__dot ${i < currentStep ? 'is-done' : ''} ${i === currentStep - 1 ? 'is-active' : ''}`}
-          />
-        ))}
+        <div className="will-step-header__progress" role="progressbar" aria-label="영상 편지 제작 진행도" aria-valuenow={currentStep} aria-valuemin={1} aria-valuemax={TOTAL_STEPS} aria-valuetext={`${TOTAL_STEPS}단계 중 ${currentStep}단계`}>
+          {Array.from({ length: TOTAL_STEPS }, (_, i) => (
+            <div
+              key={i}
+              className={`will-step-header__dot ${i < currentStep ? 'is-done' : ''} ${i === currentStep - 1 ? 'is-active' : ''}`}
+            />
+          ))}
+        </div>
       </div>
     </header>
   )

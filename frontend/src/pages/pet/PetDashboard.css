@@ -1,0 +1,324 @@
+/* 내 반려동물 대시보드.
+   카드 hover 는 테두리만 --color-pet 으로(텍스트 색으로 쓰지 않음). */
+.pet-dash {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: calc(var(--spacing-2xl) + var(--spacing-md)) var(--spacing-md) var(--spacing-2xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  box-sizing: border-box;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.pet-dash__retry {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  width: 100%;
+  min-height: var(--min-touch-target);
+  padding: 0 var(--spacing-lg);
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  border: 1px solid var(--color-pet);
+  border-radius: var(--radius-pill);
+  transition: background var(--transition-base);
+}
+
+.pet-dash__retry:hover {
+  background: var(--color-pet-soft);
+}
+
+/* 섹션 */
+.pet-dash__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.pet-dash__section-title {
+  margin: 0;
+  font-size: var(--fs-h2);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.pet-dash__error {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+}
+
+.pet-dash__error p {
+  margin: 0;
+  font-size: var(--fs-body);
+  color: var(--color-text-primary);
+}
+
+/* 카드 목록: 모바일 1열, 640px 이상 2열 (3열은 카드 폭 300px 미만이라 사용 안 함) */
+.pet-card-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--spacing-sm);
+}
+
+.pet-card-grid > li {
+  min-width: 0;
+}
+
+/* 생존 섹션 바로 뒤의 무지개다리 그리드만: .pet-dash gap(24px)을 상쇄해 카드 사이 간격(8px)과 같게 */
+.pet-dash__section + .pet-card-grid {
+  margin-top: calc(var(--spacing-sm) - var(--spacing-lg));
+}
+
+/* 카드 (가로형: 왼쪽 사진, 오른쪽 정보) */
+.pet-card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  box-sizing: border-box;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-card);
+  color: var(--color-text-primary);
+  transition: border-color var(--transition-base);
+}
+
+.pet-card:hover {
+  border-color: var(--color-pet);
+}
+
+.pet-card__photo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 72px;
+  height: 72px;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background: var(--color-pet-soft);
+  color: var(--color-text-secondary);
+}
+
+.pet-card__photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.pet-card__info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  flex: 1;
+  min-width: 0;
+}
+
+.pet-card__name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: var(--fs-body-lg);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.pet-card__species,
+.pet-card__dates {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: var(--fs-body);
+  color: var(--color-text-secondary);
+}
+
+.pet-card--memorial {
+  position: relative;
+  background: var(--color-surface);
+  border-color: color-mix(in srgb, var(--color-memorial) 18%, transparent);
+}
+
+/* 우상단 🌈 표시(장식, 컬러 이모지). 글리프 폭이 OS마다 달라(약 22~28px) 28px + 여백만큼 info 를 비운다 */
+.pet-card--memorial .pet-card__info {
+  padding-right: calc(28px + var(--spacing-sm));
+}
+
+.pet-card__rainbow {
+  position: absolute;
+  top: var(--spacing-sm);
+  right: var(--spacing-sm);
+  font-size: 22px;
+  line-height: 1;
+}
+
+/* 추가 카드: 일반 카드와 같은 구조·크기(별도 높이 규칙 없음), 테두리만 점선 */
+.pet-card--add {
+  background: transparent;
+  border: 1px dashed var(--color-border-light);
+}
+
+/* 프로필 칸: 연회색 + 점선 테두리 + 가운데 + 아이콘 (텍스트는 sr-only 로만 제공) */
+.pet-card__photo--add {
+  background: var(--color-bg-subtle);
+  border: 1px dashed var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+.pet-card__info--add {
+  justify-content: center;
+  font-size: var(--fs-body);
+  color: var(--color-text-secondary);
+  word-break: keep-all;
+}
+
+/* 동물 카드(생존 섹션 또는 무지개 그리드) 바로 뒤 '내 구독' 영역만:
+   .pet-dash gap(24px) + 32px = 56px. 카드 모양은 PetMembership.css */
+:is(.pet-dash__section, .pet-card-grid) + .pet-sub {
+  margin-top: var(--spacing-xl);
+}
+
+/* 구독 영역 메시지(성공·오류·안내) */
+.pet-sub-summary__msg {
+  margin: 0;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-body);
+  font-weight: 600;
+}
+
+.pet-sub-summary__msg--success {
+  background: var(--color-success-light);
+  color: var(--color-success);
+}
+
+.pet-sub-summary__msg--error {
+  background: var(--color-error-light);
+  color: var(--color-error);
+}
+
+.pet-sub-summary__msg--notice {
+  background: var(--color-surface-warm);
+  color: var(--color-accent-brand-text);
+  border: 1px solid var(--color-accent-brand);
+}
+
+/* 스켈레톤 (반짝임은 전역 prefers-reduced-motion 규칙으로 사실상 정지) */
+.pet-skeleton__title {
+  width: 60%;
+  max-width: 280px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: var(--color-border);
+  animation: pet-skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+.pet-skeleton__card {
+  height: 106px;
+  border-radius: var(--radius-card);
+  background: var(--color-border);
+  animation: pet-skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pet-skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ≤ 360px */
+@media (max-width: 360px) {
+  .pet-dash {
+    padding-left: var(--spacing-sm);
+    padding-right: var(--spacing-sm);
+  }
+}
+
+/* 태블릿 640~1023 */
+@media (min-width: 640px) {
+  .pet-dash__retry {
+    width: auto;
+  }
+
+  .pet-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* 2열이므로 스켈레톤은 2개만 보여 열 수와 맞춘다 */
+  .pet-card-grid > .pet-skeleton__card:nth-child(n + 3) {
+    display: none;
+  }
+}
+
+/* 900px 이상: 카드 폭이 충분해 사진 96px */
+@media (min-width: 900px) {
+  .pet-card__photo {
+    width: 96px;
+    height: 96px;
+  }
+
+  .pet-card__photo--add svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .pet-skeleton__card {
+    height: 130px;
+  }
+}
+
+/* 결제 복귀 실패 알림(PetBillingNotice): 메시지 + 닫기 버튼 */
+.pet-billing-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+}
+
+.pet-billing-notice__close {
+  flex-shrink: 0;
+  min-height: var(--min-touch-target);
+  padding: 0 var(--spacing-md);
+  border: 1px solid currentColor;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: inherit;
+  font-size: var(--fs-body);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* 무료 업셀 카드 가격 줄: 로딩/오류/값 전환 시 줄 높이 유지 */
+.pet-free__price {
+  min-height: calc(var(--fs-body) * 1.5);
+}
+
+/* 랜딩 플랜 카드: 자동 결제 고지(구독하기 버튼 위) */
+.pet-plan-card__notice {
+  margin: 0 0 var(--spacing-md);
+}
+
+.pet-plan-card__status {
+  margin: 0 0 var(--spacing-md);
+}

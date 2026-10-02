@@ -41,10 +41,10 @@ export default function WillPaymentPage() {
           </div>
         </section>
 
-        {/* 보관 구독 안내 */}
+        {/* 보관비 포함 안내 (월 구독 will_premium은 DEV-17로 폐지, 보관비는 단건 가격에 포함) */}
         <div className="will-payment__sub-notice">
           <Lock size={16} aria-hidden="true" />
-          <span>장기 보관 구독 <strong>1,900원/월</strong>은 별도 결제입니다. 지금은 제작비만 결제합니다.</span>
+          <span>보관비는 결제 금액에 포함되어 있어요.</span>
         </div>
 
         {/* 법적 유언 효력 없음 고지 - DEV-05. 결제(돈을 내는 시점) 직전에 배치 */}

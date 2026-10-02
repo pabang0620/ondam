@@ -10,6 +10,52 @@
   box-sizing: border-box;
 }
 
+/* 제목 영역: 가운데 정렬 + 상단 여백(여백은 여기서만 추가) */
+.photo-order-page .photo-order-header {
+  text-align: center;
+  padding-top: var(--spacing-lg);
+}
+
+.photo-order-page .photo-order-header h1,
+.photo-order-page .photo-order-header p {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ── 데스크톱/태블릿(>=640px): 컨테이너를 넓혀 헤더만 넓게, 나머지 콘텐츠는 기존 폭(600px) 유지 ── */
+@media (min-width: 640px) {
+  .photo-order-page {
+    max-width: 880px;
+  }
+
+  .photo-order-page > :not(.photo-order-header) {
+    width: 100%;
+    max-width: calc(600px - 2 * var(--spacing-md));
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .photo-order-page .photo-order-header {
+    word-break: keep-all;
+  }
+}
+
+/* 부제 한 줄(14px 기준 약 683px = 기존 16px 약 780px x 14/16)이 들어가는 폭에서만 nowrap.
+   768px에서 콘텐츠 폭 736px(여유 약 7%). 그보다 좁으면 자연 줄바꿈(가로 스크롤 방지) */
+@media (min-width: 768px) {
+  .photo-order-page .photo-order-header p {
+    white-space: nowrap;
+  }
+}
+
+/* 동의 체크리스트(공용 컴포넌트) 글자 크기: 이 페이지 범위에서만 --fs-caption(14px)으로 오버라이드.
+   공용 컴포넌트 CSS는 수정하지 않고 .photo-order-page 하위 선택자 특이도로 덮어쓴다. */
+.photo-order-page .consent-checklist__card-label,
+.photo-order-page .consent-checklist__card-desc,
+.photo-order-page .consent-checklist__all {
+  font-size: var(--fs-caption);
+}
+
 /* ── 반응형: 태블릿 (640px ~ 1023px) ── */
 @media (max-width: 1023px) {
   .photo-order-page {
@@ -24,6 +70,10 @@
     padding: 16px var(--spacing-md) 32px;
     gap: var(--spacing-lg);
     max-width: 100%;
+  }
+
+  .photo-order-page .photo-order-header {
+    padding-top: var(--spacing-md);
   }
 
   /* 사진 타입 탭 - 모바일에서 버튼 세로 스택 */

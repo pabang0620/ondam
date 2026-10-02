@@ -32,6 +32,7 @@ export const ROUTES = {
   PET_NEW: '/pet/new',
   PET_DETAIL: '/pet/:petId',
   PET_PORTRAIT: '/pet/:petId/portrait',
+  // 레거시 리다이렉트 전용: 지우면 /pet/:petId 로 잡혀 상세 화면이 열린다
   PET_SUBSCRIPTION: '/pet/subscription',
   PET_BILLING_SUCCESS: '/pet/billing/success',
   PET_BILLING_FAIL: '/pet/billing/fail',

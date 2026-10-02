@@ -101,7 +101,7 @@ function Toggle({ checked, onChange, id, label }) {
             width: 48,
             height: 28,
             borderRadius: 'var(--radius-pill)',
-            background: checked ? 'var(--color-warm-accent)' : 'var(--color-border)',
+            background: checked ? 'var(--color-accent-brand)' : 'var(--color-border)',
             position: 'relative',
             transition: 'background var(--transition-base)',
           }}
@@ -192,10 +192,10 @@ function SubscriptionTab() {
   return (
     <div className="my-tab-action">
       <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-md)' }}>
-        반려동물 아카이브 구독을 관리합니다.
+        반려동물 화면에서 구독을 확인하고 해지할 수 있어요.
       </p>
       <button
-        onClick={() => navigate(ROUTES.PET_SUBSCRIPTION)}
+        onClick={() => navigate(ROUTES.PET)}
         style={{
           display: 'inline-flex',
           alignItems: 'center',
@@ -211,7 +211,7 @@ function SubscriptionTab() {
           cursor: 'pointer',
         }}
       >
-        구독 관리
+        구독 확인하기
         <ChevronRight size={18} aria-hidden="true" />
       </button>
     </div>

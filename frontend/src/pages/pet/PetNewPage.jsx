@@ -88,7 +88,7 @@ export default function PetNewPage() {
       </button>
 
       <div>
-        <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 800, color: 'var(--color-primary)', letterSpacing: 'var(--ls-heading-ko)', marginBottom: 'var(--spacing-sm)' }}>
+        <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 700, color: 'var(--color-primary)', letterSpacing: 'var(--ls-heading-ko)', marginBottom: 'var(--spacing-sm)' }}>
           반려동물 등록
         </h1>
         <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)' }}>

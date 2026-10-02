@@ -1,13 +1,31 @@
+/* 고정 헤더(Header.jsx: position fixed, z-index 50, 높이 --header-height)
+   바로 아래에 붙는 sticky 진행도 바. MainLayout의 main이 이미 헤더 높이만큼
+   padding-top을 갖고 있어 최초 위치와 sticky 고정 위치가 일치한다.
+   safe-area는 Header의 paddingTop(env(safe-area-inset-top))과 동일하게 더한다.
+   조상(MainLayout/main/body)은 overflow-x: clip이라 sticky를 막지 않는다. */
 .will-step-header {
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-border-light);
+  position: sticky;
+  top: calc(var(--header-height) + env(safe-area-inset-top, 0px));
+  /* 헤더(50)보다 낮고 일반 콘텐츠보다 높게 */
+  z-index: 40;
+}
+
+/* 바 배경은 전체 폭, 내용은 가운데 정렬 + 폭 제한 */
+.will-step-header__inner {
   display: flex;
   align-items: center;
   gap: var(--spacing-md);
-  background-color: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
+  max-width: 640px;
+  margin: 0 auto;
   padding: var(--spacing-sm) var(--spacing-md);
-  position: sticky;
-  top: 0;
-  z-index: 10;
+}
+
+/* sticky 바(헤더 64px + 바 약 65px)에 포커스된 요소가 가려지지 않도록
+   will 페이지에서만 스크롤 여백 확보 */
+html:has(.will-step-header) {
+  scroll-padding-top: calc(var(--header-height) + env(safe-area-inset-top, 0px) + 80px);
 }
 
 .will-step-header__back {
@@ -62,9 +80,9 @@
   transition: background-color var(--transition-base), width var(--transition-base);
 }
 
-/* 완료 단계 - warm-accent */
+/* 완료 단계 - 브랜드 코랄 */
 .will-step-header__dot.is-done {
-  background-color: var(--color-warm-accent);
+  background-color: var(--color-accent-brand);
 }
 
 /* 현재 단계 - 차콜 (진행 중 강조) */
@@ -75,7 +93,7 @@
 
 /* ── 반응형: 모바일 (< 640px) ── */
 @media (max-width: 639px) {
-  .will-step-header {
+  .will-step-header__inner {
     padding: var(--spacing-xs) var(--spacing-sm);
     gap: var(--spacing-sm);
     /* 가로 스크롤 절대 방지 */
@@ -116,5 +134,8 @@
 @media (max-width: 359px) {
   .will-step-header__info {
     display: none;
+  }
+  .will-step-header__inner {
+    justify-content: space-between;
   }
 }

@@ -61,18 +61,18 @@ function PhotoOrderPage() {
 
   return (
     <main className="photo-order-page">
-      <header>
-        <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 800, color: 'var(--color-photo)', marginBottom: 'var(--spacing-sm)', letterSpacing: 'var(--ls-heading-ko)' }}>
+      <header className="photo-order-header">
+        <h1 style={{ fontSize: 'var(--fs-h2)', fontWeight: 700, color: 'var(--color-photo)', marginBottom: 'var(--spacing-sm)', letterSpacing: 'var(--ls-heading-ko)' }}>
           AI 사진관 주문
         </h1>
-        <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>
+        <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>
           용도를 선택하고 원본 사진을 업로드해 주세요. 사진 1장으로 결과물 4종을 만들어 드려요.
         </p>
       </header>
 
       {/* 사진 타입 탭 */}
       <section>
-        <p style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 700, marginBottom: 'var(--spacing-md)', color: 'var(--color-text-primary)' }}>
+        <p style={{ fontSize: 'var(--fs-body)', fontWeight: 600, marginBottom: 'var(--spacing-md)', color: 'var(--color-text-primary)' }}>
           1. 사진 종류 선택
         </p>
         <div className="photo-type-tabs" style={{ display: 'flex', gap: 'var(--spacing-sm)', flexWrap: 'wrap' }}>
@@ -90,8 +90,8 @@ function PhotoOrderPage() {
                   border: `2px solid ${isSelected ? 'var(--color-photo)' : 'var(--color-border)'}`,
                   background: isSelected ? 'var(--color-photo)' : 'var(--color-surface)',
                   color: isSelected ? 'var(--color-text-on-dark)' : 'var(--color-text-primary)',
-                  fontSize: 'var(--fs-button)',
-                  fontWeight: isSelected ? 700 : 400,
+                  fontSize: 'var(--fs-body)',
+                  fontWeight: isSelected ? 600 : 400,
                   cursor: 'pointer',
                   transition: 'border-color var(--transition-base), background-color var(--transition-base), color var(--transition-base)',
                 }}
@@ -105,7 +105,7 @@ function PhotoOrderPage() {
 
       {/* 파일 업로드 */}
       <section>
-        <p style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 700, marginBottom: 'var(--spacing-md)', color: 'var(--color-text-primary)' }}>
+        <p style={{ fontSize: 'var(--fs-body)', fontWeight: 600, marginBottom: 'var(--spacing-md)', color: 'var(--color-text-primary)' }}>
           2. 사진 업로드
         </p>
 
@@ -153,7 +153,7 @@ function PhotoOrderPage() {
                 aria-busy="true"
               >
                 <Loader2 size={32} className="spin" style={{ animation: 'spin 1s linear infinite' }} />
-                <span style={{ fontSize: 'var(--font-size-base)' }}>업로드 중...</span>
+                <span style={{ fontSize: 'var(--fs-caption)' }}>업로드 중...</span>
               </div>
             )}
             {!isUploading && (
@@ -168,7 +168,7 @@ function PhotoOrderPage() {
                   border: 'none',
                   borderRadius: 'var(--radius-md)',
                   padding: '0 14px',
-                  fontSize: 'var(--font-size-base)',
+                  fontSize: 'var(--fs-caption)',
                   cursor: 'pointer',
                   minHeight: 'var(--min-touch-target)',
                 }}
@@ -187,7 +187,7 @@ function PhotoOrderPage() {
               minHeight: 200,
               border: '2px dashed var(--color-border-strong)',
               borderRadius: 'var(--radius-card)',
-              background: 'var(--color-bg)',
+              background: 'var(--color-bg-subtle)',
               cursor: 'pointer',
               display: 'flex',
               flexDirection: 'column',
@@ -195,7 +195,7 @@ function PhotoOrderPage() {
               justifyContent: 'center',
               gap: 'var(--spacing-sm)',
               color: 'var(--color-text-muted)',
-              fontSize: 'var(--fs-body)',
+              fontSize: 'var(--fs-caption)',
               transition: 'border-color var(--transition-base), background-color var(--transition-base)',
             }}
             onMouseEnter={(e) => {
@@ -204,19 +204,19 @@ function PhotoOrderPage() {
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.borderColor = 'var(--color-border-strong)'
-              e.currentTarget.style.backgroundColor = 'var(--color-bg)'
+              e.currentTarget.style.backgroundColor = 'var(--color-bg-subtle)'
             }}
             aria-label="사진 업로드 영역, 클릭 또는 드래그"
           >
             <UploadCloud size={40} color="var(--color-photo)" />
-            <span style={{ fontWeight: 600, color: 'var(--color-text-secondary)', fontSize: 'var(--fs-body-lg)' }}>
+            <span style={{ fontWeight: 600, color: 'var(--color-text-secondary)', fontSize: 'var(--fs-body)' }}>
               클릭하거나 사진을 끌어다 놓으세요
             </span>
             {/* FIX: 결함5 - 20MB 용량 제한은 파일 선택창(accept)이 걸러주지 못해
                 (브라우저가 파일 크기로 필터링할 수 없음) 이 문구를 못 읽으면 업로드가
-                실패로 끝난 뒤에야 알게 된다. 보조 정보가 아니라 행동(파일 선택) 전에
-                읽어야 하는 정보로 보고 --fs-body(16px)로 올린다. */}
-            <span style={{ fontSize: 'var(--fs-body)' }}>JPG, PNG, WEBP, HEIC · 최대 20MB</span>
+                실패로 끝난 뒤에야 알게 된다. 행동(파일 선택) 전에 읽어야 하는
+                정보지만, 2026-10 글자 크기 축소 피드백으로 --fs-caption(14px, 하한)으로 낮춘다. */}
+            <span style={{ fontSize: 'var(--fs-caption)' }}>JPG, PNG, WEBP, HEIC · 최대 20MB</span>
           </button>
         )}
       </section>
@@ -235,7 +235,7 @@ function PhotoOrderPage() {
           }}
         >
           <ImageIcon size={18} color="var(--color-photo)" />
-          <span style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-primary)', fontWeight: 600 }}>
+          <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-text-primary)', fontWeight: 600 }}>
             선택된 종류: {photoTypeLabels[selectedType]}
           </span>
         </section>
@@ -244,7 +244,7 @@ function PhotoOrderPage() {
       {/* 동의 확인 - 결함C: 영정/증명/취업 사진 모두 업로드된 얼굴을 AI로 합성·보정하므로
           초상권·AI 생성물 동의 없이 처리하지 않는다 */}
       <section>
-        <p style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 700, marginBottom: 'var(--spacing-md)', color: 'var(--color-text-primary)' }}>
+        <p style={{ fontSize: 'var(--fs-body)', fontWeight: 600, marginBottom: 'var(--spacing-md)', color: 'var(--color-text-primary)' }}>
           3. 동의 확인
         </p>
         <ConsentChecklist
@@ -263,7 +263,7 @@ function PhotoOrderPage() {
           role="alert"
           style={{
             color: 'var(--color-error)',
-            fontSize: 'var(--fs-body)',
+            fontSize: 'var(--fs-caption)',
             background: 'var(--color-error-light)',
             border: '1px solid var(--color-error)',
             borderRadius: 'var(--radius-sm)',
@@ -288,7 +288,7 @@ function PhotoOrderPage() {
           color: canSubmit ? 'var(--color-text-on-dark)' : 'var(--color-text-muted)',
           border: 'none',
           borderRadius: 'var(--radius-pill)',
-          fontSize: 'var(--fs-button)',
+          fontSize: 'var(--fs-body)',
           fontWeight: 700,
           cursor: canSubmit ? 'pointer' : 'not-allowed',
           display: 'flex',

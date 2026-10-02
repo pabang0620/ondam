@@ -24,46 +24,59 @@
 
 /* Hero */
 .will-hero {
-  background: linear-gradient(160deg, #1A1715 0%, var(--color-will) 100%);
-  color: var(--color-text-on-dark);
+  background-color: var(--color-hero-rose);
+  color: var(--color-primary);
   padding: var(--spacing-2xl) var(--spacing-md);
+  min-height: 360px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   text-align: center;
 }
 
 .will-hero__inner {
-  max-width: 600px;
+  width: 100%;
+  max-width: 880px;
   margin: 0 auto;
 }
 
-.will-hero__icon {
-  color: var(--color-warm-accent);
-  margin: 0 auto var(--spacing-lg);
-}
-
 .will-hero__title {
-  font-family: var(--font-serif);
-  font-size: clamp(28px, 6vw, var(--fs-h1));
-  font-weight: 800;
+  font-size: clamp(30px, 2vw + 22px, 44px);
+  font-weight: 600;
   line-height: 1.3;
   margin-bottom: var(--spacing-md);
   letter-spacing: var(--ls-heading-ko);
-  color: var(--color-text-on-dark);
+  color: var(--color-primary);
   word-break: keep-all;
+  text-wrap: balance;
 }
 
 .will-hero__sub {
-  font-size: var(--fs-body-lg);
-  color: rgba(245, 239, 230, 0.85);
+  font-size: 17px;
+  color: var(--color-primary);
   line-height: var(--lh-relaxed);
   margin-bottom: var(--spacing-xl);
+  word-break: keep-all;
+}
+
+/* 영상편지 부제만 예외(사진관/반려동물/선물하기와 통일 원칙 제외):
+   >=768px 에서 수동 줄바꿈을 숨겨 한 줄로 표시(문구 약 600px < inner 880px, 768px 뷰포트 inner 736px) */
+@media (min-width: 768px) {
+  .will-hero__sub {
+    white-space: nowrap;
+  }
+
+  .will-hero__sub br {
+    display: none;
+  }
 }
 
 .will-hero__cta {
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-xs);
-  background-color: var(--color-warm-accent);
-  color: var(--color-primary-dark);
+  background-color: var(--color-primary);
+  color: var(--color-text-on-dark);
   font-size: var(--fs-button);
   font-weight: 700;
   padding: 0 var(--spacing-xl);
@@ -72,11 +85,11 @@
   border: none;
   border-radius: var(--radius-pill);
   cursor: pointer;
-  transition: opacity var(--transition-base);
+  transition: background-color var(--transition-base);
 }
 
 .will-hero__cta:hover {
-  opacity: 0.88;
+  background-color: var(--color-primary-soft);
 }
 
 /* Features */
@@ -85,33 +98,35 @@
   background-color: var(--color-surface);
 }
 
+.will-features__inner {
+  max-width: 1040px;
+}
+
 .will-features__grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: var(--spacing-lg);
+  gap: var(--spacing-xl);
 }
 
 .will-feature-card {
-  background-color: var(--color-bg);
+  background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-card);
-  padding: var(--spacing-lg);
-  text-align: center;
+  padding: var(--spacing-xl);
+  text-align: left;
 }
 
 .will-feature-card__icon {
-  color: var(--color-will);
-  margin: 0 auto var(--spacing-sm);
-  display: flex;
-  justify-content: center;
+  color: var(--icon-tone-fg, var(--color-text-secondary));
+  margin: 0 0 var(--spacing-sm);
 }
 
 .will-feature-card__title {
   font-family: var(--font-serif);
   font-size: var(--fs-body-lg);
-  font-weight: 700;
+  font-weight: 600;
   margin-bottom: var(--spacing-sm);
-  color: var(--color-will);
+  color: var(--color-text-primary);
   letter-spacing: var(--ls-heading-ko);
 }
 
@@ -122,164 +137,134 @@
   word-break: keep-all;
 }
 
-/* Steps */
-.will-steps {
-  padding: 56px var(--spacing-md);
-  background-color: var(--color-bg-alt);
-}
-
-.will-steps__track {
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: var(--spacing-md);
-}
-
-.will-step {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: relative;
-  min-width: 72px;
-}
-
-.will-step__circle {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--radius-pill);
-  background-color: var(--color-will);
-  color: var(--color-text-on-dark);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--fs-body-lg);
-  font-weight: 700;
-  margin-bottom: var(--spacing-sm);
-}
-
-.will-step__label {
-  font-size: var(--fs-body);
-  font-weight: 600;
-  color: var(--color-will);
-}
-
-.will-step__line {
-  display: none;
-}
-
-/* Pricing */
+/* ── Pricing: 회색 배경 위에 떠 보이는 그라데이션 테두리 가격 카드 ── */
 .will-pricing {
   padding: 56px var(--spacing-md);
-  background-color: var(--color-surface);
+  background-color: var(--color-bg-subtle);
 }
 
+.will-pricing .will-pricing__inner {
+  max-width: 720px;
+  padding: 0;
+}
+
+/* 흰색 카드 + 그라데이션 테두리: padding-box 흰색 / border-box 그라데이션 2중 레이어 */
 .will-pricing__card {
-  max-width: 480px;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 460px;
   margin: 0 auto;
-  background-color: var(--color-bg);
-  border: 2px solid var(--color-will);
-  border-radius: var(--radius-card);
   padding: var(--spacing-xl);
-  text-align: center;
+  background:
+    linear-gradient(var(--color-surface), var(--color-surface)) padding-box,
+    var(--color-brand-gradient) border-box;
+  border: 2px solid transparent;
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+.will-pricing__label {
+  font-size: var(--fs-body);
+  font-weight: 400;
+  color: var(--color-text-primary);
+  margin: 0 0 var(--spacing-xs);
 }
 
 .will-pricing__main {
   display: flex;
   align-items: baseline;
-  justify-content: center;
   gap: var(--spacing-sm);
-  margin-bottom: var(--spacing-lg);
-}
-
-.will-pricing__label {
-  font-size: var(--fs-body-lg);
-  color: var(--color-text-secondary);
+  margin: 0 0 var(--spacing-lg);
 }
 
 .will-pricing__price {
   font-family: var(--font-serif);
-  font-size: var(--fs-h1);
+  font-size: 36px;
   font-weight: 700;
-  color: var(--color-will);
+  color: var(--color-text-primary);
   letter-spacing: var(--ls-heading-ko);
 }
 
 .will-pricing__unit {
   font-size: var(--fs-body);
-  color: var(--color-text-muted);
+  color: var(--color-text-primary);
 }
 
-.will-pricing__list {
+.will-pricing__includes,
+.will-pricing__notice-list {
   list-style: none;
-  text-align: left;
-  margin-bottom: var(--spacing-lg);
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-}
-
-.will-pricing__list li {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
+  margin: 0 0 var(--spacing-xl);
+  padding: 0;
   font-size: var(--fs-body);
-  color: var(--color-text-secondary);
-}
-
-.will-pricing__list li svg {
-  color: var(--color-warm-accent);
-  flex-shrink: 0;
-}
-
-.will-pricing__subscription {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: var(--spacing-xs);
-  font-size: var(--fs-caption);
-  color: var(--color-text-muted);
-  background-color: var(--color-surface-warm);
-  padding: var(--spacing-sm) var(--spacing-md);
-  border-radius: var(--radius-sm);
-  margin-bottom: var(--spacing-xl);
+  color: var(--color-text-primary);
+  line-height: var(--lh-relaxed);
   word-break: keep-all;
-  text-align: center;
-  line-height: 1.6;
+  text-align: left;
 }
 
+.will-pricing__include {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+}
+
+.will-pricing__include + .will-pricing__include {
+  margin-top: var(--spacing-sm);
+}
+
+.will-pricing__check {
+  flex-shrink: 0;
+  /* 본문 line-height 첫 줄 중앙에 아이콘 정렬 */
+  margin-top: 3px;
+  color: var(--color-accent-brand-text);
+}
+
+/* 포함 내용 목록과 구분선으로 분리. 위 간격(32px)은 목록의 margin-bottom(spacing-xl)이 담당 */
 .will-pricing__legal-notice {
-  margin-bottom: var(--spacing-lg);
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  padding-top: var(--spacing-xl);
+  border-top: 1px solid var(--color-border);
   text-align: left;
+}
+
+/* 안내문 목록: reset/글자 스타일은 includes 와 공유, 카드 마지막이라 아래 여백만 제거 */
+.will-pricing__notice-list {
+  margin-bottom: 0;
+}
+
+/* 안내문 아이콘은 회색(흰 배경 대비 AA 이상). 포함 내용 아이콘 색은 .will-pricing__check 그대로 */
+.will-pricing__notice-list .will-pricing__check {
+  color: var(--color-text-muted);
 }
 
 .will-pricing__cta {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: var(--spacing-xs);
-  width: 100%;
   justify-content: center;
-  background-color: var(--color-will);
-  color: var(--color-text-on-dark);
+  width: 100%;
+  margin: 0 0 var(--space-7);
+  background: var(--color-brand-gradient);
+  color: var(--color-surface);
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-pill);
+  min-height: var(--min-touch-target);
   font-size: var(--fs-button);
   font-weight: 700;
-  height: var(--size-button-h);
-  min-height: var(--size-button-h);
-  border: none;
-  border-radius: var(--radius-pill);
   cursor: pointer;
-  transition: opacity var(--transition-base);
+  transition: background var(--transition-base), color var(--transition-base);
 }
 
 .will-pricing__cta:hover {
-  opacity: 0.88;
+  background: var(--color-brand-gradient);
+  border-color: transparent;
+  filter: brightness(0.94);
 }
 
 /* ── 반응형: 태블릿 이상 (640px~) ── */
 @media (min-width: 640px) {
   .will-features,
-  .will-steps,
   .will-pricing {
     padding-top: 64px;
     padding-bottom: 64px;
@@ -288,10 +273,14 @@
 
 @media (min-width: 1024px) {
   .will-features,
-  .will-steps,
   .will-pricing {
     padding-top: 80px;
     padding-bottom: 80px;
+  }
+
+  /* 데스크톱: 특징 카드 4개를 한 줄에 고정 배치 */
+  .will-features__grid {
+    grid-template-columns: repeat(4, 1fr);
   }
 }
 
@@ -301,25 +290,17 @@
     padding: 0 var(--spacing-md);
   }
 
+  /* 태블릿 이하: 확장된 데스크톱 폭을 되돌려 카드가 과하게 넓어지지 않도록 함 */
+  .will-features__inner {
+    max-width: 800px;
+  }
+
   .will-hero {
-    padding: var(--spacing-xl) var(--spacing-md);
-  }
-
-  .will-hero__title {
-    font-size: clamp(26px, 5vw, var(--fs-h1));
-  }
-
-  .will-hero__sub {
-    font-size: var(--fs-body);
+    min-height: 320px;
   }
 
   .will-features__grid {
     grid-template-columns: repeat(2, 1fr);
-  }
-
-  .will-pricing__card {
-    max-width: 100%;
-    padding: var(--spacing-lg);
   }
 }
 
@@ -330,12 +311,8 @@
   }
 
   .will-hero {
-    padding: var(--spacing-lg) var(--spacing-md);
-  }
-
-  .will-hero__title {
-    font-size: var(--fs-h2);
-    line-height: 1.4;
+    padding: var(--spacing-xl) var(--spacing-md);
+    min-height: 280px;
   }
 
   .will-hero__sub {
@@ -355,7 +332,8 @@
     margin-bottom: var(--spacing-lg);
   }
 
-  .will-features {
+  .will-features,
+  .will-pricing {
     padding: 48px var(--spacing-md);
   }
 
@@ -364,35 +342,7 @@
     gap: var(--spacing-md);
   }
 
-  .will-steps {
-    padding: 48px var(--spacing-md);
-  }
-
-  /* 모바일 step track: 가로 스크롤 방지 위해 flex-wrap 허용 */
-  .will-steps__track {
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: var(--spacing-lg);
-  }
-
-  .will-pricing {
-    padding: 48px var(--spacing-md);
-  }
-
   .will-pricing__card {
-    max-width: 100%;
-    padding: var(--spacing-md);
-  }
-
-  .will-pricing__main {
-    flex-direction: column;
-    align-items: center;
-    gap: var(--spacing-xs);
-  }
-
-  .will-pricing__cta {
-    display: flex;
-    width: 100%;
-    justify-content: center;
+    padding: var(--spacing-lg) var(--spacing-md);
   }
 }

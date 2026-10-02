@@ -154,7 +154,7 @@ export default function PetDetailPage() {
         {/* 정보 */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', flexWrap: 'wrap' }}>
-            <h1 style={{ fontSize: 'var(--fs-h2)', fontWeight: 800, color: 'var(--color-primary)' }}>{pet.name}</h1>
+            <h1 style={{ fontSize: 'var(--fs-h2)', fontWeight: 700, color: 'var(--color-primary)' }}>{pet.name}</h1>
             {/* 상태 뱃지: deceased = memorial soft */}
             {pet.pet_status === 'deceased' && (
               <span
@@ -238,7 +238,7 @@ export default function PetDetailPage() {
             marginBottom: 'var(--spacing-md)',
           }}
         >
-          <h2 style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 700, color: 'var(--color-primary)' }}>
+          <h2 style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 600, color: 'var(--color-primary)' }}>
             사진 ({media.length})
           </h2>
 
@@ -380,7 +380,7 @@ export default function PetDetailPage() {
           <div style={{ display: 'flex', gap: 'var(--spacing-sm)', alignItems: 'flex-start' }}>
             <AlertTriangle size={18} color="var(--color-text-muted)" style={{ flexShrink: 0, marginTop: 2 }} aria-hidden="true" />
             <div>
-              <p style={{ fontSize: 'var(--fs-body)', fontWeight: 700, marginBottom: 4, color: 'var(--color-primary)' }}>무지개다리 등록</p>
+              <p style={{ fontSize: 'var(--fs-body)', fontWeight: 600, marginBottom: 4, color: 'var(--color-primary)' }}>무지개다리 등록</p>
               <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
                 {pet.name}가 무지개다리를 건넜다면 등록해 주세요.
                 추모 페이지가 생성됩니다.

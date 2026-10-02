@@ -36,7 +36,7 @@
 
 .will-event__label {
   font-size: var(--fs-body);
-  font-weight: 700;
+  font-weight: 600;
   color: var(--color-text-primary);
   display: flex;
   align-items: center;
@@ -171,13 +171,13 @@
   }
 }
 
-/* 제출 버튼 - warm-accent 골드 */
+/* 제출 버튼 - 브랜드 오렌지 */
 .will-event__submit {
   width: 100%;
-  background-color: var(--color-warm-accent);
+  background-color: var(--color-accent-brand-light);
   color: var(--color-primary-dark);
   font-size: var(--fs-button);
-  font-weight: 800;
+  font-weight: 700;
   height: var(--size-button-h);
   min-height: var(--size-button-h);
   border: none;

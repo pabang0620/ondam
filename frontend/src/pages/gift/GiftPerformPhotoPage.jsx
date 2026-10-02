@@ -59,7 +59,7 @@ function GiftPerformPhotoPage() {
   if (isRefunded) {
     return (
       <main style={{ maxWidth: 480, margin: '0 auto', padding: '64px var(--spacing-md)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--spacing-lg)' }}>
-        <RotateCcw size={44} color="var(--color-warm-accent)" aria-hidden="true" />
+        <RotateCcw size={44} color="var(--color-accent-brand)" aria-hidden="true" />
         <p role="alert" style={{ fontSize: 'var(--fs-h3)', fontWeight: 700 }}>결제가 취소됐어요</p>
         <p style={{ color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>
           죄송합니다. 사진을 만드는 데 문제가 있어 결제하신 금액을 선물을 보내주신
@@ -87,7 +87,7 @@ function GiftPerformPhotoPage() {
     return (
       <main style={{ maxWidth: 480, margin: '0 auto', padding: '64px var(--spacing-md)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--spacing-lg)' }}>
         <CheckCircle2 size={44} color="var(--color-photo)" />
-        <p style={{ fontSize: 'var(--fs-h2)', fontWeight: 800 }}>사진이 완성됐어요!</p>
+        <p style={{ fontSize: 'var(--fs-h2)', fontWeight: 700 }}>사진이 완성됐어요!</p>
         <p style={{ color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>
           수고하셨어요. 마이페이지에서 언제든 다시 보실 수 있어요.
         </p>
@@ -99,14 +99,14 @@ function GiftPerformPhotoPage() {
   return (
     <main style={{ maxWidth: 480, margin: '0 auto', padding: '32px var(--spacing-md) 48px', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xl)' }}>
       <header>
-        <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 800, color: 'var(--color-photo)', marginBottom: 'var(--spacing-sm)' }}>사진 올리기</h1>
+        <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 700, color: 'var(--color-photo)', marginBottom: 'var(--spacing-sm)' }}>사진 올리기</h1>
         <p style={{ color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>
           종류를 고르고 사진 한 장을 올려주세요. 결과물 4종을 만들어 드려요.
         </p>
       </header>
 
       <section>
-        <p style={{ fontWeight: 700, marginBottom: 'var(--spacing-md)' }}>1. 사진 종류 선택</p>
+        <p style={{ fontWeight: 600, marginBottom: 'var(--spacing-md)' }}>1. 사진 종류 선택</p>
         <div style={{ display: 'flex', gap: 'var(--spacing-sm)', flexWrap: 'wrap' }}>
           {photoTypes.map(({ type, label }) => {
             const isSelected = photoType === type
@@ -120,7 +120,7 @@ function GiftPerformPhotoPage() {
                   border: `2px solid ${isSelected ? 'var(--color-photo)' : 'var(--color-border)'}`,
                   background: isSelected ? 'var(--color-photo)' : 'var(--color-surface)',
                   color: isSelected ? 'var(--color-text-on-dark)' : 'var(--color-text-primary)',
-                  fontWeight: isSelected ? 700 : 400, cursor: 'pointer',
+                  fontWeight: isSelected ? 600 : 400, cursor: 'pointer',
                 }}
               >
                 {label}
@@ -131,7 +131,7 @@ function GiftPerformPhotoPage() {
       </section>
 
       <section>
-        <p style={{ fontWeight: 700, marginBottom: 'var(--spacing-md)' }}>2. 사진 업로드</p>
+        <p style={{ fontWeight: 600, marginBottom: 'var(--spacing-md)' }}>2. 사진 업로드</p>
         <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/heic" style={{ display: 'none' }} onChange={onFileChange} />
         {previewUrl ? (
           <div style={{ position: 'relative' }}>
@@ -145,7 +145,7 @@ function GiftPerformPhotoPage() {
         ) : (
           <button
             onClick={() => fileInputRef.current?.click()}
-            style={{ width: '100%', minHeight: 200, border: '2px dashed var(--color-border-strong)', borderRadius: 'var(--radius-card)', background: 'var(--color-bg)', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-sm)', color: 'var(--color-text-muted)' }}
+            style={{ width: '100%', minHeight: 200, border: '2px dashed var(--color-border-strong)', borderRadius: 'var(--radius-card)', background: 'var(--color-bg-subtle)', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-sm)', color: 'var(--color-text-muted)' }}
           >
             <UploadCloud size={40} color="var(--color-photo)" />
             <span style={{ fontWeight: 600 }}>{isUploading ? '업로드 중...' : '눌러서 사진 선택'}</span>

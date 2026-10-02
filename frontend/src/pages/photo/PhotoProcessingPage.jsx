@@ -37,7 +37,7 @@ function PhotoProcessingPage() {
           textAlign: 'center',
         }}
       >
-        <RotateCcw size={56} color="var(--color-warm-accent)" aria-hidden="true" />
+        <RotateCcw size={56} color="var(--color-accent-brand)" aria-hidden="true" />
         <p
           role="alert"
           style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700, color: 'var(--color-text-primary)' }}
@@ -147,7 +147,7 @@ function PhotoProcessingPage() {
             style={{
               height: '100%',
               width: `${progress}%`,
-              background: 'var(--color-warm-accent)',
+              background: 'var(--color-accent-brand)',
               borderRadius: 'var(--radius-pill)',
               transition: 'width 0.5s ease',
             }}
@@ -158,7 +158,7 @@ function PhotoProcessingPage() {
             marginTop: 'var(--spacing-sm)',
             fontSize: 'var(--fs-body-lg)',
             fontWeight: 700,
-            color: 'var(--color-warm-accent)',
+            color: 'var(--color-accent-brand-text)',
           }}
         >
           {progress}%

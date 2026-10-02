@@ -12,9 +12,6 @@ const NAV_LINKS = [
   { to: ROUTES.GIFT_NEW, label: '선물하기' },
 ]
 
-// 스크롤이 이 값(px)을 넘으면 헤더가 나타난다
-const HEADER_SCROLL_THRESHOLD = 80
-
 export default function Header() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const clearUser = useAuthStore((s) => s.clearUser)
@@ -22,40 +19,24 @@ export default function Header() {
   const location = useLocation()
 
   const [drawerOpen, setDrawerOpen] = useState(false)
-  // 헤더 표시 여부 - 드로어 열림/닫힘과는 별개 상태(최상단에서는 숨김, 스크롤 시 노출)
-  // 홈이 아닌 페이지에서는 항상 true로 취급(일반 sticky 헤더, 숨김 로직 없음)
-  const [headerVisible, setHeaderVisible] = useState(false)
   const drawerRef = useRef(null)
   const hamburgerRef = useRef(null)
 
-  // 홈 화면에서만 "초기 숨김 + 스크롤 시 노출"되는 fixed 헤더를 적용한다.
-  // 그 외 페이지는 문서 흐름 안에서 항상 보이는 sticky 헤더를 유지해야 하므로
-  // 스크롤 위치에 따라 콘텐츠를 덮어버리는 fixed+숨김 로직을 아예 적용하지 않는다.
-  const isHome = location.pathname === ROUTES.HOME
+  // 스크롤 시 헤더 배경 전환: 최상단(0~10px)에서는 투명, 그 이상 스크롤되면
+  // 흰 배경(var(--color-surface))으로 전환한다. 뒤로가기 등으로 이미 스크롤된
+  // 상태에서 마운트될 수 있으므로 초기값도 window.scrollY 기준으로 계산한다.
+  const [isScrolled, setIsScrolled] = useState(
+    () => typeof window !== 'undefined' && window.scrollY > 10
+  )
 
-  // 스크롤 위치에 따라 헤더 표시 토글 - requestAnimationFrame으로 쓰로틀링 (홈 전용)
   useEffect(() => {
-    if (!isHome) {
-      // 홈이 아니면 sticky 헤더가 항상 보여야 하므로 표시 상태를 고정하고
-      // 스크롤 리스너 자체를 등록하지 않는다(불필요한 리스너 방지).
-      setHeaderVisible(true)
-      return
-    }
-
-    setHeaderVisible(window.scrollY > HEADER_SCROLL_THRESHOLD)
-
-    let ticking = false
+    const SCROLL_THRESHOLD = 10
     const handleScroll = () => {
-      if (ticking) return
-      ticking = true
-      window.requestAnimationFrame(() => {
-        setHeaderVisible(window.scrollY > HEADER_SCROLL_THRESHOLD)
-        ticking = false
-      })
+      setIsScrolled(window.scrollY > SCROLL_THRESHOLD)
     }
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
-  }, [isHome])
+  }, [])
 
   // 페이지 이동 시 drawer 닫기
   useEffect(() => {
@@ -145,20 +126,26 @@ export default function Header() {
     <>
       <header
         style={{
-          position: isHome ? 'fixed' : 'sticky',
+          // 모든 페이지에서 페이지 로드 즉시부터 항상 보이는 fixed 헤더.
+          // 과거 홈 페이지 전용 "초기 숨김 + 스크롤 시 슬라이드 인"(fixed +
+          // translateY) 로직은 제거했었고, 이후 한동안 문서 흐름 안에 있는
+          // sticky 헤더를 썼다. 이번에 랜딩 히어로가 헤더 아래로 겹쳐 보이는
+          // 풀블리드 패턴을 적용하기 위해 다시 fixed(문서 흐름에서 완전히
+          // 제외)로 바꿨다 - 헤더는 항상 뷰포트 최상단에 떠 있고, 그 아래
+          // 콘텐츠는 이 헤더 위로 스크롤되며 지나간다. 문서 흐름에서 빠지며
+          // 생기는 상단 공백은 MainLayout.jsx의 <main> 패딩(다른 모든 페이지)과
+          // HomePage.jsx의 음수 마진(히어로만 겹치도록 되돌림)이 각각
+          // --header-height 토큰으로 보정한다.
+          position: 'fixed',
           top: 0,
           left: 0,
           right: 0,
           zIndex: 50,
-          backgroundColor: 'var(--color-bg)',
-          borderBottom: '1px solid var(--color-border)',
+          // 최상단에서는 투명, SCROLL_THRESHOLD(10px) 초과 스크롤 시 흰 배경으로 전환.
+          backgroundColor: isScrolled ? 'var(--color-surface)' : 'transparent',
+          borderBottom: isScrolled ? '1px solid var(--color-border)' : '1px solid transparent',
+          transition: 'background-color 0.25s ease, border-color 0.25s ease',
           paddingTop: 'env(safe-area-inset-top, 0px)',
-          // 홈: 스크롤 전 숨김 -> HEADER_SCROLL_THRESHOLD 초과 시 노출
-          // 그 외 페이지: 항상 제자리(translateY(0))인 일반 sticky 헤더
-          transform: isHome && !headerVisible ? 'translateY(-100%)' : 'translateY(0)',
-          transition: isHome ? 'transform 0.25s ease' : 'none',
-          // 홈에서 떠 있는 상태일 때만 그림자를 주고, 그 외에는 기존처럼 borderBottom만 사용
-          boxShadow: isHome && headerVisible ? '0 2px 8px rgba(42, 40, 38, 0.08)' : 'none',
         }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
@@ -170,13 +157,19 @@ export default function Header() {
           >
             <span
               style={{
-                fontWeight: 800,
+                fontFamily:
+                  "'GMarketSans', 'Pretendard', -apple-system, BlinkMacSystemFont, 'Noto Sans KR', sans-serif",
+                fontWeight: 700,
                 fontSize: 22,
                 letterSpacing: 'var(--ls-heading-ko)',
                 color: 'var(--color-brand)',
+                background: 'var(--color-brand-gradient)',
+                WebkitBackgroundClip: 'text',
+                backgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
               }}
             >
-              온담
+              ondam
             </span>
           </Link>
 
@@ -188,8 +181,8 @@ export default function Header() {
                 to={to}
                 className={navLinkClass}
                 style={({ isActive }) => ({
-                  color: isActive ? 'var(--color-primary)' : 'var(--color-text-secondary)',
-                  borderColor: isActive ? 'var(--color-warm-accent)' : 'transparent',
+                  color: isActive ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
+                  borderColor: isActive ? 'var(--color-accent-brand)' : 'transparent',
                 })}
               >
                 {label}
@@ -210,21 +203,27 @@ export default function Header() {
                       style={{
                         display: 'inline-flex',
                         alignItems: 'center',
-                        minHeight: 'var(--min-touch-target)',
-                        padding: '0 var(--spacing-lg)',
-                        borderRadius: 'var(--radius-sm)',
-                        border: '1px solid var(--color-border-strong)',
+                        // 예외: 온담 어르신 UX 규칙상 CTA 버튼은 최소 터치 타겟 48px
+                        // (var(--min-touch-target))을 지켜야 하지만, 이 헤더의
+                        // 마이페이지/로그아웃 버튼은 사용자 요청으로 세로 여백을
+                        // 더 줄이기 위해 40px로 의도적으로 축소했다(전용 토큰이 없어
+                        // 리터럴 px 사용). 로그인/회원가입 등 다른 CTA 버튼은 그대로
+                        // 48px(var(--min-touch-target))을 유지한다.
+                        minHeight: '40px',
+                        // 로그아웃 버튼과 패딩·둥근 정도를 통일하기 위해
+                        // spacing-lg(24px) → spacing-md(16px)로 축소. 세로 패딩은 0으로
+                        // 유지하고(더 줄일 여지 없음) minHeight로만 높이를 보장한다.
+                        padding: '0 var(--spacing-md)',
+                        // 로그아웃 버튼과 동일한 pill 형태로 통일(기존 radius-sm에서 변경).
+                        borderRadius: 'var(--radius-pill)',
+                        // 스크롤 여부와 무관하게 배경은 항상 투명, 테두리만으로 경계를
+                        // 표현한다(검정 + 2px로 강조).
+                        border: '2px solid #000000',
                         color: 'var(--color-text-primary)',
                         fontSize: 'var(--fs-body)',
                         fontWeight: 500,
                         transition: 'var(--transition-base)',
                         backgroundColor: 'transparent',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = 'var(--color-surface-warm)'
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'transparent'
                       }}
                     >
                       마이페이지
@@ -235,22 +234,22 @@ export default function Header() {
                       style={{
                         display: 'inline-flex',
                         alignItems: 'center',
-                        minHeight: 'var(--min-touch-target)',
-                        padding: '0 var(--spacing-lg)',
-                        borderRadius: 'var(--radius-sm)',
-                        border: 'none',
+                        // 마이페이지 버튼과 동일한 이유로 예외적으로 40px 축소
+                        // (상세 사유는 마이페이지 Link의 minHeight 주석 참고).
+                        minHeight: '40px',
+                        // spacing-lg(24px) → spacing-md(16px)로 축소. 세로 패딩은 0.
+                        padding: '0 var(--spacing-md)',
+                        borderRadius: 'var(--radius-pill)',
+                        // 마이페이지 버튼과 테두리 색·두께 통일: 검정 + 2px.
+                        border: '2px solid #000000',
+                        // 배경은 항상 투명(hover 시에도 배경 없음).
                         background: 'transparent',
-                        color: 'var(--color-text-secondary)',
+                        // 마이페이지 버튼과 동일한 고정 색상(hover에도 변화 없음).
+                        color: 'var(--color-text-primary)',
                         fontSize: 'var(--fs-body)',
                         fontWeight: 500,
                         cursor: 'pointer',
                         transition: 'var(--transition-base)',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.color = 'var(--color-text-primary)'
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.color = 'var(--color-text-secondary)'
                       }}
                     >
                       로그아웃
@@ -404,13 +403,19 @@ export default function Header() {
             >
               <span
                 style={{
-                  fontWeight: 800,
+                  fontFamily:
+                    "'GMarketSans', 'Pretendard', -apple-system, BlinkMacSystemFont, 'Noto Sans KR', sans-serif",
+                  fontWeight: 700,
                   fontSize: 'var(--fs-h3)',
                   letterSpacing: 'var(--ls-heading-ko)',
                   color: 'var(--color-brand)',
+                  background: 'var(--color-brand-gradient)',
+                  WebkitBackgroundClip: 'text',
+                  backgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
                 }}
               >
-                온담
+                ondam
               </span>
               <button
                 type="button"
@@ -447,10 +452,10 @@ export default function Header() {
                     padding: 'var(--spacing-md) var(--spacing-lg)',
                     fontSize: 'var(--fs-body-lg)',
                     fontWeight: 500,
-                    color: isActive ? 'var(--color-primary)' : 'var(--color-text-secondary)',
+                    color: isActive ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
                     backgroundColor: isActive ? 'var(--color-surface-warm)' : 'transparent',
                     borderLeft: isActive
-                      ? '3px solid var(--color-warm-accent)'
+                      ? '3px solid var(--color-accent-brand)'
                       : '3px solid transparent',
                     transition: 'var(--transition-base)',
                     minHeight: 'var(--min-touch-target)',
@@ -500,8 +505,8 @@ export default function Header() {
                         alignItems: 'center',
                         justifyContent: 'center',
                         minHeight: 'var(--size-button-h)',
-                        borderRadius: 'var(--radius-sm)',
-                        border: 'none',
+                        borderRadius: 'var(--radius-pill)',
+                        border: '1px solid var(--color-border-strong)',
                         background: 'transparent',
                         color: 'var(--color-text-secondary)',
                         fontSize: 'var(--fs-body)',

@@ -1,103 +1,76 @@
 import { useNavigate } from 'react-router-dom'
-import { Sparkles, Palette, Scissors, Briefcase, ArrowRight } from 'lucide-react'
+import { Sparkles, Palette, Scissors, Briefcase, Flower2, IdCard, BriefcaseBusiness, ArrowRight, ListChecks, Images, Archive } from 'lucide-react'
 import { ROUTES } from '../../constants/routes.js'
+import './PhotoPage.css'
 
 const FEATURES = [
   {
     icon: Sparkles,
+    tone: 'amber',
     title: '화질 복원',
     desc: '흐릿하고 손상된 사진을 선명하게 복원합니다.',
   },
   {
     icon: Palette,
+    tone: 'rose',
     title: '흑백 컬러',
     desc: '흑백 사진에 자연스러운 색채를 입혀 드립니다.',
   },
   {
     icon: Scissors,
+    tone: 'teal',
     title: '배경 제거',
     desc: '배경을 깔끔하게 제거하고 원하는 배경으로 교체합니다.',
   },
   {
     icon: Briefcase,
+    tone: 'navy',
     title: '정장 착용',
     desc: '단정한 정장을 입힌 증명·장례 사진을 만들어 드립니다.',
   },
 ]
 
 const PHOTO_TYPES = [
-  { type: 'funeral', label: '장례 사진', desc: '고인의 영정 사진을 단정하게 보정합니다.' },
-  { type: 'id', label: '증명 사진', desc: '증명사진 규격에 맞게 배경·복장을 정리합니다.' },
-  { type: 'job', label: '취업 사진', desc: '취업용 사진을 깔끔하고 전문적으로 만듭니다.' },
+  { type: 'funeral', icon: Flower2, label: '장례 사진', desc: '고인의 영정 사진을 단정하게 보정합니다.' },
+  { type: 'id', icon: IdCard, label: '증명 사진', desc: '증명사진 규격에 맞게 배경·복장을 정리합니다.' },
+  { type: 'job', icon: BriefcaseBusiness, label: '취업 사진', desc: '취업용 사진을 깔끔하고 전문적으로 만듭니다.' },
 ]
 
-function FeatureCard({ icon: Icon, title, desc }) {
+// 결과물 4장: backend photoResultSet.js VARIANT_DEFS (용도 3종 모두 동일)
+const PRICING_INCLUDES = [
+  { icon: ListChecks, text: '용도 1가지를 선택해 주문해요' },
+  { icon: Images, text: '결과물 4장 세트를 받아요' },
+  { icon: Archive, text: '결과물은 내 보관함에 자동으로 저장돼요' },
+]
+
+function FeatureCard({ icon: Icon, tone, title, desc }) {
   return (
-    <div
-      style={{
-        background: 'var(--color-surface)',
-        border: '1px solid var(--color-border)',
-        borderRadius: 'var(--radius-card)',
-        padding: 'var(--spacing-lg)',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 'var(--spacing-sm)',
-      }}
-    >
-      <div
-        style={{
-          width: 48,
-          height: 48,
-          borderRadius: 'var(--radius-md)',
-          background: 'var(--color-bg-alt)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <Icon size={24} color="var(--color-photo)" />
+    <div className="photo-feature-card">
+      <div className="photo-feature-card__icon" data-icon-tone={tone}>
+        <Icon size={24} aria-hidden="true" />
       </div>
-      <p style={{ fontWeight: 700, fontSize: 'var(--fs-body-lg)', color: 'var(--color-text-primary)', letterSpacing: 'var(--ls-heading-ko)', wordBreak: 'keep-all' }}>{title}</p>
-      <p style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--fs-body)', lineHeight: 'var(--lh-relaxed)', wordBreak: 'keep-all' }}>
-        {desc}
-      </p>
+      <h3 className="photo-feature-card__title">{title}</h3>
+      <p className="photo-feature-card__desc">{desc}</p>
     </div>
   )
 }
 
-function PhotoTypeCard({ type, label, desc, onClick }) {
+function PhotoTypeCard({ type, icon: Icon, label, desc, onClick }) {
   return (
-    <button
-      onClick={() => onClick(type)}
-      style={{
-        background: 'var(--color-surface)',
-        border: '2px solid var(--color-border)',
-        borderRadius: 'var(--radius-card)',
-        padding: 'var(--spacing-lg)',
-        cursor: 'pointer',
-        textAlign: 'left',
-        minHeight: 'var(--size-button-h)',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        gap: 'var(--spacing-md)',
-        transition: 'border-color var(--transition-base), background-color var(--transition-base)',
-        width: '100%',
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = 'var(--color-photo)'
-        e.currentTarget.style.backgroundColor = 'var(--color-bg-alt)'
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = 'var(--color-border)'
-        e.currentTarget.style.backgroundColor = 'var(--color-surface)'
-      }}
-    >
-      <div>
-        <p style={{ fontWeight: 700, fontSize: 'var(--fs-body-lg)', marginBottom: 4, color: 'var(--color-text-primary)', letterSpacing: 'var(--ls-heading-ko)', wordBreak: 'keep-all' }}>{label}</p>
-        <p style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--fs-body)', wordBreak: 'keep-all' }}>{desc}</p>
-      </div>
-      <ArrowRight size={20} color="var(--color-photo)" style={{ flexShrink: 0 }} />
+    <button type="button" className="photo-type-card" onClick={() => onClick(type)}>
+      <span className="photo-type-card__body">
+        <span className="photo-type-card__label">{label}</span>
+        <span className="photo-type-card__desc">{desc}</span>
+      </span>
+      <span className="photo-type-card__footer">
+        <span className="photo-type-card__cta">
+          <span className="photo-type-card__cta-text">시작하기</span>
+          <ArrowRight className="photo-type-card__cta-icon" size={18} aria-hidden="true" />
+        </span>
+        <span className="photo-type-card__icon">
+          <Icon size={28} strokeWidth={1.75} aria-hidden="true" />
+        </span>
+      </span>
     </button>
   )
 }
@@ -114,160 +87,71 @@ function PhotoPage() {
   }
 
   return (
-    <main
-      style={{
-        maxWidth: 720,
-        margin: '0 auto',
-        padding: 'var(--spacing-xl) var(--spacing-md)',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '56px',
-        background: 'var(--color-bg)',
-        width: '100%',
-        boxSizing: 'border-box',
-        overflowX: 'hidden',
-      }}
-    >
+    <div className="photo-page">
       {/* Hero */}
-      <section style={{ textAlign: 'center', padding: 'var(--spacing-lg) 0 var(--spacing-2xl)' }}>
-        <h1
-          style={{
-            fontSize: 'clamp(28px, 6vw, 48px)',
-            fontWeight: 800,
-            color: 'var(--color-photo)',
-            lineHeight: 1.3,
-            marginBottom: 'var(--spacing-md)',
-            letterSpacing: 'var(--ls-heading-ko)',
-            wordBreak: 'keep-all',
-          }}
-        >
-          AI가 되살리는<br />소중한 순간
-        </h1>
-        <p
-          style={{
-            fontSize: 'var(--fs-body-lg)',
-            color: 'var(--color-text-secondary)',
-            lineHeight: 'var(--lh-relaxed)',
-            maxWidth: 480,
-            margin: '0 auto',
-            wordBreak: 'keep-all',
-          }}
-        >
-          오래되어 빛바랜 사진, 흐릿해진 기억을 AI가 선명하게 복원합니다.
-          소중한 분의 사진을 가장 아름다운 모습으로 간직하세요.
-        </p>
+      <section className="photo-hero">
+        <div className="photo-hero__inner">
+          <h1 className="photo-hero__title">
+            필요한 순간의 사진, 단정하게 완성해요
+          </h1>
+          <p className="photo-hero__sub">
+            증명·취업·장례 사진을 AI로 깔끔하게 만들어 드려요
+          </p>
+          <button className="photo-hero__cta" type="button" onClick={handleStart}>
+            사진 만들어 보기
+          </button>
+        </div>
       </section>
 
       {/* 기능 카드 */}
-      <section>
-        <h2
-          style={{
-            fontSize: 'clamp(20px, 4vw, var(--fs-h2))',
-            fontWeight: 700,
-            marginBottom: 'var(--spacing-lg)',
-            color: 'var(--color-text-primary)',
-            letterSpacing: 'var(--ls-heading-ko)',
-            wordBreak: 'keep-all',
-            lineHeight: 1.3,
-          }}
-        >
-          제공 기능
-        </h2>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))',
-            gap: 'var(--spacing-md)',
-          }}
-        >
-          {FEATURES.map((feature) => (
-            <FeatureCard key={feature.title} {...feature} />
-          ))}
+      <section className="photo-features">
+        <div className="photo-features__inner">
+          <h2 className="photo-features__title">온담 AI 사진관이 전하는 새로운 순간</h2>
+          <div className="photo-features__grid">
+            {FEATURES.map((feature) => (
+              <FeatureCard key={feature.title} {...feature} />
+            ))}
+          </div>
         </div>
       </section>
 
       {/* 사진 타입 선택 */}
-      <section>
-        <h2
-          style={{
-            fontSize: 'clamp(20px, 4vw, var(--fs-h2))',
-            fontWeight: 700,
-            marginBottom: 'var(--spacing-md)',
-            color: 'var(--color-text-primary)',
-            letterSpacing: 'var(--ls-heading-ko)',
-            wordBreak: 'keep-all',
-            lineHeight: 1.3,
-          }}
-        >
-          어떤 사진이 필요하신가요?
-        </h2>
-        <p
-          style={{
-            fontSize: 'var(--fs-body)',
-            color: 'var(--color-text-secondary)',
-            marginBottom: 'var(--spacing-lg)',
-            lineHeight: 'var(--lh-relaxed)',
-            wordBreak: 'keep-all',
-          }}
-        >
-          사진 종류를 선택하시면 바로 시작할 수 있습니다.
-        </p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
-          {PHOTO_TYPES.map((item) => (
-            <PhotoTypeCard key={item.type} {...item} onClick={handleTypeSelect} />
-          ))}
+      <section className="photo-section">
+        <div className="photo-section__inner photo-section__inner--wide">
+          <h2 className="photo-section__title">어떤 사진이 필요하신가요?</h2>
+          <p className="photo-section__sub">사진 종류를 선택하시면 바로 시작할 수 있습니다.</p>
+          <div className="photo-type-list">
+            {PHOTO_TYPES.map((item) => (
+              <PhotoTypeCard key={item.type} {...item} onClick={handleTypeSelect} />
+            ))}
+          </div>
         </div>
       </section>
 
       {/* 가격 + 시작 버튼 */}
-      <section
-        style={{
-          background: 'var(--color-surface-warm)',
-          border: '1px solid var(--color-border)',
-          borderRadius: 'var(--radius-lg)',
-          padding: 'var(--spacing-xl)',
-          textAlign: 'center',
-        }}
-      >
-        <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', marginBottom: 4 }}>
-          1세트 가격
-        </p>
-        <p
-          style={{
-            fontSize: 36,
-            fontWeight: 800,
-            color: 'var(--color-photo)',
-            marginBottom: 'var(--spacing-lg)',
-            letterSpacing: 'var(--ls-heading-ko)',
-          }}
-        >
-          9,900원
-        </p>
-        <button
-          onClick={handleStart}
-          style={{
-            background: 'var(--color-photo)',
-            color: 'var(--color-text-on-dark)',
-            border: 'none',
-            borderRadius: 'var(--radius-pill)',
-            padding: '0 var(--spacing-2xl)',
-            height: 'var(--size-button-h)',
-            minHeight: 'var(--size-button-h)',
-            fontSize: 'var(--fs-button)',
-            fontWeight: 700,
-            cursor: 'pointer',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 'var(--spacing-sm)',
-            transition: 'opacity var(--transition-base)',
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.88' }}
-          onMouseLeave={(e) => { e.currentTarget.style.opacity = '1' }}
-        >
-          지금 시작하기 <ArrowRight size={20} />
-        </button>
+      <section className="photo-pricing">
+        <div className="photo-pricing__inner">
+          <article className="photo-pricing__card">
+            <h2 className="photo-pricing__label">1세트 가격</h2>
+            <p className="photo-pricing__main">
+              <span className="photo-pricing__price">9,900원</span>
+              <span className="photo-pricing__unit">/ 1회</span>
+            </p>
+            <button className="photo-pricing__cta" type="button" onClick={handleStart}>
+              지금 시작하기
+            </button>
+            <ul className="photo-pricing__includes">
+              {PRICING_INCLUDES.map(({ icon: Icon, text }) => (
+                <li key={text} className="photo-pricing__include">
+                  <Icon className="photo-pricing__check" size={20} aria-hidden="true" />
+                  <span>{text}</span>
+                </li>
+              ))}
+            </ul>
+          </article>
+        </div>
       </section>
-    </main>
+    </div>
   )
 }
 

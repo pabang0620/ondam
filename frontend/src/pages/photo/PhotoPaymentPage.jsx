@@ -39,7 +39,7 @@ function PhotoPaymentPage() {
       }}
     >
       <header>
-        <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 800, color: 'var(--color-photo)', marginBottom: 'var(--spacing-sm)', letterSpacing: 'var(--ls-heading-ko)' }}>
+        <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 700, color: 'var(--color-photo)', marginBottom: 'var(--spacing-sm)', letterSpacing: 'var(--ls-heading-ko)' }}>
           결제
         </h1>
         <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>
@@ -59,7 +59,7 @@ function PhotoPaymentPage() {
           gap: 'var(--spacing-md)',
         }}
       >
-        <p style={{ fontWeight: 700, fontSize: 'var(--fs-body-lg)', color: 'var(--color-text-primary)' }}>주문 요약</p>
+        <p style={{ fontWeight: 600, fontSize: 'var(--fs-body-lg)', color: 'var(--color-text-primary)' }}>주문 요약</p>
 
         <div
           style={{
@@ -88,8 +88,8 @@ function PhotoPaymentPage() {
             borderTop: '2px solid var(--color-border-strong)',
           }}
         >
-          <span style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 700, color: 'var(--color-text-primary)' }}>결제 금액</span>
-          <span style={{ fontSize: 28, fontWeight: 800, color: 'var(--color-photo)' }}>
+          <span style={{ fontSize: 'var(--fs-body-lg)', fontWeight: 600, color: 'var(--color-text-primary)' }}>결제 금액</span>
+          <span style={{ fontSize: 28, fontWeight: 700, color: 'var(--color-photo)' }}>
             {formattedAmount}
           </span>
         </div>

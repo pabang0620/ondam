@@ -143,7 +143,7 @@ export default function WillPaymentSuccessPage() {
   if (state === 'uncertain') {
     return (
       <CenterMessage>
-        <Clock3 size={40} color="var(--color-warm-accent)" aria-hidden="true" />
+        <Clock3 size={40} color="var(--color-accent-brand)" aria-hidden="true" />
         <p role="status" aria-live="polite" style={{ fontSize: 'var(--fs-h3)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
           결제 결과를 확인하고 있어요
         </p>
@@ -160,7 +160,7 @@ export default function WillPaymentSuccessPage() {
   if (state === 'no-target') {
     return (
       <CenterMessage>
-        <AlertCircle size={40} color="var(--color-warm-accent)" aria-hidden="true" />
+        <AlertCircle size={40} color="var(--color-accent-brand)" aria-hidden="true" />
         <p style={{ fontSize: 'var(--fs-h3)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
           결제는 완료됐어요
         </p>
@@ -176,7 +176,7 @@ export default function WillPaymentSuccessPage() {
   if (state === 'start-failed') {
     return (
       <CenterMessage>
-        <AlertCircle size={40} color="var(--color-warm-accent)" aria-hidden="true" />
+        <AlertCircle size={40} color="var(--color-accent-brand)" aria-hidden="true" />
         <p style={{ fontSize: 'var(--fs-h3)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
           결제는 완료됐어요
         </p>

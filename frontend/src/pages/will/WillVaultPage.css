@@ -202,7 +202,7 @@
 
 .will-vault__card-title {
   font-size: var(--fs-body);
-  font-weight: 700;
+  font-weight: 600;
   color: var(--color-text-primary);
   white-space: nowrap;
   overflow: hidden;
@@ -237,7 +237,7 @@
 }
 
 .status-released {
-  background-color: var(--color-warm-accent-soft);
+  background-color: var(--color-accent-brand-soft);
   color: var(--color-will);
 }
 

@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './store/authStore.js'
 import BrandLoader from './components/common/BrandLoader.jsx'
+import ScrollToTop from './components/common/ScrollToTop.jsx'
 
 import MainLayout from './layouts/MainLayout.jsx'
 import AuthLayout from './layouts/AuthLayout.jsx'
@@ -43,7 +44,6 @@ const PetPage = lazy(() => import('./pages/pet/PetPage.jsx'))
 const PetNewPage = lazy(() => import('./pages/pet/PetNewPage.jsx'))
 const PetDetailPage = lazy(() => import('./pages/pet/PetDetailPage.jsx'))
 const PetPortraitPage = lazy(() => import('./pages/pet/PetPortraitPage.jsx'))
-const PetSubscriptionPage = lazy(() => import('./pages/pet/PetSubscriptionPage.jsx'))
 const BillingAuthSuccessPage = lazy(() => import('./pages/pet/BillingAuthSuccessPage.jsx'))
 const BillingAuthFailPage = lazy(() => import('./pages/pet/BillingAuthFailPage.jsx'))
 const MemorialPage = lazy(() => import('./pages/memorial/MemorialPage.jsx'))
@@ -83,6 +83,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Suspense
         fallback={
           <div className="flex items-center justify-center min-h-[60vh]">
@@ -127,7 +128,7 @@ export default function App() {
             {/* <Route path={ROUTES.WILL_EVENT} element={<WillEventPage />} /> */}
 
             <Route path={ROUTES.PET} element={<PetPage />} />
-            <Route path={ROUTES.PET_SUBSCRIPTION} element={<PetSubscriptionPage />} />
+            <Route path={ROUTES.PET_SUBSCRIPTION} element={<Navigate to={ROUTES.PET} replace />} />
             <Route path={ROUTES.PET_BILLING_SUCCESS} element={<BillingAuthSuccessPage />} />
             <Route path={ROUTES.PET_BILLING_FAIL} element={<BillingAuthFailPage />} />
             <Route path={ROUTES.PET_NEW} element={<PetNewPage />} />

@@ -20,7 +20,7 @@ export function LoadingSpinner({ size = 40, label = '로딩 중...' }) {
           width: size,
           height: size,
           border: `3px solid var(--color-border)`,
-          borderTopColor: 'var(--color-warm-accent)',
+          borderTopColor: 'var(--color-accent-brand)',
           borderRadius: '50%',
           animation: 'spinner-spin 0.7s linear infinite',
         }}

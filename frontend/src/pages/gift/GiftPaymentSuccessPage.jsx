@@ -173,7 +173,7 @@ export default function GiftPaymentSuccessPage() {
             textAlign: 'left',
           }}
         >
-          <p style={{ fontWeight: 700, fontSize: 'var(--fs-body)', marginBottom: 6, color: 'var(--color-text-primary)' }}>
+          <p style={{ fontWeight: 600, fontSize: 'var(--fs-body)', marginBottom: 6, color: 'var(--color-text-primary)' }}>
             부모님이 하실 일
           </p>
           <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>
@@ -192,7 +192,7 @@ export default function GiftPaymentSuccessPage() {
   if (state === 'uncertain') {
     return (
       <CenterMessage>
-        <AlertCircle size={40} color="var(--color-warm-accent)" aria-hidden="true" />
+        <AlertCircle size={40} color="var(--color-accent-brand)" aria-hidden="true" />
         <p style={{ fontSize: 'var(--fs-h3)', fontWeight: 700, color: 'var(--color-text-primary)' }}>결제 결과를 확인하고 있어요</p>
         <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>
           네트워크가 불안정해 확인이 지연되고 있어요. 잠시 후 내 선물 목록에서 다시
@@ -206,7 +206,7 @@ export default function GiftPaymentSuccessPage() {
   if (state === 'no-token') {
     return (
       <CenterMessage>
-        <AlertCircle size={40} color="var(--color-warm-accent)" aria-hidden="true" />
+        <AlertCircle size={40} color="var(--color-accent-brand)" aria-hidden="true" />
         <p style={{ fontSize: 'var(--fs-h3)', fontWeight: 700, color: 'var(--color-text-primary)' }}>결제는 완료됐어요</p>
         <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>
           다만 이 화면에서 링크를 자동으로 표시하지 못했습니다. 내 선물 목록에서

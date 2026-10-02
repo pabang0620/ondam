@@ -78,10 +78,10 @@
   line-height: 1.3;
 }
 
-/* 출생/별세 날짜 — 골드 톤 */
+/* 출생/별세 날짜 — 브랜드 오렌지 톤 */
 .memorial-header__lifespan {
   font-size: var(--fs-body);
-  color: var(--color-warm-accent-soft);
+  color: var(--color-accent-brand-light);
   letter-spacing: 0.08em;
 }
 
@@ -94,7 +94,7 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  color: var(--color-warm-accent-soft);
+  color: var(--color-accent-brand-light);
   font-size: var(--fs-body);
   font-weight: 600;
   margin-top: var(--spacing-xs);
@@ -118,11 +118,11 @@
   gap: 4px;
 }
 
-/* 날짜 라벨 — 골드 캡션 */
+/* 날짜 라벨 — 브랜드 코랄 캡션 */
 .memorial-dates__label {
   font-size: var(--fs-caption);
-  color: var(--color-warm-accent);
-  font-weight: 700;
+  color: var(--color-accent-brand-text);
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
@@ -142,7 +142,7 @@
 .memorial-gallery__title {
   font-family: var(--font-serif);
   font-size: clamp(20px, 4vw, var(--fs-h2));
-  font-weight: 700;
+  font-weight: 600;
   margin-bottom: var(--spacing-lg);
   color: var(--color-primary);
   letter-spacing: var(--ls-heading-ko);

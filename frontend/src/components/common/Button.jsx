@@ -12,7 +12,7 @@ const VARIANT_STYLES = {
     border: '1px solid var(--color-border-strong)',
   },
   warm: {
-    backgroundColor: 'var(--color-warm-accent)',
+    backgroundColor: 'var(--color-accent-brand-light)',
     color: 'var(--color-primary)',
     border: 'none',
   },

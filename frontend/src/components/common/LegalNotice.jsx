@@ -1,6 +1,11 @@
 import { Info } from 'lucide-react'
 import './LegalNotice.css'
 
+const SENTENCES = [
+  '이 영상은 마음을 전하는 편지이지, 법적으로 유언의 효력을 갖는 문서가 아닙니다.',
+  '재산 문제는 이 영상으로 정할 수 없습니다.',
+]
+
 /**
  * "법적 유언 효력 없음" 고지 - DEV-05 수용 기준
  * (docs/strategy/06-dev-backlog.md DEV-05: "랜딩·구매 플로우에 '법적 유언 효력은 없습니다' 고지 1줄 추가")
@@ -14,9 +19,10 @@ import './LegalNotice.css'
  *
  * @param {'light'|'dark'} theme - light: 크림/화이트 배경 화면(결제·동의·수령 신청 등)
  *                                 dark: 차콜 배경 화면(WillWatchPage 등 유족 열람 화면)
+ * @param {boolean} splitSentences - true면 '~다.' 문장마다 줄바꿈(기본 false: 기존 한 문단 흐름)
  * @param {string} className - 호출부에서 여백 등을 추가로 조정할 때 사용
  */
-export default function LegalNotice({ theme = 'light', className = '' }) {
+export default function LegalNotice({ theme = 'light', className = '', splitSentences = false }) {
   return (
     <div
       className={`legal-notice legal-notice--${theme}${className ? ` ${className}` : ''}`}
@@ -25,8 +31,14 @@ export default function LegalNotice({ theme = 'light', className = '' }) {
     >
       <Info size={20} aria-hidden="true" className="legal-notice__icon" />
       <p className="legal-notice__text">
-        이 영상은 마음을 전하는 편지이지, 법적으로 유언의 효력을 갖는 문서가 아닙니다.
-        재산 문제는 이 영상으로 정할 수 없습니다.
+        {splitSentences
+          ? SENTENCES.map((sentence, i) => (
+              <span key={sentence}>
+                {i > 0 ? ' ' : null}
+                <span className="legal-notice__sentence">{sentence}</span>
+              </span>
+            ))
+          : SENTENCES.join(' ')}
       </p>
     </div>
   )

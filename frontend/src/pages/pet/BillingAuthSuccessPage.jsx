@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { petApi } from './petApi.js'
+import { ROUTES } from '../../constants/routes.js'
+import { BILLING_RESULT } from './subscriptionLabels.js'
 
 // FIX: HIGH-1 - 백엔드가 결제 불확정 상태를 202로 응답하도록 바뀌었는데 응답 body가
 // {success:true, ...}라 axios가 202도 정상 성공 응답으로 처리한다(2xx는 .then으로
@@ -24,7 +26,7 @@ export default function BillingAuthSuccessPage() {
     const plan = sessionStorage.getItem('pendingSubscriptionPlan')
 
     if (!authKey || !customerKey || !plan) {
-      navigate('/pet/subscription', { replace: true })
+      navigate(ROUTES.PET, { replace: true })
       return
     }
 
@@ -39,7 +41,7 @@ export default function BillingAuthSuccessPage() {
           setState('indeterminate')
           return
         }
-        navigate('/pet/subscription', { replace: true, state: { subscriptionSuccess: true } })
+        navigate(ROUTES.PET, { replace: true, state: { [BILLING_RESULT.KEY]: BILLING_RESULT.SUCCESS } })
       })
       .catch((err) => {
         // FIX: DEV-24 - 빌링키 등록 실패를 구독 성공으로 위장하지 않는다
@@ -73,7 +75,7 @@ export default function BillingAuthSuccessPage() {
         gap: '24px',
       }}
     >
-      <p role="status" aria-live="polite" style={{ color: 'var(--color-warm-accent)', fontSize: 'var(--fs-h3)', fontWeight: 700 }}>
+      <p role="status" aria-live="polite" style={{ color: 'var(--color-accent-brand-text)', fontSize: 'var(--fs-h3)', fontWeight: 700 }}>
         결제 결과를 확인하고 있어요
       </p>
       <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>
@@ -82,7 +84,7 @@ export default function BillingAuthSuccessPage() {
       </p>
       <button
         type="button"
-        onClick={() => navigate('/pet/subscription')}
+        onClick={() => navigate(ROUTES.PET)}
         style={{
           background: 'var(--color-primary)',
           color: 'var(--color-surface)',
@@ -114,7 +116,7 @@ export default function BillingAuthSuccessPage() {
       <p role="alert" style={{ color: 'var(--color-error)', fontSize: 'var(--fs-body)' }}>{message}</p>
       <button
         type="button"
-        onClick={() => navigate('/pet/subscription')}
+        onClick={() => navigate(ROUTES.PET)}
         style={{
           background: 'var(--color-primary)',
           color: 'var(--color-surface)',

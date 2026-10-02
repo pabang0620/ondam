@@ -1,0 +1,97 @@
+/*
+ * 홈 '이렇게 만들어드려요' 좌측 목업 장식 애니메이션.
+ * - transform 만 애니메이션한다(레이아웃 속성 금지).
+ * - 기본(정적) 상태는 기존과 동일. 애니메이션은 .is-animating(화면에 보일 때
+ *   useAnimateInView 가 부여) 아래에서만 정의된다.
+ * - HomeServices.css 의 .ondam-mock 규칙과 섞이지 않도록 별도 클래스 접두사 사용.
+ */
+
+.ondam-process-fill {
+  transform-origin: left center;
+}
+
+.ondam-process-mock.is-animating .ondam-process-tile {
+  animation: ondam-process-tile-rise 4.2s ease-in-out infinite;
+}
+
+.ondam-process-mock.is-animating .ondam-process-tile:nth-child(2) { animation-delay: 0.35s; }
+.ondam-process-mock.is-animating .ondam-process-tile:nth-child(3) { animation-delay: 0.7s; }
+.ondam-process-mock.is-animating .ondam-process-tile:nth-child(4) { animation-delay: 1.05s; }
+
+@keyframes ondam-process-tile-rise {
+  0%, 100% { transform: translateY(6px); }
+  25%, 75% { transform: translateY(0); }
+}
+
+.ondam-process-mock.is-animating .ondam-process-spark {
+  animation: ondam-process-spark-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes ondam-process-spark-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+/* 바(fill)와 퍼센트 숫자가 같은 duration/타이밍/지연을 공유해 어긋나지 않게 한다. */
+.ondam-process-mock {
+  --ondam-process-progress-duration: 4s;
+  --ondam-process-progress-timing: ease-in-out;
+  --ondam-process-progress-delay: 0s;
+}
+
+/* 숫자는 @property 정수 변수를 counter 로 표시한다. 기본/정적/미지원 상태는 initial-value 100. */
+@property --ondam-pct {
+  syntax: '<integer>';
+  inherits: false;
+  initial-value: 100;
+}
+
+.ondam-process-pct {
+  display: inline-block;
+  min-width: 4ch;
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+  counter-reset: ondam-pct var(--ondam-pct);
+}
+
+.ondam-process-pct::after {
+  content: counter(ondam-pct) '%';
+}
+
+.ondam-process-mock.is-animating .ondam-process-fill {
+  animation: ondam-process-progress var(--ondam-process-progress-duration) var(--ondam-process-progress-timing) var(--ondam-process-progress-delay) infinite;
+  will-change: transform;
+}
+
+.ondam-process-mock.is-animating .ondam-process-pct {
+  animation: ondam-process-pct var(--ondam-process-progress-duration) var(--ondam-process-progress-timing) var(--ondam-process-progress-delay) infinite;
+}
+
+@keyframes ondam-process-progress {
+  0% { transform: scaleX(0); }
+  75%, 100% { transform: scaleX(1); }
+}
+
+@keyframes ondam-process-pct {
+  0% { --ondam-pct: 0; }
+  75%, 100% { --ondam-pct: 100; }
+}
+
+.ondam-process-mock.is-animating .ondam-process-done {
+  animation: ondam-process-done-pulse 2.8s ease-in-out infinite;
+}
+
+@keyframes ondam-process-done-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ondam-process-mock .ondam-process-tile,
+  .ondam-process-mock .ondam-process-spark,
+  .ondam-process-mock .ondam-process-fill,
+  .ondam-process-mock .ondam-process-pct,
+  .ondam-process-mock .ondam-process-done {
+    animation: none !important;
+  }
+}

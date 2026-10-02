@@ -1,19 +1,23 @@
 .pet-page {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-2xl);
+  /* 섹션 사이 gap 금지: 페이지 배경(--color-bg) 띠가 비쳐 섹션 배경이 이중으로 보임 */
 }
 
-/* Hero — 따뜻한 파스텔 테라코타 + 살구 베이스 */
+/* Hero - 연한 복숭아 배경(--color-hero-peach). 글자 --color-primary */
 .pet-hero {
-  background: linear-gradient(135deg, var(--color-pet-soft) 0%, var(--color-surface-warm) 100%);
+  background: var(--color-hero-peach);
   padding: var(--spacing-2xl) var(--spacing-md);
+  min-height: 360px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   text-align: center;
-  border-bottom: 1px solid var(--color-border);
 }
 
 .pet-hero__inner {
-  max-width: 600px;
+  width: 100%;
+  max-width: 880px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -21,22 +25,19 @@
   gap: var(--spacing-md);
 }
 
-.pet-hero__icon {
-  color: var(--color-pet);
-}
-
 .pet-hero__title {
-  font-size: clamp(28px, 6vw, var(--fs-h1));
-  font-weight: 800;
+  font-size: clamp(30px, 2vw + 22px, 44px);
+  font-weight: 600;
   color: var(--color-primary);
   line-height: 1.3;
   letter-spacing: var(--ls-heading-ko);
   word-break: keep-all;
+  text-wrap: balance;
 }
 
 .pet-hero__sub {
-  font-size: var(--fs-body-lg);
-  color: var(--color-text-secondary);
+  font-size: 17px;
+  color: var(--color-primary);
   line-height: var(--lh-relaxed);
   word-break: keep-all;
 }
@@ -45,22 +46,22 @@
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-sm);
-  background: var(--color-pet);
-  color: var(--color-surface);
+  background: var(--color-primary);
+  color: var(--color-text-on-dark);
   border: none;
   border-radius: var(--radius-pill);
   padding: 0 var(--spacing-2xl);
-  min-height: var(--size-button-h);
+  min-height: var(--min-touch-target);
   font-size: var(--fs-button);
   font-weight: 700;
   cursor: pointer;
-  transition: background var(--transition-base);
+  transition: background var(--transition-base), color var(--transition-base);
   min-width: 200px;
   justify-content: center;
 }
 
 .pet-hero__cta:hover {
-  background: var(--color-primary);
+  background: var(--color-primary-soft);
 }
 
 /* Section */
@@ -69,9 +70,13 @@
 }
 
 .pet-section--accent {
-  background: var(--color-surface-warm);
-  border-top: 1px solid var(--color-border);
-  border-bottom: 1px solid var(--color-border);
+  /* 앞 섹션(pet-features: --color-surface)과 톤을 구분하기 위해 연한 회색(--color-bg-subtle) 사용 */
+  background: var(--color-bg-subtle);
+}
+
+.pet-section--surface {
+  /* 바로 앞 섹션(구독 플랜: --color-bg-subtle)과 구분하기 위해 흰색 사용 */
+  background: var(--color-surface);
 }
 
 .pet-section__inner {
@@ -81,7 +86,7 @@
 
 .pet-section__title {
   font-size: clamp(20px, 4vw, var(--fs-h2));
-  font-weight: 700;
+  font-weight: 600;
   color: var(--color-text-primary);
   margin-bottom: var(--spacing-lg);
   letter-spacing: var(--ls-heading-ko);
@@ -96,37 +101,56 @@
   margin-bottom: var(--spacing-lg);
 }
 
-/* Feature cards — 따뜻한 카드 */
-.pet-features-grid {
+/* Feature cards — 영상편지(will-features) 섹션과 동일한 시각 스타일 */
+.pet-features {
+  padding: 56px var(--spacing-md);
+  background-color: var(--color-surface);
+}
+
+.pet-features__inner {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-md);
+}
+
+.pet-features__title {
+  font-family: var(--font-serif);
+  font-size: clamp(20px, 4vw, var(--fs-h2));
+  font-weight: 600;
+  color: var(--color-text-primary);
+  text-align: center;
+  margin-bottom: var(--spacing-xl);
+  letter-spacing: var(--ls-heading-ko);
+  word-break: keep-all;
+  line-height: 1.3;
+}
+
+.pet-features__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--spacing-xl);
 }
 
 .pet-feature-card {
-  background: var(--color-surface-warm);
-  border: 1px solid var(--color-pet-soft);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-card);
-  padding: 20px 24px;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
+  padding: var(--spacing-xl);
+  text-align: left;
 }
 
 .pet-feature-card__icon {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--radius-sm);
-  background: var(--color-pet-soft);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  color: var(--icon-tone-fg, var(--color-text-secondary));
+  margin: 0 0 var(--spacing-sm);
 }
 
 .pet-feature-card__title {
-  font-weight: 700;
+  font-family: var(--font-serif);
   font-size: var(--fs-body-lg);
-  color: var(--color-primary);
+  font-weight: 600;
+  margin-bottom: var(--spacing-sm);
+  color: var(--color-text-primary);
+  letter-spacing: var(--ls-heading-ko);
 }
 
 .pet-feature-card__desc {
@@ -147,16 +171,22 @@
   background: var(--color-surface);
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-card);
-  padding: 24px;
+  --pet-plan-card-padding: 24px;
+  padding: var(--pet-plan-card-padding);
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
   position: relative;
 }
 
+/* 흰색 카드 + 그라데이션 테두리: padding-box 흰색 / border-box 그라데이션 2중 레이어.
+   border-image와 달리 border-radius가 유지된다. */
 .pet-plan-card--highlight {
-  background: var(--color-pet-soft);
-  border: 2px solid var(--color-pet);
+  background:
+    linear-gradient(var(--color-surface), var(--color-surface)) padding-box,
+    var(--color-brand-gradient) border-box;
+  border: 2px solid transparent;
+  /* border가 일반 카드(1px)보다 1px 두꺼운 만큼 padding 보정 → 내용 시작 위치 정렬 */
+  padding: calc(var(--pet-plan-card-padding) - 1px);
 }
 
 .pet-plan-card__badge {
@@ -164,48 +194,69 @@
   top: -12px;
   left: 50%;
   transform: translateX(-50%);
-  background: var(--color-pet);
+  background: var(--color-accent-brand-text);
   color: var(--color-surface);
   font-size: var(--fs-caption);
-  font-weight: 700;
+  font-weight: 600;
   padding: 2px 14px;
   border-radius: var(--radius-pill);
   white-space: nowrap;
 }
 
 .pet-plan-card__label {
-  font-size: var(--fs-body-lg);
-  font-weight: 700;
-  color: var(--color-primary);
+  font-size: var(--fs-body);
+  font-weight: 400;
+  color: var(--color-text-primary);
+  text-align: left;
+  margin: 0 0 var(--spacing-xs);
+}
+
+.pet-plan-card__main {
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-sm);
+  margin: 0 0 var(--spacing-lg);
+  text-align: left;
 }
 
 .pet-plan-card__price {
-  font-size: var(--fs-h2);
-  font-weight: 800;
-  color: var(--color-primary);
+  font-family: var(--font-serif);
+  font-size: 36px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  letter-spacing: var(--ls-heading-ko);
+}
+
+.pet-plan-card__unit {
+  font-size: var(--fs-body);
+  color: var(--color-text-primary);
 }
 
 .pet-plan-card__features {
   list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
-  flex: 1;
-}
-
-.pet-plan-card__features li {
+  margin: 0;
+  padding: 0;
   font-size: var(--fs-body);
-  color: var(--color-text-secondary);
-  padding-left: var(--spacing-md);
-  position: relative;
+  color: var(--color-text-primary);
+  line-height: var(--lh-relaxed);
+  word-break: keep-all;
+  text-align: left;
 }
 
-.pet-plan-card__features li::before {
-  content: '✓';
-  position: absolute;
-  left: 0;
-  color: var(--color-success);
-  font-weight: 700;
+.pet-plan-card__feature {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+}
+
+.pet-plan-card__feature + .pet-plan-card__feature {
+  margin-top: var(--spacing-sm);
+}
+
+.pet-plan-card__check {
+  flex-shrink: 0;
+  margin-top: 3px;
+  color: var(--color-accent-brand-text);
 }
 
 .pet-plan-card__btn {
@@ -213,9 +264,10 @@
   color: var(--color-primary);
   border: 1.5px solid var(--color-primary);
   border-radius: var(--radius-pill);
-  min-height: var(--size-button-h);
+  min-height: var(--min-touch-target);
+  margin: 0 0 var(--space-7);
   font-size: var(--fs-button);
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
   transition: background var(--transition-base), color var(--transition-base);
 }
@@ -224,15 +276,17 @@
   background: var(--color-surface-warm);
 }
 
+/* 메인 그라데이션 버튼: 흰 글자 (인기 뱃지와 동일하게 --color-surface = #FFFFFF 사용) */
 .pet-plan-card__btn--primary {
-  background: var(--color-pet);
+  background: var(--color-brand-gradient);
   color: var(--color-surface);
-  border-color: var(--color-pet);
+  border-color: transparent;
 }
 
 .pet-plan-card__btn--primary:hover {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
+  background: var(--color-brand-gradient);
+  border-color: transparent;
+  filter: brightness(0.94);
 }
 
 .pet-plan-card__note {
@@ -240,125 +294,20 @@
   color: var(--color-text-muted);
   text-align: center;
   min-height: var(--min-touch-target);
+  margin: 0 0 var(--space-7);
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-/* Pet list */
-.pet-list-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--spacing-lg);
-}
-
-.pet-list-add {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-  background: var(--color-pet-soft);
-  color: var(--color-primary);
-  border: 1px solid var(--color-pet);
-  border-radius: var(--radius-pill);
-  padding: 0 var(--spacing-md);
-  min-height: var(--size-button-h);
-  font-size: var(--fs-button);
-  font-weight: 600;
-  cursor: pointer;
-  transition: background var(--transition-base), color var(--transition-base);
-}
-
-.pet-list-add:hover {
-  background: var(--color-pet);
-  color: var(--color-surface);
-}
-
-.pet-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-}
-
-/* 펫 카드 — surface-warm + pet-soft border + radius 16~20px */
-.pet-list-item {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
-  background: var(--color-surface-warm);
-  border: 1px solid var(--color-pet-soft);
-  border-radius: var(--radius-card);
-  padding: var(--spacing-md);
-  min-height: var(--size-button-h);
-  cursor: pointer;
-  text-align: left;
-  width: 100%;
-  transition: border-color var(--transition-base), background var(--transition-base);
-}
-
-.pet-list-item:hover {
-  border-color: var(--color-pet);
-  background: var(--color-surface);
-}
-
-.pet-list-item__avatar {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  background: var(--color-pet-soft);
-  border: 2px solid var(--color-pet-soft);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  flex-shrink: 0;
-}
-
-.pet-list-item__avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.pet-list-item__info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.pet-list-item__name {
-  font-size: var(--fs-body-lg);
-  font-weight: 700;
-  color: var(--color-primary);
-}
-
-.pet-list-item__species {
-  font-size: var(--fs-caption);
-  color: var(--color-text-secondary);
-}
-
-/* 상태 뱃지: deceased = memorial soft 톤 */
-.pet-list-item__badge {
-  display: inline-block;
-  font-size: var(--fs-caption);
-  background: rgba(42, 58, 82, 0.10);
-  color: var(--color-memorial);
-  padding: 1px 8px;
-  border-radius: var(--radius-pill);
-  font-weight: 600;
-}
-
-.pet-list-empty {
-  font-size: var(--fs-body);
-  color: var(--color-text-muted);
-  text-align: center;
-  padding: var(--spacing-2xl) 0;
 }
 
 /* ── 반응형: 데스크톱 (≥ 1024px) ── */
 @media (min-width: 1024px) {
-  .pet-features-grid {
+  .pet-features {
+    padding-top: 80px;
+    padding-bottom: 80px;
+  }
+
+  .pet-features__grid {
     grid-template-columns: repeat(4, 1fr);
   }
 
@@ -377,14 +326,24 @@
 
 /* ── 반응형: 태블릿 (640px ~ 1023px) ── */
 @media (min-width: 640px) and (max-width: 1023px) {
+  .pet-hero {
+    min-height: 320px;
+  }
+
   .pet-section {
     padding: 64px var(--spacing-md);
   }
-}
 
-/* ── 반응형: 태블릿 (640px ~ 1023px) ── */
-@media (min-width: 640px) and (max-width: 1023px) {
-  .pet-features-grid {
+  .pet-features {
+    padding-top: 64px;
+    padding-bottom: 64px;
+  }
+
+  .pet-features__inner {
+    max-width: 800px;
+  }
+
+  .pet-features__grid {
     grid-template-columns: repeat(2, 1fr);
   }
 
@@ -400,11 +359,8 @@
 /* ── 반응형: 모바일 (< 640px) ── */
 @media (max-width: 639px) {
   .pet-hero {
-    padding: var(--spacing-lg) var(--spacing-md);
-  }
-
-  .pet-hero__title {
-    font-size: var(--fs-h2);
+    padding: var(--spacing-xl) var(--spacing-md);
+    min-height: 280px;
   }
 
   .pet-hero__sub {
@@ -430,9 +386,22 @@
     max-width: 100%;
   }
 
-  .pet-features-grid {
+  .pet-features__inner {
+    max-width: 800px;
+  }
+
+  .pet-features__title {
+    font-size: var(--fs-body-lg);
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .pet-features {
+    padding: 48px var(--spacing-md);
+  }
+
+  .pet-features__grid {
     grid-template-columns: 1fr;
-    gap: var(--spacing-sm);
+    gap: var(--spacing-md);
   }
 
   .pet-plans-grid {
@@ -441,36 +410,16 @@
   }
 
   .pet-plan-card {
-    padding: 20px;
+    --pet-plan-card-padding: 20px;
   }
 
   .pet-plan-card__btn {
     width: 100%;
   }
-
-  .pet-list-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--spacing-md);
-  }
-
-  .pet-list-add {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .pet-list-item {
-    gap: var(--spacing-sm);
-    padding: var(--spacing-sm) var(--spacing-md);
-  }
 }
 
 /* ── 320px 안전망 ── */
 @media (max-width: 360px) {
-  .pet-hero__title {
-    font-size: var(--fs-h3);
-  }
-
   .pet-section {
     padding: var(--spacing-md) var(--spacing-sm);
   }

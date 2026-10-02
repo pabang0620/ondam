@@ -1,0 +1,395 @@
+/* GiftNewPage - 선물하기 진입 + 주문 폼
+   레이아웃 규약: 각 section은 화면 전체 너비(배경색 담당),
+   내부 __inner가 콘텐츠 폭만 제한(히어로 600px / 폼 600px - 폼 계열 컨벤션).
+   Photo/Will/Pet 랜딩과 동일 구조. */
+.gift-new-page {
+  /* 히어로 배경은 전역 --color-gift-banner(노랑) 사용 */
+  min-height: 100vh;
+  background-color: var(--color-bg);
+}
+
+/* ── Hero: 연한 노랑 배너 (하단 CTA 버튼은 어두운 --color-primary, 글자 --color-primary 대비 13.1:1, 다음 섹션은 흰색) ── */
+.gift-hero {
+  background: var(--color-gift-banner);
+  color: var(--color-primary);
+  padding: var(--spacing-2xl) var(--spacing-md);
+  min-height: 360px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+}
+
+.gift-hero__inner {
+  width: 100%;
+  max-width: 880px;
+  margin: 0 auto;
+}
+
+.gift-hero__title {
+  font-size: clamp(30px, 2vw + 22px, 44px);
+  font-weight: 600;
+  line-height: 1.3;
+  margin-bottom: var(--spacing-md);
+  letter-spacing: var(--ls-heading-ko);
+  color: var(--color-primary);
+  word-break: keep-all;
+  text-wrap: balance;
+}
+
+.gift-hero__sub {
+  font-size: 17px;
+  color: var(--color-primary);
+  line-height: var(--lh-relaxed);
+  margin-bottom: var(--spacing-xl);
+  word-break: keep-all;
+}
+
+/* photo/pet/will 배너 CTA 와 동일한 값 */
+.gift-hero__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-primary);
+  color: var(--color-text-on-dark);
+  font-size: var(--fs-button);
+  font-weight: 700;
+  padding: 0 var(--spacing-xl);
+  min-width: 200px;
+  min-height: var(--size-button-h);
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: background-color var(--transition-base);
+}
+
+.gift-hero__cta:hover {
+  background: var(--color-primary-soft);
+}
+
+/* ── 반응형: 태블릿 (640px ~ 1023px) ── */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .gift-hero {
+    min-height: 320px;
+  }
+}
+
+/* ── Form section (outer = full bleed, inner = 폭 제한) ── */
+/* 배너 버튼의 스크롤 대상: 고정 헤더(Header.jsx, global.css --header-height 64px)에 가려지지 않게 헤더 높이만큼 띄운다 */
+.gift-form {
+  scroll-margin-top: var(--header-height);
+}
+
+/* tabIndex=-1 은 스크립트로만 포커스되는 이동 표식이다. 큰 섹션 전체에 포커스 링이
+   뜨면 오히려 어수선하므로 이 요소에 한해서만 링을 끈다(버튼·입력은 전역 :focus-visible 유지) */
+.gift-form[tabindex="-1"]:focus {
+  outline: none;
+}
+
+.gift-form {
+  /* 위쪽 여백은 이 섹션에서만 지정(히어로엔 margin-bottom 없음): 80px + 16px = 96px */
+  padding: calc(var(--spacing-section) + var(--spacing-md)) var(--spacing-md) var(--spacing-section);
+}
+
+.gift-form__inner {
+  max-width: 960px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+
+/* 1·2단계: 기본 세로(모바일~899px, 입력 폭 600px 제한), 900px 이상 2열.
+   640~899px에서 2열이면 열 폭이 ~300px대로 좁아져 입력/안내문이 불편해 세로 유지 */
+.gift-form__steps {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--spacing-xl);
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  /* 결제 영역(에러+버튼) 위 추가 간격: inner gap(xl) + lg = 56px(2xl). 이 한 곳에서만 조정 */
+  margin-bottom: var(--spacing-lg);
+}
+
+/* 에러/제출 버튼은 기존 600px 폭 유지 */
+.gift-error,
+.gift-submit {
+  width: 100%;
+  max-width: 600px;
+  margin-inline: auto;
+  box-sizing: border-box;
+}
+
+@media (min-width: 900px) {
+  .gift-form__steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-width: none;
+    align-items: start;
+    /* 1·2단계 열 간격: 900px 뷰포트 열 폭 (868 - 56) / 2 = 406px, 960px 컨테이너 (960 - 56) / 2 = 452px */
+    column-gap: var(--spacing-2xl);
+  }
+}
+
+.gift-form__step-title {
+  --gift-badge-size: 40px;
+
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+  font-size: var(--fs-body-lg);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: var(--ls-heading-ko);
+  /* h2 기본 margin 방지: 하단 간격만 명시(아래 내용 쪽엔 margin-top 없음 → 이중 여백 없음) */
+  margin: 0 0 var(--spacing-xl);
+  word-break: keep-all;
+}
+
+/* 단계 번호 뱃지: --color-primary(검정) 배경 + --color-surface(흰) 숫자
+   (대비 16.5:1 이상). 테두리 없음, border-box로 40px 유지 */
+.gift-form__step-badge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--gift-badge-size);
+  height: var(--gift-badge-size);
+  box-sizing: border-box;
+  border-radius: 50%;
+  background: var(--color-primary);
+  border: 0;
+  color: var(--color-surface);
+  font-size: var(--fs-h2);
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1;
+}
+
+/* 텍스트 줄 높이 = 뱃지 높이: 한 줄이면 세로 중앙, 줄바꿈 시 뱃지는 첫 줄에 고정 */
+.gift-form__step-title > span:last-child {
+  line-height: var(--gift-badge-size);
+}
+
+/* ── 상품 선택 카드 ── */
+.gift-product-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+/* 세로 배치: 텍스트 블록은 왼쪽 위, 아이콘은 오른쪽 아래(DOM 순서: 텍스트 → 아이콘) */
+.gift-product-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: var(--spacing-md);
+  width: 100%;
+  text-align: left;
+  padding: var(--spacing-lg);
+  min-height: var(--min-touch-target);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  cursor: pointer;
+  transition: box-shadow var(--transition-base), border-color var(--transition-base);
+}
+
+/* 호버: 그림자만 (transform 없음 → 레이아웃 고정). 터치 기기 hover 고착 방지 */
+@media (hover: hover) {
+  .gift-product-card:hover {
+    border-color: var(--color-border);
+    box-shadow: var(--shadow-card);
+  }
+
+  /* 선택+호버: 호버(0,2,0)보다 specificity가 높아 선택 테두리 색 유지, 그림자는 호버와 동일 */
+  .gift-product-card.is-selected:hover {
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-card);
+  }
+}
+
+/* 선택 상태: 1px 유지(굵기 변화 없음 → 레이아웃 고정), 색만 --color-primary. 그림자 없음.
+   흰 배경 대비 16.5:1 이상, 비선택 테두리(--color-border-light) 대비 약 13:1 */
+.gift-product-card.is-selected {
+  border-color: var(--color-primary);
+}
+
+/* 카드가 더 높아져도 항상 padding 안쪽 오른쪽 아래. 위 gap으로 텍스트와 겹치지 않음 */
+.gift-product-card__icon {
+  flex-shrink: 0;
+  align-self: flex-end;
+  margin-top: auto;
+  color: var(--color-primary);
+}
+
+.gift-product-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  text-align: left;
+}
+
+.gift-product-card__label {
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  letter-spacing: var(--ls-heading-ko);
+  word-break: keep-all;
+}
+
+.gift-product-card__desc {
+  font-size: var(--fs-body);
+  color: var(--color-text-secondary);
+  line-height: var(--lh-relaxed);
+  word-break: keep-all;
+}
+
+/* ── 입력 필드 ── */
+.gift-field-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.gift-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gift-field__label {
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+/* outline: none 금지 - global.css의 :focus-visible 링을 덮어버린다.
+   테두리 색만 강조하고 전역 포커스 링은 그대로 둔다. */
+.gift-field__input {
+  height: var(--size-input-h);
+  min-height: var(--size-input-h);
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 var(--spacing-md);
+  font-size: var(--fs-body);
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  transition: border-color var(--transition-base);
+}
+
+.gift-field__input:focus {
+  border-color: var(--color-primary);
+}
+
+.gift-field__hint {
+  font-size: var(--fs-caption);
+  color: var(--color-text-muted);
+  line-height: var(--lh-relaxed);
+  word-break: keep-all;
+}
+
+/* ── 에러 ── */
+.gift-error {
+  color: var(--color-error);
+  font-size: var(--fs-body);
+  background: var(--color-error-light);
+  border: 1px solid var(--color-error);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-md);
+  line-height: var(--lh-relaxed);
+  word-break: keep-all;
+}
+
+/* ── 제출 버튼 ── */
+.gift-submit {
+  width: 100%;
+  height: var(--size-button-h);
+  min-height: var(--size-button-h);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  background: var(--color-primary);
+  color: var(--color-text-on-dark);
+  border: none;
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-button);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color var(--transition-base), opacity var(--transition-base);
+}
+
+.gift-submit:not(:disabled):hover {
+  opacity: 0.88;
+}
+
+/* 기존 인라인 조건부 style(canSubmit ? ... : ...)과 동일한 비활성 표현 */
+.gift-submit:disabled {
+  background: var(--color-border);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+.gift-submit__spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ── 반응형: 모바일 (< 640px) ── */
+@media (max-width: 639px) {
+  .gift-new-page {
+    overflow-x: hidden;
+  }
+
+  .gift-hero {
+    padding: var(--spacing-xl) var(--spacing-md);
+    min-height: 280px;
+  }
+
+  .gift-hero__sub {
+    font-size: var(--fs-body);
+  }
+
+  .gift-hero__cta {
+    width: 100%;
+    min-width: unset;
+    padding: 0 var(--spacing-md);
+  }
+
+  .gift-form {
+    padding: var(--spacing-2xl) var(--spacing-md) var(--spacing-2xl);
+  }
+
+  .gift-form__inner {
+    gap: var(--spacing-lg);
+    max-width: 100%;
+  }
+
+  /* 모바일: inner gap(lg 24px) + 12px = 36px (데스크톱 56px의 약 65%) */
+  .gift-form__steps {
+    margin-bottom: calc(var(--spacing-md) - var(--spacing-xs));
+  }
+
+  .gift-product-card {
+    padding: var(--spacing-md);
+  }
+}
+
+/* 320px 극소 화면 */
+@media (max-width: 359px) {
+  .gift-form {
+    padding: var(--space-7) var(--spacing-sm) var(--spacing-2xl);
+  }
+}

@@ -1,134 +1,52 @@
-import { useNavigate, Link } from 'react-router-dom'
-import {
-  Heart,
-  PawPrint,
-  Image,
-  Sparkles,
-  ArrowRight,
-  Plus,
-} from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore.js'
 import { usePet } from './usePet.js'
+import { useMySubscription } from './useMySubscription.js'
+import { usePetCheckout } from './usePetCheckout.js'
+import { useArchivePlanPrice } from './useArchivePlanPrice.js'
+import { useBillingReturnNotice } from './useBillingReturnNotice.js'
 import { ROUTES } from '../../constants/routes.js'
+import PetLanding from './PetLanding.jsx'
+import PetDashboard from './PetDashboard.jsx'
+import PetDashboardSkeleton from './PetDashboardSkeleton.jsx'
+import PetBillingNotice from './PetBillingNotice.jsx'
+import PetSubscriptionSummary from './PetSubscriptionSummary.jsx'
 import './PetPage.css'
 
-// [정합성 수정, 2026-08-22] 펫 구독은 pet_archive 단일 플랜(4,900원)으로 확정됐다.
-// 정본: PetSubscriptionPage.jsx + backend subscriptionService.js의 PLANS.
-// 이전 3티어(무료/스탠다드 4,900/프리미엄 9,900) 표기는 백엔드 zod enum(['pet_archive'])이
-// 이미 거부하는 죽은 동선이었다.
-const PLANS = [
-  {
-    key: 'free',
-    label: '무료',
-    price: '0원',
-    features: ['반려동물 사진 보관', 'AI 초상화 평생 1회 체험', '기본 프로필 페이지'],
-    highlight: false,
-    selectable: false,
-  },
-  {
-    key: 'pet_archive',
-    label: '반려동물 아카이브',
-    price: '4,900원/월',
-    features: ['반려동물 사진 무제한 보관', 'AI 초상화 월 3장', '추모 페이지 공개'],
-    highlight: true,
-    selectable: true,
-  },
-]
+const DEFAULT_TITLE = '내 반려동물'
 
-const FEATURES = [
-  { icon: PawPrint, title: '반려동물 프로필', desc: '이름, 종류, 생일 등 소중한 정보를 기록합니다.' },
-  { icon: Image, title: '사진 아카이브', desc: '함께한 순간의 사진을 안전하게 보관합니다.' },
-  { icon: Sparkles, title: 'AI 초상화', desc: '사진을 유화·수채화·일러스트로 변환합니다.' },
-  { icon: Heart, title: '추모 페이지', desc: '무지개다리를 건넌 후에도 기억을 이어갑니다.' },
-]
+// 구독 조회 결과 → 랜딩 플랜 카드용 상태. null 이면 구독하기 가능(또는 비로그인).
+const SUB_STATUS = { CHECKING: 'checking', SUBSCRIBED: 'subscribed', UNAVAILABLE: 'unavailable' }
 
-function FeatureCard({ icon: Icon, title, desc }) {
-  return (
-    <div className="pet-feature-card">
-      <div className="pet-feature-card__icon">
-        <Icon size={24} color="var(--color-primary)" aria-hidden="true" />
-      </div>
-      <p className="pet-feature-card__title">{title}</p>
-      <p className="pet-feature-card__desc">{desc}</p>
-    </div>
-  )
-}
-
-function PlanCard({ plan, onSelect }) {
-  return (
-    <div className={`pet-plan-card${plan.highlight ? ' pet-plan-card--highlight' : ''}`}>
-      {plan.highlight && <span className="pet-plan-card__badge">인기</span>}
-      <p className="pet-plan-card__label">{plan.label}</p>
-      <p className="pet-plan-card__price">{plan.price}</p>
-      <ul className="pet-plan-card__features">
-        {plan.features.map((f) => (
-          <li key={f}>{f}</li>
-        ))}
-      </ul>
-      {plan.selectable ? (
-        <button
-          className={`pet-plan-card__btn${plan.highlight ? ' pet-plan-card__btn--primary' : ''}`}
-          onClick={() => onSelect(plan.key)}
-          aria-label={`${plan.label} 플랜 선택`}
-        >
-          구독하기
-        </button>
-      ) : (
-        <p className="pet-plan-card__note">가입 시 자동으로 적용돼요</p>
-      )}
-    </div>
-  )
-}
-
-function PetListItem({ pet }) {
-  const navigate = useNavigate()
-  const SPECIES_LABEL = {
-    dog: '강아지', cat: '고양이', rabbit: '토끼',
-    bird: '새', hamster: '햄스터', fish: '물고기',
-    reptile: '파충류', other: '기타',
+// 구독하기 가능 여부는 "무료 확정" 일 때만 true(로딩/오류/unknown/구독 중은 모두 false).
+function resolveSubscribeGate({ isAuthenticated, enabled, subscription }) {
+  if (!isAuthenticated) return { isFree: false, canSubscribe: true, status: null }
+  if (!enabled || subscription.isLoading) {
+    return { isFree: false, canSubscribe: false, status: SUB_STATUS.CHECKING }
   }
-
-  return (
-    <button
-      className="pet-list-item"
-      onClick={() => navigate(`/pet/${pet.pet_id}`)}
-      aria-label={`${pet.name} 상세 보기`}
-    >
-      <div className="pet-list-item__avatar">
-        {pet.profile_image_url
-          ? (
-            <img
-              src={pet.profile_image_url}
-              alt={pet.name}
-              onError={(e) => { e.target.onerror = null; e.target.src = '' }}
-            />
-          )
-          : <PawPrint size={28} color="var(--color-primary)" aria-hidden="true" />}
-      </div>
-      <div className="pet-list-item__info">
-        <span className="pet-list-item__name">{pet.name}</span>
-        <span className="pet-list-item__species">{SPECIES_LABEL[pet.species] || pet.species}</span>
-        {pet.pet_status === 'deceased' && (
-          <span className="pet-list-item__badge">무지개다리</span>
-        )}
-      </div>
-      <ArrowRight size={18} color="var(--color-text-muted)" aria-hidden="true" />
-    </button>
-  )
+  const kind = subscription.summary?.kind
+  if (!subscription.error && kind === 'free') return { isFree: true, canSubscribe: true, status: null }
+  const isLive = !subscription.error && kind != null && kind !== 'unknown'
+  return {
+    isFree: false,
+    canSubscribe: false,
+    status: isLive ? SUB_STATUS.SUBSCRIBED : SUB_STATUS.UNAVAILABLE,
+  }
 }
 
 export default function PetPage() {
   const navigate = useNavigate()
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
-  const { pets, isLoading, error } = usePet()
-
-  const handlePlanSelect = (plan) => {
-    if (!isAuthenticated) {
-      navigate(ROUTES.LOGIN)
-      return
-    }
-    navigate(ROUTES.PET_SUBSCRIPTION, { state: { selectedPlan: plan } })
-  }
+  const nickname = useAuthStore((s) => s.user?.nickname)
+  const { pets, isLoading, error, refetch } = usePet({ enabled: isAuthenticated })
+  // 0마리 구독자도 상태를 알아야 해지/이중 가입 차단이 가능하다. 목록 로딩 완료 + 목록 오류 아님이면 조회.
+  const subscriptionEnabled = isAuthenticated && !isLoading && !error
+  const subscription = useMySubscription({ enabled: subscriptionEnabled })
+  const gate = resolveSubscribeGate({ isAuthenticated, enabled: subscriptionEnabled, subscription })
+  const { canSubscribe } = gate
+  const checkout = usePetCheckout({ canSubscribe })
+  const price = useArchivePlanPrice({ enabled: gate.isFree })
+  const { notice, dismiss } = useBillingReturnNotice()
 
   const handleRegister = () => {
     if (!isAuthenticated) {
@@ -138,85 +56,58 @@ export default function PetPage() {
     navigate(ROUTES.PET_NEW)
   }
 
+  const trimmed = nickname?.trim()
+  const displayName = trimmed ? `${trimmed}님의 반려동물` : DEFAULT_TITLE
+  const deceasedPets = pets.filter((pet) => pet.pet_status === 'deceased')
+  const alivePets = pets.filter((pet) => pet.pet_status !== 'deceased')
+
+  // 무료가 아닌 확정 상태(구독 중/unknown/오류)일 때만 랜딩 위에 '내 구독' 영역을 둔다.
+  const showLandingSummary =
+    gate.status === SUB_STATUS.SUBSCRIBED || gate.status === SUB_STATUS.UNAVAILABLE
+  const subscriptionSlot = showLandingSummary ? (
+    <PetSubscriptionSummary
+      summary={subscription.summary}
+      isLoading={false}
+      error={subscription.error}
+      isStale={subscription.isStale}
+      onSubscriptionChanged={subscription.refetch}
+      onRetry={subscription.refetch}
+    />
+  ) : null
+
+  const renderBody = () => {
+    if (isLoading && isAuthenticated) return <PetDashboardSkeleton />
+    if (!isAuthenticated || (!error && pets.length === 0)) {
+      return (
+        <PetLanding
+          onRegister={handleRegister}
+          checkout={checkout}
+          canSubscribe={canSubscribe}
+          subscriptionStatus={gate.status}
+          subscriptionSlot={subscriptionSlot}
+        />
+      )
+    }
+    return (
+      <PetDashboard
+        displayName={error ? DEFAULT_TITLE : displayName}
+        alivePets={alivePets}
+        deceasedPets={deceasedPets}
+        error={error}
+        onRetry={() => refetch()}
+        onRegister={handleRegister}
+        subscription={subscription}
+        checkout={checkout}
+        price={price}
+        canSubscribe={canSubscribe}
+      />
+    )
+  }
+
   return (
     <main className="pet-page">
-      {/* Hero */}
-      <section className="pet-hero">
-        <div className="pet-hero__inner">
-          <Heart className="pet-hero__icon" size={48} aria-hidden="true" />
-          <h1 className="pet-hero__title">
-            소중한 반려동물의<br />기억을 간직하세요
-          </h1>
-          <p className="pet-hero__sub">
-            함께한 순간의 사진을 안전하게 보관하고,<br />
-            AI 초상화로 특별한 추억을 만들어 드립니다.
-          </p>
-          <button className="pet-hero__cta" onClick={handleRegister}>
-            반려동물 등록하기
-            <ArrowRight size={20} aria-hidden="true" />
-          </button>
-        </div>
-      </section>
-
-      {/* 기능 소개 */}
-      <section className="pet-section">
-        <div className="pet-section__inner">
-          <h2 className="pet-section__title">반려동물 아카이브 기능</h2>
-          <div className="pet-features-grid">
-            {FEATURES.map((f) => (
-              <FeatureCard key={f.title} {...f} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 구독 플랜 */}
-      <section className="pet-section pet-section--accent">
-        <div className="pet-section__inner">
-          <h2 className="pet-section__title">구독 플랜</h2>
-          <p className="pet-section__sub">소중한 기억만큼 합리적인 가격으로 시작하세요.</p>
-          <div className="pet-plans-grid">
-            {PLANS.map((plan) => (
-              <PlanCard key={plan.key} plan={plan} onSelect={handlePlanSelect} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 등록된 반려동물 목록 */}
-      {isAuthenticated && (
-        <section className="pet-section">
-          <div className="pet-section__inner">
-            <div className="pet-list-header">
-              <h2 className="pet-section__title" style={{ marginBottom: 0 }}>내 반려동물</h2>
-              <button className="pet-list-add" onClick={handleRegister} aria-label="반려동물 추가">
-                <Plus size={18} aria-hidden="true" />
-                추가
-              </button>
-            </div>
-
-            {isLoading && (
-              <p className="pet-list-empty" role="status">불러오는 중...</p>
-            )}
-
-            {!isLoading && error && (
-              <p className="pet-list-empty" role="alert">{error}</p>
-            )}
-
-            {!isLoading && !error && pets.length === 0 && (
-              <p className="pet-list-empty">아직 등록된 반려동물이 없습니다.</p>
-            )}
-
-            {!isLoading && !error && pets.length > 0 && (
-              <div className="pet-list">
-                {pets.map((pet) => (
-                  <PetListItem key={pet.pet_id} pet={pet} />
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
-      )}
+      <PetBillingNotice notice={notice} onDismiss={dismiss} />
+      {renderBody()}
     </main>
   )
 }

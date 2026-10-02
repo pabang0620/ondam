@@ -56,7 +56,7 @@
 
 .will-release__label {
   font-size: var(--fs-body);
-  font-weight: 700;
+  font-weight: 600;
   color: var(--color-text-primary);
   display: flex;
   align-items: center;
@@ -96,7 +96,7 @@
 
 .will-release__drop-label {
   font-size: var(--fs-body);
-  font-weight: 700;
+  font-weight: 600;
   color: var(--color-text-primary);
 }
 
@@ -161,7 +161,7 @@
 }
 
 .will-release__reselect:hover {
-  background-color: var(--color-bg);
+  background-color: var(--color-bg-subtle);
 }
 
 .will-release__file-input {
@@ -192,7 +192,7 @@
 .will-release__notice-title {
   font-family: var(--font-serif);
   font-size: var(--fs-body);
-  font-weight: 700;
+  font-weight: 600;
   color: var(--color-will);
   margin-bottom: var(--spacing-xs);
   letter-spacing: var(--ls-heading-ko);

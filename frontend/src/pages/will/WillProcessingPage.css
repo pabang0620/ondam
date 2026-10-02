@@ -32,7 +32,7 @@
   height: 64px;
   border-radius: var(--radius-pill);
   border: 5px solid rgba(245, 239, 230, 0.25);
-  border-top-color: var(--color-warm-accent);
+  border-top-color: var(--color-accent-brand-light);
   animation: spin 1s linear infinite;
 }
 
@@ -80,7 +80,7 @@
 
 .will-proc__stage.is-done {
   opacity: 1;
-  background-color: rgba(201, 162, 75, 0.15);
+  background-color: rgba(245, 160, 82, 0.15);
 }
 
 .will-proc__stage.is-active {
@@ -124,7 +124,7 @@
 
 .will-proc__progress-fill {
   height: 100%;
-  background-color: var(--color-warm-accent);
+  background-color: var(--color-accent-brand-light);
   border-radius: var(--radius-pill);
   transition: width 0.5s ease;
 }
@@ -132,7 +132,12 @@
 .will-proc__progress-pct {
   font-size: var(--fs-body);
   font-weight: 700;
-  color: var(--color-warm-accent);
+  /* 의도적 예외: 이 배경(.will-proc-page, #1A1715→--color-will #6B5D45)의
+     베이지 쪽 끝에서 --color-accent-brand-light(#F5A052)는 대비 3.06:1로
+     AA 미달. --color-accent-brand-soft(#FDEBDF)는 5.53:1로 통과하는
+     유일한 브랜드 토큰이라 "배경 틴트 전용" 용도를 벗어나 텍스트에 사용한다.
+     네이밍만 보고 -light로 되돌리지 말 것. */
+  color: var(--color-accent-brand-soft);
   min-width: 40px;
   text-align: right;
 }

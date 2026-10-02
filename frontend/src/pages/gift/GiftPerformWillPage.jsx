@@ -204,7 +204,7 @@ function GiftPerformWillPage() {
       <Screen>
         <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--spacing-lg)' }}>
           <CheckCircle2 size={44} color="var(--color-primary)" />
-          <p style={{ fontSize: 'var(--fs-h2)', fontWeight: 800 }}>영상 편지가 완성됐어요!</p>
+          <p style={{ fontSize: 'var(--fs-h2)', fontWeight: 700 }}>영상 편지가 완성됐어요!</p>
           <p style={{ color: 'var(--color-text-secondary)', lineHeight: 'var(--lh-relaxed)' }}>
             수고하셨어요. 마이페이지에서 언제든 다시 보실 수 있어요.
           </p>
