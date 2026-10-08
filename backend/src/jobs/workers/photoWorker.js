@@ -149,7 +149,7 @@ const finalizeOrderFailure = async ({ orderId, userId, failReason }) => {
     await notificationQueue.add('photo_order_failed_refund', {
       type: 'email',
       to: email,
-      subject: '[리멤버미] 사진 처리 실패 안내',
+      subject: '[온담] 사진 처리 실패 안내',
       message,
     }).catch((err) => console.error('[photoWorker] 실패 알림 큐 등록 오류:', err.message))
   }

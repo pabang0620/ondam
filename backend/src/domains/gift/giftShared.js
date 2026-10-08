@@ -72,7 +72,7 @@ export const notifyGiver = async (gift, giver, { type, title, message }) => {
 
   if (giver?.email) {
     await notificationQueue
-      .add(type, { type: 'email', to: giver.email, subject: `[리멤버미] ${title}`, message })
+      .add(type, { type: 'email', to: giver.email, subject: `[온담] ${title}`, message })
       .catch((e) => console.error('[giftShared] 이메일 알림 큐 등록 실패:', gift.gift_id, e.message))
   }
 }

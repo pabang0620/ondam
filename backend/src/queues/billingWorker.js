@@ -143,7 +143,7 @@ const handleExecuteBilling = async (data) => {
   const customerEmail = userRow?.email ?? ''
 
   const planInfo = PLANS[plan] ?? PLANS[sub.plan]
-  const orderName = `리멤버미 ${planInfo?.name ?? plan} 정기구독`
+  const orderName = `온담 ${planInfo?.name ?? plan} 정기구독`
 
   // 6. 결제 실행 (orderId/log는 위에서 락 안에 예약된 것을 그대로 사용)
   const result = await runBilling({

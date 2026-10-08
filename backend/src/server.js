@@ -144,7 +144,7 @@ app.use('/api/gifts', giftRoutes)
 
 // 헬스체크
 app.get('/api/health', (req, res) => {
-  res.json({ success: true, message: '리멤버미 서버 정상 동작 중' })
+  res.json({ success: true, message: '온담 서버 정상 동작 중' })
 })
 
 // multer 에러 핸들러 (글로벌 에러 핸들러 앞에 등록)
