@@ -22,7 +22,6 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--spacing-md);
 }
 
 .pet-hero__title {
@@ -30,6 +29,7 @@
   font-weight: 600;
   color: var(--color-primary);
   line-height: 1.3;
+  margin-bottom: var(--spacing-md);
   letter-spacing: var(--ls-heading-ko);
   word-break: keep-all;
   text-wrap: balance;
@@ -39,19 +39,19 @@
   font-size: 17px;
   color: var(--color-primary);
   line-height: var(--lh-relaxed);
+  margin-bottom: var(--spacing-xl);
   word-break: keep-all;
 }
 
 .pet-hero__cta {
   display: inline-flex;
   align-items: center;
-  gap: var(--spacing-sm);
   background: var(--color-primary);
   color: var(--color-text-on-dark);
   border: none;
   border-radius: var(--radius-pill);
-  padding: 0 var(--spacing-2xl);
-  min-height: var(--min-touch-target);
+  padding: 0 var(--spacing-xl);
+  min-height: var(--size-button-h);
   font-size: var(--fs-button);
   font-weight: 700;
   cursor: pointer;
@@ -94,21 +94,18 @@
   margin: 0 auto;
 }
 
+/* 구독 플랜 섹션 제목: 영상편지(will-section-title)와 같은 serif/중앙 정렬 */
 .pet-section__title {
+  font-family: var(--font-serif);
   font-size: clamp(20px, 4vw, var(--fs-h2));
   font-weight: 600;
   color: var(--color-text-primary);
-  margin-bottom: var(--spacing-lg);
+  text-align: center;
+  /* 부제 제거: 이전 부제 아래 간격(--spacing-xl)을 제목 아래로 이관 */
+  margin-bottom: var(--spacing-xl);
   letter-spacing: var(--ls-heading-ko);
   word-break: keep-all;
   line-height: 1.3;
-}
-
-.pet-section__sub {
-  font-size: var(--fs-body);
-  color: var(--color-text-secondary);
-  margin-top: calc(-1 * var(--spacing-md));
-  margin-bottom: var(--spacing-lg);
 }
 
 /* Feature cards — 영상편지(will-features) 섹션과 동일한 시각 스타일 */
@@ -173,16 +170,22 @@
 /* Plan cards — 구독 카드: 살구 베이지 베이스 */
 .pet-plans-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 20px;
+  grid-template-columns: minmax(0, 1fr);
+  justify-content: center;
+  gap: var(--spacing-xl);
 }
 
 .pet-plan-card {
   background: var(--color-surface);
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-card);
-  --pet-plan-card-padding: 24px;
-  padding: var(--pet-plan-card-padding);
+  box-shadow: var(--shadow-card);
+  /* 영상편지 가격 카드(will-pricing__card) 여백: 32px, 모바일 24px 16px */
+  --pet-plan-card-pad-y: var(--spacing-xl);
+  --pet-plan-card-pad-x: var(--spacing-xl);
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--pet-plan-card-pad-y) var(--pet-plan-card-pad-x);
   display: flex;
   flex-direction: column;
   position: relative;
@@ -196,7 +199,7 @@
     var(--color-brand-gradient) border-box;
   border: 2px solid transparent;
   /* border가 일반 카드(1px)보다 1px 두꺼운 만큼 padding 보정 → 내용 시작 위치 정렬 */
-  padding: calc(var(--pet-plan-card-padding) - 1px);
+  padding: calc(var(--pet-plan-card-pad-y) - 1px) calc(var(--pet-plan-card-pad-x) - 1px);
 }
 
 .pet-plan-card__badge {
@@ -232,7 +235,7 @@
 .pet-plan-card__price {
   font-family: var(--font-serif);
   font-size: 36px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--color-text-primary);
   letter-spacing: var(--ls-heading-ko);
 }
@@ -251,6 +254,11 @@
   line-height: var(--lh-relaxed);
   word-break: keep-all;
   text-align: left;
+}
+
+/* 이용 항목 아래(구독 버튼 위) 간격. 무료 카드처럼 마지막이면 카드 padding 만 사용 */
+.pet-plan-card__features:not(:last-child) {
+  margin-bottom: var(--spacing-lg);
 }
 
 .pet-plan-card__feature {
@@ -275,9 +283,9 @@
   border: 1.5px solid var(--color-primary);
   border-radius: var(--radius-pill);
   min-height: var(--min-touch-target);
-  margin: 0 0 var(--space-7);
+  margin: 0 0 var(--spacing-md);
   font-size: var(--fs-button);
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: background var(--transition-base), color var(--transition-base), filter var(--hover-transition), transform var(--hover-transition);
 }
@@ -303,18 +311,18 @@
   border-color: transparent;
 }
 
-/* hover: 한 단계 어둡게(기존 brightness 0.94 → 토큰 0.92). focus-visible 도 같은 강도 */
+/* hover: 영상편지 CTA(will-pricing__cta:hover)와 같은 brightness(0.94). focus-visible 도 같은 강도 */
 .pet-plan-card__btn--primary:focus-visible:not(:disabled) {
   background: var(--color-brand-gradient);
   border-color: transparent;
-  filter: var(--hover-darken);
+  filter: brightness(0.94);
 }
 
 @media (hover: hover), (any-hover: hover) {
   .pet-plan-card__btn--primary:hover:not(:disabled) {
     background: var(--color-brand-gradient);
     border-color: transparent;
-    filter: var(--hover-darken);
+    filter: brightness(0.94);
   }
 }
 
@@ -323,10 +331,27 @@
   color: var(--color-text-muted);
   text-align: center;
   min-height: var(--min-touch-target);
-  margin: 0 0 var(--space-7);
+  margin: 0 0 var(--spacing-md);
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.pet-plan-card__note:last-child {
+  margin-bottom: 0;
+}
+
+/* 무료 카드 안내: 정보용 회색 박스(버튼처럼 보이지 않게 테두리·그림자·hover·cursor 없음).
+   --color-text-secondary(#6E6E73) on --color-bg-subtle(#F5F5F7) ≈ 4.6:1 (AA) */
+.pet-plan-card__free-note {
+  background: var(--color-bg-subtle);
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  margin: 0 0 var(--spacing-lg);
+  font-size: var(--font-size-base);
+  text-align: center;
+  word-break: keep-all;
 }
 
 /* ── 반응형: 데스크톱 (≥ 1024px) ── */
@@ -341,7 +366,7 @@
   }
 
   .pet-plans-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 460px));
   }
 
   .pet-section__inner {
@@ -377,7 +402,8 @@
   }
 
   .pet-plans-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 460px));
+    gap: var(--spacing-md);
   }
 
   .pet-section__inner {
@@ -434,12 +460,13 @@
   }
 
   .pet-plans-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--spacing-xl);
   }
 
   .pet-plan-card {
-    --pet-plan-card-padding: 20px;
+    --pet-plan-card-pad-y: var(--spacing-lg);
+    --pet-plan-card-pad-x: var(--spacing-md);
   }
 
   .pet-plan-card__btn {

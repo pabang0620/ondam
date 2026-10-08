@@ -1,4 +1,3 @@
-import { ArrowRight } from 'lucide-react'
 import PetFeatureGrid from './PetFeatureGrid.jsx'
 import PetPlanGrid from './PetPlanGrid.jsx'
 
@@ -26,7 +25,6 @@ export default function PetLanding({
           </p>
           <button className="pet-hero__cta" onClick={onRegister}>
             반려동물 등록하기
-            <ArrowRight size={20} aria-hidden="true" />
           </button>
         </div>
       </section>
@@ -43,7 +41,6 @@ export default function PetLanding({
       <section className="pet-section pet-section--accent">
         <div className="pet-section__inner">
           <h2 className="pet-section__title">구독 플랜</h2>
-          <p className="pet-section__sub">소중한 기억만큼 합리적인 가격으로 시작하세요.</p>
           <PetPlanGrid checkout={checkout} canSubscribe={canSubscribe} status={subscriptionStatus} />
         </div>
       </section>

@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { Camera, Video, Loader2 } from 'lucide-react'
+import { Camera, Video, Loader2, Gift } from 'lucide-react'
 import useGiftNew from './useGiftNew.js'
 import './GiftNewPage.css'
 
@@ -63,6 +63,7 @@ function GiftNewPage() {
           </p>
           <button type="button" className="gift-hero__cta" onClick={handleStart}>
             선물 시작하기
+            <Gift size={20} aria-hidden="true" />
           </button>
         </div>
       </section>

@@ -50,6 +50,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: var(--spacing-sm);
+  white-space: nowrap;
   background: var(--color-primary);
   color: var(--color-text-on-dark);
   font-size: var(--fs-button);
@@ -213,9 +215,12 @@
 }
 
 /* 선택 상태: 1px 유지(굵기 변화 없음 → 레이아웃 고정), 색만 --color-primary. 그림자 없음.
-   흰 배경 대비 16.5:1 이상, 비선택 테두리(--color-border-light) 대비 약 13:1 */
+   흰 배경 대비 16.5:1 이상, 비선택 테두리(--color-border-light) 대비 약 13:1.
+   배경: 배너색(--color-gift-banner) 40% + surface 혼합 = 약 #FFF3D0.
+   글자 대비: label 11.4:1, desc(--color-text-secondary) 4.58:1, 테두리 15.2:1 (모두 AA 4.5:1 이상) */
 .gift-product-card.is-selected {
   border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-gift-banner) 40%, var(--color-surface));
 }
 
 /* 카드가 더 높아져도 항상 padding 안쪽 오른쪽 아래. 위 gap으로 텍스트와 겹치지 않음 */

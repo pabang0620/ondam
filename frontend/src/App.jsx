@@ -101,11 +101,18 @@ export default function App() {
             <Route path={ROUTES.WILL_WATCH} element={<WillWatchPage />} />
             {/* 선물 수행 링크 - 무계정 진입(SPEC-01 3-2), 본인확인/계정연결은 페이지 내부에서 처리 */}
             <Route path={ROUTES.GIFT_PERFORM} element={<GiftPerformPage />} />
+            {/* 서비스 소개/가격 페이지 - 비로그인도 열람 가능. 주문·동의·결제 등 실제 이용 단계는
+                아래 보호 그룹(PrivateRoute)에 그대로 둔다. 로그인 여부별 분기는 각 페이지가 처리한다. */}
+            <Route path={ROUTES.WILL} element={<WillPage />} />
+            <Route path={ROUTES.PET} element={<PetPage />} />
+            <Route path={ROUTES.PHOTO} element={<PhotoPage />} />
+            {/* 선물하기 소개/가격/주문 폼 - 열람은 공개. 실제 주문 생성(POST /gifts)은 useGiftNew 가
+                제출 시점에 로그인 여부를 확인해 /login 으로 보낸다. */}
+            <Route path={ROUTES.GIFT_NEW} element={<GiftNewPage />} />
           </Route>
 
           {/* 보호된 메인 레이아웃 - 인증 필요 */}
           <Route element={<PrivateRoute><MainLayout /></PrivateRoute>}>
-            <Route path={ROUTES.PHOTO} element={<PhotoPage />} />
             <Route path={ROUTES.PHOTO_ORDER} element={<PhotoOrderPage />} />
             <Route path={ROUTES.PHOTO_PAYMENT} element={<PhotoPaymentPage />} />
             <Route path={ROUTES.PHOTO_PAYMENT_SUCCESS} element={<PhotoPaymentSuccessPage />} />
@@ -113,7 +120,6 @@ export default function App() {
             <Route path={ROUTES.PHOTO_PROCESSING} element={<PhotoProcessingPage />} />
             <Route path={ROUTES.PHOTO_RESULT} element={<PhotoResultPage />} />
 
-            <Route path={ROUTES.WILL} element={<WillPage />} />
             <Route path={ROUTES.WILL_CONSENT} element={<WillConsentPage />} />
             <Route path={ROUTES.WILL_BENEFICIARIES} element={<WillBeneficiariesPage />} />
             <Route path={ROUTES.WILL_RECORD} element={<WillRecordPage />} />
@@ -128,7 +134,6 @@ export default function App() {
                 되살리려면 위 lazy import 복구 후 이 줄의 주석을 해제한다. */}
             {/* <Route path={ROUTES.WILL_EVENT} element={<WillEventPage />} /> */}
 
-            <Route path={ROUTES.PET} element={<PetPage />} />
             <Route path={ROUTES.PET_SUBSCRIPTION} element={<Navigate to={ROUTES.PET} replace />} />
             <Route path={ROUTES.PET_BILLING_SUCCESS} element={<BillingAuthSuccessPage />} />
             <Route path={ROUTES.PET_BILLING_FAIL} element={<BillingAuthFailPage />} />
@@ -140,8 +145,7 @@ export default function App() {
             <Route path={ROUTES.MY} element={<MyPage />} />
             <Route path="/my/edit" element={<MyPage />} />
 
-            {/* 선물하기 (SPEC-01 DEV-10) - 구매(자녀)는 인증 필요 */}
-            <Route path={ROUTES.GIFT_NEW} element={<GiftNewPage />} />
+            {/* 선물하기 (SPEC-01 DEV-10) - 구매(자녀)는 인증 필요 (GIFT_NEW 소개/폼은 위 공개 그룹) */}
             <Route path={ROUTES.GIFT_PAYMENT} element={<GiftPaymentPage />} />
             <Route path={ROUTES.GIFT_PAYMENT_SUCCESS} element={<GiftPaymentSuccessPage />} />
             <Route path={ROUTES.GIFT_PAYMENT_FAIL} element={<GiftPaymentFailPage />} />

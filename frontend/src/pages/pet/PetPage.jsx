@@ -34,7 +34,25 @@ function resolveSubscribeGate({ isAuthenticated, enabled, subscription }) {
   }
 }
 
+// /pet 은 공개 라우트라 PrivateRoute 의 초기화 대기가 없다. 세션 복원(initAuth)이 끝나기 전에는
+// 비로그인 소개 화면을 잠깐 보였다 대시보드로 바뀌는 깜빡임과 불필요한 API 호출을 막기 위해
+// 스켈레톤만 보여주고, 끝난 뒤에 본문을 마운트한다(본문은 로그인 상태가 확정된 채로 시작).
 export default function PetPage() {
+  const isAuthInitialized = useAuthStore((s) => s.isAuthInitialized)
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+
+  if (!isAuthInitialized) {
+    return (
+      <main className="pet-page">
+        <PetDashboardSkeleton />
+      </main>
+    )
+  }
+  // key: 로그인/로그아웃으로 인증 상태가 바뀌면 본문을 새로 마운트해 이전 사용자 데이터 상태를 버린다.
+  return <PetPageContent key={isAuthenticated ? 'auth' : 'anon'} />
+}
+
+function PetPageContent() {
   const navigate = useNavigate()
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const nickname = useAuthStore((s) => s.user?.nickname)

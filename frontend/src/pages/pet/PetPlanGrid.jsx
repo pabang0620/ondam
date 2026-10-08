@@ -1,3 +1,4 @@
+import { useId } from 'react'
 import { Image, Sparkles, UserRound, Flower2 } from 'lucide-react'
 import { PET_ARCHIVE_BENEFITS } from './subscriptionLabels.js'
 import SubscriptionNotice from './SubscriptionNotice.jsx'
@@ -42,16 +43,16 @@ const PLANS = [
   },
 ]
 
+// 구독 버튼 영역: (상태/오류 안내) → 구독 버튼 → 자동결제·해지 유의사항.
+// 유의사항이 버튼 아래에 오므로 aria-describedby 로 버튼에 연결해 스크린리더가 결제 전에 읽게 한다.
 function SubscribeAction({ plan, checkout, canSubscribe, status }) {
+  const noticeId = useId()
   const isRedirecting = Boolean(checkout?.isRedirecting)
   if (!canSubscribe && status && STATUS_NOTES[status]) {
     return <p className="pet-plan-card__note" role="status">{STATUS_NOTES[status]}</p>
   }
   return (
     <>
-      <div className="pet-plan-card__notice">
-        <SubscriptionNotice variant="inline" showFirstCharge />
-      </div>
       {checkout?.error && (
         <p className="pet-sub-summary__msg pet-sub-summary__msg--error pet-plan-card__status" role="alert">
           {checkout.error}
@@ -66,9 +67,13 @@ function SubscribeAction({ plan, checkout, canSubscribe, status }) {
         onClick={() => checkout?.start(plan.key)}
         disabled={!canSubscribe || isRedirecting}
         aria-label={`${plan.label} 플랜 선택`}
+        aria-describedby={noticeId}
       >
         {isRedirecting ? REDIRECT_TEXT : '구독하기'}
       </button>
+      <div id={noticeId} className="pet-plan-card__notice">
+        <SubscriptionNotice variant="inline" showFirstCharge />
+      </div>
     </>
   )
 }
@@ -82,10 +87,8 @@ function PlanCard({ plan, checkout, canSubscribe, status }) {
         <span className="pet-plan-card__price">{plan.price}</span>
         {plan.unit && <span className="pet-plan-card__unit">{plan.unit}</span>}
       </p>
-      {plan.selectable ? (
-        <SubscribeAction plan={plan} checkout={checkout} canSubscribe={canSubscribe} status={status} />
-      ) : (
-        <p className="pet-plan-card__note">가입 시 자동으로 적용돼요</p>
+      {!plan.selectable && (
+        <p className="pet-plan-card__free-note">가입 시 자동으로 적용돼요</p>
       )}
       <ul className="pet-plan-card__features">
         {plan.features.map(({ icon: Icon, text }) => (
@@ -97,6 +100,9 @@ function PlanCard({ plan, checkout, canSubscribe, status }) {
           </li>
         ))}
       </ul>
+      {plan.selectable && (
+        <SubscribeAction plan={plan} checkout={checkout} canSubscribe={canSubscribe} status={status} />
+      )}
     </div>
   )
 }

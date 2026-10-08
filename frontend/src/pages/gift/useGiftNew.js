@@ -1,9 +1,13 @@
 import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createGiftOrder } from './giftApi.js'
+import { useAuthStore } from '../../store/authStore.js'
+import { ROUTES } from '../../constants/routes.js'
 
 function useGiftNew() {
   const navigate = useNavigate()
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const isAuthInitialized = useAuthStore((s) => s.isAuthInitialized)
 
   const [productType, setProductType] = useState(null)
   const [recipientName, setRecipientName] = useState('')
@@ -17,6 +21,13 @@ function useGiftNew() {
 
   const handleSubmit = useCallback(async () => {
     if (!canSubmit) return
+    // 비로그인도 이 페이지를 열람할 수 있으므로 주문 생성 API 호출 전에 로그인으로 보낸다.
+    // 세션 복원(initAuth) 중이면 판정을 보류한다.
+    if (!isAuthInitialized) return
+    if (!isAuthenticated) {
+      navigate(ROUTES.LOGIN)
+      return
+    }
     setIsSubmitting(true)
     setError(null)
     try {
@@ -31,7 +42,7 @@ function useGiftNew() {
     } finally {
       setIsSubmitting(false)
     }
-  }, [canSubmit, productType, recipientName, recipientPhone, navigate])
+  }, [canSubmit, isAuthenticated, isAuthInitialized, productType, recipientName, recipientPhone, navigate])
 
   return {
     productType,

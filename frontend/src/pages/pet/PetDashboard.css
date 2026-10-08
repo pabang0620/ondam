@@ -609,9 +609,47 @@
   min-height: calc(var(--fs-body) * 1.5);
 }
 
-/* 랜딩 플랜 카드: 자동 결제 고지(구독하기 버튼 위) */
+/* 랜딩 플랜 카드: 자동 결제 고지(구독하기 버튼 아래; 버튼과의 간격은 버튼 margin-bottom) */
 .pet-plan-card__notice {
-  margin: 0 0 var(--spacing-md);
+  box-sizing: border-box;
+  width: 100%;
+  /* 버튼 margin-bottom(md) + 이 margin-top(md) = 32px: 영상편지 포함 목록 → 구분선 간격과 동일 */
+  margin: var(--spacing-md) 0 0;
+  padding-top: var(--spacing-xl);
+  border-top: 1px solid var(--color-border);
+  text-align: left;
+}
+
+/* 영상편지 안내문(will-pricing__notice-list)과 동일: 16px / 1.6 / text-primary, 항목 간격 8px, Info 아이콘.
+   SubscriptionNotice 공용 마크업은 그대로 두고 카드 범위에서만 disc 를 Info 아이콘(마스크)으로 대체한다. */
+.pet-plan-card__notice .pet-notice__list {
+  padding: 0;
+  list-style: none;
+  gap: var(--spacing-sm);
+  font-size: var(--fs-body);
+  line-height: var(--lh-relaxed);
+  color: var(--color-text-primary);
+  word-break: keep-all;
+  text-align: left;
+}
+
+.pet-plan-card__notice .pet-notice__list > li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+}
+
+.pet-plan-card__notice .pet-notice__list > li::before {
+  content: '';
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  margin-top: 3px;
+  background-color: var(--color-text-muted);
+  -webkit-mask: var(--pet-notice-info-icon) center / contain no-repeat;
+  mask: var(--pet-notice-info-icon) center / contain no-repeat;
+  /* lucide Info (24x24, stroke) */
+  --pet-notice-info-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 16v-4'/%3E%3Cpath d='M12 8h.01'/%3E%3C/svg%3E");
 }
 
 .pet-plan-card__status {

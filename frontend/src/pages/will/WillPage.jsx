@@ -4,7 +4,6 @@ import {
   Video,
   Lock,
   Send,
-  ChevronRight,
   UserRound,
   Archive,
   Info,
@@ -71,7 +70,6 @@ export default function WillPage() {
             onClick={() => navigate('/will/consent')}
           >
             AI 영상 편지 만들기
-            <ChevronRight size={20} aria-hidden="true" />
           </button>
         </div>
       </section>
