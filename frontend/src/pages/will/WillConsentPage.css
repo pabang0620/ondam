@@ -11,7 +11,8 @@
 
 .will-consent__guide {
   font-size: var(--fs-body);
-  color: var(--color-text-secondary);
+  color: var(--color-text-primary);
+  text-align: center;
   margin-bottom: var(--spacing-xl);
   line-height: var(--lh-relaxed);
 }

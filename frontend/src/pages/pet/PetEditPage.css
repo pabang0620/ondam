@@ -1,0 +1,146 @@
+/* 반려동물 수정 페이지: 등록 페이지(PetNewPage)와 같은 시각 스타일 */
+.pet-edit {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+  max-width: 480px;
+  margin: 0 auto;
+  padding: var(--spacing-xl) var(--spacing-md) var(--spacing-2xl);
+}
+
+.pet-edit--status {
+  gap: var(--spacing-md);
+}
+
+.pet-edit__back {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: var(--spacing-xs);
+  min-height: var(--min-touch-target);
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.pet-edit__title {
+  margin: 0;
+  font-size: var(--fs-h1);
+  font-weight: 700;
+  letter-spacing: var(--ls-heading-ko);
+  color: var(--color-primary);
+}
+
+.pet-edit__message {
+  margin: 0;
+  font-size: var(--fs-body);
+  color: var(--color-text-muted);
+}
+
+.pet-edit__message--error,
+.pet-edit__submit-error {
+  margin: 0;
+  font-size: var(--fs-body);
+  color: var(--color-error);
+}
+
+.pet-edit__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.pet-edit__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.pet-edit__label {
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.pet-edit__required {
+  color: var(--color-error);
+}
+
+.pet-edit__input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: var(--size-input-h);
+  padding: 0 var(--spacing-md);
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: var(--fs-body);
+  transition: border-color var(--transition-fast);
+}
+
+.pet-edit__input[aria-invalid='true'] {
+  border-color: var(--color-error);
+}
+
+.pet-edit__input--readonly {
+  background: var(--color-bg-subtle);
+  color: var(--color-text-secondary);
+}
+
+.pet-edit__error {
+  font-size: var(--fs-caption);
+  color: var(--color-error);
+}
+
+.pet-edit__hint {
+  font-size: var(--fs-caption);
+  color: var(--color-text-muted);
+}
+
+.pet-edit__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.pet-edit__btn {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: var(--size-button-h);
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-button);
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background var(--transition-base);
+}
+
+.pet-edit__btn--primary {
+  border: none;
+  background: var(--color-pet);
+  color: var(--color-surface);
+}
+
+.pet-edit__btn--primary:disabled {
+  background: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+.pet-edit__btn--secondary {
+  border: 1.5px solid var(--color-border-strong);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+}
+
+@media (max-width: 360px) {
+  .pet-edit {
+    padding-left: var(--spacing-sm);
+    padding-right: var(--spacing-sm);
+  }
+}

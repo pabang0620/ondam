@@ -3,7 +3,8 @@ import { http, HttpResponse, delay } from 'msw'
 
 // [개발용 시나리오 전환] 브라우저 콘솔에서 값을 넣고 새로고침한다 (개발 모드에서만 MSW 가 켜짐 - main.jsx).
 //   localStorage.setItem('msw:pets', 'empty'); location.reload()
-//   msw:pets : empty(0마리) | alive(생존 2) | deceased(무지개다리 1) | error(500) | slow(2초 지연) | 그 외/없음(기본 3마리)
+//   msw:pets : empty(0마리) | alive(생존 2) | deceased(무지개다리 1) | many(생존 2 + 무지개다리 2)
+//              | deceased2(무지개다리 2) | error(500) | slow(2초 지연) | 그 외/없음(기본 3마리)
 //   msw:sub  : free([]) | past_due | suspended | canceled | error(500) | unknown(상태값 없음) | 그 외/없음(active)
 //              폐지 플랜: legacy(will_premium 1,900 active) | legacy_past_due | legacy_suspended(will_premium)
 //                        | legacy_all(all 9,900 active) | mixed([canceled pet_archive, active will_premium])
@@ -73,6 +74,20 @@ const MOCK_PETS = [
   },
 ]
 
+// many / deceased2 시나리오용 무지개다리 한 마리 추가분 (생존·무지개다리 카드가 한 목록에서 함께 정렬되는지 확인용)
+const MOCK_PET_EXTRA_DECEASED = {
+  pet_id: 'pet-mock-4',
+  name: '보리',
+  species: 'cat',
+  breed: '러시안블루',
+  pet_status: 'deceased',
+  profile_image_url: 'https://placekitten.com/800/601',
+  birth_date: '2010-03-21',
+  death_date: '2024-08-02',
+  memorial_slug: 'bori',
+  is_public: 0,
+}
+
 function readScenario(key) {
   try {
     return localStorage.getItem(key)
@@ -87,6 +102,10 @@ function buildPets(scenario) {
   if (scenario === 'empty') return []
   if (scenario === 'alive') return copy(MOCK_PETS.filter((pet) => pet.pet_status === 'alive'))
   if (scenario === 'deceased') return copy(MOCK_PETS.filter((pet) => pet.pet_status === 'deceased'))
+  if (scenario === 'many') return copy([...MOCK_PETS, MOCK_PET_EXTRA_DECEASED])
+  if (scenario === 'deceased2') {
+    return copy([...MOCK_PETS.filter((pet) => pet.pet_status === 'deceased'), MOCK_PET_EXTRA_DECEASED])
+  }
   return copy(MOCK_PETS)
 }
 

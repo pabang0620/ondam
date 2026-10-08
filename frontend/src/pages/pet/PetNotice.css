@@ -22,6 +22,24 @@
   font-size: var(--fs-body);
   font-weight: 400;
   color: var(--color-text-secondary);
+  text-underline-offset: 3px;
+  transition: color var(--hover-transition);
+}
+
+.pet-notice__summary:focus-visible {
+  color: var(--color-text-primary);
+  text-decoration: underline;
+}
+
+@media (hover: hover), (any-hover: hover) {
+  .pet-notice__summary:hover {
+    color: var(--color-text-primary);
+    text-decoration: underline;
+  }
+}
+
+.pet-notice__summary:active {
+  color: var(--color-text-primary);
 }
 
 .pet-notice__summary::-webkit-details-marker {

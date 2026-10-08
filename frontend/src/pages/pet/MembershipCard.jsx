@@ -1,5 +1,5 @@
-import { useId } from 'react'
-import { Check } from 'lucide-react'
+import { useId, useState } from 'react'
+import { Check, ChevronDown } from 'lucide-react'
 import { formatKstDot } from '../../utils/dateKst.js'
 import {
   ARCHIVE_PLAN,
@@ -11,6 +11,7 @@ import {
 import SubscriptionNotice from './SubscriptionNotice.jsx'
 import './PetMembership.css'
 
+const PLAN_LABEL = '구독 상품'
 const PRICE_LABEL = '월 요금'
 const NEXT_BILLING_LABEL = '다음 결제일'
 const BENEFITS_TITLE = '이용 중인 혜택'
@@ -21,7 +22,10 @@ const LEGACY_NOTE = '반려동물 혜택(AI 초상화 월 3장 등)은 반려동
 const RETRY_TEXT = '재결제하기'
 const PROCESSING_TEXT = '처리 중...'
 const CANCEL_TEXT = '구독 해지'
+const FOLD_OPEN_TEXT = '유의사항 및 구독해지 보기'
+const FOLD_CLOSE_TEXT = '유의사항 및 구독해지 접기'
 const CHECK_ICON_SIZE = 20
+const CHEVRON_ICON_SIZE = 20
 
 const PILL_CLASS = {
   active: 'pet-member__pill--active',
@@ -30,12 +34,16 @@ const PILL_CLASS = {
   canceled: 'pet-member__pill--canceled',
 }
 
-function MembershipHeader({ titleId, planName, status }) {
+// 브랜드 머리띠: 구독명(왼쪽) + 상태 알약(오른쪽 끝). '구독 상품' 라벨은 스크린리더 전용
+function MembershipHeader({ planName, status }) {
   const config = STATUS_CONFIG[status] ?? STATUS_CONFIG.canceled
   const pillClass = PILL_CLASS[status] ?? PILL_CLASS.canceled
   return (
     <div className="pet-member__header">
-      <h3 id={titleId} className="pet-member__title">{planName}</h3>
+      <dl className="pet-member__plan">
+        <dt className="pet-member__sr-only">{PLAN_LABEL}</dt>
+        <dd>{planName}</dd>
+      </dl>
       <span className={`pet-member__pill ${pillClass}`}>{config.label}</span>
     </div>
   )
@@ -56,12 +64,12 @@ function buildStats(subscription, status) {
   return stats
 }
 
-function MembershipStats({ stats }) {
+function MembershipRows({ stats }) {
   if (stats.length === 0) return null
   return (
-    <dl className="pet-member__stats">
+    <dl className="pet-member__rows">
       {stats.map((stat) => (
-        <div key={stat.id} className="pet-member__stat">
+        <div key={stat.id} className="pet-member__row">
           <dt>{stat.label}</dt>
           <dd>{stat.value}</dd>
         </div>
@@ -87,7 +95,7 @@ function PaymentAlert({ status, isArchive }) {
 
 function ArchiveBenefits() {
   return (
-    <div className="pet-member__benefits">
+    <div className="pet-member__section">
       <h4 className="pet-member__benefits-title">{BENEFITS_TITLE}</h4>
       <ul className="pet-member__benefit-list" role="list">
         {PET_ARCHIVE_BENEFITS.map((benefit) => (
@@ -102,7 +110,11 @@ function ArchiveBenefits() {
 }
 
 function LegacyNote() {
-  return <p className="pet-member__text">{LEGACY_NOTE}</p>
+  return (
+    <div className="pet-member__section">
+      <p className="pet-member__text">{LEGACY_NOTE}</p>
+    </div>
+  )
 }
 
 // 재결제 버튼. 호출 방식은 SubscriptionStatusCard 와 동일(onRetry(subscription.subscription_id)).
@@ -137,8 +149,40 @@ function MembershipLinks({ canCancel, onCancel, isProcessing }) {
   )
 }
 
+// 유의사항 + 구독 해지를 한 접이식 영역으로 묶는다. 접힌 동안은 마운트하지 않아
+// 해지 버튼이 탭 순서·스크린리더에 노출되지 않는다.
+function MembershipFold({ canCancel, onCancel, isProcessing }) {
+  const [isOpen, setIsOpen] = useState(false)
+  const bodyId = useId()
+  return (
+    <div className="pet-member__fold">
+      <button
+        type="button"
+        className="pet-member__fold-toggle"
+        aria-expanded={isOpen}
+        aria-controls={bodyId}
+        onClick={() => setIsOpen((prev) => !prev)}
+      >
+        <span>{isOpen ? FOLD_CLOSE_TEXT : FOLD_OPEN_TEXT}</span>
+        <ChevronDown
+          size={CHEVRON_ICON_SIZE}
+          className="pet-member__fold-chevron"
+          aria-hidden="true"
+        />
+      </button>
+      {isOpen && (
+        <div id={bodyId}>
+          <div className="pet-member__notice">
+            <SubscriptionNotice variant="inline" />
+          </div>
+          <MembershipLinks canCancel={canCancel} onCancel={onCancel} isProcessing={isProcessing} />
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function MembershipCard({ subscription, summary, onCancel, onRetry, isProcessing }) {
-  const titleId = useId()
   if (!subscription) return null
 
   const status = readStatus(subscription) ?? 'canceled'
@@ -147,37 +191,31 @@ export default function MembershipCard({ subscription, summary, onCancel, onRetr
   // 혜택은 summary 가 아니라 이 카드가 받은 구독 객체로 다시 계산한다(해지 직후 로컬 canceled 에 즉시 반응).
   const showBenefits = hasArchiveBenefits(subscription)
   const showLegacy = !isArchive && !isCanceled
-  const bodyClass = showBenefits || showLegacy ? 'pet-member__body' : 'pet-member__body pet-member__body--single'
 
   return (
-    <article className="pet-member" aria-labelledby={titleId}>
-      <MembershipHeader titleId={titleId} planName={summary?.planName ?? '이전 요금제'} status={status} />
-      <div className={bodyClass}>
-        {!isCanceled && (
-          <div className="pet-member__main">
-            <MembershipStats stats={buildStats(subscription, status)} />
-            <PaymentAlert status={status} isArchive={isArchive} />
-            <MembershipActions
-              status={status}
-              subscription={subscription}
-              onRetry={onRetry}
-              isProcessing={isProcessing}
-            />
-          </div>
-        )}
-        {showBenefits && <ArchiveBenefits />}
-        {showLegacy && <LegacyNote />}
-        {!isCanceled && (
-          <div className="pet-member__notice">
-            <SubscriptionNotice variant="details" />
-          </div>
-        )}
-        <MembershipLinks
+    <article className="pet-member pet-member--sub" aria-labelledby="pet-sub-title">
+      <MembershipHeader planName={summary?.planName ?? '이전 요금제'} status={status} />
+      {!isCanceled && <MembershipRows stats={buildStats(subscription, status)} />}
+      {!isCanceled && (
+        <div className="pet-member__main">
+          <PaymentAlert status={status} isArchive={isArchive} />
+          <MembershipActions
+            status={status}
+            subscription={subscription}
+            onRetry={onRetry}
+            isProcessing={isProcessing}
+          />
+        </div>
+      )}
+      {showBenefits && <ArchiveBenefits />}
+      {showLegacy && <LegacyNote />}
+      {!isCanceled && (
+        <MembershipFold
           canCancel={status === 'active' || status === 'past_due'}
           onCancel={onCancel}
           isProcessing={isProcessing}
         />
-      </div>
+      )}
     </article>
   )
 }

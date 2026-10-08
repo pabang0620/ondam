@@ -2,28 +2,16 @@ import { useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import {
   ChevronLeft,
-  PawPrint,
   Camera,
   Sparkles,
   Heart,
   AlertTriangle,
 } from 'lucide-react'
 import { usePetDetail } from './usePetDetail.js'
+import { PetProfileCard } from './PetCard.jsx'
+import './PetDashboard.css'
 import MemorialSettingsSection from './MemorialSettingsSection.jsx'
 import './PetDetailPage.css'
-
-const SPECIES_LABEL = {
-  dog: '강아지', cat: '고양이', rabbit: '토끼',
-  bird: '새', hamster: '햄스터', fish: '물고기',
-  reptile: '파충류', other: '기타',
-}
-
-function formatDate(dateStr) {
-  if (!dateStr) return null
-  return new Date(dateStr).toLocaleDateString('ko-KR', {
-    year: 'numeric', month: 'long', day: 'numeric',
-  })
-}
 
 export default function PetDetailPage() {
   const { petId } = useParams()
@@ -119,70 +107,12 @@ export default function PetDetailPage() {
         목록으로
       </button>
 
-      {/* 프로필 카드 — surface-warm + pet-soft border + radius 20px */}
-      <section
-        className="pet-detail-profile-card"
+      {/* 프로필: 대시보드 '함께하는 아이들' 카드와 같은 모양(링크 없는 표시용) */}
+      <PetProfileCard
+        pet={pet}
+        isMemorial={pet.pet_status === 'deceased'}
         aria-label={`${pet.name} 프로필`}
-      >
-        {/* 아바타 — 둥근 원형 */}
-        <div
-          style={{
-            width: 80,
-            height: 80,
-            borderRadius: '50%',
-            background: 'var(--color-pet-soft)',
-            border: '2px solid var(--color-pet-soft)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            overflow: 'hidden',
-            flexShrink: 0,
-          }}
-        >
-          {pet.profile_image_url
-            ? (
-              <img
-                src={pet.profile_image_url}
-                alt={pet.name}
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                onError={(e) => { e.target.onerror = null; e.target.src = '' }}
-              />
-            )
-            : <PawPrint size={36} color="var(--color-pet)" aria-hidden="true" />}
-        </div>
-
-        {/* 정보 */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', flexWrap: 'wrap' }}>
-            <h1 style={{ fontSize: 'var(--fs-h2)', fontWeight: 700, color: 'var(--color-primary)' }}>{pet.name}</h1>
-            {/* 상태 뱃지: deceased = memorial soft */}
-            {pet.pet_status === 'deceased' && (
-              <span
-                style={{
-                  fontSize: 'var(--fs-caption)',
-                  background: 'rgba(42, 58, 82, 0.10)',
-                  color: 'var(--color-memorial)',
-                  padding: '2px 10px',
-                  borderRadius: 'var(--radius-pill)',
-                  fontWeight: 600,
-                }}
-              >
-                무지개다리
-              </span>
-            )}
-          </div>
-          <p style={{ fontSize: 'var(--fs-body)', color: 'var(--color-text-secondary)' }}>
-            {SPECIES_LABEL[pet.species] || pet.species}
-            {pet.breed ? ` · ${pet.breed}` : ''}
-          </p>
-          {pet.birth_date && (
-            <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-text-muted)' }}>
-              {formatDate(pet.birth_date)}
-              {pet.death_date ? ` ~ ${formatDate(pet.death_date)}` : ''}
-            </p>
-          )}
-        </div>
-      </section>
+      />
 
       {/* 추모 페이지 링크 (deceased) - memorial 네이비 톤 */}
       {/* FIX: DEV-31 - 접근 코드 없이 /memorial/:slug 로만 이동하면 소유자 본인도 항상

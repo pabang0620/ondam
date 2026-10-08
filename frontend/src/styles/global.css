@@ -344,6 +344,15 @@
 
   /* Shadow - 카드류 절제된 입체감 (rgba 값은 --color-text-primary와 동일 톤) */
   --shadow-card: 0 12px 32px rgba(29, 29, 31, 0.07);
+
+  /* 상호작용(hover/press) 토큰 - 반려동물 페이지부터 사용. 그림자 rgba 는 --shadow-card 와 같은 중립 톤(29,29,31).
+     --hover-lift/--press-scale 은 아래 prefers-reduced-motion 블록에서 0px/1 로 덮어써 움직임을 없앤다 */
+  --shadow-hover: 0 10px 24px rgba(29, 29, 31, 0.14);
+  --shadow-pressed: 0 2px 6px rgba(29, 29, 31, 0.10);
+  --hover-lift: -3px;
+  --press-scale: 0.98;
+  --hover-darken: brightness(0.88);
+  --hover-transition: var(--transition-base);
 }
 
 /* 기본 리셋 - @layer base 안에 두어야 Tailwind utilities(mx-auto, px-*, py-*)가 이를 덮어쓸 수 있음 */
@@ -472,6 +481,14 @@ textarea {
   *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* 움직임 줄이기: 위로 뜨기·눌림 축소는 없애고 색/그림자 변화만 남긴다(토큰을 항등값으로) */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --hover-lift: 0px;
+    --press-scale: 1;
   }
 }
 

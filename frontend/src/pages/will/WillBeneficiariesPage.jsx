@@ -1,5 +1,6 @@
+import { useEffect, useRef } from 'react'
 import { useWillBeneficiaries } from './useWillBeneficiaries.js'
-import { UserPlus, Trash2, ChevronDown, ChevronUp } from 'lucide-react'
+import { UserPlus, Trash2 } from 'lucide-react'
 import WillStepHeader from './WillStepHeader.jsx'
 import './WillBeneficiariesPage.css'
 
@@ -17,9 +18,45 @@ export default function WillBeneficiariesPage() {
     handleNext,
   } = useWillBeneficiaries()
 
+  const canAdd = Boolean(form.name.trim() && form.email.trim() && form.phone.trim())
+  const showForm = beneficiaries.length === 0 || isAdding
+
+  const nameInputRef = useRef(null)
+  const moreBtnRef = useRef(null)
+  // 카드가 열리거나 닫힌 직후 포커스를 옮길 대상 ('name' | 'more' | null)
+  const focusTargetRef = useRef(null)
+
+  useEffect(() => {
+    const target = focusTargetRef.current
+    focusTargetRef.current = null
+    if (target === 'name') nameInputRef.current?.focus()
+    if (target === 'more') moreBtnRef.current?.focus()
+  }, [showForm])
+
+  const handleAdd = () => {
+    if (!canAdd) return
+    focusTargetRef.current = 'more'
+    addBeneficiary()
+  }
+
+  const handleOpenForm = () => {
+    focusTargetRef.current = 'name'
+    setIsAdding(true)
+  }
+
+  const handleCancel = () => {
+    focusTargetRef.current = 'more'
+    setIsAdding(false)
+  }
+
   return (
     <div className="will-ben-page">
-      <WillStepHeader currentStep={2} title="유가족 등록" />
+      <WillStepHeader
+        currentStep={2}
+        title="유가족 등록"
+        onNext={handleNext}
+        nextDisabled={beneficiaries.length === 0}
+      />
 
       <div className="will-ben__content">
         <p className="will-ben__guide">
@@ -55,24 +92,25 @@ export default function WillBeneficiariesPage() {
           </ul>
         )}
 
-        {/* 추가 폼 토글 */}
-        <button
-          type="button"
-          className="will-ben__add-toggle"
-          onClick={() => setIsAdding((v) => !v)}
-          aria-expanded={isAdding}
-        >
-          <UserPlus size={20} aria-hidden="true" />
-          유가족 추가
-          {isAdding ? <ChevronUp size={18} aria-hidden="true" /> : <ChevronDown size={18} aria-hidden="true" />}
-        </button>
+        {!showForm && (
+          <button
+            ref={moreBtnRef}
+            type="button"
+            className="will-ben__more"
+            onClick={handleOpenForm}
+          >
+            <UserPlus size={20} aria-hidden="true" />
+            다른 유가족 추가
+          </button>
+        )}
 
-        {isAdding && (
+        {showForm && (
           <div className="will-ben__form" role="group" aria-label="유가족 정보 입력">
             <div className="will-ben__field">
               <label className="will-ben__label" htmlFor="ben-name">이름 *</label>
               <input
                 id="ben-name"
+                ref={nameInputRef}
                 type="text"
                 className="will-ben__input"
                 value={form.name}
@@ -144,11 +182,19 @@ export default function WillBeneficiariesPage() {
             <button
               type="button"
               className="will-ben__add-btn"
-              onClick={addBeneficiary}
-              disabled={!form.name.trim() || !form.email.trim() || !form.phone.trim()}
+              onClick={handleAdd}
+              disabled={!canAdd}
+              aria-disabled={!canAdd}
             >
-              추가 완료
+              <UserPlus size={20} aria-hidden="true" />
+              유가족 추가
             </button>
+
+            {beneficiaries.length > 0 && (
+              <button type="button" className="will-ben__cancel" onClick={handleCancel}>
+                취소
+              </button>
+            )}
           </div>
         )}
 
@@ -159,7 +205,8 @@ export default function WillBeneficiariesPage() {
           disabled={beneficiaries.length === 0}
           aria-disabled={beneficiaries.length === 0}
         >
-          다음 - 음성 녹음
+          <span className="will-ben__next-sub">유가족 {beneficiaries.length}명 등록</span>
+          <span className="will-ben__next-main">다음 - 음성 녹음</span>
         </button>
       </div>
     </div>

@@ -23,7 +23,7 @@ export default function WillRecordPage() {
 
   return (
     <div className="will-record-page">
-      <WillStepHeader currentStep={3} title="음성 녹음" />
+      <WillStepHeader currentStep={3} title="음성 녹음" onNext={handleUpload} nextDisabled={!recordedBlob || isUploading} />
 
       <div className="will-record__content">
         <div className="will-record__guide-box">

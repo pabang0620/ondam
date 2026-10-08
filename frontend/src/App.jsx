@@ -43,6 +43,7 @@ const WillWatchPage = lazy(() => import('./pages/will/WillWatchPage.jsx'))
 const PetPage = lazy(() => import('./pages/pet/PetPage.jsx'))
 const PetNewPage = lazy(() => import('./pages/pet/PetNewPage.jsx'))
 const PetDetailPage = lazy(() => import('./pages/pet/PetDetailPage.jsx'))
+const PetEditPage = lazy(() => import('./pages/pet/PetEditPage.jsx'))
 const PetPortraitPage = lazy(() => import('./pages/pet/PetPortraitPage.jsx'))
 const BillingAuthSuccessPage = lazy(() => import('./pages/pet/BillingAuthSuccessPage.jsx'))
 const BillingAuthFailPage = lazy(() => import('./pages/pet/BillingAuthFailPage.jsx'))
@@ -133,6 +134,7 @@ export default function App() {
             <Route path={ROUTES.PET_BILLING_FAIL} element={<BillingAuthFailPage />} />
             <Route path={ROUTES.PET_NEW} element={<PetNewPage />} />
             <Route path={ROUTES.PET_DETAIL} element={<PetDetailPage />} />
+            <Route path={ROUTES.PET_EDIT} element={<PetEditPage />} />
             <Route path={ROUTES.PET_PORTRAIT} element={<PetPortraitPage />} />
 
             <Route path={ROUTES.MY} element={<MyPage />} />

@@ -1,5 +1,5 @@
 /* 대시보드 '내 구독' 멤버십 카드 / 무료 안내 카드.
-   동물 카드와 같은 카드 언어(흰 바탕, 1px 연한 테두리, 18px 라운드). hover 효과 없음.
+   동물 카드와 같은 카드 언어(흰 바탕, 1px 연한 테두리, 18px 라운드). 카드 자체는 hover 효과 없음(카드 안 버튼·링크만 효과).
    글자 굵기는 400/600 두 가지만 쓴다. 텍스트 색은 흰 바탕 대비 4.5:1 이상인 토큰만 쓴다. */
 .pet-member {
   display: flex;
@@ -27,15 +27,47 @@
   animation: pet-skeleton-pulse 1.4s ease-in-out infinite;
 }
 
-/* 헤더: 플랜명 + 상태 알약 */
+/* 멤버십 카드(MembershipCard)는 한 겹 카드: 모든 구역이 좌우 padding var(--spacing-md)를 직접 갖고,
+   overflow hidden 으로 머리띠가 카드 모서리를 따라간다. 무료 안내 카드와 .pet-member 를 공유하므로
+   MembershipCard 전용 변경은 .pet-member--sub 아래에서만 한다(파일 맨 아래). */
+
+/* 머리띠: 옅은 회색 단색(--color-bg-subtle) 위에 구독명(왼쪽) + 상태 알약(오른쪽 끝). 모든 상태 동일 색 */
 .pet-member__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap;
   gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background: var(--color-bg-subtle);
 }
 
+.pet-member__plan {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+}
+
+.pet-member__plan dd {
+  margin: 0;
+  font-size: var(--fs-body-lg);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  overflow-wrap: anywhere;
+}
+
+.pet-member__sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* 무료 안내 카드(FreeUpsellCard) 제목 */
 .pet-member__title {
   margin: 0;
   font-size: var(--fs-h3);
@@ -45,7 +77,9 @@
 
 .pet-member__pill {
   display: inline-block;
+  flex-shrink: 0;
   padding: 2px 12px;
+  border: 1px solid var(--color-border-light);
   border-radius: var(--radius-pill);
   font-size: var(--fs-caption);
   font-weight: 600;
@@ -53,7 +87,7 @@
 
 .pet-member__pill--active {
   color: var(--color-accent-brand-text);
-  background: var(--color-accent-brand-soft);
+  background: var(--color-surface);
 }
 
 .pet-member__pill--warn {
@@ -63,46 +97,58 @@
 
 .pet-member__pill--canceled {
   color: var(--color-text-secondary);
-  background: var(--color-surface-warm);
+  background: var(--color-surface);
 }
 
-/* 본문 */
-.pet-member__body,
+/* 알림·재결제 버튼 묶음 (보여줄 것이 없으면 통째로 숨김) */
 .pet-member__main {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
   min-width: 0;
+  padding: 0 var(--spacing-md) var(--spacing-md);
+}
+
+.pet-member__header + .pet-member__main {
+  padding-top: var(--spacing-md);
 }
 
 .pet-member__main:empty {
   display: none;
 }
 
-.pet-member__stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-sm) var(--spacing-lg);
+/* 정보 행: 라벨(왼쪽, 회색) + 값(오른쪽, 굵게). 행 사이는 가로 hairline 하나 */
+.pet-member__rows {
   margin: 0;
 }
 
-.pet-member__stat {
+.pet-member__row {
   display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
 }
 
-.pet-member__stat dt {
-  font-size: var(--fs-caption);
+.pet-member__row + .pet-member__row {
+  border-top: 1px solid var(--color-border-light);
+}
+
+.pet-member__row dt {
+  font-size: var(--fs-body);
   font-weight: 400;
   color: var(--color-text-secondary);
 }
 
-.pet-member__stat dd {
+.pet-member__row dd {
+  min-width: 0;
   margin: 0;
   font-size: var(--fs-body-lg);
   font-weight: 600;
-  color: var(--color-accent-brand-text);
+  color: var(--color-text-primary);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
 }
 
 .pet-member__text {
@@ -129,7 +175,17 @@
   margin-top: var(--spacing-xs);
 }
 
-/* 혜택 체크 목록 */
+/* 혜택·안내 구역: 위쪽 hairline 하나로 정보 행/알림과 구분 */
+.pet-member__section {
+  min-width: 0;
+  padding: var(--spacing-md);
+  border-top: 1px solid var(--color-border-light);
+}
+
+.pet-member__section > .pet-member__text {
+  margin: 0;
+}
+
 .pet-member__benefits-title {
   margin: 0 0 var(--spacing-sm);
   font-size: var(--fs-body);
@@ -141,9 +197,9 @@
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--spacing-sm) var(--spacing-md);
 }
 
 .pet-member__benefit-list li {
@@ -184,11 +240,27 @@
   color: var(--color-surface);
   background: var(--color-accent-brand-text);
   border: 0;
+  transition: filter var(--hover-transition), transform var(--hover-transition);
 }
 
 .pet-member__retry:disabled {
   opacity: 0.7;
   cursor: not-allowed;
+}
+
+/* hover: 배경이 한 단계 어두워진다(흰 글자 대비는 오히려 올라감). focus-visible 도 같은 강도 */
+.pet-member__retry:focus-visible:not(:disabled):not([aria-disabled='true']) {
+  filter: var(--hover-darken);
+}
+
+@media (hover: hover), (any-hover: hover) {
+  .pet-member__retry:hover:not(:disabled):not([aria-disabled='true']) {
+    filter: var(--hover-darken);
+  }
+}
+
+.pet-member__retry:active:not(:disabled):not([aria-disabled='true']) {
+  transform: scale(var(--press-scale));
 }
 
 .pet-member__outline-btn {
@@ -227,6 +299,7 @@
   color: var(--color-text-secondary);
   text-decoration: underline;
   text-underline-offset: 3px;
+  transition: color var(--hover-transition);
 }
 
 .pet-member__link--button {
@@ -242,26 +315,91 @@
   cursor: not-allowed;
 }
 
-/* 640px 이상: 본문 2열(왼쪽 수치·경고·재결제, 오른쪽 혜택), 유의사항·링크 줄은 전체 폭 */
+/* 텍스트 링크/버튼: 글자색이 한 단계 진해진다(이미 밑줄). :active 는 색만 */
+.pet-member__link:focus-visible:not(:disabled),
+.pet-member__link:active:not(:disabled) {
+  color: var(--color-text-primary);
+}
+
+@media (hover: hover), (any-hover: hover) {
+  .pet-member__link:hover:not(:disabled) {
+    color: var(--color-text-primary);
+  }
+}
+
+/* 유의사항·구독 해지 접이식 토글 */
+.pet-member__fold-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-xs);
+  box-sizing: border-box;
+  width: 100%;
+  min-height: var(--min-touch-target);
+  padding: 0 var(--spacing-md);
+  font-family: inherit;
+  font-size: var(--fs-body);
+  font-weight: 400;
+  color: var(--color-text-secondary);
+  text-align: left;
+  background: none;
+  border: 0;
+  border-top: 1px solid var(--color-border-light);
+  cursor: pointer;
+  text-underline-offset: 3px;
+  transition: color var(--hover-transition);
+}
+
+.pet-member__fold-toggle:focus-visible {
+  outline: 2px solid var(--color-accent-brand-text);
+  outline-offset: -2px;
+  color: var(--color-text-primary);
+  text-decoration: underline;
+}
+
+@media (hover: hover), (any-hover: hover) {
+  .pet-member__fold-toggle:hover {
+    color: var(--color-text-primary);
+    text-decoration: underline;
+  }
+}
+
+.pet-member__fold-toggle:active {
+  color: var(--color-text-primary);
+}
+
+.pet-member__fold-chevron {
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.pet-member__fold-toggle[aria-expanded='true'] .pet-member__fold-chevron {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pet-member__fold-chevron {
+    transition: none;
+  }
+}
+
+/* 유의사항: 카드 좌우 padding 과 같은 시작선 */
+.pet-member__notice {
+  padding: 0 var(--spacing-md) var(--spacing-md);
+}
+
+.pet-member__header + .pet-member__notice {
+  padding-top: var(--spacing-md);
+}
+
 @media (min-width: 640px) {
-  .pet-member__body {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--spacing-md) var(--spacing-lg);
-  }
-
-  .pet-member__body--single {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .pet-member__notice,
-  .pet-member__links {
-    grid-column: 1 / -1;
-  }
-
   .pet-member__retry {
     width: auto;
     align-self: flex-start;
+  }
+
+  .pet-member__benefit-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -269,4 +407,27 @@
   .pet-member {
     padding: 20px;
   }
+}
+
+/* MembershipCard 전용(무료 안내 카드·fallback 카드에는 영향 없음). 위의 .pet-member 규칙보다 뒤에 둔다 */
+.pet-member--sub {
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.pet-member--sub .pet-member__retry {
+  width: 100%;
+  align-self: stretch;
+}
+
+.pet-member--sub .pet-member__links {
+  padding: var(--spacing-md) var(--spacing-md) 0;
+  border-top: 0;
+}
+
+.pet-member--sub .pet-member__link--button {
+  min-width: var(--min-touch-target);
+  padding: 0;
+  justify-content: flex-end;
 }

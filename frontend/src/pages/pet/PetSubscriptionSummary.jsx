@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useAuthStore } from '../../store/authStore.js'
 import { usePetSubscription } from './usePetSubscription.js'
 import { readStatus } from './subscriptionLabels.js'
 import MembershipCard from './MembershipCard.jsx'
@@ -11,6 +12,8 @@ const SUCCESS_MESSAGE_MS = 4000
 const STALE_TEXT = '최신 상태를 불러오지 못했어요. 잠시 후 새로고침해 주세요.'
 const UNKNOWN_TEXT = '구독 정보를 확인하지 못했어요. 잠시 후 다시 확인해 주세요.'
 const SECTION_TITLE = '내 구독'
+const LIVE_TITLE_SUFFIX = '님의 구독 현황'
+const LIVE_TITLE_FALLBACK = '내 구독 현황'
 const RECHECK_TEXT = '다시 확인'
 
 // 구독 중(active/past_due/suspended): 구독 관리 페이지와 같은 훅·카드·해지 모달을 그대로 인라인으로 쓴다.
@@ -97,6 +100,16 @@ function NeutralCard({ onRetry }) {
   )
 }
 
+// 구독 중 제목: 회원명이 비어 있으면 '내 구독 현황'. 이름은 React 텍스트로만 렌더한다.
+function buildLiveTitle(memberName) {
+  const name = typeof memberName === 'string' ? memberName.trim() : ''
+  return name ? `${name}${LIVE_TITLE_SUFFIX}` : LIVE_TITLE_FALLBACK
+}
+
+function isLiveSummary({ summary, isLoading, error }) {
+  return !isLoading && !error && Boolean(summary) && LIVE_KINDS.includes(summary.kind)
+}
+
 function SummaryBody({ summary, isLoading, error, isStale, onSuccess, onRetry, checkout, price, canSubscribe }) {
   if (isLoading) return <div className="pet-sub__skeleton" aria-hidden="true" />
   if (error || !summary || summary.kind === 'unknown') return <NeutralCard onRetry={onRetry} />
@@ -132,6 +145,9 @@ export default function PetSubscriptionSummary({
 }) {
   // 성공 메시지 state 는 최상위에 둔다: 해지 성공으로 요약이 free 로 바뀌어도 4초간 유지된다.
   const [message, setMessage] = useState(null)
+  // 회원명: PetPage 가 넘기는 displayName 은 '…님의 반려동물' 로 조합된 문구라 쓸 수 없어 store 의 nickname 을 직접 읽는다.
+  const memberName = useAuthStore((s) => s.user?.nickname)
+  const title = isLiveSummary({ summary, isLoading, error }) ? buildLiveTitle(memberName) : SECTION_TITLE
 
   useEffect(() => {
     if (!message) return undefined
@@ -146,7 +162,7 @@ export default function PetSubscriptionSummary({
 
   return (
     <section className="pet-dash__section pet-sub" aria-labelledby="pet-sub-title" aria-busy={isLoading ? 'true' : undefined}>
-      <h2 id="pet-sub-title" className="pet-dash__section-title">{SECTION_TITLE}</h2>
+      <h2 id="pet-sub-title" className="pet-dash__section-title">{title}</h2>
       {message && (
         <p className="pet-sub-summary__msg pet-sub-summary__msg--success" role="status" aria-live="polite">
           {message}

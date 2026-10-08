@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { petApi } from './petApi.js'
 
 const STYLES = [
@@ -9,9 +9,8 @@ const STYLES = [
 
 export function usePetPortrait(petId) {
   const [media, setMedia] = useState([])
-  // [DEV-33] 아무것도 고르지 않고 진행하는 어르신 사용자를 위해 첫 번째 스타일을
-  // 기본 선택 상태로 시작한다(null이면 버튼이 계속 비활성 상태로 남는다).
-  const [selectedStyle, setSelectedStyle] = useState(STYLES[0].key)
+  // 스타일/사진 모두 기본 선택 없음으로 시작한다. 사용자가 직접 눌러야만 선택된다.
+  const [selectedStyle, setSelectedStyle] = useState(null)
   const [selectedMediaId, setSelectedMediaId] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
   const [mediaError, setMediaError] = useState(null)
@@ -21,6 +20,10 @@ export function usePetPortrait(petId) {
   // 남은 AI 초상화 매수 (구독자 월 3매 / 무료 티어 평생 1회 체험) - null이면 아직 조회 전
   const [quota, setQuota] = useState(null)
   const [quotaError, setQuotaError] = useState(null)
+  // 새 사진 추가(업로드) 상태 - 연타로 중복 업로드되지 않게 ref로 즉시 잠근다
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadError, setUploadError] = useState(null)
+  const uploadPendingRef = useRef(false)
 
   const fetchQuota = useCallback(async () => {
     if (!petId) return
@@ -50,13 +53,6 @@ export function usePetPortrait(petId) {
       if (res.data.success) {
         const list = res.data.data ?? []
         setMedia(list)
-        // [DEV-33] 사진도 스타일과 마찬가지로 기본 선택을 채워 어르신이 아무것도
-        // 고르지 않고 진행하는 경우를 방지한다. 이미 고른 사진이 있으면 덮어쓰지 않는다.
-        setSelectedMediaId((prev) => {
-          if (prev) return prev
-          const firstPhoto = list.find((m) => m.media_type === 'photo')
-          return firstPhoto?.media_id ?? prev
-        })
       }
     } catch (err) {
       if (err.name === 'CanceledError') return
@@ -76,9 +72,39 @@ export function usePetPortrait(petId) {
     return () => ac.abort()
   }, [fetchMedia])
 
+  // 반려동물 상세 페이지(usePetDetail.handleMediaUpload)와 동일한 경로:
+  // POST /uploads/photo -> POST /pet/:petId/media. 성공하면 목록에 추가하고 즉시 선택한다.
+  const handleMediaUpload = async (file) => {
+    if (!file || !petId || uploadPendingRef.current) return
+    uploadPendingRef.current = true
+    setIsUploading(true)
+    setUploadError(null)
+    try {
+      const uploadRes = await petApi.uploadPhoto(file)
+      const { s3Key, url, mimeType, size } = uploadRes.data.data
+      const addRes = await petApi.addPetMedia(petId, {
+        mediaType: 'photo',
+        fileUrl: url,
+        s3Key,
+        mimeType,
+        fileSize: size,
+      })
+      if (addRes.data.success) {
+        const added = addRes.data.data
+        setMedia((prev) => [...prev, added])
+        setSelectedMediaId(added.media_id)
+      }
+    } catch (err) {
+      setUploadError(err?.response?.data?.message ?? '사진 업로드에 실패했습니다. 잠시 후 다시 시도해 주세요.')
+    } finally {
+      uploadPendingRef.current = false
+      setIsUploading(false)
+    }
+  }
+
   const handleGenerate = async () => {
     if (!selectedStyle || !selectedMediaId) return
-    if (isGenerating) return
+    if (isGenerating || isUploading) return
 
     setIsGenerating(true)
     setGenerateError(null)
@@ -161,5 +187,8 @@ export function usePetPortrait(petId) {
     handleGenerate,
     quota,
     quotaError,
+    isUploading,
+    uploadError,
+    handleMediaUpload,
   }
 }

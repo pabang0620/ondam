@@ -23,39 +23,23 @@
   gap: var(--spacing-md);
 }
 
-.will-preview__section-title {
-  font-family: var(--font-serif);
-  font-size: var(--fs-body-lg);
-  font-weight: 700;
-  color: var(--color-will);
-  margin-bottom: var(--spacing-xs);
-  letter-spacing: var(--ls-heading-ko);
-}
-
 .will-preview__summary-row {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
   flex-wrap: wrap;
   font-size: var(--fs-body);
-  color: var(--color-text-secondary);
+  color: var(--color-success);
 }
 
 .will-preview__summary-row svg {
-  color: var(--color-will);
+  color: var(--color-success);
   flex-shrink: 0;
 }
 
-.will-preview__summary-row.is-done {
-  color: var(--color-success);
-}
-
-.will-preview__summary-row.is-done svg {
-  color: var(--color-success);
-}
-
-.will-preview__summary-row.is-missing {
-  color: var(--color-text-muted);
+.will-preview__summary-text {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .will-preview__ben-chips {
@@ -70,7 +54,7 @@
 .will-preview__chip {
   background-color: var(--color-surface-warm);
   color: var(--color-will);
-  font-size: var(--fs-caption);
+  font-size: var(--fs-body);
   padding: 2px var(--spacing-sm);
   border-radius: var(--radius-pill);
   font-weight: 600;
@@ -93,14 +77,16 @@
   gap: 4px;
 }
 
-.will-preview__required {
-  color: var(--color-error);
+.will-preview__hint {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--fs-body);
+  line-height: 1.6;
+  word-break: keep-all;
 }
 
-.will-preview__field-hint {
-  font-size: var(--fs-caption);
-  color: var(--color-text-muted);
-  line-height: 1.5;
+.will-preview__required {
+  color: var(--color-error);
 }
 
 .will-preview__input {
@@ -144,10 +130,22 @@
   border-color: var(--color-error);
 }
 
+.will-preview__count-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs) var(--spacing-md);
+}
+
+.will-preview__read-time,
 .will-preview__char-count {
-  align-self: flex-end;
-  font-size: var(--fs-caption);
-  color: var(--color-text-muted);
+  font-size: var(--fs-body);
+  color: var(--color-text-secondary);
+}
+
+.will-preview__char-count {
+  margin-left: auto;
 }
 
 /* 에러 */
@@ -169,7 +167,7 @@
   background-color: var(--color-will);
   color: var(--color-text-on-dark);
   font-size: var(--fs-button);
-  font-weight: 700;
+  font-weight: 600;
   height: var(--size-button-h);
   min-height: var(--size-button-h);
   border: none;

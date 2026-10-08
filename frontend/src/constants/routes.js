@@ -31,6 +31,8 @@ export const ROUTES = {
   PET: '/pet',
   PET_NEW: '/pet/new',
   PET_DETAIL: '/pet/:petId',
+  // /pet/:petId 보다 세그먼트가 많은 경로라 react-router 가 우선 매칭한다
+  PET_EDIT: '/pet/:petId/edit',
   PET_PORTRAIT: '/pet/:petId/portrait',
   // 레거시 리다이렉트 전용: 지우면 /pet/:petId 로 잡혀 상세 화면이 열린다
   PET_SUBSCRIPTION: '/pet/subscription',

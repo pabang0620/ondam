@@ -12,7 +12,7 @@ export default function WillConsentPage() {
 
   return (
     <div className="will-consent-page">
-      <WillStepHeader currentStep={1} title="동의 확인" />
+      <WillStepHeader currentStep={1} title="동의 확인" onNext={handleNext} nextDisabled={!allChecked || isSaving} />
 
       <div className="will-consent__content">
         <p className="will-consent__guide">

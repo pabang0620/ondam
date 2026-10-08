@@ -1,8 +1,13 @@
 /* 내 반려동물 대시보드.
-   카드 hover 는 테두리만 --color-pet 으로(텍스트 색으로 쓰지 않음). */
+   카드 hover: 3px 상승 + 옅은 배경 틴트 + 옅은 그림자 + 테두리 --color-border-strong (토큰은 styles/global.css). hover 는 @media (hover: hover), (any-hover: hover) 안에만. */
+/* 대시보드 기둥 폭(좌우 padding 포함). 조정은 이 값 한 곳에서만 한다. 결제 알림도 같은 값을 쓴다 */
+.pet-page {
+  --pet-dash-width: 640px;
+}
+
 .pet-dash {
   width: 100%;
-  max-width: 960px;
+  max-width: var(--pet-dash-width);
   margin: 0 auto;
   padding: calc(var(--spacing-2xl) + var(--spacing-md)) var(--spacing-md) var(--spacing-2xl);
   display: flex;
@@ -37,11 +42,21 @@
   background: var(--color-surface);
   border: 1px solid var(--color-pet);
   border-radius: var(--radius-pill);
-  transition: background var(--transition-base);
+  transition: background var(--hover-transition), transform var(--hover-transition);
 }
 
-.pet-dash__retry:hover {
-  background: var(--color-pet-soft);
+.pet-dash__retry:focus-visible {
+  background: var(--color-bg-subtle);
+}
+
+@media (hover: hover), (any-hover: hover) {
+  .pet-dash__retry:hover {
+    background: var(--color-bg-subtle);
+  }
+}
+
+.pet-dash__retry:active {
+  transform: scale(var(--press-scale));
 }
 
 /* 섹션 */
@@ -58,6 +73,87 @@
   color: var(--color-text-primary);
 }
 
+.pet-dash__section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+}
+
+/* 순서 변경 모드 토글(2마리 이상일 때만 렌더). 꺼짐: 보조색, 켜짐(aria-pressed=true): 진한 배경 + 흰 아이콘 */
+.pet-dash__reorder-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: var(--min-touch-target);
+  height: var(--min-touch-target);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: background-color var(--transition-base), color var(--transition-base), transform var(--hover-transition);
+}
+
+/* 제목 줄 오른쪽 버튼 묶음(순서 변경 토글 + 추가) */
+.pet-dash__section-actions {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: var(--spacing-xs);
+}
+
+/* 위쪽 반려동물 추가 버튼: 카드와 같은 흰 바탕 + 1px 테두리, hover 시 연한 회색 채움 + 테두리 --color-border-strong */
+.pet-dash__add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-width: var(--min-touch-target);
+  min-height: var(--min-touch-target);
+  box-sizing: border-box;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
+  border-radius: 50%;
+  color: var(--color-text-primary);
+  transition: background-color var(--hover-transition), border-color var(--hover-transition), transform var(--hover-transition);
+}
+
+.pet-dash__add:focus-visible {
+  background: var(--color-bg-subtle);
+  border-color: var(--color-border-strong);
+}
+
+.pet-dash__reorder-toggle:focus-visible:not([aria-pressed='true']) {
+  background: var(--color-bg-subtle);
+  color: var(--color-text-primary);
+}
+
+.pet-dash__reorder-toggle[aria-pressed='true'] {
+  background: var(--color-primary);
+  color: var(--color-surface);
+}
+
+/* hover 는 터치에서 남지 않도록 hover 가능한 기기에서만. 켜짐(aria-pressed=true)은 기존 진한 배경 유지 */
+@media (hover: hover), (any-hover: hover) {
+  .pet-dash__add:hover {
+    background: var(--color-bg-subtle);
+    border-color: var(--color-border-strong);
+  }
+
+  .pet-dash__reorder-toggle:hover:not([aria-pressed='true']) {
+    background: var(--color-bg-subtle);
+    color: var(--color-text-primary);
+  }
+}
+
+.pet-dash__add:active,
+.pet-dash__reorder-toggle:active {
+  transform: scale(var(--press-scale));
+}
+
 .pet-dash__error {
   display: flex;
   flex-direction: column;
@@ -71,7 +167,7 @@
   color: var(--color-text-primary);
 }
 
-/* 카드 목록: 모바일 1열, 640px 이상 2열 (3열은 카드 폭 300px 미만이라 사용 안 함) */
+/* 카드 목록: 모든 화면 폭에서 1열 */
 .pet-card-grid {
   list-style: none;
   margin: 0;
@@ -82,12 +178,8 @@
 }
 
 .pet-card-grid > li {
+  position: relative; /* 순서 변경 버튼(오른쪽 아래)의 기준 */
   min-width: 0;
-}
-
-/* 생존 섹션 바로 뒤의 무지개다리 그리드만: .pet-dash gap(24px)을 상쇄해 카드 사이 간격(8px)과 같게 */
-.pet-dash__section + .pet-card-grid {
-  margin-top: calc(var(--spacing-sm) - var(--spacing-lg));
 }
 
 /* 카드 (가로형: 왼쪽 사진, 오른쪽 정보) */
@@ -102,11 +194,37 @@
   border: 1px solid var(--color-border-light);
   border-radius: var(--radius-card);
   color: var(--color-text-primary);
-  transition: border-color var(--transition-base);
+  /* 상승 거리: 순서 변경 모드에서는 0 (아래 .pet-card-item--reorder 규칙) */
+  --pet-card-lift: var(--hover-lift);
+  transition: background-color var(--hover-transition), border-color var(--hover-transition), box-shadow var(--hover-transition), transform var(--hover-transition);
 }
 
-.pet-card:hover {
-  border-color: var(--color-pet);
+/* 키보드 포커스: hover 와 같은 배경 틴트·그림자·테두리(상승은 없음). 전역 outline 은 그대로 유지 */
+.pet-card:not(.pet-card--static):focus-visible {
+  background-color: var(--color-bg-subtle);
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-hover);
+}
+
+@media (hover: hover), (any-hover: hover) {
+  .pet-card:not(.pet-card--static):hover {
+    background-color: var(--color-bg-subtle);
+    border-color: var(--color-border-strong);
+    box-shadow: var(--shadow-hover);
+    transform: translateY(var(--pet-card-lift));
+  }
+}
+
+/* 누름: 제자리로 내려오고 그림자가 줄어든다(터치에서도 보이도록 media 밖, hover 규칙보다 뒤) */
+.pet-card:not(.pet-card--static):active {
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-pressed);
+  transform: none;
+}
+
+/* 링크 없는 표시용 카드(상세 페이지 프로필): hover 강조 없음 (위 규칙이 :not(--static) 이라 효과 없음) */
+.pet-card--static:hover {
+  border-color: var(--color-border-light);
 }
 
 .pet-card__photo {
@@ -118,8 +236,17 @@
   height: 72px;
   overflow: hidden;
   border-radius: var(--radius-md);
-  background: var(--color-pet-soft);
+  background: var(--color-bg-subtle);
   color: var(--color-text-secondary);
+}
+
+/* 반려동물 카드(함께하는/무지개다리 공통): 프로필은 정사각 → 완전한 원 */
+.pet-card--pet .pet-card__photo {
+  border-radius: 50%;
+}
+
+.pet-card--pet .pet-card__photo img {
+  border-radius: 50%;
 }
 
 .pet-card__photo img {
@@ -127,6 +254,123 @@
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+/* 반려동물 카드: 프로필 + 정보 1행. 같은 그리드 행 카드는 높이를 맞추고 내용은 위쪽 정렬.
+   종별 뱃지 색조: 로고 그라데이션(--color-brand-gradient, 오렌지→코랄)의 두 스톱을 종마다 다른 비율로 쓴다.
+   알 수 없는 종·rabbit/bird/hamster/fish/reptile/other 는 로고 그대로(오렌지→코랄) 기본 파스텔 */
+.pet-card--pet {
+  --badge-hue-from: var(--color-accent-brand-light);
+  --badge-hue-to: var(--color-accent-brand);
+  align-items: stretch;
+  justify-content: flex-start;
+}
+
+/* 강아지: 오렌지 쪽(끝 스톱도 오렌지 70% + 코랄 30%) */
+.pet-card--pet[data-species='dog'] {
+  --badge-hue-to: color-mix(in srgb, var(--color-accent-brand-light) 70%, var(--color-accent-brand));
+}
+
+/* 고양이: 코랄/핑크 쪽(시작 스톱도 코랄 70% + 오렌지 30%) */
+.pet-card--pet[data-species='cat'] {
+  --badge-hue-from: color-mix(in srgb, var(--color-accent-brand) 70%, var(--color-accent-brand-light));
+}
+
+.pet-card-grid > li > .pet-card--pet {
+  height: 100%;
+}
+
+/* 프로필(고정 크기, 위쪽) + 정보(프로필과 같은 높이로 늘어남: 이름·뱃지는 위, 생일 줄은 맨 아래) */
+.pet-card__main {
+  display: flex;
+  flex: 1;
+  align-items: stretch;
+  gap: var(--spacing-md);
+  min-width: 0;
+}
+
+.pet-card--pet .pet-card__photo {
+  align-self: flex-start;
+}
+
+/* 생일·나이 줄: info 맨 아래(margin-top: auto). 구분선 없음 */
+.pet-card__birth {
+  margin-top: auto;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: var(--fs-caption);
+  font-weight: 400;
+  color: var(--color-text-secondary);
+}
+
+/* 순서 변경 모드(토글 ON): li 안에서 카드(Link)와 버튼 묶음이 형제, 버튼 묶음을 카드 오른쪽 아래에 겹친다 */
+
+.pet-card__reorder {
+  position: absolute;
+  right: var(--spacing-sm);
+  bottom: var(--spacing-sm);
+  z-index: 1;
+  display: flex;
+}
+
+.pet-card__reorder-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--min-touch-target);
+  height: var(--min-touch-target);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: background-color var(--transition-base), color var(--transition-base), transform var(--hover-transition);
+}
+
+.pet-card__reorder-btn:focus-visible:not(:disabled) {
+  background: var(--color-bg-subtle);
+  color: var(--color-text-primary);
+}
+
+@media (hover: hover), (any-hover: hover) {
+  .pet-card__reorder-btn:hover:not(:disabled) {
+    background: var(--color-bg-subtle);
+    color: var(--color-text-primary);
+  }
+}
+
+.pet-card__reorder-btn:active:not(:disabled) {
+  transform: scale(var(--press-scale));
+}
+
+.pet-card__reorder-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* 순서 변경 모드: 이동 버튼은 li 에 고정(absolute)이라 카드만 떠오르면 버튼과 어긋나므로 상승만 끈다(그림자·테두리 변화는 유지) */
+.pet-card-item--reorder .pet-card {
+  --pet-card-lift: 0px;
+}
+
+/* 모드가 켜졌을 때만 적용(.pet-card-item--reorder 는 모드 ON 일 때만 붙음).
+   카드 최소 높이 = 48 x 2 + 8 x 3 = 120px.
+   버튼(48px 2개)이 카드 오른쪽 아래에 겹치므로 info 맨 아래의 생일 줄과, 버튼 영역에 걸치는 뱃지 줄의 오른쪽을 비운다.
+   생일 줄은 한 줄 고정이라 padding-right 는 높이를 바꾸지 않는다 */
+.pet-card-item--reorder .pet-card__birth,
+.pet-card-item--reorder .pet-card:not(.pet-card--no-birth) .pet-card__kind {
+  padding-right: calc(var(--min-touch-target) * 2);
+}
+
+/* 생일 줄이 없는 카드(info 는 이름+뱃지만, 프로필과 세로 중앙): 모드 ON 일 때만 버튼 영역(터치 영역 + 위아래 여백)만큼 하단을 확보 */
+.pet-card-item--reorder .pet-card--pet {
+  min-height: calc(var(--min-touch-target) * 2 + var(--spacing-sm) * 3);
+}
+
+.pet-card-item--reorder .pet-card--no-birth {
+  padding-bottom: calc(var(--min-touch-target) + var(--spacing-sm) * 2);
 }
 
 .pet-card__info {
@@ -137,7 +381,12 @@
   min-width: 0;
 }
 
+.pet-card--no-birth .pet-card__info {
+  justify-content: center;
+}
+
 .pet-card__name {
+  margin: 0; /* 상세 페이지에서는 h1 */
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -146,32 +395,76 @@
   color: var(--color-text-primary);
 }
 
-.pet-card__species,
-.pet-card__dates {
+.pet-card__kind {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  min-width: 0;
+}
+
+/* 종·품종 뱃지: 굵기 500 통일, 로고 파스텔 그라데이션 배경 + 어두운 글자(--color-text-primary, 12px 는 큰 글씨가 아니므로 4.5:1 이상 필요, 실측 최저 7:1 이상).
+   종 = 색조 스톱 40% + 흰색, 품종 = 같은 색조 15% + 흰색(더 연함) + 색조 25% 테두리.
+   글자 크기 예외(사용자 요청): 사이트 글자 하한은 --fs-caption(14px) 이지만, 이 뱃지는 사용자가 직접 글자를 줄여 달라고 요청했고
+   장식성 메타 정보(종·품종 이름은 사진 옆 이름·생일 줄이 주 정보)라 하한 미만(12px)을 허용한다.
+   14px 미만 토큰이 없으므로 이 규칙 안에서만 쓰는 로컬 변수로 정의한다(하드코딩 px 금지 규칙의 의도적 예외, 다른 곳에서 재사용 금지).
+   높이 24px = 줄높이(2 x 뱃지 글자 - 테두리 위아래 2px = 22px) + 1px 테두리 x2 */
+.pet-card__badge {
+  --pet-badge-fs: 12px;
+  box-sizing: border-box;
+  display: block;
+  max-width: 100%;
+  min-height: calc(var(--pet-badge-fs) * 2);
+  padding: 0 var(--spacing-sm);
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  font-size: var(--fs-body);
-  color: var(--color-text-secondary);
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  font-size: var(--pet-badge-fs);
+  font-weight: 500;
+  line-height: calc(var(--pet-badge-fs) * 2 - 2px);
+  color: var(--color-text-primary);
 }
 
+.pet-card__badge--species {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--badge-hue-from) 40%, var(--color-surface)),
+    color-mix(in srgb, var(--badge-hue-to) 40%, var(--color-surface))
+  );
+  border-color: color-mix(in srgb, var(--badge-hue-to) 25%, transparent);
+}
+
+.pet-card__badge--breed {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--badge-hue-from) 15%, var(--color-surface)),
+    color-mix(in srgb, var(--badge-hue-to) 15%, var(--color-surface))
+  );
+  border-color: color-mix(in srgb, var(--badge-hue-to) 25%, transparent);
+}
+
+/* 무지개다리 카드: 일반 카드와 같은 모양, 🌈(장식)만 추가. 오른쪽 위에 두고, 이름·뱃지 줄 오른쪽을 🌈 폭만큼 비운다 */
 .pet-card--memorial {
   position: relative;
-  background: var(--color-surface);
-  border-color: color-mix(in srgb, var(--color-memorial) 18%, transparent);
 }
 
-/* 우상단 🌈 표시(장식, 컬러 이모지). 글리프 폭이 OS마다 달라(약 22~28px) 28px + 여백만큼 info 를 비운다 */
-.pet-card--memorial .pet-card__info {
-  padding-right: calc(28px + var(--spacing-sm));
+.pet-card--memorial .pet-card__name,
+.pet-card--memorial .pet-card__kind {
+  /* 카드 가장자리 간격 + 🌈 폭 + 간격 - info 오른쪽 여백 16px */
+  padding-right: calc(var(--spacing-sm) + var(--font-size-xl) + var(--spacing-xs) - var(--spacing-md));
 }
 
 .pet-card__rainbow {
   position: absolute;
   top: var(--spacing-sm);
   right: var(--spacing-sm);
-  font-size: 22px;
+  display: flex;
+  align-items: center;
+  height: var(--min-touch-target);
+  font-size: var(--font-size-xl);
   line-height: 1;
+  pointer-events: none;
 }
 
 /* 추가 카드: 일반 카드와 같은 구조·크기(별도 높이 규칙 없음), 테두리만 점선 */
@@ -194,9 +487,9 @@
   word-break: keep-all;
 }
 
-/* 동물 카드(생존 섹션 또는 무지개 그리드) 바로 뒤 '내 구독' 영역만:
+/* 동물 카드 섹션 바로 뒤 '내 구독' 영역만:
    .pet-dash gap(24px) + 32px = 56px. 카드 모양은 PetMembership.css */
-:is(.pet-dash__section, .pet-card-grid) + .pet-sub {
+.pet-dash__section + .pet-sub {
   margin-top: var(--spacing-xl);
 }
 
@@ -247,11 +540,22 @@
   50% { opacity: 0.5; }
 }
 
+/* 결제 복귀 알림은 .pet-dash 밖(main 바로 아래)이라 같은 기둥(본문 폭 = 폭 변수 - 좌우 padding)으로 맞춘다 */
+.pet-page > .pet-sub-summary__msg {
+  box-sizing: border-box;
+  width: min(calc(100% - 2 * var(--spacing-md)), calc(var(--pet-dash-width) - 2 * var(--spacing-md)));
+  margin-inline: auto;
+}
+
 /* ≤ 360px */
 @media (max-width: 360px) {
   .pet-dash {
     padding-left: var(--spacing-sm);
     padding-right: var(--spacing-sm);
+  }
+
+  .pet-page > .pet-sub-summary__msg {
+    width: calc(100% - 2 * var(--spacing-sm));
   }
 }
 
@@ -259,15 +563,6 @@
 @media (min-width: 640px) {
   .pet-dash__retry {
     width: auto;
-  }
-
-  .pet-card-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  /* 2열이므로 스켈레톤은 2개만 보여 열 수와 맞춘다 */
-  .pet-card-grid > .pet-skeleton__card:nth-child(n + 3) {
-    display: none;
   }
 }
 

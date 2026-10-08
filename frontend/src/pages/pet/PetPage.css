@@ -55,13 +55,23 @@
   font-size: var(--fs-button);
   font-weight: 700;
   cursor: pointer;
-  transition: background var(--transition-base), color var(--transition-base);
+  transition: background var(--hover-transition), color var(--transition-base), transform var(--hover-transition);
   min-width: 200px;
   justify-content: center;
 }
 
-.pet-hero__cta:hover {
+.pet-hero__cta:focus-visible {
   background: var(--color-primary-soft);
+}
+
+@media (hover: hover), (any-hover: hover) {
+  .pet-hero__cta:hover {
+    background: var(--color-primary-soft);
+  }
+}
+
+.pet-hero__cta:active {
+  transform: scale(var(--press-scale));
 }
 
 /* Section */
@@ -269,11 +279,21 @@
   font-size: var(--fs-button);
   font-weight: 600;
   cursor: pointer;
-  transition: background var(--transition-base), color var(--transition-base);
+  transition: background var(--transition-base), color var(--transition-base), filter var(--hover-transition), transform var(--hover-transition);
 }
 
-.pet-plan-card__btn:hover {
+.pet-plan-card__btn:focus-visible:not(:disabled) {
   background: var(--color-surface-warm);
+}
+
+@media (hover: hover), (any-hover: hover) {
+  .pet-plan-card__btn:hover:not(:disabled) {
+    background: var(--color-surface-warm);
+  }
+}
+
+.pet-plan-card__btn:active:not(:disabled) {
+  transform: scale(var(--press-scale));
 }
 
 /* 메인 그라데이션 버튼: 흰 글자 (인기 뱃지와 동일하게 --color-surface = #FFFFFF 사용) */
@@ -283,10 +303,19 @@
   border-color: transparent;
 }
 
-.pet-plan-card__btn--primary:hover {
+/* hover: 한 단계 어둡게(기존 brightness 0.94 → 토큰 0.92). focus-visible 도 같은 강도 */
+.pet-plan-card__btn--primary:focus-visible:not(:disabled) {
   background: var(--color-brand-gradient);
   border-color: transparent;
-  filter: brightness(0.94);
+  filter: var(--hover-darken);
+}
+
+@media (hover: hover), (any-hover: hover) {
+  .pet-plan-card__btn--primary:hover:not(:disabled) {
+    background: var(--color-brand-gradient);
+    border-color: transparent;
+    filter: var(--hover-darken);
+  }
 }
 
 .pet-plan-card__note {

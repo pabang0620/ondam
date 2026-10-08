@@ -1,10 +1,10 @@
 /* PetPortraitPage 모바일 반응형 */
 
-/* 페이지 래퍼 */
+/* 페이지 래퍼 (PhotoOrderPage와 동일한 토큰·값, 클래스는 공유하지 않음) */
 .pet-portrait-page {
   max-width: 600px;
   margin: 0 auto;
-  padding: 32px var(--spacing-md) 48px;
+  padding: 32px var(--spacing-md) var(--spacing-section-lg);
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xl);
@@ -12,57 +12,429 @@
   width: 100%;
 }
 
+/* 제목 영역: 가운데 정렬 + 상단 여백 */
+.pet-portrait-page .pet-portrait-header {
+  text-align: center;
+  padding-top: var(--spacing-lg);
+}
+
+.pet-portrait-page .pet-portrait-header h1 {
+  font-size: var(--fs-h2);
+  font-weight: 700;
+  color: var(--color-photo);
+  margin: 0 auto var(--spacing-sm);
+  letter-spacing: var(--ls-heading-ko);
+}
+
+.pet-portrait-page .pet-portrait-header p {
+  font-size: var(--fs-caption);
+  color: var(--color-text-secondary);
+  line-height: var(--lh-relaxed);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* 단계 제목 (PhotoOrderPage의 "1. ..." 라벨과 동일 스타일) */
+.pet-portrait-page .pet-portrait-step-title {
+  font-size: var(--fs-body);
+  font-weight: 600;
+  margin: 0 0 var(--spacing-md);
+  color: var(--color-text-primary);
+}
+
+/* 단계 섹션 사이 / 생성 버튼 위 여백: flex gap(xl) + 추가 margin-top */
+.pet-portrait-page .pet-portrait-step-photo,
+.pet-portrait-page .pet-portrait-submit {
+  margin-top: var(--spacing-lg);
+}
+
+/* 남은 매수 안내: 테두리·그림자 없는 옅은 브랜드 틴트 띠 (버튼/카드처럼 보이지 않게) */
+.pet-portrait-page .pet-portrait-notice {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background: var(--color-accent-brand-soft);
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  font-size: var(--fs-body);
+  line-height: var(--lh-relaxed);
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+/* 소진 상태: 같은 형태, 중립 톤 */
+.pet-portrait-page .pet-portrait-notice.is-empty {
+  background: var(--color-bg-subtle);
+}
+
+.pet-portrait-notice-icon {
+  flex-shrink: 0;
+  color: var(--color-accent-brand);
+  /* 첫 줄 텍스트 중앙에 맞춘다: (줄높이 - 아이콘 20px) / 2 */
+  margin-top: calc((var(--fs-body) * var(--lh-relaxed) - 20px) / 2);
+}
+
+.pet-portrait-notice.is-empty .pet-portrait-notice-icon {
+  color: var(--color-text-secondary);
+}
+
+.pet-portrait-notice-body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  text-align: left;
+}
+
+.pet-portrait-notice-body p {
+  margin: 0;
+}
+
+.pet-portrait-notice-count {
+  font-weight: 700;
+  color: var(--color-accent-brand-text);
+}
+
+.pet-portrait-notice-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--min-touch-target);
+  color: var(--color-photo);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+/* 에러 메시지 박스 */
+.pet-portrait-page .pet-portrait-error {
+  color: var(--color-error);
+  font-size: var(--fs-caption);
+  background: var(--color-error-light);
+  border: 1px solid var(--color-error);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-md);
+}
+
+/* 생성 버튼 */
+.pet-portrait-page .pet-portrait-submit {
+  width: 100%;
+  height: var(--size-button-h);
+  min-height: var(--size-button-h);
+  min-width: 120px;
+  background: var(--color-brand-gradient);
+  color: var(--color-surface);
+  border: none;
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-body);
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  transition: filter var(--transition-base);
+}
+
+/* hover/focus-visible: 펫 요금제 메인 버튼(PetPage.css .pet-plan-card__btn--primary)과 동일하게 한 단계 어둡게 */
+.pet-portrait-page .pet-portrait-submit:focus-visible:not(:disabled) {
+  filter: var(--hover-darken);
+}
+
+@media (hover: hover) {
+  .pet-portrait-page .pet-portrait-submit:hover:not(:disabled) {
+    filter: var(--hover-darken);
+  }
+}
+
+.pet-portrait-page .pet-portrait-submit:active:not(:disabled) {
+  transform: scale(var(--press-scale));
+}
+
+.pet-portrait-page .pet-portrait-submit:disabled {
+  background: var(--color-border);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+/* 생성 완료 카드의 '반려동물 페이지로' 버튼: 생성 버튼과 같은 그라데이션 CTA (기존 인라인 스타일을 클래스로 이동) */
+.pet-portrait-result-btn {
+  min-width: 120px;
+  min-height: var(--size-button-h);
+  padding: 0 var(--spacing-xl);
+  background: var(--color-brand-gradient);
+  color: var(--color-surface);
+  border: none;
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-button);
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter var(--transition-base);
+}
+
+.pet-portrait-result-btn:focus-visible {
+  filter: var(--hover-darken);
+}
+
+@media (hover: hover) {
+  .pet-portrait-result-btn:hover {
+    filter: var(--hover-darken);
+  }
+}
+
+.pet-portrait-result-btn:active {
+  transform: scale(var(--press-scale));
+}
+
+/* 데스크톱/태블릿(>=640px): 컨테이너를 넓혀 헤더만 넓게, 나머지는 600px 폭 유지 */
+@media (min-width: 640px) {
+  .pet-portrait-page {
+    max-width: 880px;
+  }
+
+  .pet-portrait-page > :not(.pet-portrait-header) {
+    width: 100%;
+    max-width: calc(600px - 2 * var(--spacing-md));
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .pet-portrait-page .pet-portrait-header {
+    word-break: keep-all;
+  }
+}
+
+@media (min-width: 768px) {
+  .pet-portrait-page .pet-portrait-header p {
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 1023px) {
+  .pet-portrait-page {
+    padding: 24px var(--spacing-md) var(--spacing-section-lg);
+  }
+}
+
 @media (max-width: 639px) {
   .pet-portrait-page {
-    padding: var(--spacing-lg) var(--spacing-md) 32px;
+    padding: 16px var(--spacing-md) calc(var(--spacing-section) + var(--spacing-md));
+    gap: var(--spacing-lg);
+    max-width: 100%;
+  }
+
+  .pet-portrait-page .pet-portrait-header {
+    padding-top: var(--spacing-md);
   }
 }
 
-/* AI 초상화 스타일 선택 — 모바일 2열, 데스크톱 3~4열 */
+/* AI 초상화 스타일 선택 — 모든 폭에서 3열 1:1:1 */
 .pet-portrait-style-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--spacing-sm);
 }
 
-@media (min-width: 640px) and (max-width: 1023px) {
-  .pet-portrait-style-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
+.pet-portrait-style-card {
+  min-width: 0;
+  min-height: var(--min-touch-target);
+  padding: var(--spacing-md) var(--spacing-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  cursor: pointer;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+  transition: border-color var(--transition-base), background-color var(--transition-base);
 }
 
-@media (min-width: 1024px) {
-  .pet-portrait-style-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
+.pet-portrait-style-card.is-selected {
+  background: var(--color-bg-subtle);
+  border: 2px solid var(--color-accent-brand);
+  /* 테두리 2px 증가분만큼 패딩을 줄여 선택 시 카드 크기가 변하지 않게 한다 */
+  padding: calc(var(--spacing-md) - 1px) calc(var(--spacing-sm) - 1px);
+}
+
+.pet-portrait-style-card:focus-visible,
+.pet-portrait-photo-item:focus-visible,
+.pet-portrait-photo-add:focus-visible {
+  outline: 2px solid var(--color-photo);
+  outline-offset: 2px;
+}
+
+.pet-portrait-style-icon {
+  color: var(--color-accent-brand);
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+/* 스타일별 브랜드 톤 (선택/비선택 모두 유지) */
+.pet-portrait-style-icon--oil {
+  color: var(--color-accent-brand-light);
+}
+
+.pet-portrait-style-icon--watercolor {
+  color: var(--color-accent-brand);
+}
+
+.pet-portrait-style-icon--illustration {
+  color: var(--color-accent-brand-text);
+}
+
+.pet-portrait-style-label {
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--color-primary);
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+}
+
+.pet-portrait-style-desc {
+  font-size: var(--fs-caption);
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+  word-break: keep-all;
 }
 
 /* 사진 선택 그리드 — 모바일 3열, 태블릿 4열, 데스크톱 5열 */
 .pet-portrait-photo-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--spacing-sm);
 }
 
 @media (min-width: 640px) {
   .pet-portrait-photo-grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
 @media (min-width: 1024px) {
   .pet-portrait-photo-grid {
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }
 
-/* 320px 안전망 */
-@media (max-width: 360px) {
-  .pet-portrait-style-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--spacing-sm);
+.pet-portrait-photo-item {
+  position: relative;
+  aspect-ratio: 1;
+  padding: 0;
+  overflow: hidden;
+  cursor: pointer;
+  background: var(--color-bg-alt);
+  border: 2px solid transparent;
+  border-radius: var(--radius-sm);
+  transition: border-color var(--transition-base);
+}
+
+.pet-portrait-photo-item.is-selected {
+  border: 3px solid var(--color-accent-brand);
+}
+
+.pet-portrait-photo-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pet-portrait-photo-check {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-accent-brand);
+  border-radius: 50%;
+}
+
+/* 점선 '사진 추가' 타일 (PhotoOrderPage 업로드 영역과 같은 톤) */
+.pet-portrait-photo-add {
+  aspect-ratio: 1;
+  min-width: 0;
+  padding: var(--spacing-xs);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  background: var(--color-bg-subtle);
+  border: 2px dashed var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-caption);
+  font-weight: 600;
+  text-align: center;
+  transition: border-color var(--transition-base), background-color var(--transition-base);
+}
+
+.pet-portrait-photo-add svg {
+  color: var(--color-photo);
+}
+
+.pet-portrait-photo-add:hover:not(:disabled) {
+  border-color: var(--color-photo);
+  background: var(--color-bg-alt);
+}
+
+.pet-portrait-photo-add:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.pet-portrait-spin {
+  animation: pet-portrait-spin 1s linear infinite;
+}
+
+@keyframes pet-portrait-spin {
+  to { transform: rotate(360deg); }
+}
+
+.pet-portrait-file-input {
+  display: none;
+}
+
+.pet-portrait-photo-empty {
+  margin: 0 0 var(--spacing-md);
+  color: var(--color-text-secondary);
+  font-size: var(--fs-caption);
+}
+
+.pet-portrait-upload-error {
+  margin: var(--spacing-md) 0 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pet-portrait-spin {
+    animation: none;
+  }
+}
+
+/* 360px 이하 안전망: 스타일 카드 아이콘 축소, 패딩 최소화 */
+@media (max-width: 400px) {
+  .pet-portrait-style-icon {
+    width: 20px;
+    height: 20px;
   }
 
+  .pet-portrait-style-card {
+    padding: var(--spacing-md) var(--spacing-xs);
+  }
+
+  .pet-portrait-style-card.is-selected {
+    padding: calc(var(--spacing-md) - 1px) calc(var(--spacing-xs) - 1px);
+  }
+}
+
+@media (max-width: 359px) {
   .pet-portrait-page {
     padding: var(--spacing-md) var(--spacing-sm);
   }
