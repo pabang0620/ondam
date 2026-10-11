@@ -7,14 +7,14 @@ const PRODUCTS = [
   {
     type: 'photo',
     label: 'AI 사진관 세트',
-    price: '9,900원',
+    price: '990원',
     desc: '오래된 사진을 복원하고 결과물 4종을 만들어 드려요',
     icon: Camera,
   },
   {
     type: 'will',
     label: '마지막 영상 편지',
-    price: '49,000원',
+    price: '29,000원',
     desc: '사진과 목소리로 소중한 분께 남기는 영상 편지예요',
     icon: Video,
   },

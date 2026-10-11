@@ -35,7 +35,7 @@ const PLANS = [
   {
     key: 'pet_archive',
     label: '반려동물 아카이브',
-    price: '4,900원',
+    price: '2,900원',
     unit: '/월',
     features: PET_ARCHIVE_BENEFITS.map(({ id, text }) => ({ icon: BENEFIT_ICONS[id], text })),
     highlight: true,

@@ -184,7 +184,7 @@ export const createWill = async ({
     [
       willId, userId, voiceSampleId, title, contentTextEncrypted, contentTextKmsKeyId,
       contentTextEncFormat ?? null,
-      releasePolicy, priceKrw ?? 49000, eventType ?? null,
+      releasePolicy, priceKrw ?? 29000, eventType ?? null,
     ],
   )
   return result
@@ -616,7 +616,7 @@ export const createWillWithBeneficiaries = async (willData, beneficiariesData) =
       [
         willId, userId, voiceSampleId, title, contentTextEncrypted, contentTextKmsKeyId,
         contentTextEncFormat ?? null,
-        releasePolicy, priceKrw ?? 49000, eventType ?? null,
+        releasePolicy, priceKrw ?? 29000, eventType ?? null,
       ],
     )
 

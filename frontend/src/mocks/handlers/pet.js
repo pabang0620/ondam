@@ -180,7 +180,7 @@ function buildPetMedia() {
 const MOCK_SUBSCRIPTION = {
   subscription_id: 'sub-mock-1',
   plan: 'pet_archive',
-  price_krw: 4900,
+  price_krw: 2900,
   subStatus: 'active',
   next_billing_at: new Date(now + 20 * DAY_MS).toISOString(),
 }
@@ -247,7 +247,7 @@ export const handlers = [
         {
           plan: 'pet_archive',
           name: '반려동물 아카이브',
-          priceKrw: 4900,
+          priceKrw: 2900,
           description: '반려동물 추억 보관 + AI 초상화 월 3장',
         },
       ],
@@ -296,7 +296,7 @@ export const handlers = [
           subscriptionId: 'sub-mock-1',
           plan,
           subStatus: 'active',
-          priceKrw: 4900,
+          priceKrw: 2900,
           nextBillingAt: new Date(Date.now() + 30 * DAY_MS).toISOString(),
           lastBilledAt: new Date().toISOString(),
         },
@@ -313,14 +313,14 @@ export const handlers = [
         {
           payment_log_id: 'paylog-mock-1',
           subscription_id: 'sub-mock-1',
-          amount_krw: 4900,
+          amount_krw: 2900,
           status: 'success',
           paid_at: new Date(now - 10 * DAY_MS).toISOString(),
         },
         {
           payment_log_id: 'paylog-mock-2',
           subscription_id: 'sub-mock-1',
-          amount_krw: 4900,
+          amount_krw: 2900,
           status: 'success',
           paid_at: new Date(now - 40 * DAY_MS).toISOString(),
         },

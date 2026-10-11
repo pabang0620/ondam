@@ -68,7 +68,7 @@ export const createOrder = async (userId, { photoType, sourceImageUrl }) => {
   await assertPhotoConsents(userId)
 
   const orderId = uuidv4()
-  const priceKrw = 9900
+  const priceKrw = 990
 
   await photoRepository.createOrder({ orderId, userId, photoType, priceKrw, sourceImageUrl })
 

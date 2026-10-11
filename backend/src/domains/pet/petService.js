@@ -348,7 +348,7 @@ export const requestPortrait = async (userId, petId, { style = 'oil', mediaId } 
   if (quota.remaining <= 0) {
     const message = quota.isSubscribed
       ? `이번 달 AI 초상화 생성 횟수(${quota.limit}장)를 모두 사용하셨습니다. 다음 달 1일에 초기화됩니다.`
-      : '무료 체험 AI 초상화를 이미 사용하셨습니다. 반려동물 아카이브 구독(월 4,900원)을 시작하면 매달 3장의 AI 초상화를 만들 수 있어요.'
+      : '무료 체험 AI 초상화를 이미 사용하셨습니다. 반려동물 아카이브 구독(월 2,900원)을 시작하면 매달 3장의 AI 초상화를 만들 수 있어요.'
     throw Object.assign(new Error(message), { status: 429 })
   }
 

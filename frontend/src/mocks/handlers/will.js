@@ -45,7 +45,7 @@ export const handlers = [
         will_id: params.willId,
         title: '사랑하는 가족에게',
         status: 'paid',
-        price_krw: 49000,
+        price_krw: 29000,
         content_text: '항상 고맙고 사랑한다는 말을 전하고 싶었어요.',
         created_at: '2026-09-05T14:30:00+09:00',
       },
@@ -198,7 +198,7 @@ export const handlers = [
       success: true,
       data: {
         tossOrderId: 'mock-order-20260914-0001',
-        amountKrw: 49000,
+        amountKrw: 29000,
       },
     })
   }),
@@ -212,7 +212,7 @@ export const handlers = [
           target_id: 'mock-will-0001',
           payment_key: 'mock_payment_key_0001',
           order_id: 'mock-order-20260914-0001',
-          amount: 49000,
+          amount: 29000,
           status: 'DONE',
         },
       },

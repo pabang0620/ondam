@@ -31,7 +31,7 @@ function buildMockPhotoOrder(orderId, overrides = {}) {
     id: orderId,
     photo_type: 'funeral',
     status: 'paid',
-    price_krw: 9900,
+    price_krw: 990,
     source_image_url: 'https://picsum.photos/seed/ondam-photo-source/800/600',
     created_at: '2026-09-10T09:00:00+09:00',
     ...overrides,
@@ -185,7 +185,7 @@ export const handlers = [
       success: true,
       data: {
         tossOrderId: `mock_toss_order_${Date.now()}`,
-        amountKrw: 9900,
+        amountKrw: 990,
       },
     })
   }),

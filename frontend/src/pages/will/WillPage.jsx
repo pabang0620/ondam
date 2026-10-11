@@ -98,7 +98,7 @@ export default function WillPage() {
           <article className="will-pricing__card">
             <h2 className="will-pricing__label">AI 영상 편지 제작</h2>
             <p className="will-pricing__main">
-              <span className="will-pricing__price">49,000원</span>
+              <span className="will-pricing__price">29,000원</span>
               <span className="will-pricing__unit">/ 건</span>
             </p>
             <button

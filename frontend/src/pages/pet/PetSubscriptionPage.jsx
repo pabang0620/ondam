@@ -16,7 +16,7 @@ import './PetSubscriptionPage.css'
 // subscriptionService.js의 PLANS/subscriptionRoutes.js의 zod enum에서도 이미
 // 제거됐다. 펫 아카이브는 티어를 나누지 않고 pet_archive 단일가로 확정한다.
 const PLANS = [
-  { key: 'pet_archive', name: '반려동물 아카이브', price: 4900, desc: '반려동물 추억 보관 + AI 초상화 월 3장', highlight: true },
+  { key: 'pet_archive', name: '반려동물 아카이브', price: 2900, desc: '반려동물 추억 보관 + AI 초상화 월 3장', highlight: true },
 ]
 
 function PlanCard({ plan, isCurrent, isProcessing, isRedirecting, onSubscribe }) {

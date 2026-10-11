@@ -134,7 +134,7 @@ function PhotoPage() {
           <article className="photo-pricing__card">
             <h2 className="photo-pricing__label">1세트 가격</h2>
             <p className="photo-pricing__main">
-              <span className="photo-pricing__price">9,900원</span>
+              <span className="photo-pricing__price">990원</span>
               <span className="photo-pricing__unit">/ 1회</span>
             </p>
             <button className="photo-pricing__cta" type="button" onClick={handleStart}>

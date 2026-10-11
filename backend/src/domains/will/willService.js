@@ -102,7 +102,7 @@ const extractPhoneLast4 = (phone) => {
 // 유언 영상 편지 - 베이직 단일가 (2026-08-21 오너 확정). 가격은 서버가 결정하는
 // 단일 정본이며 클라이언트 입력(priceKrw)을 받지 않는다. payment 도메인의
 // preparePayment는 wills.price_krw(이 값으로 저장된 스냅샷)를 조회해 검증한다.
-const WILL_BASIC_PRICE_KRW = 49000
+const WILL_BASIC_PRICE_KRW = 29000
 
 // ─── 유언 텍스트 KMS 봉투 암호화 (보안 갭 1 수정 + 4KB 제한 수정 2026-08-23) ───────
 // CLAUDE.md 보안 규칙 1번·스키마 주석 모두 wills.content_text를 KMS 암호화 대상으로

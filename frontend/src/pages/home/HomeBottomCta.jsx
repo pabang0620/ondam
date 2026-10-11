@@ -106,7 +106,7 @@ export default function HomeBottomCta() {
             wordBreak: 'keep-all',
           }}
         >
-          9,900원이면 복원부터 결과물 4종까지 받아보실 수 있어요.
+          990원이면 복원부터 결과물 4종까지 받아보실 수 있어요.
         </p>
         <div className="flex justify-center">
           {/* 오렌지→코랄 위→아래 그라디언트 버튼 + 흰 글자(AA 미달, 사용자 요청.

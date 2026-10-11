@@ -42,8 +42,8 @@ import { toSafeLimit, toSafeOffset } from '../../utils/pagination.js'
 // 거기서 가격을 조회할 수 없다. 이 정적 맵이 gift 결제의 가격 정본이다(G3) - 클라이언트
 // 입력을 받지 않고 서버가 product_type만으로 금액을 확정한다.
 export const GIFT_PRICE_KRW = {
-  photo: 9900,
-  will: 49000,
+  photo: 990,
+  will: 29000,
 }
 
 // 수행 링크 유효기간 - SPEC-01 4-1 "발급 후 90일"

@@ -3,7 +3,7 @@ import { CreditCard, Loader2 } from 'lucide-react'
 import useGiftPayment from './useGiftPayment.js'
 
 // 표시 전용 - 실제 결제 금액은 서버가 preparePayment 응답으로 확정한 값을 쓴다(G3).
-const PRICE_LABELS = { photo: '9,900원 (AI 사진관 세트)', will: '49,000원 (마지막 영상 편지)' }
+const PRICE_LABELS = { photo: '990원 (AI 사진관 세트)', will: '29,000원 (마지막 영상 편지)' }
 
 function GiftPaymentPage() {
   const location = useLocation()

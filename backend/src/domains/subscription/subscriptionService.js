@@ -64,7 +64,7 @@ const toSubscriptionDtoList = (rows) => pickAll(rows, SUBSCRIPTION_PUBLIC_FIELDS
  * `PLANS[plan] ?? 대체값` 폴백을 갖고 있어 죽지 않는다.
  */
 export const PLANS = {
-  pet_archive: { price: 4900, name: '반려동물 아카이브' },
+  pet_archive: { price: 2900, name: '반려동물 아카이브' },
 }
 
 /**
